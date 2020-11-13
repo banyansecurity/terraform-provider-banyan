@@ -23,3 +23,8 @@ installed on your machine (version 1.15.0+ is *required*). currently requires gv
 
 To compile the provider, run `make install`.
 This will build the provider and put the provider binary into your local terraform provider directory
+
+Pull Requests
+-------------------------------
+
+All PRs should have an associated issue.
