@@ -1,4 +1,4 @@
-module github.com/tsfenwick/bnn-tf-prov
+module github.com/banyansecurity/terraform-banyan-provider
 
 go 1.15
 

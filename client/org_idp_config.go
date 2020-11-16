@@ -63,7 +63,7 @@ func (this *Client) GetOrgIdpConfig() (orgIdpConfig OrgIdpConfig, err error) {
 	if err != nil {
 		return
 	}
-	var orgIdpConfigJson OrgIdpConfigJson
+	var orgIdpConfigJson orgIdpConfigJson
 	err = json.Unmarshal(responseData, &orgIdpConfigJson)
 	if err != nil {
 		return
