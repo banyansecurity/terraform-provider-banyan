@@ -7,7 +7,7 @@ MAKEFLAGS += --no-builtin-rules
 
 #Constants
 ARTIFACT_NAME = terraform-provider-banyan
-GO_VERSION = go1.15.4
+GO_VERSION = go1.15.5
 
 HOSTNAME=github.com
 NAMESPACE=banyansecurity

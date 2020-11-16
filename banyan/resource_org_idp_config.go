@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bnnClient "github.com/tsfenwick/bnn-tf-prov/client"
+	bnnClient "github.com/banyansecurity/terraform-banyan-provider/client"
 )
 
 func resourceOrgIdpConfig() *schema.Resource {
