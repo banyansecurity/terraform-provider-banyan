@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/banyansecurity/terraform-banyan-provider/banyan"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/banyansecurity/terraform-banyan-provider/banyan"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-package client
+package restclient
 
 import (
 	"encoding/json"
@@ -11,23 +11,18 @@ import (
 	"github.com/pkg/errors"
 )
 
-const defaultHostUrl = "http://net.banyanops.com/"
-
-type BnnClient interface {
-	OidcSettingsClienter
-	OrgIdpConfigClienter
-}
-
 // Client is the struct that you use to interact with the banyan restapi.
-type Client struct {
+type RestClient struct {
 	accessToken string
 	hostUrl     string
 	httpClient  *http.Client
 }
 
+const defaultHostUrl = "http://net.banyanops.com"
+
 // New creates a new client that will let the user interact with the restapi server.
 // As part of this it exchanges the given refreshtoken for an acesstoken.
-func New(hostUrl string, refreshToken string) (client *Client, err error) {
+func New(hostUrl string, refreshToken string) (client *RestClient, err error) {
 	if refreshToken == "" {
 		err = errors.New("need a refresh token")
 		return
@@ -37,7 +32,7 @@ func New(hostUrl string, refreshToken string) (client *Client, err error) {
 		clientHostUrl = hostUrl
 	}
 
-	client = &Client{
+	client = &RestClient{
 		accessToken: "",
 		hostUrl:     clientHostUrl,
 		httpClient:  &http.Client{Timeout: 10 * time.Second},
@@ -49,7 +44,7 @@ func New(hostUrl string, refreshToken string) (client *Client, err error) {
 		return
 	}
 
-	client = &Client{
+	client = &RestClient{
 		accessToken: accessToken,
 		hostUrl:     clientHostUrl,
 		httpClient:  &http.Client{Timeout: 10 * time.Second},
@@ -58,13 +53,36 @@ func New(hostUrl string, refreshToken string) (client *Client, err error) {
 	return
 }
 
+// DoGet sends and does the get request
+func (this *RestClient) DoGet(path string) (response *http.Response, err error) {
+	request, err := this.Get(path)
+	if err != nil {
+		return
+	}
+	response, err = this.Do(request)
+	return
+}
+
 // get creates a new Get request, saving the user of needing to pass in a nil value
-func (this *Client) get(url string) (request *http.Request, err error) {
+func (this *RestClient) Get(path string) (request *http.Request, err error) {
+	return this.NewRequest("GET", path, nil)
+}
+
+func (this *RestClient) Do(request *http.Request) (response *http.Response, err error) {
+	return this.httpClient.Do(request)
+}
+
+// get creates a new Get request, saving the user of needing to pass in a nil value
+func (this *RestClient) get(url string) (request *http.Request, err error) {
 	return this.newRequest("GET", url, nil)
 }
 
+func (this *RestClient) NewRequest(method string, path string, body io.Reader) (request *http.Request, err error) {
+	return this.newRequest(method, this.hostUrl+path, body)
+}
+
 // newRequest creates a new request with the accessToken added as a header
-func (this *Client) newRequest(method string, url string, body io.Reader) (request *http.Request, err error) {
+func (this *RestClient) newRequest(method string, url string, body io.Reader) (request *http.Request, err error) {
 	request, err = http.NewRequest(method, url, body)
 	if err != nil {
 		return
@@ -73,7 +91,7 @@ func (this *Client) newRequest(method string, url string, body io.Reader) (reque
 	return
 }
 
-func (this *Client) exhangeRefreshTokenForAccessToken(clientHostUrl string, refreshToken string) (accessToken string, err error) {
+func (this *RestClient) exhangeRefreshTokenForAccessToken(clientHostUrl string, refreshToken string) (accessToken string, err error) {
 	req, err := http.NewRequest("POST", clientHostUrl+"api/v1/refresh_token", nil)
 	req.Header.Add("Authorization", "Bearer "+refreshToken)
 	resp, err := this.httpClient.Do(req)
@@ -101,7 +119,7 @@ func getAccessTokenFromJSON(body []byte) (accessToken string, err error) {
 	var accessTokenStruct AccessToken
 	err = json.Unmarshal(body, &accessTokenStruct)
 	if err != nil {
-		err = errors.WithMessage(err, "unable to unmarshall the accessToken, "+string(body))
+		err = errors.WithMessage(err, "unable to unmarshal the accessToken, "+string(body))
 		return
 	}
 	accessToken = accessTokenStruct.Message

@@ -5,61 +5,44 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
-
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	bnnClient "github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/admin/orgidpconfig"
+	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/pkg/errors"
 )
 
-func resourceOrgIdpConfig() *schema.Resource {
+func resourceService() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This is an org wide setting. There can only be one of these per organization.",
-		CreateContext: resourceOrgIdpConfigCreate,
-		ReadContext:   resourceOrgIdpConfigRead,
-		UpdateContext: resourceOrgIdpConfigUpdate,
-		DeleteContext: resourceOrgIdpConfigDelete,
+		CreateContext: resourceServiceCreate,
+		ReadContext:   resourceServiceRead,
+		UpdateContext: resourceServiceUpdate,
+		DeleteContext: resourceServiceDelete,
 		Schema: map[string]*schema.Schema{
-			"idp_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of your IdP service",
-			},
-			"idp_protocol": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"OIDC"}, false),
-				Description:  "The protocol your IdP uses. Only Supports OIDC currently",
-			},
-
-			"idp_config": {
+			"attributes": {
 				Type:        schema.TypeList,
-				MinItems:    1,
-				MaxItems:    1,
 				Required:    true,
-				Description: "The details regarding setting up an idp. Currently only supports OIDC. SAML support is planned.",
+				Description: "",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"redirect_url": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "**ADVANCED USAGE ONLY** No need to set, banyan sets up your default for you.",
+						"tls_sni": {
+							Type:        schema.TypeList,
+							Description: "",
+							Elem:        schema.TypeString,
 						},
-						"issuer_url": {
-							Type:     schema.TypeString,
-							Required: true,
+						"host_tag_selector": {
+							Type:        schema.TypeMap,
+							Description: "",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
-						"client_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"client_secret": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
+						"frontend_addresses": {
+							Type: schema.TypeList,
+							Elem: &schema.Resource{},
 						},
 					},
 				},
@@ -68,20 +51,8 @@ func resourceOrgIdpConfig() *schema.Resource {
 	}
 }
 
-func resourceOrgIdpConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	client := m.(*client.ClientHolder)
-	idpName, ok := d.Get("idp_name").(string)
-	if !ok {
-		err := errors.New("Couldn't type assert idp_name")
-		diagnostics = diag.FromErr(err)
-		return
-	}
-	idpProtocol, ok := d.Get("idp_protocol").(string)
-	if !ok {
-		err := errors.New("Couldn't type assert ipd_protocol")
-		diagnostics = diag.FromErr(err)
-		return
-	}
 	idpConfigResource, ok := d.Get("idp_config").([]interface{})
 	if !ok {
 		idpConfigType := reflect.TypeOf(d.Get("idp_config"))
@@ -142,16 +113,17 @@ func resourceOrgIdpConfigCreate(ctx context.Context, d *schema.ResourceData, m i
 			ClientSecret: clientSecret,
 		},
 	}
-	client.Admin.OrgIdpConfig.CreateOrUpdate(orgIdpConfig)
+	var CreateServiceSpec service.CreateService
+	client.Service.Create()
 	// read to get the final state
 	return resourceOrgIdpConfigRead(ctx, d, m)
 }
 
-func resourceOrgIdpConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	return resourceOrgIdpConfigCreate(ctx, d, m)
 }
 
-func resourceOrgIdpConfigRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	client := m.(*bnnClient.Client)
 	orgIdpConfig, err := client.GetOrgIdpConfig()
 	if err != nil {
@@ -172,7 +144,7 @@ func resourceOrgIdpConfigRead(ctx context.Context, d *schema.ResourceData, m int
 	return
 }
 
-func resourceOrgIdpConfigDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 
 	return
 }

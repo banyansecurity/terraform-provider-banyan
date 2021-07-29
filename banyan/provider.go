@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	bnnClient "github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bnnClient "github.com/banyansecurity/terraform-banyan-provider/client"
 )
 
 // Provider for banhyan
