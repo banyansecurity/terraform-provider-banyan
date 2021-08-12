@@ -63,10 +63,10 @@ resource "banyan_service" "test-service" {
   description = "description2"
   metadatatags {
     domain = "test2.com"
-    port = "1111"
+    port = 1111
     protocol = "https"
     service_app_type = "WEB"
-    user_facing = "true"
+    user_facing = false
   }
   spec {
     attributes {
@@ -76,7 +76,7 @@ resource "banyan_service" "test-service" {
       }
       frontend_address {
         cidr = "127.99.114.14/32"
-        port = "222"
+        port = 0
       }
       host_tag_selector {
         site_name = "sitename"
@@ -90,7 +90,7 @@ resource "banyan_service" "test-service" {
       target {
         client_certificate = true
         name = "targetbackend"
-        port = "15151"
+        port = 15151
         tls = false
         tls_insecure = true
       }

@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
+	"net"
 	"reflect"
+	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -12,6 +15,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
+
+func portValidation() func(val interface{}, key string) (warns []string, errs []error) {
+	return func(val interface{}, key string) (warns []string, errs []error) {
+		v := val.(int)
+		if v < 0 || v > math.MaxUint16 {
+			errs = append(errs, fmt.Errorf("%q must be in range 0-%d, got: %d ", key, math.MaxUint16, v))
+		}
+		return
+	}
+}
+
+func validateCIDR() func(val interface{}, key string) (warns []string, errs []error) {
+	return func(val interface{}, key string) (warns []string, errs []error) {
+		v := val.(string)
+		_, _, err := net.ParseCIDR(v)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("%q must be a CIDR, got: %q", key, v))
+		}
+		return
+	}
+}
 
 func resourceService() *schema.Resource {
 	log.Println("getting resource")
@@ -50,8 +74,9 @@ func resourceService() *schema.Resource {
 							Required: true,
 						},
 						"port": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: portValidation(),
 						},
 						"protocol": {
 							Type:     schema.TypeString,
@@ -62,7 +87,7 @@ func resourceService() *schema.Resource {
 							Required: true,
 						},
 						"user_facing": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Required: true,
 						},
 					},
@@ -94,10 +119,12 @@ func resourceService() *schema.Resource {
 												"cidr": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validateCIDR(),
 												},
 												"port": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: portValidation(),
 												},
 											},
 										},
@@ -150,8 +177,9 @@ func resourceService() *schema.Resource {
 													Required: true,
 												},
 												"port": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: portValidation(),
 												},
 												"tls": {
 													Type:     schema.TypeBool,
@@ -280,11 +308,12 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			diagnostics = diag.FromErr(errors.New("couldn't type assert issuerUrl"))
 			return
 		}
-		svc.Metadata.Tags.Port, ok = ii["port"].(string)
+		port, ok := ii["port"].(int)
 		if !ok {
-			diagnostics = diag.FromErr(errors.New("couldn't type assert redirectUrl"))
+			diagnostics = diag.FromErr(errors.New("couldn't type assert port"))
 			return
 		}
+		svc.Metadata.Tags.Port = strconv.Itoa(port)
 		svc.Metadata.Tags.Protocol, ok = ii["protocol"].(string)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert clientId"))
@@ -295,11 +324,12 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			diagnostics = diag.FromErr(errors.New("couldn't type assert clientSecret"))
 			return
 		}
-		svc.Metadata.Tags.UserFacing, ok = ii["user_facing"].(string)
+		userFacingMetadataTag, ok := ii["user_facing"].(bool)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert clientSecret"))
 			return
 		}
+		svc.Metadata.Tags.UserFacing = strconv.FormatBool(userFacingMetadataTag)
 	}
 
 	svc.Spec.Attributes.TLSSNI = append(svc.Spec.Attributes.TLSSNI, "sni")
@@ -363,14 +393,14 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 					diagnostics = diag.Errorf("Couldn't type assert frontend_address cidr value")
 					return
 				}
-				port, ok := frontEndAddressItemMap["port"].(string)
+				port, ok := frontEndAddressItemMap["port"].(int)
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert frontend_address cidr value")
+					diagnostics = diag.Errorf("Couldn't type assert frontend_address port value")
 					return
 				}
 				svc.Spec.Attributes.FrontendAddresses = append(svc.Spec.Attributes.FrontendAddresses, service.FrontendAddress{
 					CIDR: cidr,
-					Port: port,
+					Port: strconv.Itoa(port),
 				})
 
 			}
@@ -568,25 +598,48 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	if !ok {
 		diagnostics = diag.Errorf("couldn't find expected resource")
+		return
 	}
 	log.Printf("#### readService: %#v", service)
 	d.Set("name", service.ServiceName)
 	d.Set("description", service.Description)
 	d.Set("cluster", service.ClusterName)
+	port, err := strconv.Atoi(service.CreateServiceSpec.Metadata.Tags.Port)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	metadataTagUserFacing, err := strconv.ParseBool(service.CreateServiceSpec.Metadata.Tags.UserFacing)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
 	metadatatags := map[string]interface{}{
 		"domain":           service.CreateServiceSpec.Metadata.Tags.Domain,
-		"port":             service.CreateServiceSpec.Metadata.Tags.Port,
+		"port":             port,
 		"protocol":         service.CreateServiceSpec.Metadata.Tags.Protocol,
 		"service_app_type": service.CreateServiceSpec.Metadata.Tags.ServiceAppType,
-		"user_facing":      service.CreateServiceSpec.Metadata.Tags.UserFacing,
+		"user_facing":      metadataTagUserFacing,
 	}
 	d.Set("metadatatags", metadatatags)
+	frontendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	backendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
 	spec := map[string]interface{}{
 		"attributes": map[string]interface{}{
+			//todo make this be able to handle n frontend addresses
 			"frontend_address": map[string]interface{}{
 				"cidr": service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].CIDR,
-				"port": service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port,
+				"port": frontendPort,
 			},
+			//todo make this handle n host tag selectors
 			"host_tag_selector": map[string]interface{}{
 				"site_name": service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0],
 			},
@@ -596,7 +649,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 			"target": map[string]interface{}{
 				"client_certificate": service.CreateServiceSpec.Spec.Backend.Target.ClientCertificate,
 				"name":               service.CreateServiceSpec.Spec.Backend.Target.Name,
-				"port":               service.CreateServiceSpec.Spec.Backend.Target.Port,
+				"port":               backendPort,
 				"tls":                service.CreateServiceSpec.Spec.Backend.Target.TLS,
 				"tls_insecure":       service.CreateServiceSpec.Spec.Backend.Target.TLSInsecure,
 			},
