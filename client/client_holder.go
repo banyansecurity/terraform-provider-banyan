@@ -9,7 +9,6 @@ import (
 type ClientHolder struct {
 	Service service.ServiceClienter
 	Admin   *admin.Admin
-	
 }
 
 func NewClientHolder(hostUrl string, refreshToken string) (client *ClientHolder, err error) {
@@ -17,6 +16,8 @@ func NewClientHolder(hostUrl string, refreshToken string) (client *ClientHolder,
 	if err != nil {
 		return
 	}
+	client2 := ClientHolder{}
+	client = &client2
 	service := service.NewClient(restClient)
 	client.Service = service
 	admin := admin.NewClient(restClient)

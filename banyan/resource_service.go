@@ -3,11 +3,10 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
-	bnnClient "github.com/banyansecurity/terraform-banyan-provider/client"
-	"github.com/banyansecurity/terraform-banyan-provider/client/admin/orgidpconfig"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -15,6 +14,7 @@ import (
 )
 
 func resourceService() *schema.Resource {
+	log.Println("getting resource")
 	return &schema.Resource{
 		Description:   "This is an org wide setting. There can only be one of these per organization.",
 		CreateContext: resourceServiceCreate,
@@ -22,27 +22,206 @@ func resourceService() *schema.Resource {
 		UpdateContext: resourceServiceUpdate,
 		DeleteContext: resourceServiceDelete,
 		Schema: map[string]*schema.Schema{
-			"attributes": {
-				Type:        schema.TypeList,
+			"name": {
+				Type:        schema.TypeString,
 				Required:    true,
-				Description: "",
+				Description: "Name of your service",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "description of your service",
+			},
+			"cluster": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "description of your service",
+			},
+			"metadatatags": {
+				Type:        schema.TypeList,
+				MinItems:    1,
+				MaxItems:    1,
+				Required:    true,
+				Description: "The details regarding setting up an idp. Currently only supports OIDC. SAML support is planned.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"tls_sni": {
-							Type:        schema.TypeList,
-							Description: "",
-							Elem:        schema.TypeString,
+						"domain": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
-						"host_tag_selector": {
-							Type:        schema.TypeMap,
-							Description: "",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+						"port": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"service_app_type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"user_facing": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"spec": {
+				Type:        schema.TypeList,
+				MinItems:    1,
+				MaxItems:    1,
+				Required:    true,
+				Description: "The spec",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attributes": {
+							Type:        schema.TypeList,
+							MinItems:    1,
+							MaxItems:    1,
+							Required:    true,
+							Description: "attributes",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"frontend_address": {
+										Type:        schema.TypeList,
+										MinItems:    1,
+										Required:    true,
+										Description: "frontend addresses",
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cidr": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"port": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"host_tag_selector": {
+										Type:        schema.TypeList,
+										MinItems:    1,
+										Required:    true,
+										Description: "host_tag_selector",
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"site_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"tls_sni": {
+										Type: schema.TypeSet,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+										Optional: true,
+									},
+								},
 							},
 						},
-						"frontend_addresses": {
-							Type: schema.TypeList,
-							Elem: &schema.Resource{},
+						"backend": {
+							Type:        schema.TypeList,
+							MinItems:    1,
+							MaxItems:    1,
+							Required:    true,
+							Description: "backend",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"target": {
+										Type:        schema.TypeList,
+										MinItems:    1,
+										Required:    true,
+										Description: "target",
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"client_certificate": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"port": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"tls": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"tls_insecure": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"http_settings": {
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							MinItems:    1,
+							Required:    true,
+							Description: "HTTP settings used for x",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"oidc_settings": {
+										Type:        schema.TypeList,
+										MinItems:    1,
+										MaxItems:    1,
+										Required:    true,
+										Description: "oidc settings",
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"service_domain_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"cert_settings": {
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							MinItems:    1,
+							Required:    true,
+							Description: "cert settings used for x",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"letsencrypt": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"dns_names": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -52,99 +231,387 @@ func resourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Println("creating resource")
 	client := m.(*client.ClientHolder)
-	idpConfigResource, ok := d.Get("idp_config").([]interface{})
+	log.Printf("#### %#v\n", d)
+	name, ok := d.Get("name").(string)
 	if !ok {
-		idpConfigType := reflect.TypeOf(d.Get("idp_config"))
-		err := errors.New("Couldn't type assert idp_config, type is " + fmt.Sprintf("%+v", idpConfigType))
+		err := errors.New("Couldn't type assert name")
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	var issuerUrl string
-	var redirectUrl string
-	var clientId string
-	var clientSecret string
-	for _, item := range idpConfigResource {
+	description, ok := d.Get("description").(string)
+	if !ok {
+		err := errors.New("Couldn't type assert protocol")
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	cluster, ok := d.Get("cluster").(string)
+	if !ok {
+		err := errors.New("Couldn't type assert cluster")
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	svc := service.CreateService{
+		Metadata: service.Metadata{
+			Name:        name,
+			Description: description,
+			Cluster:     cluster,
+		},
+	}
+
+	metadatatags, ok := d.Get("metadatatags").([]interface{})
+	if !ok {
+		metadatatags := reflect.TypeOf(d.Get("metadatatags"))
+		err := errors.New("Couldn't type assert metadatags, type is " + fmt.Sprintf("%+v", metadatatags))
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	for _, item := range metadatatags {
 		ii, ok := item.(map[string]interface{})
 		if !ok {
-			err := errors.New("Couldn't type assert element in idpConfig")
+			err := errors.New("Couldn't type assert element in metadatatags")
 			diagnostics = diag.FromErr(err)
 			return
 		}
-		issuerUrl, ok = ii["issuer_url"].(string)
+
+		svc.Metadata.Tags.Domain, ok = ii["domain"].(string)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert issuerUrl"))
 			return
 		}
-		redirectUrl, ok = ii["redirect_url"].(string)
+		svc.Metadata.Tags.Port, ok = ii["port"].(string)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert redirectUrl"))
 			return
 		}
-		clientId, ok = ii["client_id"].(string)
+		svc.Metadata.Tags.Protocol, ok = ii["protocol"].(string)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert clientId"))
 			return
 		}
-		clientSecret, ok = ii["client_secret"].(string)
+		svc.Metadata.Tags.ServiceAppType, ok = ii["service_app_type"].(string)
+		if !ok {
+			diagnostics = diag.FromErr(errors.New("couldn't type assert clientSecret"))
+			return
+		}
+		svc.Metadata.Tags.UserFacing, ok = ii["user_facing"].(string)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert clientSecret"))
 			return
 		}
 	}
 
-	// make sure we don't overwrite the existing one
-	if redirectUrl == "" {
-		originalOrgIdpConfig, err := client.Admin.OrgIdpConfig.Get()
-		if err != nil {
-			diagnostics = diag.FromErr(err)
-			return
-		}
-		redirectUrl = originalOrgIdpConfig.IdpConfig.RedirectUrl
-	}
+	svc.Spec.Attributes.TLSSNI = append(svc.Spec.Attributes.TLSSNI, "sni")
 
-	orgIdpConfig := orgidpconfig.Spec{
-		IdpName:     idpName,
-		IdpProtocol: idpProtocol,
-		IdpConfig: orgidpconfig.IdpConfig{
-			RedirectUrl:  redirectUrl,
-			IssuerUrl:    issuerUrl,
-			ClientId:     clientId,
-			ClientSecret: clientSecret,
-		},
-	}
-	var CreateServiceSpec service.CreateService
-	client.Service.Create()
-	// read to get the final state
-	return resourceOrgIdpConfigRead(ctx, d, m)
-}
-
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	return resourceOrgIdpConfigCreate(ctx, d, m)
-}
-
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*bnnClient.Client)
-	orgIdpConfig, err := client.GetOrgIdpConfig()
-	if err != nil {
+	spec, ok := d.Get("spec").([]interface{})
+	if !ok {
+		spec := reflect.TypeOf(d.Get("spec"))
+		err := errors.New("Couldn't type assert spec, type is " + fmt.Sprintf("%+v", spec))
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	d.SetId("singleton")
-	d.Set("idp_protocol", orgIdpConfig.IdpProtocol)
-	d.Set("idp_name", orgIdpConfig.IdpName)
-	idpConfig := map[string]interface{}{
-		"redirect_url":  orgIdpConfig.IdpConfig.RedirectUrl,
-		"issuer_url":    orgIdpConfig.IdpConfig.IssuerUrl,
-		"client_id":     orgIdpConfig.IdpConfig.ClientId,
-		"client_secret": orgIdpConfig.IdpConfig.ClientSecret,
-	}
-	d.Set("idp_config", idpConfig)
+	for _, item := range spec {
+		ii, ok := item.(map[string]interface{})
+		if !ok {
+			err := errors.New("Couldn't type assert element in metadatatags")
+			diagnostics = diag.FromErr(err)
+			return
+		}
 
+		attributes, ok := ii["attributes"].([]interface{})
+		if !ok {
+			diagnostics = diag.FromErr(errors.New("couldn't type assert attributes"))
+			return
+		}
+		for _, attributeItem := range attributes {
+			jj, ok := attributeItem.(map[string]interface{})
+			if !ok {
+				err := errors.New("Couldn't type assert element in attributeItems")
+				diagnostics = diag.FromErr(err)
+				return
+			}
+
+			tlsSNISet, ok := jj["tls_sni"].(*schema.Set)
+			if !ok {
+				tlsSNIMAPTYPE := reflect.TypeOf(jj["tls_sni"])
+				diagnostics = diag.FromErr(errors.New("couldn't type assert tls_sni_set" + fmt.Sprintf("%+v", tlsSNIMAPTYPE)))
+				return
+			}
+			for _, tlsSNIItem := range tlsSNISet.List() {
+				tlsSNIValue, ok := tlsSNIItem.(string)
+				if !ok {
+					diag.FromErr(errors.New("couldn't type assert tls_sni_value"))
+					return
+				}
+				svc.Spec.Attributes.TLSSNI = append(svc.Spec.Attributes.TLSSNI, tlsSNIValue)
+			}
+
+			frontEndAddress, ok := jj["frontend_address"].([]interface{})
+			if !ok {
+				diagnostics = diag.Errorf("Couldn't type assert frontend_address")
+				return
+			}
+			for _, frontEndAddressItem := range frontEndAddress {
+				frontEndAddressItemMap, ok := frontEndAddressItem.(map[string]interface{})
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert frontend_address item value %+v", reflect.TypeOf(frontEndAddressItem))
+					return
+				}
+				cidr, ok := frontEndAddressItemMap["cidr"].(string)
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert frontend_address cidr value")
+					return
+				}
+				port, ok := frontEndAddressItemMap["port"].(string)
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert frontend_address cidr value")
+					return
+				}
+				svc.Spec.Attributes.FrontendAddresses = append(svc.Spec.Attributes.FrontendAddresses, service.FrontendAddress{
+					CIDR: cidr,
+					Port: port,
+				})
+
+			}
+			hostTagSelector, ok := jj["host_tag_selector"].([]interface{})
+			if !ok {
+				diagnostics = diag.Errorf("Couldn't type assert host_tag_selector")
+				return
+			}
+			for _, hosthostTagSelectorItem := range hostTagSelector {
+				hostTagSelectorMap, ok := hosthostTagSelectorItem.(map[string]interface{})
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert host tag selector item value %+v", reflect.TypeOf(hostTagSelectorMap))
+					return
+				}
+				siteName, ok := hostTagSelectorMap["site_name"].(string)
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert hosttag selecyot site name value.")
+
+				}
+				svc.Spec.Attributes.HostTagSelector = append(svc.Spec.Attributes.HostTagSelector, service.HostTag{
+					ComBanyanopsHosttagSiteName: siteName,
+				})
+			}
+
+		}
+		backend, ok := ii["backend"].([]interface{})
+		if !ok {
+			diagnostics = diag.Errorf("Couldn't type assert backend")
+			return
+		}
+		for _, backendItem := range backend {
+			jj, ok := backendItem.(map[string]interface{})
+			if !ok {
+				diagnostics = diag.Errorf("Couldn't Type assert backend item")
+				return
+			}
+			target, ok := jj["target"].([]interface{})
+			if !ok {
+				diagnostics = diag.Errorf("Couldn't type assert target")
+				return
+			}
+			for _, targetItem := range target {
+				targetItemMap, ok := targetItem.(map[string]interface{})
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert target item map")
+					return
+				}
+				clientCertificate, ok := targetItemMap["client_certificate"].(bool)
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert spec.backend.target.client_certificate")
+					return
+				}
+				svc.Spec.Backend.Target.ClientCertificate = clientCertificate
+
+				tls, ok := targetItemMap["tls"].(bool)
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert spec.backend.target.tls")
+					return
+				}
+				svc.Spec.Backend.Target.TLS = tls
+
+				TLSInsecure, ok := targetItemMap["tls_insecure"].(bool)
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert spec.backend.target.tls_insecure")
+					return
+				}
+				svc.Spec.Backend.Target.TLSInsecure = TLSInsecure
+			}
+		}
+		certSettings, ok := ii["cert_settings"].([]interface{})
+		if !ok {
+			diagnostics = diag.Errorf("Couldn't type assert certsettings")
+			return
+		}
+		for _, certSettingsItem := range certSettings {
+			certSettingsMap, ok := certSettingsItem.(map[string]interface{})
+			if !ok {
+				diagnostics = diag.Errorf("Couldn't type assert certsettings map")
+				return
+			}
+			letsencrypt, ok := certSettingsMap["letsencrypt"].(bool)
+			if !ok {
+				diagnostics = diag.Errorf("Couldn't type assert letscenrypt")
+				return
+			}
+			svc.Spec.CertSettings.LetsEncrypt = letsencrypt
+
+			dnsNames, ok := certSettingsMap["dns_names"].(*schema.Set)
+			if !ok {
+				diagnostics = diag.Errorf("couldn't type assert dns_names to type: %+v", reflect.TypeOf(certSettingsMap["dns_names"]))
+				return
+			}
+			for _, dnsName := range dnsNames.List() {
+				dnsNameValue, ok := dnsName.(string)
+				if !ok {
+					diagnostics = diag.FromErr(errors.New("couldn't type assert dnsNameValue"))
+					return
+				}
+				svc.Spec.CertSettings.DNSNames = append(svc.Spec.CertSettings.DNSNames, dnsNameValue)
+			}
+		}
+		httpSettings, ok := ii["http_settings"].([]interface{})
+		if !ok {
+			diagnostics = diag.Errorf("Couldn't type assert backend")
+			return
+		}
+		for _, httpSettingsItem := range httpSettings {
+			httpSettingsMap, ok := httpSettingsItem.(map[string]interface{})
+			if !ok {
+				diagnostics = diag.Errorf("Couldn't type assert certsettings map")
+				return
+			}
+			enabled, ok := httpSettingsMap["enabled"].(bool)
+			if !ok {
+				diagnostics = diag.Errorf("Couldn't type assert httpsetting enabled")
+				return
+			}
+			svc.Spec.HTTPSettings.Enabled = enabled
+
+			oidcSettingsList, ok := httpSettingsMap["oidc_settings"].([]interface{})
+			if !ok {
+				diagnostics = diag.Errorf("Couldn't type assert oidc_settings")
+				return
+			}
+			for _, oidcSettings := range oidcSettingsList {
+				oidcSetting, ok := oidcSettings.(map[string]interface{})
+				if !ok {
+					diagnostics = diag.Errorf("couldn't type assert oidcSettings value")
+					return
+				}
+				enabled, ok := oidcSetting["enabled"].(bool)
+				if !ok {
+					diagnostics = diag.Errorf("couldn't type assert spec.http_settings.oidc_settings.enabled")
+					return
+				}
+				svc.Spec.HTTPSettings.OIDCSettings.Enabled = enabled
+
+				serviceDomainName, ok := oidcSetting["service_domain_name"].(string)
+				if !ok {
+					diagnostics = diag.Errorf("couldn't type assert spec.http_settings.oidc_settings.enabled")
+					return
+				}
+				svc.Spec.HTTPSettings.OIDCSettings.ServiceDomainName = serviceDomainName
+			}
+		}
+	}
+
+	log.Printf("#### toBeSetService %#v\n", svc)
+	newService, err := client.Service.Create(svc)
+	if err != nil {
+		diag.FromErr(errors.WithMessage(err, "couldn't create new service"))
+		return
+	}
+	log.Printf("#### newservice%#v\n", newService)
+	d.SetId(newService.ServiceID)
+	// make sure we don't overwrite the existing one
+	return resourceServiceRead(ctx, d, m)
+}
+
+// func do(d *schema.ResourceData, key string, subKeys []string) (values map[string]interface{}, diagnostics diag.Diagnostics) {
+// 	vals, ok := d.Get(key).([]interface{})
+// 	if !ok {
+// 		valType := reflect.TypeOf(d.Get(key))
+// 		err := errors.New(fmt.Sprintf("Couldn't type assert for %s with type of: %v", key, valType))
+// 		diagnostics = diag.FromErr(err)
+// 		return
+// 	}
+// 	values = map[string]interface{}{}
+// 	for _, item := range vals {
+// 		moreValues, ok := item.(map[string]interface{})
+// 		if !ok {
+// 			err := errors.New("Couldn't type assert element in metadatatags")
+// 			diagnostics = diag.FromErr(err)
+// 			return
+// 		}
+// 		values[]
+
+// 	}
+// 	return
+// }
+
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Println("updating resource")
+	return resourceServiceCreate(ctx, d, m)
+}
+
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Println("reading resource")
+	client := m.(*client.ClientHolder)
+	id := d.Id()
+	service, ok, err := client.Service.Get(id)
+	if err != nil {
+		diagnostics = diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
+		return
+	}
+	if !ok {
+		diagnostics = diag.Errorf("couldn't find expected resource")
+	}
+	log.Printf("#### readService: %#v", service)
+	d.Set("name", service.ServiceName)
+	d.Set("description", service.Description)
+	d.Set("cluster", service.ClusterName)
+	metadatatags := map[string]interface{}{
+		"domain":           service.CreateServiceSpec.Metadata.Tags.Domain,
+		"port":             service.CreateServiceSpec.Metadata.Tags.Port,
+		"protocol":         service.CreateServiceSpec.Metadata.Tags.Protocol,
+		"service_app_type": service.CreateServiceSpec.Metadata.Tags.ServiceAppType,
+		"user_facing":      service.CreateServiceSpec.Metadata.Tags.UserFacing,
+	}
+	d.Set("metadatatags", metadatatags)
+	spec := map[string]interface{}{
+		"attributes": map[string]interface{}{
+			"frontend_address": map[string]interface{}{
+				"cidr": service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].CIDR,
+				"port": service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port,
+			},
+			"host_tag_selector": map[string]interface{}{
+				"site_name": service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0],
+			},
+			"tls_sni": service.CreateServiceSpec.Spec.Attributes.TLSSNI,
+		},
+		"backend": map[string]interface{}{
+			"target": map[string]interface{}{
+				"client_certificate": service.CreateServiceSpec.Spec.Backend.Target.ClientCertificate,
+				"name":               service.CreateServiceSpec.Spec.Backend.Target.Name,
+				"port":               service.CreateServiceSpec.Spec.Backend.Target.Port,
+				"tls":                service.CreateServiceSpec.Spec.Backend.Target.TLS,
+				"tls_insecure":       service.CreateServiceSpec.Spec.Backend.Target.TLSInsecure,
+			},
+		},
+	}
+	d.Set("spec", spec)
+	d.SetId(service.ServiceID)
 	return
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-
+	client := m.(*client.ClientHolder)
+	err := client.Service.Delete(d.Id())
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+	}
 	return
 }

@@ -3,6 +3,7 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -69,6 +70,7 @@ func resourceOrgIdpConfig() *schema.Resource {
 }
 
 func resourceOrgIdpConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Printf("#### creating org\n")
 	client := m.(*client.ClientHolder)
 	idpName, ok := d.Get("idp_name").(string)
 	if !ok {

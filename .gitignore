@@ -10,11 +10,16 @@ terraform-provider-banyan
 terraform.tfstate
 terraform.tfstate.backup
 
+#########################
+# environment variables #
+#########################
+.env
+
 ###########################################################################################
 # terraform gitignore https://github.com/github/gitignore/blob/master/Terraform.gitignore #
 ###########################################################################################
 # Local .terraform directories
-**/.terraform/*
+examples/.terraform.bak/*
 
 # .tfstate files
 *.tfstate

@@ -63,6 +63,19 @@ func (this *RestClient) DoGet(path string) (response *http.Response, err error) 
 	return
 }
 
+func (this *RestClient) delete(path string) (request *http.Request, err error) {
+	return this.NewRequest(http.MethodDelete, path, nil)
+}
+
+func (this *RestClient) DoDelete(path string) (response *http.Response, err error) {
+	request, err := this.delete(path)
+	if err != nil {
+		return
+	}
+	response, err = this.Do(request)
+	return
+}
+
 // get creates a new Get request, saving the user of needing to pass in a nil value
 func (this *RestClient) Get(path string) (request *http.Request, err error) {
 	return this.NewRequest("GET", path, nil)
