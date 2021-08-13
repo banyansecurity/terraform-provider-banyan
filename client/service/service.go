@@ -150,8 +150,8 @@ type Spec struct {
 }
 
 type CIDRAddress struct {
-	CIDR  string `json:"cidr" toml:"cidr"`
-	Ports string `json:"ports" toml:"ports"`
+	CIDR  string `json:"cidr"`
+	Ports string `json:"ports"`
 }
 
 type ClientCIDRs struct {
