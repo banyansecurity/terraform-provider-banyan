@@ -1,7 +1,6 @@
 package client
 
 import (
-	// "os"
 	"log"
 	"os"
 	"testing"

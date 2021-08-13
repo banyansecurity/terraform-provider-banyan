@@ -320,17 +320,17 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 		svc.Metadata.Tags.Port = strconv.Itoa(port)
 		svc.Metadata.Tags.Protocol, ok = ii["protocol"].(string)
 		if !ok {
-			diagnostics = diag.FromErr(errors.New("couldn't type assert clientId"))
+			diagnostics = diag.FromErr(errors.New("couldn't type assert protocol"))
 			return
 		}
 		svc.Metadata.Tags.ServiceAppType, ok = ii["service_app_type"].(string)
 		if !ok {
-			diagnostics = diag.FromErr(errors.New("couldn't type assert clientSecret"))
+			diagnostics = diag.FromErr(errors.New("couldn't type assert service_app_type"))
 			return
 		}
 		userFacingMetadataTag, ok := ii["user_facing"].(bool)
 		if !ok {
-			diagnostics = diag.FromErr(errors.New("couldn't type assert clientSecret"))
+			diagnostics = diag.FromErr(errors.New("couldn't type assert user_facing"))
 			return
 		}
 		svc.Metadata.Tags.UserFacing = strconv.FormatBool(userFacingMetadataTag)
@@ -487,7 +487,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			}
 			letsencrypt, ok := certSettingsMap["letsencrypt"].(bool)
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert letscenrypt")
+				diagnostics = diag.Errorf("Couldn't type assert letscencrypt")
 				return
 			}
 			svc.Spec.CertSettings.LetsEncrypt = letsencrypt
