@@ -47,11 +47,34 @@ type Attributes struct {
 }
 
 type Backend struct {
-	AllowPatterns []interface{}          `json:"allow_patterns"` // unsure of what goes in here
-	DNSOverrides  map[string]interface{} `json:"dns_overrides"`  // needs to be figured out later
-	HTTPConnect   bool                   `json:"http_connect"`
-	Target        Target                 `json:"target"`
-	Whitelist     []interface{}          `json:"whitelist"`
+	AllowPatterns []BackendAllowPattern `json:"allow_patterns"` // unsure of what goes in here
+	DNSOverrides  map[string]string     `json:"dns_overrides"`  // needs to be figured out later
+	HTTPConnect   bool                  `json:"http_connect"`
+	Target        Target                `json:"target"`
+	Whitelist     []string              `json:"whitelist"`
+}
+
+type BackendAllowPattern struct {
+	// Allowed hostnames my include a leading and/or trailing wildcard character "*"
+	// to match multiple hostnames
+	Hostnames []string `json:"hostnames,omitempty"`
+	// Host may be a CIDR such as 10.1.1.0/24
+	CIDRs []string `json:"cidrs,omitempty"`
+	// List of allowed ports and port ranges
+	Ports *BackendAllowPorts `json:"ports,omitempty"`
+}
+
+type BackendAllowPorts struct {
+	// List of allowed ports
+	PortList []int `json:"port_list,omitempty"`
+	// List of allowed port ranges
+	PortRanges []PortRange `json:"port_ranges,omitempty"`
+}
+
+type PortRange struct {
+	// Min and Max values of the port range
+	Min int `json:"min"`
+	Max int `json:"max"`
 }
 
 type Target struct {
@@ -75,26 +98,40 @@ type CustomTLSCert struct {
 }
 
 type HTTPSettings struct {
-	Enabled         bool            `json:"enabled"`
-	ExemptedPaths   ExemptedPaths   `json:"exempted_paths"`
-	Headers         interface{}     `json:"headers"`
-	HTTPHealthCheck HTTPHealthCheck `json:"http_health_check"`
-	OIDCSettings    OIDCSettings    `json:"oidc_settings"`
+	Enabled         bool              `json:"enabled"`
+	ExemptedPaths   ExemptedPaths     `json:"exempted_paths"`
+	Headers         map[string]string `json:"headers"`
+	HTTPHealthCheck HTTPHealthCheck   `json:"http_health_check"`
+	OIDCSettings    OIDCSettings      `json:"oidc_settings"`
 }
 
 type ExemptedPaths struct {
-	Enabled  bool          `json:"enabled"`
-	Paths    []interface{} `json:"paths"`
-	Patterns []interface{} `json:"patterns"`
+	Enabled  bool      `json:"enabled"`
+	Paths    []string  `json:"paths"`
+	Patterns []Pattern `json:"patterns"`
+}
+
+// ExemptedPaths pattern used for usecases as CORS/Source IP exception
+type Pattern struct {
+	SourceCIDRs      []string `json:"source_cidrs,omitempty"`
+	Hosts            []Host   `json:"hosts"`
+	Methods          []string `json:"methods"`
+	Paths            []string `json:"paths"`
+	MandatoryHeaders []string `json:"mandatory_headers"`
+}
+
+type Host struct {
+	OriginHeader []string `json:"origin_header"`
+	Target       []string `json:"target"`
 }
 
 type HTTPHealthCheck struct {
-	Enabled     bool          `json:"enabled"`
-	FromAddress []interface{} `json:"from_address"`
-	HTTPS       bool          `json:"https"`
-	Method      string        `json:"method"`
-	Path        string        `json:"path"`
-	UserAgent   string        `json:"user_agent"`
+	Enabled     bool     `json:"enabled"`
+	FromAddress []string `json:"from_address"`
+	HTTPS       bool     `json:"https"`
+	Method      string   `json:"method"`
+	Path        string   `json:"path"`
+	UserAgent   string   `json:"user_agent"`
 }
 
 type OIDCSettings struct {
@@ -108,8 +145,19 @@ type Spec struct {
 	Attributes   Attributes    `json:"attributes"`
 	Backend      Backend       `json:"backend"`
 	CertSettings CertSettings  `json:"cert_settings"`
-	ClientCIDRs  []interface{} `json:"client_cidrs"`
+	ClientCIDRs  []ClientCIDRs `json:"client_cidrs"`
 	HTTPSettings HTTPSettings  `json:"http_settings"`
+}
+
+type CIDRAddress struct {
+	CIDR  string `json:"cidr" toml:"cidr"`
+	Ports string `json:"ports" toml:"ports"`
+}
+
+type ClientCIDRs struct {
+	Addresses       []CIDRAddress       `json:"addresses"`
+	HostTagSelector []map[string]string `json:"host_tag_selector"`
+	Clusters        []string            `json:"clusters"`
 }
 
 type CreateService struct {
@@ -274,18 +322,18 @@ func (this *Service) Create(svc CreateService) (service GetServiceSpec, err erro
 	log.Printf("@@@@ Creating a new service %#v\n", svc)
 	body, err := json.Marshal(svc)
 	if err != nil {
-	    log.Printf("@@@@ Creating a new service, found an error %#v\n", err)
+		log.Printf("@@@@ Creating a new service, found an error %#v\n", err)
 		return
 	}
 	request, err := this.restClient.NewRequest(http.MethodPost, path, bytes.NewBuffer(body))
 	if err != nil {
-	    log.Printf("@@@@ Creating a new service, found an error %#v\n", err)
+		log.Printf("@@@@ Creating a new service, found an error %#v\n", err)
 		return
 	}
 	log.Printf("@@@@ %#v", request.URL)
 	response, err := this.restClient.Do(request)
 	if response.StatusCode != 200 {
-	    log.Printf("@@@@ status code %#v, found an error %#v\n", response.StatusCode, err)
+		log.Printf("@@@@ status code %#v, found an error %#v\n", response.StatusCode, err)
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
 		return
 	}

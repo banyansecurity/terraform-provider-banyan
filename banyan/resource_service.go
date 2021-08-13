@@ -90,6 +90,7 @@ func resourceService() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
+						//TODO add template
 					},
 				},
 			},
@@ -117,8 +118,8 @@ func resourceService() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cidr": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
 													ValidateFunc: validateCIDR(),
 												},
 												"port": {
@@ -286,6 +287,9 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			Description: description,
 			Cluster:     cluster,
 		},
+		Kind:       "BanyanService",
+		APIVersion: "rbac.banyanops.com/v1",
+		Type:       "origin",
 	}
 
 	metadatatags, ok := d.Get("metadatatags").([]interface{})
@@ -548,6 +552,16 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 		}
 	}
 
+	//fill in null values
+	svc.Spec.Backend.AllowPatterns = []service.BackendAllowPattern{}
+	svc.Spec.Backend.DNSOverrides = map[string]string{}
+	svc.Spec.Backend.Whitelist = []string{}
+	svc.Spec.ClientCIDRs = []service.ClientCIDRs{}
+	svc.Spec.HTTPSettings.ExemptedPaths.Paths = []string{}
+	svc.Spec.HTTPSettings.ExemptedPaths.Patterns = []service.Pattern{}
+	svc.Spec.HTTPSettings.Headers = map[string]string{}
+	svc.Spec.HTTPSettings.HTTPHealthCheck = service.HTTPHealthCheck{}
+
 	log.Printf("#### toBeSetService %#v\n", svc)
 	newService, err := client.Service.Create(svc)
 	if err != nil {
@@ -559,28 +573,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 	// make sure we don't overwrite the existing one
 	return resourceServiceRead(ctx, d, m)
 }
-
-// func do(d *schema.ResourceData, key string, subKeys []string) (values map[string]interface{}, diagnostics diag.Diagnostics) {
-// 	vals, ok := d.Get(key).([]interface{})
-// 	if !ok {
-// 		valType := reflect.TypeOf(d.Get(key))
-// 		err := errors.New(fmt.Sprintf("Couldn't type assert for %s with type of: %v", key, valType))
-// 		diagnostics = diag.FromErr(err)
-// 		return
-// 	}
-// 	values = map[string]interface{}{}
-// 	for _, item := range vals {
-// 		moreValues, ok := item.(map[string]interface{})
-// 		if !ok {
-// 			err := errors.New("Couldn't type assert element in metadatatags")
-// 			diagnostics = diag.FromErr(err)
-// 			return
-// 		}
-// 		values[]
-
-// 	}
-// 	return
-// }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Println("updating resource")
