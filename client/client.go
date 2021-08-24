@@ -13,10 +13,10 @@ import (
 
 const defaultHostUrl = "http://net.banyanops.com/"
 
-type BnnClient interface {
-	OidcSettingsClienter
-	OrgIdpConfigClienter
-}
+// type BnnClient interface {
+// 	OidcSettingsClienter
+// 	OrgIdpConfigClienter
+// }
 
 // Client is the struct that you use to interact with the banyan restapi.
 type Client struct {

@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
-	bnnClient "github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/admin/orgidpconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -154,8 +153,8 @@ func resourceOrgIdpConfigUpdate(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func resourceOrgIdpConfigRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*bnnClient.Client)
-	orgIdpConfig, err := client.GetOrgIdpConfig()
+	client := m.(*client.ClientHolder)
+	orgIdpConfig, err := client.Admin.OrgIdpConfig.Get()
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
