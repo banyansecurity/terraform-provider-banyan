@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func portValidation() func(val interface{}, key string) (warns []string, errs []error) {
+func validatePort() func(val interface{}, key string) (warns []string, errs []error) {
 	return func(val interface{}, key string) (warns []string, errs []error) {
 		v := val.(int)
 		if v < 0 || v > math.MaxUint16 {
@@ -32,6 +32,16 @@ func validateCIDR() func(val interface{}, key string) (warns []string, errs []er
 		_, _, err := net.ParseCIDR(v)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%q must be a CIDR, got: %q", key, v))
+		}
+		return
+	}
+}
+
+func validateTemplate() func(val interface{}, key string) (warns []string, errs []error) {
+	return func(val interface{}, key string) (warns []string, errs []error) {
+		v := val.(string)
+		if v != "WEB_USER" && v != "" {
+			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "WEB_USER", v))
 		}
 		return
 	}
@@ -76,7 +86,7 @@ func resourceService() *schema.Resource {
 						"port": {
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: portValidation(),
+							ValidateFunc: validatePort(),
 						},
 						"protocol": {
 							Type:     schema.TypeString,
@@ -90,7 +100,11 @@ func resourceService() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						//TODO add template
+						"template": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateTemplate(),
+						},
 					},
 				},
 			},
@@ -125,7 +139,7 @@ func resourceService() *schema.Resource {
 												"port": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: portValidation(),
+													ValidateFunc: validatePort(),
 												},
 											},
 										},
@@ -180,7 +194,7 @@ func resourceService() *schema.Resource {
 												"port": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: portValidation(),
+													ValidateFunc: validatePort(),
 												},
 												"tls": {
 													Type:     schema.TypeBool,
@@ -334,6 +348,12 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			return
 		}
 		svc.Metadata.Tags.UserFacing = strconv.FormatBool(userFacingMetadataTag)
+
+		svc.Metadata.Tags.Template, ok = ii["template"].(string)
+		if !ok {
+			diagnostics = diag.Errorf("Couldn't type assert template")
+			return
+		}
 	}
 
 	svc.Spec.Attributes.TLSSNI = append(svc.Spec.Attributes.TLSSNI, "sni")
@@ -472,6 +492,19 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 					return
 				}
 				svc.Spec.Backend.Target.TLSInsecure = TLSInsecure
+
+				svc.Spec.Backend.Target.Name, ok = targetItemMap["name"].(string)
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert spec.backend.target.name")
+					return
+				}
+
+				targetPortInt, ok := targetItemMap["port"].(int)
+				if !ok {
+					diagnostics = diag.Errorf("Couldn't type assert spec.backend.target.port")
+					return
+				}
+				svc.Spec.Backend.Target.Port = strconv.Itoa(targetPortInt)
 			}
 		}
 		certSettings, ok := ii["cert_settings"].([]interface{})

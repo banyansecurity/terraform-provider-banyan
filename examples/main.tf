@@ -67,6 +67,7 @@ resource "banyan_service" "test-service" {
     protocol = "https"
     service_app_type = "WEB"
     user_facing = false
+    template= "WEB_USER"
   }
   spec {
     attributes {
@@ -89,9 +90,9 @@ resource "banyan_service" "test-service" {
     backend {
       target {
         client_certificate = true
-        name = "targetbackend"
-        port = 15151
-        tls = false
+        name = "targetbacknd"
+        port = 1515
+        tls = true
         tls_insecure = true
       }
     }
