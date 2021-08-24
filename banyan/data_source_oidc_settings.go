@@ -62,9 +62,8 @@ func dataSourceOidcSettings() *schema.Resource {
 }
 
 func dataSourceOidcSettingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*client.Client)
-
-	oidcSettings, err := client.GetOidcSettings()
+	client := m.(*client.ClientHolder)
+	oidcSettings, err := client.Admin.OidcSettings.Get()
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
@@ -73,7 +72,7 @@ func dataSourceOidcSettingsRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("authorization_endpoint", oidcSettings.AuthorizationEndpoint)
 	d.Set("token_endpoint", oidcSettings.TokenEndpoint)
 	d.Set("jwks_endpoint", oidcSettings.JwksEndpoint)
-	d.Set("redirect_url", "https://issuer.trust-samltest062320.bnntest.com/bnn/callback")
+	d.Set("redirect_url", oidcSettings.IssuerUrl+"/callback")
 	d.Set("scope", oidcSettings.Scope)
 	d.Set("userinfo _endpoint", oidcSettings.UserinfoEndpoint)
 	d.Set("openid_configuration_endpoint", oidcSettings.OpenidConfigurationEndpoint)

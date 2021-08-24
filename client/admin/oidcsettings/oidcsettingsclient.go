@@ -1,19 +1,25 @@
-package client
+package oidcsettings
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
+	restclient "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"github.com/pkg/errors"
 )
 
 type OidcSettingsClienter interface {
-	GetOidcSettings() (OidcSettings, error)
+	Get() (Spec, error)
+}
+
+func Client(restClient *restclient.RestClient) OidcSettingsClienter {
+	newClient := OidcSettings{restClient: restClient}
+	return &newClient
 }
 
 // OidcSettings are the settings that are used for for OIDC clients
-type OidcSettings struct {
+type Spec struct {
 	IssuerUrl                   string `json:"issuer_url"`
 	AuthorizationEndpoint       string `json:"authorization_endpoint"`
 	TokenEndpoint               string `json:"token_endpoint"`
@@ -24,21 +30,17 @@ type OidcSettings struct {
 	OpenidConfigurationEndpoint string `json:"openid_configuration_endpoint"`
 }
 
-// GetOidcSettings gets the oidc settings from a command center
-func (this *Client) GetOidcSettings() (oidcSettings OidcSettings, err error) {
+type OidcSettings struct {
+	restClient *restclient.RestClient
+}
+
+func (this *OidcSettings) Get() (oidcSettings Spec, err error) {
 	path := "api/v1/oidc_settings"
-	url := this.hostUrl + path
 
-	client := this.httpClient
-
-	request, err := this.newRequest("GET", url, nil)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
+	request, err := this.restClient.Get(path)
 
 	// initiate request for response
-	response, err := client.Do(request)
+	response, err := this.restClient.Do(request)
 
 	// // code here to error handle
 	if err != nil {

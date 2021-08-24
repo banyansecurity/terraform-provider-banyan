@@ -1,10 +1,12 @@
 package banyan
 
 import (
+	"log"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/joho/godotenv"
 )
 
 var testAccProviders map[string]*schema.Provider
@@ -28,6 +30,11 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	if err := os.Getenv("BANYAN_REFRESH_TOKEN"); err == "" {
 		t.Fatal("BANYAN_REFRESH_TOKEN must be set for acceptance tests")
 	}

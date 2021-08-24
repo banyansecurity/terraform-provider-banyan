@@ -3,14 +3,16 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
 
 	"github.com/pkg/errors"
 
+	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"github.com/banyansecurity/terraform-banyan-provider/client/admin/orgidpconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bnnClient "github.com/banyansecurity/terraform-banyan-provider/client"
 )
 
 func resourceOrgIdpConfig() *schema.Resource {
@@ -67,7 +69,8 @@ func resourceOrgIdpConfig() *schema.Resource {
 }
 
 func resourceOrgIdpConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*bnnClient.Client)
+	log.Printf("#### creating org\n")
+	client := m.(*client.ClientHolder)
 	idpName, ok := d.Get("idp_name").(string)
 	if !ok {
 		err := errors.New("Couldn't type assert idp_name")
@@ -118,12 +121,11 @@ func resourceOrgIdpConfigCreate(ctx context.Context, d *schema.ResourceData, m i
 			diagnostics = diag.FromErr(errors.New("couldn't type assert clientSecret"))
 			return
 		}
-
 	}
 
 	// make sure we don't overwrite the existing one
 	if redirectUrl == "" {
-		originalOrgIdpConfig, err := client.GetOrgIdpConfig()
+		originalOrgIdpConfig, err := client.Admin.OrgIdpConfig.Get()
 		if err != nil {
 			diagnostics = diag.FromErr(err)
 			return
@@ -131,17 +133,17 @@ func resourceOrgIdpConfigCreate(ctx context.Context, d *schema.ResourceData, m i
 		redirectUrl = originalOrgIdpConfig.IdpConfig.RedirectUrl
 	}
 
-	orgIdpConfig := bnnClient.OrgIdpConfig{
+	orgIdpConfig := orgidpconfig.Spec{
 		IdpName:     idpName,
 		IdpProtocol: idpProtocol,
-		IdpConfig: bnnClient.IdpConfig{
+		IdpConfig: orgidpconfig.IdpConfig{
 			RedirectUrl:  redirectUrl,
 			IssuerUrl:    issuerUrl,
 			ClientId:     clientId,
 			ClientSecret: clientSecret,
 		},
 	}
-	client.CreateUpdateOrgIdpConfig(orgIdpConfig)
+	client.Admin.OrgIdpConfig.CreateOrUpdate(orgIdpConfig)
 	// read to get the final state
 	return resourceOrgIdpConfigRead(ctx, d, m)
 }
@@ -151,8 +153,8 @@ func resourceOrgIdpConfigUpdate(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func resourceOrgIdpConfigRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*bnnClient.Client)
-	orgIdpConfig, err := client.GetOrgIdpConfig()
+	client := m.(*client.ClientHolder)
+	orgIdpConfig, err := client.Admin.OrgIdpConfig.Get()
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return

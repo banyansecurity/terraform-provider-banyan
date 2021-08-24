@@ -1,4 +1,4 @@
-package client
+package orgidpconfig
 
 import (
 	"encoding/json"
@@ -8,15 +8,26 @@ import (
 	"net/url"
 	"strings"
 
+	restclient "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+
 	"github.com/pkg/errors"
 )
 
 // OrgIdpConfigClienter only supports OIDC currently
 type OrgIdpConfigClienter interface {
-	GetOrgIdpConfig() (OrgIdpConfig, error)
-	CreateUpdateOrgIdpConfig(OrgIdpConfig) error
-	// TBD if this is necessary since it's tough to delete org wide things...
-	// DeleteOrgIdpConfig() error
+	Get() (Spec, error)
+	CreateOrUpdate(Spec) error
+	// TBD if this is necessary since it's tough to delete org wide things like this. I guess we can just use creat or update to set values to essentially empty values...
+	// Delete() error
+}
+
+func Client(restClient *restclient.RestClient) OrgIdpConfigClienter {
+	newClient := OrgIdpConfig{restClient: restClient}
+	return &newClient
+}
+
+type OrgIdpConfig struct {
+	restClient *restclient.RestClient
 }
 
 type orgIdpConfigJson struct {
@@ -26,7 +37,7 @@ type orgIdpConfigJson struct {
 }
 
 // Business domain representation of the restquery
-type OrgIdpConfig struct {
+type Spec struct {
 	IdpName     string
 	IdpProtocol string
 	IdpConfig   IdpConfig
@@ -40,16 +51,13 @@ type IdpConfig struct {
 }
 
 // GetOrfIdpConfig returns back the configuration for an organizations IdP
-func (this *Client) GetOrgIdpConfig() (orgIdpConfig OrgIdpConfig, err error) {
+func (this *OrgIdpConfig) Get() (orgIdpConfig Spec, err error) {
 	path := "api/v1/user_org_details"
-	url := this.hostUrl + path
 
-	request, err := this.newRequest("GET", url, nil)
-	if err != nil {
-		return
-	}
+	request, err := this.restClient.Get(path)
 
-	response, err := this.httpClient.Do(request)
+	// initiate request for response
+	response, err := this.restClient.Do(request)
 	if err != nil {
 		return
 	}
@@ -82,19 +90,16 @@ func (this *Client) GetOrgIdpConfig() (orgIdpConfig OrgIdpConfig, err error) {
 }
 
 // CreateUpdateOrgIdpConfig creates or updates the org's IdP
-func (this *Client) CreateUpdateOrgIdpConfig(orgIdpConfig OrgIdpConfig) (err error) {
+func (this *OrgIdpConfig) CreateOrUpdate(orgIdpConfig Spec) (err error) {
 	path := "api/v1/update_org"
-	url := this.hostUrl + path
 
 	body, err := mapToFormEncodedOrgIdpConfigBody(orgIdpConfig)
 
-	request, err := this.newRequest("POST", url, strings.NewReader(body))
-	if err != nil {
-		return
-	}
+	request, err := this.restClient.NewRequest("POST", path, strings.NewReader(body))
+
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	response, err := this.httpClient.Do(request)
+	response, err := this.restClient.Do(request)
 	if err != nil {
 		return
 	}
@@ -106,7 +111,7 @@ func (this *Client) CreateUpdateOrgIdpConfig(orgIdpConfig OrgIdpConfig) (err err
 	return
 }
 
-func mapToFormEncodedOrgIdpConfigBody(orgIdpConfig OrgIdpConfig) (body string, err error) {
+func mapToFormEncodedOrgIdpConfigBody(orgIdpConfig Spec) (body string, err error) {
 
 	idpConfigBytes, err := json.Marshal(orgIdpConfig.IdpConfig)
 	if err != nil {

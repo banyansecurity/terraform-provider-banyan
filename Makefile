@@ -7,7 +7,7 @@ MAKEFLAGS += --no-builtin-rules
 
 #Constants
 ARTIFACT_NAME = terraform-provider-banyan
-GO_VERSION = go1.15.5
+GO_VERSION = go1.16.6
 
 HOSTNAME=github.com
 NAMESPACE=banyansecurity
@@ -32,10 +32,17 @@ set-go-version: install-go
 	source ~/.gvm/scripts/gvm && gvm use $(GO_VERSION)
 .PHONY: set-go-version
 
-build: set-go-version
+build: set-go-version clean-examples
 	go build -o $(ARTIFACT_NAME)
 	cp $(ARTIFACT_NAME) examples/
 .PHONY: build
+
+clean-examples:
+	echo "Cleaning"
+	rm -rf examples/.terraform
+	rm -f examples/.terraform.lock.hcl
+	rm -f examples/terraform-provider-banyan examples/terraform.tfstate examples/terraform.tfstate.backup
+.PHONY: clean-examples
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
@@ -46,7 +53,7 @@ test: set-go-version
 	go test ./...
 .PHONY: test
 
-test-terraform-init: build
+test-terraform-init: install build
 	cd examples && terraform init
 .PHONY: test-init
 

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	bnnClient "github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bnnClient "github.com/banyansecurity/terraform-banyan-provider/client"
 )
 
 // Provider for banhyan
@@ -25,7 +25,8 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"banyan_org_idp_config": resourceOrgIdpConfig(),
+// 			"banyan_org_idp_config": resourceOrgIdpConfig(),
+			"banyan_service":        resourceService(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"banyan_oidc_settings": dataSourceOidcSettings(),
@@ -52,7 +53,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (client inte
 		domain = domainTypeAsserted
 	}
 
-	client, err := bnnClient.New(domain, refreshToken)
+	client, err := bnnClient.NewClientHolder(domain, refreshToken)
 	if err != nil {
 		diagnostic = append(diagnostic, diag.Diagnostic{
 			Severity: diag.Error,
