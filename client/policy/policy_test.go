@@ -1,47 +1,30 @@
 package policy_test
 
 import (
-	"log"
-	"os"
 	"testing"
 
-	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
-	"github.com/joho/godotenv"
+	"github.com/banyansecurity/terraform-banyan-provider/client/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_GetNonexistentService(t *testing.T) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 	emptyPolicy := policy.GetPolicy{}
-
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken)
+	client, err := testutil.GetClientHolderForTest()
 	assert.NoError(t, err, "Expected to not get an error here")
 	policy, ok, err := client.Policy.Get("heh")
 	assert.NoError(t, err, "expected no error here")
 	assert.False(t, ok, "expected to get a value here")
+
 	assert.Equal(t, emptyPolicy, policy, "expected to get service x")
 }
 
-// https://dev05.console.bnntest.com/api/v1/security_policies?PolicyID=
-
 func Test_GetExistingPolicy(t *testing.T) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	client, err := testutil.GetClientHolderForTest()
+	assert.NoError(t, err, "Expected to not get an error here")
 	emptyPolicy := policy.GetPolicy{}
 	emptyPolicy.CreatedBy = "me"
 
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken)
-	assert.NoError(t, err, "Expected to not get an error here")
 	policy, ok, err := client.Policy.Get("dc612429-e8cf-4a0c-89b4-a41f14eb58bd")
 	assert.NoError(t, err, "expected no error here")
 	assert.True(t, ok, "expected to get a value here")
@@ -49,16 +32,8 @@ func Test_GetExistingPolicy(t *testing.T) {
 }
 
 func Test_CreatePolicy(t *testing.T) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken)
-	if err != nil {
-		t.Fatalf("%+v", err)
-	}
+	client, err := testutil.GetClientHolderForTest()
+	assert.NoError(t, err, "Expected to not get an error here")
 	testPolicy := policy.CreatePolicy{
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanPolicy",
@@ -112,16 +87,8 @@ func Test_CreatePolicy(t *testing.T) {
 }
 
 func Test_Delete(t *testing.T) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken)
-	if err != nil {
-		t.Fatalf("%+v", err)
-	}
+	client, err := testutil.GetClientHolderForTest()
+	assert.NoError(t, err, "Expected to not get an error here")
 	testPolicy := policy.CreatePolicy{
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanPolicy",
@@ -173,7 +140,7 @@ func Test_Delete(t *testing.T) {
 	}
 	_, ok, err = client.Policy.Get(createdPolicy.ID)
 	if err != nil {
-		t. Fatalf("%+v", err)
+		t.Fatalf("%+v", err)
 	}
 	assert.False(t, ok, "expected to not find the policy here")
 }
