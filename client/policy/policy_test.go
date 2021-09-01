@@ -98,7 +98,7 @@ func Test_CreatePolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
-	resultOfGet, ok, err := client.Policy.Get(resultOfCreate.PolicyID)
+	resultOfGet, ok, err := client.Policy.Get(resultOfCreate.ID)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
@@ -160,18 +160,18 @@ func Test_Delete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
-	_, ok, err := client.Policy.Get(createdPolicy.PolicyID)
+	_, ok, err := client.Policy.Get(createdPolicy.ID)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 	if !ok {
 		t.Fatal("expected to find policy")
 	}
-	err = client.Policy.Delete(createdPolicy.PolicyID)
+	err = client.Policy.Delete(createdPolicy.ID)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
-	_, ok, err = client.Policy.Get(createdPolicy.PolicyID)
+	_, ok, err = client.Policy.Get(createdPolicy.ID)
 	if err != nil {
 		t. Fatalf("%+v", err)
 	}

@@ -59,9 +59,9 @@ type GetPolicy struct {
 	Description        string `json:"Description"`
 	LastUpdatedAt      int    `json:"LastUpdatedAt"`
 	LastUpdatedBy      string `json:"LastUpdatedBy"`
-	PolicyID           string `json:"PolicyID"`
-	PolicyName         string `json:"PolicyName"`
-	PolicySpec         string `json:"PolicySpec"`
-	PolicyVersion      int    `json:"PolicyVersion"`
+	ID           string `json:"PolicyID"`
+	Name         string `json:"PolicyName"`
+	Spec         string `json:"PolicySpec"`
+	Version      int    `json:"PolicyVersion"`
 	UnmarshalledPolicy CreatePolicy
 }

@@ -29,7 +29,7 @@ func NewClient(restClient *restclient.RestClient) PolicyClienter {
 type PolicyClienter interface {
 	Get(id string) (policy GetPolicy, ok bool, err error)
 	Create(policy CreatePolicy) (createdPolicy GetPolicy, err error)
-	Update(id string, policy CreatePolicy) (updatedPolicy GetPolicy, err error)
+	Update(policy CreatePolicy) (updatedPolicy GetPolicy, err error)
 	Delete(id string) (err error)
 }
 
@@ -76,10 +76,10 @@ func (this *policy) Get(id string) (policy GetPolicy, ok bool, err error) {
 		return
 	}
 	policy = getPolicyJson[0]
-	policy.PolicySpec = html.UnescapeString(policy.PolicySpec)
+	policy.Spec = html.UnescapeString(policy.Spec)
 
 	var spec CreatePolicy
-	err = json.Unmarshal([]byte(policy.PolicySpec), &spec)
+	err = json.Unmarshal([]byte(policy.Spec), &spec)
 	if err != nil {
 		return
 	}
@@ -117,9 +117,9 @@ func (this *policy) Create(policy CreatePolicy) (createdPolicy GetPolicy, err er
 	if err != nil {
 		return
 	}
-	createdPolicy.PolicySpec = html.UnescapeString(createdPolicy.PolicySpec)
+	createdPolicy.Spec = html.UnescapeString(createdPolicy.Spec)
 	var spec CreatePolicy
-	err = json.Unmarshal([]byte(createdPolicy.PolicySpec), &spec)
+	err = json.Unmarshal([]byte(createdPolicy.Spec), &spec)
 	if err != nil {
 		return
 	}
@@ -128,7 +128,7 @@ func (this *policy) Create(policy CreatePolicy) (createdPolicy GetPolicy, err er
 	return
 }
 
-func (this *policy) Update(id string, policy CreatePolicy) (updatedPolicy GetPolicy, err error) {
+func (this *policy) Update(policy CreatePolicy) (updatedPolicy GetPolicy, err error) {
 	return this.Create(policy)
 }
 
