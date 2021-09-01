@@ -75,18 +75,18 @@ func (this *policy) Get(id string) (policy GetPolicy, ok bool, err error) {
 		err = errors.New("got more than one service")
 		return
 	}
-	getPolicyJson[0].PolicySpec = html.UnescapeString(getPolicyJson[0].PolicySpec)
-	fmt.Printf("%#v\n\n", getPolicyJson)
+	policy = getPolicyJson[0]
+	policy.PolicySpec = html.UnescapeString(policy.PolicySpec)
 
 	var spec CreatePolicy
-	err = json.Unmarshal([]byte(getPolicyJson[0].PolicySpec), &spec)
+	err = json.Unmarshal([]byte(policy.PolicySpec), &spec)
 	if err != nil {
 		return
 	}
-	fmt.Printf("%#v\n", spec)
 
-	getPolicyJson[0].UnmarshalledPolicy = spec
+	policy.UnmarshalledPolicy = spec
 	ok = true
+
 	return
 }
 
@@ -94,12 +94,12 @@ func (this *policy) Create(policy CreatePolicy) (createdPolicy GetPolicy, err er
 	path := "api/v1/insert_security_policy"
 	body, err := json.Marshal(policy)
 	if err != nil {
-		log.Printf("@@@@ Creating a new policy, found an error %#v\n", err)
+		log.Printf("[POLICY|POST] Creating a new policy, found an error %#v\n", err)
 		return
 	}
 	request, err := this.restClient.NewRequest(http.MethodPost, path, bytes.NewBuffer(body))
 	if err != nil {
-		log.Printf("")
+		log.Printf("[POLICY|POST] Creating a new request, found an error %#v\n", err)
 	}
 	response, err := this.restClient.Do(request)
 	if response.StatusCode != 200 {
@@ -113,14 +113,11 @@ func (this *policy) Create(policy CreatePolicy) (createdPolicy GetPolicy, err er
 	if err != nil {
 		return
 	}
-	fmt.Printf("1 %#v\n", string(responseData))
 	err = json.Unmarshal(responseData, &createdPolicy)
 	if err != nil {
 		return
 	}
-	fmt.Printf("2 %#v\n", createdPolicy)
 	createdPolicy.PolicySpec = html.UnescapeString(createdPolicy.PolicySpec)
-	fmt.Printf("3 %#v\n", createdPolicy)
 	var spec CreatePolicy
 	err = json.Unmarshal([]byte(createdPolicy.PolicySpec), &spec)
 	if err != nil {
@@ -154,7 +151,3 @@ func (this *policy) Delete(id string) (err error) {
 	}
 	return
 }
-
-/*
-{"kind":"BanyanPolicy","apiVersion":"rbac.banyanops.com/v1","metadata":{"name":"policy-name","description":"description","tags":{"template":"USER"}},"type":"USER","spec":{"access":[{"roles":["ANY","Everyone","tomemail"],"rules":{"l7_access":[{"resources":["*"],"actions":["*"]}],"conditions":{"trust_level":"High"}}}],"exception":{"src_addr":[]},"options":{"disable_tls_client_authentication":true,"l7_protocol":"http"}}}
-*/

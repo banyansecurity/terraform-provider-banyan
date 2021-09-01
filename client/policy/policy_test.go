@@ -105,6 +105,9 @@ func Test_CreatePolicy(t *testing.T) {
 	if !ok {
 		t.Fatalf("Didn't find the policy")
 	}
+	// these will potentially conflict
+	resultOfCreate.LastUpdatedAt = 0
+	resultOfGet.LastUpdatedAt = 0
 	assert.Equal(t, resultOfCreate, resultOfGet)
 }
 
