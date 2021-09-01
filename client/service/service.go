@@ -305,7 +305,6 @@ func (this *Service) Delete(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
-	fmt.Printf("%v", myUrl.String())
 	resp, err := this.restClient.DoDelete(myUrl.String())
 	if err != nil {
 		return
