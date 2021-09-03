@@ -109,3 +109,48 @@ resource "banyan_service" "test-service" {
     }
   }
 }
+
+resource "banyan_policy" "test-policy" {
+  name = "realtfpolicytest"
+  description = "realdescription"
+  metadatatags {
+    template = "USER"
+  }
+  spec {
+    access {
+      roles = ["ANY", "HI"]
+      rules {
+        conditions {
+          trust_level = "High"
+        }
+        l7_access {
+          resources = ["*", "endpoint"]
+          actions = ["*", "POST"]
+        }
+        l7_access {
+          resources = ["*", "number2"]
+          actions = ["*", "NUMBER2"]
+        }
+      }
+    }
+    access {
+      roles = ["ROLE2"]
+      rules {
+        conditions {
+          trust_level = "Low"
+        }
+        l7_access {
+          resources = ["*", "endpoint"]
+          actions = ["*", "POST"]
+        }
+      }
+    }
+    exception {
+      src_addr = ["127.0.0.1/32"]
+    }
+    options {
+      disable_tls_client_authentication = true
+      l7_protocol = "http"
+    }
+  }
+}

@@ -34,6 +34,7 @@ type PolicyClienter interface {
 }
 
 func (this *policy) Get(id string) (policy GetPolicy, ok bool, err error) {
+	log.Printf("[POLICY|GET] reading policy")
 	if id == "" {
 		err = errors.New("need an id to get a policy")
 		return
@@ -86,7 +87,7 @@ func (this *policy) Get(id string) (policy GetPolicy, ok bool, err error) {
 
 	policy.UnmarshalledPolicy = spec
 	ok = true
-
+	log.Printf("[POLICY|GET] read policy")
 	return
 }
 
@@ -124,15 +125,19 @@ func (this *policy) Create(policy CreatePolicy) (createdPolicy GetPolicy, err er
 		return
 	}
 	createdPolicy.UnmarshalledPolicy = spec
-
+	log.Printf("[POLICY|POST] created a new policy %#v", createdPolicy)
 	return
 }
 
 func (this *policy) Update(policy CreatePolicy) (updatedPolicy GetPolicy, err error) {
-	return this.Create(policy)
+	log.Printf("[POLICY|UPDATE] updating policy")
+	updatedPolicy, err = this.Create(policy)
+	log.Printf("[POLICY|UPDATE] updated policy")
+	return
 }
 
 func (this *policy) Delete(id string) (err error) {
+	log.Printf("[POLICY|DELETE] deleting policy with id %s", id)
 	path := "api/v1/delete_security_policy"
 	myUrl, err := url.Parse(path)
 	if err != nil {
@@ -149,5 +154,6 @@ func (this *policy) Delete(id string) (err error) {
 		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %v", resp))
 		return
 	}
+	log.Printf("[POLICY|DELETE] deleted policy with id %s", id)
 	return
 }
