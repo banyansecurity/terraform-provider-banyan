@@ -205,18 +205,17 @@ var domainRegex = regexp.MustCompile(`^(http:\/\/www\.|https:\/\/www\.|http:\/\/
 var ipRegex = regexp.MustCompile(`^[0-9\/\.]+$`)
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[POLICY|RES] creating resource")
+	log.Println("[POLICY|RES|CREATE] creating policy")
 	client := m.(*client.ClientHolder)
 	name, ok := d.Get("name").(string)
 	if !ok {
-		err := errors.New("Couldn't type assert name")
-		diagnostics = diag.FromErr(err)
+		diagnostics = diag.Errorf("Couldn't type assert name")
 		return
 	}
 	description, ok := d.Get("description").(string)
 	if !ok {
-		err := errors.New("Couldn't type assert description")
-		diagnostics = diag.FromErr(err)
+		diagnostics = diag.Errorf("Couldn't type assert description")
+
 		return
 	}
 	policyToCreate := policy.CreatePolicy{
@@ -232,15 +231,13 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	metadatatags, ok := d.Get("metadatatags").([]interface{})
 	if !ok {
 		metadatatags := reflect.TypeOf(d.Get("metadatatags"))
-		err := errors.New("Couldn't type assert metadatags, type is " + fmt.Sprintf("%+v", metadatatags))
-		diagnostics = diag.FromErr(err)
+		diagnostics = diag.Errorf("Couldn't type assert metadatags, type is " + fmt.Sprintf("%+v", metadatatags))
 		return
 	}
 	for _, item := range metadatatags {
 		ii, ok := item.(map[string]interface{})
 		if !ok {
-			err := errors.New("Couldn't type assert element in metadatatags")
-			diagnostics = diag.FromErr(err)
+			diagnostics = diag.Errorf("Couldn't type assert element in metadatatags")
 			return
 		}
 
@@ -261,20 +258,20 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	for _, item := range spec {
 		ii, ok := item.(map[string]interface{})
 		if !ok {
-			err := errors.New("Couldn't type assert element in metadatatags")
+			err := errors.New("Couldn't type assert element in spec")
 			diagnostics = diag.FromErr(err)
 			return
 		}
 
 		exception, ok := ii["exception"].([]interface{})
 		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert certsettings")
+			diagnostics = diag.Errorf("Couldn't type assert exception")
 			return
 		}
 		for _, exceptionItem := range exception {
 			exceptionItemMap, ok := exceptionItem.(map[string]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert certsettings map")
+				diagnostics = diag.Errorf("Couldn't type assert exception item map")
 				return
 			}
 			srdAddrs, ok := exceptionItemMap["src_addr"].(*schema.Set)
@@ -285,7 +282,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 			for _, srcAddr := range srdAddrs.List() {
 				srcAddrValue, ok := srcAddr.(string)
 				if !ok {
-					diagnostics = diag.FromErr(errors.New("couldn't type assert dnsNameValue"))
+					diagnostics = diag.FromErr(errors.New("couldn't type assert srcAddrValue"))
 					return
 				}
 				if !ipRegex.MatchString(srcAddrValue) && !domainRegex.MatchString(srcAddrValue) {
@@ -293,14 +290,14 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 				}
 				policyToCreate.Spec.Exception.SourceAddress = append(policyToCreate.Spec.Exception.SourceAddress, srcAddrValue)
 			}
-			// check if there is more than one error
+			// check if there is more than one error and return an error. Terraform cannot validate lists or sets currently
 			if len(diagnostics) > 0 {
 				return
 			}
 		}
 		options, ok := ii["options"].([]interface{})
 		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert backend")
+			diagnostics = diag.Errorf("Couldn't type assert options")
 			return
 		}
 		for _, optionsItem := range options {
@@ -345,7 +342,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 			for _, role := range roles.List() {
 				roleValue, ok := role.(string)
 				if !ok {
-					diagnostics = diag.FromErr(errors.New("couldn't type assert roles"))
+					diagnostics = diag.FromErr(errors.New("couldn't type assert role value"))
 					return
 				}
 				// validate here because as of terraform 1.0.6 it cannot validate on Lists or Sets
@@ -357,35 +354,34 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 			}
 			// early return if there are any values in diagnostics. probably came from validating role values
 			if len(diagnostics) != 0 {
-				log.Printf("[POLICY|RES] diagnostic errors exist: %#v", diagnostics)
 				return
 			}
 			access.Roles = append(access.Roles, rolesSlice...)
 			rules, ok := accessItemMap["rules"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert rules value %+v", reflect.TypeOf(rules))
+				diagnostics = diag.Errorf("Couldn't type assert rules list value %+v", reflect.TypeOf(rules))
 				return
 			}
 			for _, rulesItem := range rules {
 				rulesItemMap, ok := rulesItem.(map[string]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert rules value %+v", reflect.TypeOf(rulesItemMap))
+					diagnostics = diag.Errorf("Couldn't type assert rules item %+v", reflect.TypeOf(rulesItem))
 					return
 				}
 				conditions, ok := rulesItemMap["conditions"].([]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert conditions %+v", reflect.TypeOf(conditions))
+					diagnostics = diag.Errorf("Couldn't type assert conditions %+v", reflect.TypeOf(rulesItemMap["conditions"]))
 					return
 				}
 				for _, condition := range conditions {
 					conditionItemMap, ok := condition.(map[string]interface{})
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert conditions %+v", reflect.TypeOf(conditionItemMap))
+						diagnostics = diag.Errorf("Couldn't type assert conditions %+v", reflect.TypeOf(condition))
 						return
 					}
 					trustLevel, ok := conditionItemMap["trust_level"].(string)
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert trust_level %+v", reflect.TypeOf(trustLevel))
+						diagnostics = diag.Errorf("Couldn't type assert trust_level %+v", reflect.TypeOf(conditionItemMap["trust_level"]))
 						return
 					}
 					access.Rules.Conditions.TrustLevel = trustLevel
@@ -393,19 +389,19 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 				l7Access, ok := rulesItemMap["l7_access"].([]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert l7Access %+v", reflect.TypeOf(l7Access))
+					diagnostics = diag.Errorf("Couldn't type assert l7Access %+v", reflect.TypeOf(rulesItemMap["l7_access"]))
 					return
 				}
 				for _, l7AccessItem := range l7Access {
 					l7AccessToCreate := policy.L7Access{}
 					l7AccessItemMap, ok := l7AccessItem.(map[string]interface{})
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert l7access item %+v", reflect.TypeOf(l7AccessItemMap))
+						diagnostics = diag.Errorf("Couldn't type assert l7access item %+v", reflect.TypeOf(l7AccessItem))
 						return
 					}
 					actionsSet, ok := l7AccessItemMap["actions"].((*schema.Set))
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert actions %+v", reflect.TypeOf(actionsSet))
+						diagnostics = diag.Errorf("Couldn't type assert actions %+v", reflect.TypeOf(l7AccessItemMap["actions"]))
 						return
 					}
 					actions := []string{}
@@ -418,7 +414,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 						if actionValue != "create" && actionValue != "write" &&
 							actionValue != "read" && actionValue != "update" &&
 							actionValue != "delete" && actionValue != "*" {
-								diagnostics = append(diagnostics, diag.Errorf("action must be one of the following %q, but instead had %s", []string{"create", "write", "read", "update", "delete", "*"}, actionValue)...)
+							diagnostics = append(diagnostics, diag.Errorf("action must be one of the following %q, but instead had %s", []string{"create", "write", "read", "update", "delete", "*"}, actionValue)...)
 						}
 						actions = append(actions, actionValue)
 					}
@@ -428,16 +424,16 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 					}
 					l7AccessToCreate.Actions = actions
 
-					resourcesSet, ok := l7AccessItemMap["resources"].((*schema.Set))
+					resourcesSet, ok := l7AccessItemMap["resources"].(*schema.Set)
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert resources  %+v", reflect.TypeOf(resourcesSet))
+						diagnostics = diag.Errorf("Couldn't type assert resources  %+v", reflect.TypeOf(l7AccessItemMap["resources"]))
 						return
 					}
 					resources := []string{}
-					for _, resource := range actionsSet.List() {
+					for _, resource := range resourcesSet.List() {
 						resourceValue, ok := resource.(string)
 						if !ok {
-							diagnostics = diag.FromErr(errors.New("couldn't type assert action"))
+							diagnostics = diag.FromErr(errors.New("couldn't type assert resource"))
 							return
 						}
 						resources = append(resources, resourceValue)
@@ -452,7 +448,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		}
 	}
 
-	log.Printf("[POLICY|RES] to be created %#v\n", policyToCreate)
+	log.Printf("[POLICY|RES|CREATE] to be created %#v\n", policyToCreate)
 	createdPolicy, err := client.Policy.Create(policyToCreate)
 	if err != nil {
 		diag.FromErr(errors.WithMessage(err, "couldn't create new policy"))
@@ -460,13 +456,15 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 	log.Printf("[POLICY|RES|CREATE] createdPolicy %#v\n", createdPolicy)
 	d.SetId(createdPolicy.ID)
-	// make sure we don't overwrite the existing one
-	return resourcePolicyRead(ctx, d, m)
+	diagnostics = resourcePolicyRead(ctx, d, m)
+	return
 }
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Println("[POLICY|RES|UPDATE] updating policy")
-	return resourcePolicyCreate(ctx, d, m)
+	diagnostics = resourcePolicyCreate(ctx, d, m)
+	log.Println("[POLICY|RES|UPDATE] updated policy")
+	return
 }
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -500,15 +498,19 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	d.Set("spec", spec)
 	d.SetId(policy.ID)
+	log.Println("[POLICY|RES|READ] read policy")
 	return
 }
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Println("[POLICY|RES|DELETE] deleting policy")
+
 	client := m.(*client.ClientHolder)
 	err := client.Policy.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
+	log.Println("[POLICY|RES|DELETE] deleted policy")
 	return
 }
