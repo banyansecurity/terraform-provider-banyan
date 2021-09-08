@@ -5,6 +5,6 @@ provider "github.com/banyansecurity/banyan" {
   version     = "0.1.0"
   constraints = "0.1.0"
   hashes = [
-    "h1:e3+IYLsQi3f8y/ww8uKBIaZkp1uMMQMxihfD2Sat11I=",
+    "h1:qA6HAgSC+KUXdiOs7240AvZHv7P8cTD2ly5lAYZqrRg=",
   ]
 }

@@ -125,11 +125,11 @@ resource "banyan_policy" "test-policy" {
         }
         l7_access {
           resources = ["*", "endpoint"]
-          actions = ["*", "POST"]
+          actions = ["*"]
         }
         l7_access {
           resources = ["*", "number2"]
-          actions = ["*", "NUMBER2"]
+          actions = ["*", "write"]
         }
       }
     }
@@ -141,7 +141,7 @@ resource "banyan_policy" "test-policy" {
         }
         l7_access {
           resources = ["*", "endpoint"]
-          actions = ["*", "POST"]
+          actions = ["*"]
         }
       }
     }
