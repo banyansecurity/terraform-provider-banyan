@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
@@ -14,7 +15,7 @@ import (
 )
 
 func resourcePolicy() *schema.Resource {
-	log.Println("getting resource")
+	log.Println("[POLICY|RES] getting resource schema")
 	return &schema.Resource{
 		Description:   "This is an org wide setting. There can only be one of these per organization.",
 		CreateContext: resourcePolicyCreate,
@@ -113,7 +114,6 @@ func resourcePolicy() *schema.Resource {
 																Elem: &schema.Schema{
 																	Type: schema.TypeString,
 																},
-																//TODO validate actions? ValidateFunc: validatePort(),
 															},
 														},
 													},
@@ -156,7 +156,7 @@ func resourcePolicy() *schema.Resource {
 									},
 									"l7_protocol": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validateL7Protocol(),
 									},
 								},
@@ -182,8 +182,9 @@ func validateL7Protocol() func(val interface{}, key string) (warns []string, err
 func validateTrustLevel() func(val interface{}, key string) (warns []string, errs []error) {
 	return func(val interface{}, key string) (warns []string, errs []error) {
 		v := val.(string)
-		if v != "High" && v != "Low" && v != "" {
-			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "High", v))
+		if v != "High" && v != "Medium" && v != "Low" && v != "" {
+			// this error message might need to be cleaned up to handle the empty trustlevel
+			errs = append(errs, fmt.Errorf("%q must be one of the following %q, got: %q", key, []string{"High", "Medium", "Low", ""}, v))
 		}
 		return
 	}
@@ -198,6 +199,10 @@ func validatePolicyTemplate() func(val interface{}, key string) (warns []string,
 		return
 	}
 }
+
+var onlyLettersAndNumbersRegex = regexp.MustCompile("^[A-Za-z0-9-_]+$")
+var domainRegex = regexp.MustCompile(`^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$`)
+var ipRegex = regexp.MustCompile(`^[0-9\/\.]+$`)
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Println("[POLICY|RES] creating resource")
@@ -283,7 +288,14 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 					diagnostics = diag.FromErr(errors.New("couldn't type assert dnsNameValue"))
 					return
 				}
+				if !ipRegex.MatchString(srcAddrValue) && !domainRegex.MatchString(srcAddrValue) {
+					diagnostics = append(diagnostics, diag.Errorf("src_addr: %q didn't match expected pattern for ip address or domain", srcAddrValue)...)
+				}
 				policyToCreate.Spec.Exception.SourceAddress = append(policyToCreate.Spec.Exception.SourceAddress, srcAddrValue)
+			}
+			// check if there is more than one error
+			if len(diagnostics) > 0 {
+				return
 			}
 		}
 		options, ok := ii["options"].([]interface{})
@@ -333,10 +345,20 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 			for _, role := range roles.List() {
 				roleValue, ok := role.(string)
 				if !ok {
-					diagnostics = diag.FromErr(errors.New("couldn't type assert dnsNameValue"))
+					diagnostics = diag.FromErr(errors.New("couldn't type assert roles"))
 					return
 				}
+				// validate here because as of terraform 1.0.6 it cannot validate on Lists or Sets
+				// https://github.com/hashicorp/terraform-plugin-sdk/issues/156
+				if !onlyLettersAndNumbersRegex.MatchString(roleValue) {
+					diagnostics = append(diagnostics, diag.Errorf("invalid value: %q in roles, can only be alphanumeric and have '-'s", roleValue)...)
+				}
 				rolesSlice = append(rolesSlice, roleValue)
+			}
+			// early return if there are any values in diagnostics. probably came from validating role values
+			if len(diagnostics) != 0 {
+				log.Printf("[POLICY|RES] diagnostic errors exist: %#v", diagnostics)
+				return
 			}
 			access.Roles = append(access.Roles, rolesSlice...)
 			rules, ok := accessItemMap["rules"].([]interface{})
@@ -393,7 +415,16 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 							diagnostics = diag.FromErr(errors.New("couldn't type assert action"))
 							return
 						}
+						if actionValue != "create" && actionValue != "write" &&
+							actionValue != "read" && actionValue != "update" &&
+							actionValue != "delete" && actionValue != "*" {
+								diagnostics = append(diagnostics, diag.Errorf("action must be one of the following %q, but instead had %s", []string{"create", "write", "read", "update", "delete", "*"}, actionValue)...)
+						}
 						actions = append(actions, actionValue)
+					}
+					// validate action value here because terraform cannot validate list or sets at the schema level
+					if len(diagnostics) != 0 {
+						return
 					}
 					l7AccessToCreate.Actions = actions
 
@@ -421,24 +452,6 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		}
 	}
 
-	//fill in null values
-	// policyToCreate.Spec.Access = []policy.Access{
-	// 	{
-	// 		Roles: []string{"ANY"},
-	// 		Rules: policy.Rules{
-	// 			Conditions: policy.Conditions{
-	// 				TrustLevel: "High",
-	// 			},
-	// 			L7Access: []policy.L7Access{
-	// 				{
-	// 					Actions:   []string{"*"},
-	// 					Resources: []string{"*"},
-	// 				},
-	// 			},
-	// 		},
-	// 	},
-	// }
-
 	log.Printf("[POLICY|RES] to be created %#v\n", policyToCreate)
 	createdPolicy, err := client.Policy.Create(policyToCreate)
 	if err != nil {
@@ -453,7 +466,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Println("[POLICY|RES|UPDATE] updating policy")
-	return resourceServiceCreate(ctx, d, m)
+	return resourcePolicyCreate(ctx, d, m)
 }
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -495,6 +508,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	err := client.Policy.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
+		return
 	}
 	return
 }
