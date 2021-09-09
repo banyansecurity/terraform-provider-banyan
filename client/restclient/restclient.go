@@ -53,6 +53,16 @@ func New(hostUrl string, refreshToken string) (client *RestClient, err error) {
 	return
 }
 
+// DoPost posts a message to host url, with the method path and body listsed
+func (this *RestClient) DoPost(path string, body io.Reader) (response *http.Response, err error) {
+	req, err := this.NewRequest(http.MethodPost, path, body)
+	if err != nil {
+		return
+	}
+	response, err = this.Do(req)
+	return
+}
+
 // DoGet sends and does the get request
 func (this *RestClient) DoGet(path string) (response *http.Response, err error) {
 	request, err := this.Get(path)
