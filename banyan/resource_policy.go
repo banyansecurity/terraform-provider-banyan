@@ -493,7 +493,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 		},
 		"options": map[string]interface{}{
 			"disable_tls_client_authentication": policy.UnmarshalledPolicy.Spec.Options.DisableTLSClientAuthentication,
-			"l7_protocl":                        policy.UnmarshalledPolicy.Spec.Options.L7Protocol,
+			"l7_protocol":                       policy.UnmarshalledPolicy.Spec.Options.L7Protocol,
 		},
 	}
 	d.Set("spec", spec)

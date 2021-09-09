@@ -134,7 +134,7 @@ resource "banyan_policy" "test-policy" {
       }
     }
     access {
-      roles = ["ROLE2"]
+      roles = [banyan_role.test-role.name]
       rules {
         conditions {
           trust_level = "Low"
@@ -152,5 +152,21 @@ resource "banyan_policy" "test-policy" {
       disable_tls_client_authentication = true
       l7_protocol = "http"
     }
+  }
+}
+
+resource "banyan_role" "test-role" {
+ name = "realtfpolicytest"
+  description = "realdescription"
+  metadatatags {
+    template = "USER"
+  }
+  spec {
+    known_device_only = true
+    platform = ["macOS", "Android"]
+    group = ["Everyone", "admins"]
+    email = ["john@marsha.com"]
+    device_ownership = ["Corporate Dedicated", "Employee Owned",]
+    mdm_present = true
   }
 }
