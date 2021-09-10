@@ -63,4 +63,11 @@ func Test_CreateGetUpdateGetThenDeleteAttachment(t *testing.T) {
 	updatedAttachment.AttachedToName = "realtftest"
 	assert.Equal(t, updatedAttachment, retrievedAttachment)
 
+	client.PolicyAttachment.Delete(everyonePolicyID, policyattachment.DetachBody{
+		AttachedToID: serviceToAttachToID,
+		AttachedToType: attachedToType,
+	})
+	retrievedAttachment, ok, err = client.PolicyAttachment.Get(everyonePolicyID, serviceToAttachToID, attachedToType)
+	assert.NoError(t, err)
+	assert.False(t, ok)
 }
