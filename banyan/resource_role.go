@@ -14,7 +14,7 @@ import (
 )
 
 func resourceRole() *schema.Resource {
-	log.Println("[POLICY|RES] getting resource schema")
+	log.Println("[ROLE|RES] getting resource schema")
 	return &schema.Resource{
 		Description:   "This is an org wide setting. There can only be one of these per organization.",
 		CreateContext: resourceRoleCreate,
