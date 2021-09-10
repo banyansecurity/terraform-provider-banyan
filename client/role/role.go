@@ -57,7 +57,8 @@ func (this *role) disable(id string) (err error) {
 		defer response.Body.Close()
 		responseBody, rerr := ioutil.ReadAll(response.Body)
 		if rerr != nil {
-			errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to disable role id: %q, couldn't parse body got error %+v", response.Status, response, id, rerr))
+			err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to disable role id: %q, couldn't parse body got error %+v", response.Status, response, id, rerr))
+			return
 		}
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to disable role id: %q, has message: %v", response.Status, response, id, string(responseBody)))
 		return
@@ -140,6 +141,7 @@ func (this *role) Create(role CreateRole) (createdRole GetRole, err error) {
 	request, err := this.restClient.NewRequest(http.MethodPost, path, bytes.NewBuffer(body))
 	if err != nil {
 		log.Printf("[ROLE|POST] Creating a new request, found an error %#v\n", err)
+		return
 	}
 	response, err := this.restClient.Do(request)
 	if response.StatusCode != 200 {

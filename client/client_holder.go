@@ -3,16 +3,18 @@ package client
 import (
 	admin "github.com/banyansecurity/terraform-banyan-provider/client/admin"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
+	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	service "github.com/banyansecurity/terraform-banyan-provider/client/service"
 )
 
 type ClientHolder struct {
-	Service service.ServiceClienter
-	Policy  policy.PolicyClienter
-	Role    role.RoleClienter
-	Admin   *admin.Admin
+	Service          service.ServiceClienter
+	Policy           policy.PolicyClienter
+	Role             role.RoleClienter
+	PolicyAttachment policyattachment.Clienter
+	Admin            *admin.Admin
 }
 
 func NewClientHolder(hostUrl string, refreshToken string) (client *ClientHolder, err error) {
@@ -26,6 +28,7 @@ func NewClientHolder(hostUrl string, refreshToken string) (client *ClientHolder,
 	client.Service = service
 	client.Policy = policy.NewClient(restClient)
 	client.Role = role.NewClient(restClient)
+	client.PolicyAttachment = policyattachment.NewClient(restClient)
 	admin := admin.NewClient(restClient)
 	client.Admin = admin
 	return
