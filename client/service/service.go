@@ -30,6 +30,7 @@ type ServiceClienter interface {
 	Create(svc CreateService) (Service GetServiceSpec, err error)
 	Update(id string, svc CreateService) (Service GetServiceSpec, err error)
 	Delete(id string) (err error)
+	disable(id string) (err error)
 }
 
 type FrontendAddress struct {
@@ -296,7 +297,35 @@ func (this *Service) Get(id string) (service GetServiceSpec, ok bool, err error)
 	return
 }
 
+func (this *Service) disable(id string) (err error) {
+	log.Printf("[SVC|CLIENT|DISABLE] disabling service id: %q", id)
+	path := "api/v1/disable_registered_service"
+	myUrl, err := url.Parse(path)
+	if err != nil {
+		return
+	}
+	query := myUrl.Query()
+	query.Set("ServiceID", id)
+	myUrl.RawQuery = query.Encode()
+	fmt.Printf("%v", myUrl.String())
+	resp, err := this.restClient.DoPost(myUrl.String(), nil)
+	if err != nil {
+		return
+	}
+	if resp.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %v", resp))
+		return
+	}
+	log.Printf("[SVC|CLIENT|DISABLE] disabled service id: %q", id)
+	return
+}
+
 func (this *Service) Delete(id string) (err error) {
+	log.Printf("[SVC|CLIENT|DELETE] delete service id: %q", id)
+	err = this.disable(id)
+	if err != nil {
+		log.Printf("Couldn't disable service: %s before delete", id)
+	}
 	path := "api/v1/delete_registered_service"
 	myUrl, err := url.Parse(path)
 	if err != nil {
@@ -314,6 +343,7 @@ func (this *Service) Delete(id string) (err error) {
 		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %v", resp))
 		return
 	}
+	log.Printf("[SVC|CLIENT|DELETE] deleted service id: %q", id)
 	return
 }
 
