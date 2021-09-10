@@ -26,9 +26,10 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			// 			"banyan_org_idp_config": resourceOrgIdpConfig(),
-			"banyan_service": resourceService(),
-			"banyan_policy":  resourcePolicy(),
-			"banyan_role":    resourceRole(),
+			"banyan_service":           resourceService(),
+			"banyan_policy":            resourcePolicy(),
+			"banyan_role":              resourceRole(),
+			"banyan_policy_attachment": resourcePolicyAttachment(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"banyan_oidc_settings": dataSourceOidcSettings(),
