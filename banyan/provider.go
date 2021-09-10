@@ -28,6 +28,7 @@ func Provider() *schema.Provider {
 			// 			"banyan_org_idp_config": resourceOrgIdpConfig(),
 			"banyan_service": resourceService(),
 			"banyan_policy":  resourcePolicy(),
+			"banyan_role":    resourceRole(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"banyan_oidc_settings": dataSourceOidcSettings(),
