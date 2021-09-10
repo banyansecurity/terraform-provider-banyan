@@ -170,3 +170,10 @@ resource "banyan_role" "test-role" {
     mdm_present = true
   }
 }
+
+resource "banyan_policy_attachment" "test-attachment" {
+  policy_id = banyan_policy.test-policy.id
+  attached_to_type = "service"
+  attached_to_id = banyan_service.test-service.id
+  is_enforcing = true
+}
