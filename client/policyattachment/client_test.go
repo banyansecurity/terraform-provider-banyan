@@ -8,18 +8,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_GetNonexistentRole(t *testing.T) {
+func Test_GetNonexistentAttachment(t *testing.T) {
 	emptyAttachment := policyattachment.GetBody{}
 	client, err := testutil.GetClientHolderForTest()
 	assert.NoError(t, err, "Expected to not get an error here")
-	role, ok, err := client.PolicyAttachment.Get("heh", "hi", "service")
+	attachment, ok, err := client.PolicyAttachment.Get("heh", "hi", "service")
 	assert.NoError(t, err, "expected no error here")
 	assert.False(t, ok, "expected to get a value here")
 
-	assert.Equal(t, emptyAttachment, role, "expected to get empty attachment")
+	assert.Equal(t, emptyAttachment, attachment, "expected to get empty attachment")
 }
 
-func Test_GetExistingRole(t *testing.T) {
+func Test_GetExistingAttachment(t *testing.T) {
 	client, err := testutil.GetClientHolderForTest()
 	assert.NoError(t, err, "Expected to not get an error here")
 	emptyAttachment := policyattachment.GetBody{}
