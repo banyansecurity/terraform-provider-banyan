@@ -486,16 +486,8 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 	metadatatags := map[string]interface{}{
 		"template": policy.UnmarshalledPolicy.Metadata.Tags.Template,
 	}
-	d.Set("metadatatags", metadatatags)
-	spec := map[string]interface{}{
-		"exception": map[string]interface{}{
-			"src_addr": policy.UnmarshalledPolicy.Spec.Exception.SourceAddress,
-		},
-		"options": map[string]interface{}{
-			"disable_tls_client_authentication": policy.UnmarshalledPolicy.Spec.Options.DisableTLSClientAuthentication,
-			"l7_protocol":                       policy.UnmarshalledPolicy.Spec.Options.L7Protocol,
-		},
-	}
+	d.Set("metadatatags", []interface{}{metadatatags})
+	spec := flattenPolicySpec(policy.UnmarshalledPolicy.Spec)
 	d.Set("spec", spec)
 	d.SetId(policy.ID)
 	log.Println("[POLICY|RES|READ] read policy")
@@ -512,5 +504,71 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 		return
 	}
 	log.Println("[POLICY|RES|DELETE] deleted policy")
+	return
+}
+
+func flattenPolicySpec(toFlatten policy.Spec) (flattened []interface{}) {
+	s := make(map[string]interface{})
+	s["options"] = flattenPolicyOptions(toFlatten.Options)
+	s["exception"] = flattenPolicyException(toFlatten.Exception)
+	s["access"] = flattenPolicyAccess(toFlatten.Access)
+
+	flattened = append(flattened, s)
+	return
+}
+
+func flattenPolicyOptions(toFlatten policy.Options) (flattened []interface{}) {
+	o := make(map[string]interface{})
+	o["disable_tls_client_authentication"] = toFlatten.DisableTLSClientAuthentication
+	o["l7_protocol"] = toFlatten.L7Protocol
+
+	flattened = append(flattened, o)
+	return
+}
+
+func flattenPolicyException(toFlatten policy.Exception) (flattened []interface{}) {
+	e := make(map[string]interface{})
+	e["source_address"] = toFlatten.SourceAddress
+
+	flattened = append(flattened, e)
+	return
+}
+
+func flattenPolicyAccess(toFlatten []policy.Access) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, accessItem := range toFlatten {
+		ai := make(map[string]interface{})
+		ai["roles"] = accessItem.Roles
+		ai["rules"] = flattenPolicyRules(accessItem.Rules)
+		flattened[idx] = ai
+	}
+	return
+}
+
+func flattenPolicyRules(toFlatten policy.Rules) (flattened []interface{}) {
+	r := make(map[string]interface{})
+	r["conditions"] = flattenPolicyConditions(toFlatten.Conditions)
+	r["l7_access"] = flattenPolicyL7Access(toFlatten.L7Access)
+	flattened = append(flattened, r)
+	return
+}
+
+func flattenPolicyConditions(toFlatten policy.Conditions) (flattened []interface{}) {
+	c := make(map[string]interface{})
+	c["trust_level"] = toFlatten.TrustLevel
+	flattened = append(flattened, c)
+	return
+}
+
+func flattenPolicyL7Access(toFlatten []policy.L7Access) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, accessItem := range toFlatten {
+		ai := make(map[string]interface{})
+		ai["resources"] = accessItem.Resources
+		ai["actions"] = accessItem.Actions
+		flattened[idx] = ai
+	}
 	return
 }
