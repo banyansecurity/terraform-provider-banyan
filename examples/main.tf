@@ -268,21 +268,21 @@ resource "banyan_policy" "test-policy" {
   }
 }
 
-//resource "banyan_role" "test-role" {
-// name = "realtfpolicytest"
-//  description = "realdescription"
-//  metadatatags {
-//    template = "USER"
-//  }
-//  spec {
-//    known_device_only = true
-//    platform = ["macOS", "Android"]
-//    group = ["Everyone", "admins"]
-//    email = ["john@marsha.com"]
-//    device_ownership = ["Corporate Dedicated", "Employee Owned",]
-//    mdm_present = true
-//  }
-//}
+resource "banyan_role" "test-role" {
+ name = "realtfpolicytest"
+  description = "realdescription"
+  metadatatags {
+    template = "USER"
+  }
+  spec {
+    known_device_only = true
+    platform = ["macOS", "Android"]
+    group = ["Everyone", "admins"]
+    email = ["john@marsha.com"]
+    device_ownership = ["Corporate Dedicated", "Employee Owned",]
+    mdm_present = true
+  }
+}
 //
 //resource "banyan_policy_attachment" "test-attachment" {
 //  policy_id = banyan_policy.test-policy.id
