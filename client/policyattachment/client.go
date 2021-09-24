@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 )
@@ -81,7 +84,57 @@ func (this *policyAttachment) Get(policyID string, attachedToID string, attached
 	return
 }
 
+func (this *policyAttachment) createServiceAttachment(policyID string, policyAttachment CreateBody) (createdAttachment GetBody, err error) {
+	path := "/api/v1/insert_security_attach_policy"
+	log.Printf("&&&&& %#v", policyAttachment)
+	form := url.Values{}
+	form.Add("PolicyID", policyID)
+	form.Add("ServiceID", policyAttachment.AttachedToID)
+	form.Add("Enabled", policyAttachment.Enabled)
+
+	request, err := this.restClient.NewRequest(http.MethodPost, path, strings.NewReader(form.Encode()))
+	if err != nil {
+		return
+	}
+	request.Header.Set("content-type", "application/x-www-form-urlencoded")
+	response, err := this.restClient.Do(request)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return
+	}
+	if response.StatusCode != 200 {
+		log.Printf("[POLICYATTACHMENT|CREATE] status code %#v, with message %q\n", response.StatusCode, string(responseData))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response message: %q for request to", response.Status, string(responseData)))
+		return
+	}
+	serviceAttachmentResponseBody := RegisteredServiceAttachCreateResponseBody{}
+	err = json.Unmarshal(responseData, &serviceAttachmentResponseBody)
+	if err != nil {
+		return
+	}
+	createdAttachment.AttachedAt = serviceAttachmentResponseBody.AttachedAt
+	createdAttachment.AttachedBy = serviceAttachmentResponseBody.AttachedBy
+	createdAttachment.Enabled = serviceAttachmentResponseBody.Enabled
+	createdAttachment.PolicyID = serviceAttachmentResponseBody.PolicyID
+	createdAttachment.AttachedToID = serviceAttachmentResponseBody.ServiceID
+	createdAttachment.AttachedToType = "service"
+	isEnabled, err := strconv.ParseBool(createdAttachment.Enabled)
+	if err != nil {
+		return
+	}
+	createdAttachment.IsEnabled = isEnabled
+
+	return
+}
+
 func (this *policyAttachment) Create(policyID string, policyAttachment CreateBody) (createdAttachment GetBody, err error) {
+	if policyAttachment.AttachedToType == "service" {
+		return this.createServiceAttachment(policyID, policyAttachment)
+	}
 	log.Printf("[POLICYATTACHMENT|CREATE] creating policyattachment")
 	path := fmt.Sprintf("/api/v1/policy/%s/attach", policyID)
 	body, err := json.Marshal(policyAttachment)
@@ -123,7 +176,35 @@ func (this *policyAttachment) Update(policyID string, attachment CreateBody) (up
 	return
 }
 
+func (this *policyAttachment) deleteServiceAttachment(policyID, serviceID string) (err error) {
+	path := "/api/v1/delete_security_attach_policy"
+
+	myUrl, err := url.Parse(path)
+	if err != nil {
+		return
+	}
+	query := myUrl.Query()
+	query.Set("PolicyID", policyID)
+	query.Set("ServiceID", serviceID)
+	myUrl.RawQuery = query.Encode()
+	resp, err := this.restClient.DoDelete(myUrl.String())
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	respBody, _ := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %v with message: %s", resp, string(respBody)))
+		return
+	}
+
+	return
+}
+
 func (this *policyAttachment) Delete(policyID string, detachBody DetachBody) (err error) {
+	if detachBody.AttachedToType == "service" {
+		return this.deleteServiceAttachment(policyID, detachBody.AttachedToID)
+	}
 	log.Printf("[POLICYATTACHMENT|DELETE] deleting policyattachment")
 	path := fmt.Sprintf("/api/v1/policy/%s/detach", policyID)
 	body, err := json.Marshal(detachBody)

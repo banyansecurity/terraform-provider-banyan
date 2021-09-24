@@ -23,3 +23,17 @@ type DetachBody struct {
 	AttachedToID   string `json:"attached_to_id"`
 	AttachedToType string `json:"attached_to_type"`
 }
+
+type RegisteredServiceAttachCreateBody struct {
+	PolicyID  string `json:"PolicyID"`
+	ServiceID string `json:"ServiceID"`
+	Enabled   string `json:"Enabled"`
+}
+
+type RegisteredServiceAttachCreateResponseBody struct {
+	PolicyID   string `json:"PolicyID"`
+	ServiceID  string `json:"ServiceID"`
+	Enabled    string `json:"Enabled"`
+	AttachedBy string `json:"AttachedBy"`
+	AttachedAt int `json:"AttachedAt"`
+}
