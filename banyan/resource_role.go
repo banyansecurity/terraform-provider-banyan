@@ -281,18 +281,18 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	log.Printf("[ROLE|RES|READ] got role: %#v", role)
 	d.Set("name", role.Name)
 	d.Set("description", role.Description)
-	metadatatags := map[string]interface{}{
+	metadatatags := []interface{}{map[string]interface{}{
 		"template": role.UnmarshalledSpec.Metadata.Tags.Template,
-	}
+	}}
 	d.Set("metadatatags", metadatatags)
-	spec := map[string]interface{}{
+	spec := []interface{}{map[string]interface{}{
 		"known_device_only": role.UnmarshalledSpec.Spec.KnownDeviceOnly,
 		"group":             role.UnmarshalledSpec.Spec.Group,
 		"email":             role.UnmarshalledSpec.Spec.Email,
 		"mdm_present":       role.UnmarshalledSpec.Spec.MDMPresent,
 		"device_ownership":  role.UnmarshalledSpec.Spec.DeviceOwnership,
 		"platform":          role.UnmarshalledSpec.Spec.Platform,
-	}
+	}}
 
 	d.Set("spec", spec)
 	d.SetId(role.ID)
