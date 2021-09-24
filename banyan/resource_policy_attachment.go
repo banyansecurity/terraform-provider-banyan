@@ -26,17 +26,20 @@ func resourcePolicyAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of your service",
+				ForceNew:    true,
 			},
 			"attached_to_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "description of your service",
+				ForceNew:    true,
 			},
 			"attached_to_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				Description:  "what the policy is attached to",
 				ValidateFunc: validateAttachedToType(),
+				ForceNew:     true,
 			},
 			"is_enforcing": {
 				Type:        schema.TypeBool,
