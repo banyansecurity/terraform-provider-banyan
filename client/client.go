@@ -104,6 +104,10 @@ func getAccessTokenFromJSON(body []byte) (accessToken string, err error) {
 		err = errors.WithMessage(err, "unable to unmarshall the accessToken, "+string(body))
 		return
 	}
+	if accessTokenStruct.Message == "Unauthorized access" {
+		err = errors.New("Unauthorized access")
+		return
+	}
 	accessToken = accessTokenStruct.Message
 
 	return
