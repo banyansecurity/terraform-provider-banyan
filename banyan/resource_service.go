@@ -1649,13 +1649,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[SERVICE|RES|DELETE] deleting service with id: %q ", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
 
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}
-	log.Println("[SERVICE|RES|DELETE] deleted service with id: %q ", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleted service with id: %q \n", d.Id())
 	return
 }

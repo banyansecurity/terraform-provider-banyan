@@ -29,16 +29,16 @@ func TestProvider_impl(t *testing.T) {
 	var _ *schema.Provider = Provider()
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck() {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
 	if err := os.Getenv("BANYAN_REFRESH_TOKEN"); err == "" {
-		t.Fatal("BANYAN_REFRESH_TOKEN must be set for acceptance tests")
+		log.Fatal("BANYAN_REFRESH_TOKEN must be set for acceptance tests")
 	}
 	if err := os.Getenv("BANYAN_HOST"); err == "" {
-		t.Fatal("BANYAN_HOST must be set for acceptance tests")
+		log.Fatal("BANYAN_HOST must be set for acceptance tests")
 	}
 }
