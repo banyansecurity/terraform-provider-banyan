@@ -251,7 +251,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		diag.FromErr(errors.WithMessage(err, "couldn't create new role"))
 		return
 	}
-	log.Printf("[ROLE|RES|CREATE] createdRole %#v\n", createdRole)
+	log.Printf("[ROLE|RES|CREATE] created role %#v\n", createdRole)
 	d.SetId(createdRole.ID)
 	diagnostics = resourceRoleRead(ctx, d, m)
 	return
