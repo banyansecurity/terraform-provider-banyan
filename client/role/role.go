@@ -15,12 +15,12 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 )
 
-type role struct {
+type Role struct {
 	restClient *restclient.RestClient
 }
 
 func NewClient(restClient *restclient.RestClient) RoleClienter {
-	roleClient := role{
+	roleClient := Role{
 		restClient: restClient,
 	}
 	return &roleClient
@@ -34,12 +34,12 @@ type RoleClienter interface {
 	disable(id string) (err error)
 }
 
-func (this *role) disable(id string) (err error) {
+func (this *Role) disable(id string) (err error) {
 	if id == "" {
-		err = errors.New("need an id disable a role")
+		err = errors.New("need an id disable a Role")
 		return
 	}
-	log.Printf("[ROLE|DISABLE] disabling role: %v", id)
+	log.Printf("[ROLE|DISABLE] disabling Role: %v", id)
 	path := "api/v1/disable_security_role"
 	myUrl, err := url.Parse(path)
 	if err != nil {
@@ -57,20 +57,20 @@ func (this *role) disable(id string) (err error) {
 		defer response.Body.Close()
 		responseBody, rerr := ioutil.ReadAll(response.Body)
 		if rerr != nil {
-			err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to disable role id: %q, couldn't parse body got error %+v", response.Status, response, id, rerr))
+			err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to disable Role id: %q, couldn't parse body got error %+v", response.Status, response, id, rerr))
 			return
 		}
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to disable role id: %q, has message: %v", response.Status, response, id, string(responseBody)))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to disable Role id: %q, has message: %v", response.Status, response, id, string(responseBody)))
 		return
 	}
-	log.Printf("[ROLE|DISABLE] disabled role: %v", id)
+	log.Printf("[ROLE|DISABLE] disabled Role: %v", id)
 	return
 }
 
-func (this *role) Get(id string) (role GetRole, ok bool, err error) {
-	log.Printf("[ROLE|GET] reading role")
+func (this *Role) Get(id string) (role GetRole, ok bool, err error) {
+	log.Printf("[ROLE|GET] reading Role")
 	if id == "" {
-		err = errors.New("need an id to get a role")
+		err = errors.New("need an id to get a Role")
 		return
 	}
 	path := "api/v1/security_roles"
@@ -126,16 +126,16 @@ func (this *role) Get(id string) (role GetRole, ok bool, err error) {
 	}
 	role.IsEnabled = isEnabled
 	ok = true
-	log.Printf("[POLICY|GET] read role")
+	log.Printf("[POLICY|GET] read Role")
 	return
 
 }
 
-func (this *role) Create(role CreateRole) (createdRole GetRole, err error) {
+func (this *Role) Create(role CreateRole) (createdRole GetRole, err error) {
 	path := "api/v1/insert_security_role"
 	body, err := json.Marshal(role)
 	if err != nil {
-		log.Printf("[ROLE|POST] Creating a new role, found an error %#v\n", err)
+		log.Printf("[ROLE|POST] Creating a new Role, found an error %#v\n", err)
 		return
 	}
 	request, err := this.restClient.NewRequest(http.MethodPost, path, bytes.NewBuffer(body))
@@ -171,25 +171,25 @@ func (this *role) Create(role CreateRole) (createdRole GetRole, err error) {
 		return
 	}
 	createdRole.IsEnabled = isEnabled
-	log.Printf("[ROLE|POST] created a new role %#v", createdRole)
+	log.Printf("[ROLE|POST] created a new Role %#v", createdRole)
 	return
 }
 
-func (this *role) Update(role CreateRole) (updatedRole GetRole, err error) {
-	log.Printf("[ROLE|UPDATE] updating role")
+func (this *Role) Update(role CreateRole) (updatedRole GetRole, err error) {
+	log.Printf("[ROLE|UPDATE] updating Role")
 	updatedRole, err = this.Create(role)
 	if err != nil {
 		return
 	}
-	log.Printf("[ROLE|UPDATE] updated role")
+	log.Printf("[ROLE|UPDATE] updated Role")
 	return
 }
 
-func (this *role) Delete(id string) (err error) {
-	log.Printf("[ROLE|DELETE] deleting role with id %s", id)
+func (this *Role) Delete(id string) (err error) {
+	log.Printf("[ROLE|DELETE] deleting Role with id %s", id)
 	err = this.disable(id)
 	if err != nil {
-		log.Printf("[ROLE|DELETE] couldn't disable role with id %s", id)
+		log.Printf("[ROLE|DELETE] couldn't disable Role with id %s", id)
 		return
 	}
 	path := "api/v1/delete_security_role"
@@ -208,6 +208,6 @@ func (this *role) Delete(id string) (err error) {
 		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %v", resp))
 		return
 	}
-	log.Printf("[ROLE|DELETE] deleted role with id %s", id)
+	log.Printf("[ROLE|DELETE] deleted Role with id %s", id)
 	return
 }

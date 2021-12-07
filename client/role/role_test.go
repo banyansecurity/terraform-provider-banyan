@@ -64,7 +64,7 @@ func Test_CreateRole(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 	if !ok {
-		t.Fatalf("Didn't find the role")
+		t.Fatalf("Didn't find the Role")
 	}
 	// these will potentially conflict
 	resultOfCreate.LastUpdatedAt = 0
@@ -104,7 +104,7 @@ func Test_Delete(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 	if !ok {
-		t.Fatal("expected to find role")
+		t.Fatal("expected to find Role")
 	}
 	err = client.Role.Delete(createdRole.ID)
 	if err != nil {
@@ -114,5 +114,5 @@ func Test_Delete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
-	assert.False(t, ok, "expected to not find the role here")
+	assert.False(t, ok, "expected to not find the Role here")
 }
