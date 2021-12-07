@@ -25,7 +25,7 @@ func Test_GetExistingRole(t *testing.T) {
 	emptyRole := role.GetRole{}
 	emptyRole.CreatedBy = "me"
 
-	role, ok, err := client.Role.Get("ef7ac2ad-1184-454d-accb-b7b32c9bead0")
+	role, ok, err := client.Role.Get("3746e045-aa73-4fd3-96c5-a7ed893d3eaa")
 	assert.NoError(t, err, "expected no error here")
 	assert.True(t, ok, "expected to get a value here")
 	assert.NotEqual(t, emptyRole, role, "expected to get service x")

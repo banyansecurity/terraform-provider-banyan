@@ -25,7 +25,7 @@ func Test_GetExistingPolicy(t *testing.T) {
 	emptyPolicy := policy.GetPolicy{}
 	emptyPolicy.CreatedBy = "me"
 
-	policy, ok, err := client.Policy.Get("dc612429-e8cf-4a0c-89b4-a41f14eb58bd")
+	policy, ok, err := client.Policy.Get("9ddf21be-2db3-42f6-aa77-2d1a61931278")
 	assert.NoError(t, err, "expected no error here")
 	assert.True(t, ok, "expected to get a value here")
 	assert.NotEqual(t, emptyPolicy, policy, "expected to get service x")

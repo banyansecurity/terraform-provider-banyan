@@ -37,7 +37,7 @@ func Test_GetExistingService(t *testing.T) {
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
 	client, err := client.NewClientHolder(testhost, testRefreshToken)
 	assert.NoError(t, err, "Expected to not get an error here")
-	svc, ok, err := client.Service.Get("a.dev05-banyan.bnn")
+	svc, ok, err := client.Service.Get("testservice.us-west.bnn")
 	assert.NoError(t, err, "expected no error here")
 	assert.True(t, ok, "expected to get a value here")
 	assert.NotEqual(t, service.GetServiceSpec{}, svc, "expected to get service x")
