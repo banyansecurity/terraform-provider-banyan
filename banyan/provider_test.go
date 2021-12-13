@@ -1,6 +1,7 @@
 package banyan
 
 import (
+	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"log"
 	"os"
 	"testing"
@@ -11,12 +12,22 @@ import (
 
 var testAccProviders map[string]*schema.Provider
 var testAccProvider *schema.Provider
+var testAccClient *client.ClientHolder
 
 func init() {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	testAccProvider = Provider()
 	testAccProviders = map[string]*schema.Provider{
 		"banyan": testAccProvider,
 	}
+	testAccClient, err = NewAccClient()
+}
+
+func NewAccClient() (c *client.ClientHolder, err error) {
+	return client.NewClientHolder(os.Getenv("BANYAN_HOST"), os.Getenv("BANYAN_API_TOKEN"))
 }
 
 func TestProvider(t *testing.T) {
