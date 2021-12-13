@@ -107,7 +107,7 @@ func (this *Role) Get(id string) (role GetRole, ok bool, err error) {
 		return
 	}
 	if len(getRoleJson) > 1 {
-		err = errors.New("got more than one service")
+		err = errors.New("got more than one role")
 		return
 	}
 	role = getRoleJson[0]
