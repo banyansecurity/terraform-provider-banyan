@@ -68,3 +68,12 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (client inte
 	}
 	return
 }
+
+func Contains(set []string, key string) bool {
+	for _, s := range set {
+		if s == key {
+			return true
+		}
+	}
+	return false
+}

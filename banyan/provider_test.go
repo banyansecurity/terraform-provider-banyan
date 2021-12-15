@@ -15,19 +15,21 @@ var testAccProvider *schema.Provider
 var testAccClient *client.ClientHolder
 
 func init() {
-	err := godotenv.Load("../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	testAccPreCheck()
+	testAccClient = NewAccClient()
 	testAccProvider = Provider()
 	testAccProviders = map[string]*schema.Provider{
 		"banyan": testAccProvider,
 	}
-	testAccClient, err = NewAccClient()
+
 }
 
-func NewAccClient() (c *client.ClientHolder, err error) {
-	return client.NewClientHolder(os.Getenv("BANYAN_HOST"), os.Getenv("BANYAN_API_TOKEN"))
+func NewAccClient() (c *client.ClientHolder) {
+	c, err := client.NewClientHolder(os.Getenv("BANYAN_HOST"), os.Getenv("BANYAN_API_TOKEN"))
+	if err != nil {
+		log.Fatal("Could not create the test client")
+	}
+	return
 }
 
 func TestProvider(t *testing.T) {
@@ -40,16 +42,22 @@ func TestProvider_impl(t *testing.T) {
 	var _ *schema.Provider = Provider()
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck() {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
 	if err := os.Getenv("BANYAN_REFRESH_TOKEN"); err == "" {
-		t.Fatal("BANYAN_REFRESH_TOKEN must be set for acceptance tests")
+		log.Fatal("BANYAN_REFRESH_TOKEN must be set for acceptance tests")
 	}
 	if err := os.Getenv("BANYAN_HOST"); err == "" {
-		t.Fatal("BANYAN_HOST must be set for acceptance tests")
+		log.Fatal("BANYAN_HOST must be set for acceptance tests")
+	}
+}
+
+func TestContains(t *testing.T) {
+	if !Contains([]string{"foo", "bar"}, "bar") {
+		t.Fatal("Element is in list but the function returned false")
 	}
 }
