@@ -215,7 +215,6 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	description, ok := d.Get("description").(string)
 	if !ok {
 		diagnostics = diag.Errorf("Couldn't type assert description")
-
 		return
 	}
 	policyToCreate := policy.CreatePolicy{
@@ -274,12 +273,12 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 				diagnostics = diag.Errorf("Couldn't type assert exception item map")
 				return
 			}
-			srdAddrs, ok := exceptionItemMap["src_addr"].(*schema.Set)
+			srcAddr, ok := exceptionItemMap["src_addr"].(*schema.Set)
 			if !ok {
 				diagnostics = diag.Errorf("couldn't type assert src_addr to type: %+v", reflect.TypeOf(exceptionItemMap["src_addr"]))
 				return
 			}
-			for _, srcAddr := range srdAddrs.List() {
+			for _, srcAddr := range srcAddr.List() {
 				srcAddrValue, ok := srcAddr.(string)
 				if !ok {
 					diagnostics = diag.FromErr(errors.New("couldn't type assert srcAddrValue"))
@@ -528,7 +527,7 @@ func flattenPolicyOptions(toFlatten policy.Options) (flattened []interface{}) {
 
 func flattenPolicyException(toFlatten policy.Exception) (flattened []interface{}) {
 	e := make(map[string]interface{})
-	e["source_address"] = toFlatten.SourceAddress
+	e["src_addr"] = toFlatten.SourceAddress
 
 	flattened = append(flattened, e)
 	return
