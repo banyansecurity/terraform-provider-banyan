@@ -22,6 +22,6 @@ client-test-job:   # This job runs in the test stage.
 tf-acceptance-test-job:   # This job also runs in the test stage.
   stage: test    # It can run at the same time as unit-test-job (in parallel).
   script:
-    - echo "Running acceptance tests...""
+    - echo "Running acceptance tests..."
     - export TF_ACC=true;TF_LOG=DEBUG
     - go test ./banyan/... -v
