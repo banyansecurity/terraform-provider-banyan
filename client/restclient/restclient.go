@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Client is the struct that you use to interact with the banyan restapi.
+// RestClient is the struct used interact with the Banyan REST API.
 type RestClient struct {
 	accessToken string
 	hostUrl     string
@@ -20,7 +20,7 @@ type RestClient struct {
 
 const defaultHostUrl = "http://net.banyanops.com"
 
-// New creates a new client that will let the user interact with the restapi server.
+// New creates a new client that will let the user interact with the REST API server.
 // As part of this it exchanges the given refreshtoken for an acesstoken.
 func New(hostUrl string, refreshToken string) (client *RestClient, err error) {
 	if refreshToken == "" {
@@ -53,8 +53,7 @@ func New(hostUrl string, refreshToken string) (client *RestClient, err error) {
 	return
 }
 
-
-// DoPut posts a message to host url, with the method path and body listsed
+// DoPut posts a message to host url, with the method path and body listed
 func (this *RestClient) DoPut(path string, body io.Reader) (response *http.Response, err error) {
 	req, err := this.NewRequest(http.MethodPut, path, body)
 	if err != nil {
@@ -64,7 +63,7 @@ func (this *RestClient) DoPut(path string, body io.Reader) (response *http.Respo
 	return
 }
 
-// DoPost posts a message to host url, with the method path and body listsed
+// DoPost posts a message to host url, with the method path and body listed
 func (this *RestClient) DoPost(path string, body io.Reader) (response *http.Response, err error) {
 	req, err := this.NewRequest(http.MethodPost, path, body)
 	if err != nil {
@@ -84,10 +83,7 @@ func (this *RestClient) DoGet(path string) (response *http.Response, err error) 
 	return
 }
 
-func (this *RestClient) delete(path string) (request *http.Request, err error) {
-	return this.NewRequest(http.MethodDelete, path, nil)
-}
-
+// DoDelete sends the delete request
 func (this *RestClient) DoDelete(path string) (response *http.Response, err error) {
 	request, err := this.delete(path)
 	if err != nil {
@@ -97,25 +93,29 @@ func (this *RestClient) DoDelete(path string) (response *http.Response, err erro
 	return
 }
 
-// get creates a new Get request, saving the user of needing to pass in a nil value
+func (this *RestClient) delete(path string) (request *http.Request, err error) {
+	return this.NewRequest(http.MethodDelete, path, nil)
+}
+
+// Get creates a new Get request, saving the user from needing to pass in a nil value
 func (this *RestClient) Get(path string) (request *http.Request, err error) {
 	return this.NewRequest("GET", path, nil)
 }
 
-func (this *RestClient) Do(request *http.Request) (response *http.Response, err error) {
-	return this.httpClient.Do(request)
-}
-
-// get creates a new Get request, saving the user of needing to pass in a nil value
 func (this *RestClient) get(url string) (request *http.Request, err error) {
 	return this.newRequest("GET", url, nil)
 }
 
+// Do executes the request and returns the response
+func (this *RestClient) Do(request *http.Request) (response *http.Response, err error) {
+	return this.httpClient.Do(request)
+}
+
+// NewRequest creates a new request with the accessToken added as a header
 func (this *RestClient) NewRequest(method string, path string, body io.Reader) (request *http.Request, err error) {
 	return this.newRequest(method, this.hostUrl+path, body)
 }
 
-// newRequest creates a new request with the accessToken added as a header
 func (this *RestClient) newRequest(method string, url string, body io.Reader) (request *http.Request, err error) {
 	request, err = http.NewRequest(method, url, body)
 	if err != nil {

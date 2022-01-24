@@ -18,6 +18,7 @@ type Service struct {
 	restClient *restclient.RestClient
 }
 
+// NewClient returns a new client for interaction with the service resource
 func NewClient(restClient *restclient.RestClient) ServiceClienter {
 	serviceClient := Service{
 		restClient: restClient,
@@ -25,6 +26,7 @@ func NewClient(restClient *restclient.RestClient) ServiceClienter {
 	return &serviceClient
 }
 
+// ServiceClienter is used to perform CRUD operations on the service resource
 type ServiceClienter interface {
 	Get(id string) (service GetServiceSpec, ok bool, err error)
 	Create(svc CreateService) (Service GetServiceSpec, err error)
