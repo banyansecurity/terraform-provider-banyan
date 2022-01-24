@@ -2,18 +2,11 @@ package client
 
 import (
 	"github.com/stretchr/testify/assert"
-	"log"
 	"os"
 	"testing"
-
-	"github.com/joho/godotenv"
 )
 
 func Test_Authentication(t *testing.T) {
-	err := godotenv.Load("../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
 	testApiToken := os.Getenv("BANYAN_API_TOKEN")
