@@ -23,6 +23,7 @@ install-go:
     - echo $PATH
     - go env
     - which go
+    - ln -s /root/golang/go/bin/go /usr/local/bin/go
 
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
