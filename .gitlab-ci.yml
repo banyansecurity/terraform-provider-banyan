@@ -1,0 +1,46 @@
+stages:
+  - install-environment
+  - build
+  - test
+
+install-go:
+  stage: install-environment
+  script:
+    - export CURRENT_BUILD_PATH=$(pwd)
+    - echo $PATH
+    - rm -rf $HOME/golang
+    - rm -rf $HOME/gopath
+    - mkdir -p $HOME/golang # for GOROOT (contains the Go binary & core packages)
+    - mkdir -p $HOME/gopath # for GOPATH (contains code and external packages)
+    - curl http://storage.googleapis.com/golang/go1.5.2.linux-amd64.tar.gz 2>/dev/null > go1.5.2.linux-amd64.tar.gz
+    - tar -C $HOME/golang -xzf go1.5.2.linux-amd64.tar.gz
+    - export GOROOT=$HOME/golang/go
+    - export GOPATH=$HOME/gopath
+    - export PATH=$PATH:$GOROOT/bin
+    - export PATH=$PATH:$GOPATH/bin
+    - (if [[ "$(go version)" == *"go version go1.5"* ]]; then echo "✓ Go binary installed!"; else echo "Go binary not installed"; exit -1; fi);
+    - go version
+    - echo $PATH
+    - go env
+    - which go
+
+build-job:       # This job runs in the build stage, which runs first.
+  stage: build
+  script:
+    - echo "Compiling client..."
+    - cd client && go build .
+    - cd .. && cd banyan && go build .
+    - echo "Compile complete."
+
+client-test-job:   # This job runs in the test stage.
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  script:
+    - echo "Running unit tests...""
+    - cd go test ./client/... -v
+
+tf-acceptance-test-job:   # This job also runs in the test stage.
+  stage: test    # It can run at the same time as unit-test-job (in parallel).
+  script:
+    - echo "Running acceptance tests...""
+    - export TF_ACC=true;TF_LOG=DEBUG
+    - go test ./banyan/... -v
