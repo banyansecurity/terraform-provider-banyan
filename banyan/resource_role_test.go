@@ -20,6 +20,7 @@ func TestAccRole_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoleDestroy(t, &bnnRole.ID),
 		Steps: []resource.TestStep{
+			// Creates the role with the given terraform configuration and asserts that the role is created
 			{
 				Config: testAccRole_create(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -28,6 +29,7 @@ func TestAccRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPtr("banyan_role.acceptance", "id", &bnnRole.ID),
 				),
 			},
+			// Updates the same role with a different configuration and asserts that the same role was updated correctly
 			{
 				Config: testAccRole_update(rName),
 				Check: resource.ComposeTestCheckFunc(

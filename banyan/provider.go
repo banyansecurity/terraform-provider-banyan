@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Provider for banhyan
+// Provider for Banyan
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
@@ -38,6 +38,7 @@ func Provider() *schema.Provider {
 	}
 }
 
+// Configures the Banyan provider with the given refresh / API token and host url
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (client interface{}, diagnostic diag.Diagnostics) {
 	refreshToken := d.Get("refresh_token").(string)
 	var domain string
@@ -49,8 +50,8 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (client inte
 		if !ok {
 			diagnostic = append(diagnostic, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Unable to create HashiCups client",
-				Detail:   "Unable to authenticate user for authenticated HashiCups client",
+				Summary:  "Unable to create Banyan client",
+				Detail:   "Unable to authenticate against the provided banyan host url with the given refresh / API token",
 			})
 		}
 		domain = domainTypeAsserted
@@ -61,7 +62,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (client inte
 		diagnostic = append(diagnostic, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create Banyan client",
-			Detail:   "Unable to authenticate user via refreshToken for authenticated Banyan client" + fmt.Sprintf("%+v", err),
+			Detail:   "Unable to authenticate user with the given refresh / API token" + fmt.Sprintf("%+v", err),
 		})
 
 		return

@@ -18,14 +18,14 @@ const defaultHostUrl = "http://net.banyanops.com/"
 // 	OrgIdpConfigClienter
 // }
 
-// Client is the struct that you use to interact with the banyan restapi.
+// Client is the struct used to interact with the Banyan REST API.
 type Client struct {
 	accessToken string
 	hostUrl     string
 	httpClient  *http.Client
 }
 
-// New creates a new client that will let the user interact with the restapi server.
+// New creates a new client that will let the user interact with the REST API server.
 // As part of this it exchanges the given refreshtoken for an acesstoken.
 func New(hostUrl string, refreshToken string) (client *Client, err error) {
 	if refreshToken == "" {

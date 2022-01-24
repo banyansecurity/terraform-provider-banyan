@@ -13,10 +13,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// The policy attachment resource. For more information on Banyan policy attachments, see the documentation:
 func resourcePolicyAttachment() *schema.Resource {
 	log.Println("[POLICYATTACHMENT|RES] getting resource schema")
 	return &schema.Resource{
-		Description:   "Attach a policy to a service or saasapp",
+		Description:   "A Banyan policy attachment. Attaches a policy.",
 		CreateContext: resourcePolicyAttachmentCreate,
 		ReadContext:   resourcePolicyAttachmentRead,
 		UpdateContext: resourcePolicyAttachmentUpdate,
@@ -25,26 +26,26 @@ func resourcePolicyAttachment() *schema.Resource {
 			"policy_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of your service",
+				Description: "Name of the policy",
 				ForceNew:    true,
 			},
 			"attached_to_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "description of your service",
+				Description: "ID of the resource the policy will be attached to",
 				ForceNew:    true,
 			},
 			"attached_to_type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				Description:  "what the policy is attached to",
+				Description:  "Type which the policy is attached to (i.e. service / saasapp)",
 				ValidateFunc: validateAttachedToType(),
 				ForceNew:     true,
 			},
 			"is_enforcing": {
 				Type:        schema.TypeBool,
 				Required:    true,
-				Description: "sets if the policy is enforcing",
+				Description: "Sets whether the policy is enforcing or not",
 			},
 		},
 	}
@@ -65,6 +66,7 @@ func getPolicyAttachmentID(attachment policyattachment.GetBody) (id string) {
 	id = fmt.Sprintf("%s..%s..%s", attachment.PolicyID, attachment.AttachedToType, attachment.AttachedToID)
 	return
 }
+
 func getInfoFromPolicyAttachmentID(terraformPolicyAttachmentID string) (policyID, attachedToType, attachedToID string) {
 	policyIDParts := strings.Split(terraformPolicyAttachmentID, "..")
 	policyID = policyIDParts[0]
@@ -110,7 +112,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		Enabled:        Enabled,
 	}
 
-	log.Printf("[POLICYATTACHMENT|RES|CREATE] to be created %#v\n", creatPolicyAttachment)
+	log.Printf("[POLICYATTACHMENT|RES|CREATE] to be created: %#v\n", creatPolicyAttachment)
 	createdPolicyAttachment, err := client.PolicyAttachment.Create(policyID, creatPolicyAttachment)
 	if err != nil {
 		diag.FromErr(errors.WithMessage(err, "couldn't create new policyAttachment"))

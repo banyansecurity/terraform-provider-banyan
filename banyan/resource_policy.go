@@ -14,10 +14,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Schema for the policy resource. For more information on Banyan policies, see the documentation:
 func resourcePolicy() *schema.Resource {
 	log.Println("[POLICY|RES] getting resource schema")
 	return &schema.Resource{
-		Description:   "This is an org wide setting. There can only be one of these per organization.",
+		Description:   "Banyan policy for controlling access to a service",
 		CreateContext: resourcePolicyCreate,
 		ReadContext:   resourcePolicyRead,
 		UpdateContext: resourcePolicyUpdate,

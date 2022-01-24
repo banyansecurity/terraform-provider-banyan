@@ -36,7 +36,7 @@ type orgIdpConfigJson struct {
 	IdpConfig   string `json:"IDPConfig"`
 }
 
-// Business domain representation of the restquery
+// Business domain representation of the rest query
 type Spec struct {
 	IdpName     string
 	IdpProtocol string

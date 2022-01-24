@@ -13,10 +13,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// The role resource. For more information on Banyan roles, please see the documentation:
 func resourceRole() *schema.Resource {
 	log.Println("[ROLE|RES] getting resource schema")
 	return &schema.Resource{
-		Description:   "This is an org wide setting. There can only be one of these per organization.",
+		Description:   "A role represents a group of users in the organization.",
 		CreateContext: resourceRoleCreate,
 		ReadContext:   resourceRoleRead,
 		UpdateContext: resourceRoleUpdate,
@@ -25,24 +26,24 @@ func resourceRole() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of your service",
+				Description: "Name of the role",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "description of your service",
+				Description: "Description of the role",
 			},
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "uuid of the role in banyan",
+				Description: "ID of the role in Banyan",
 			},
 			"metadatatags": {
 				Type:        schema.TypeList,
 				MinItems:    1,
 				MaxItems:    1,
 				Required:    true,
-				Description: "The details regarding setting up an idp. Currently only supports OIDC. SAML support is planned.",
+				Description: "Metadata about the role",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"template": {
@@ -58,13 +59,13 @@ func resourceRole() *schema.Resource {
 				MinItems:    1,
 				MaxItems:    1,
 				Required:    true,
-				Description: "The spec",
+				Description: "The spec for the role",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"email": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "access",
+							Description: "Email address for the user or group of users in the role",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -72,7 +73,7 @@ func resourceRole() *schema.Resource {
 						"group": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "access",
+							Description: "Name of the group (from your IdP) which will be included in the role",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -80,7 +81,7 @@ func resourceRole() *schema.Resource {
 						"platform": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "access",
+							Description: "Platform type which is required by the role",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -88,7 +89,7 @@ func resourceRole() *schema.Resource {
 						"device_ownership": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "access",
+							Description: "Device ownership specification for the role",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -96,12 +97,12 @@ func resourceRole() *schema.Resource {
 						"known_device_only": {
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Description: "access",
+							Description: "Enforces whether the role requires known devices only for access",
 						},
 						"mdm_present": {
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Description: "access",
+							Description: "Enforces whether the role requires an MDM to be present on the device",
 						},
 					},
 				},
@@ -114,7 +115,7 @@ func validateRoleTemplate() func(val interface{}, key string) (warns []string, e
 	return func(val interface{}, key string) (warns []string, errs []error) {
 		v := val.(string)
 		if v != "USER" && v != "" {
-			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "WEB_USER", v))
+			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "USER", v))
 		}
 		return
 	}
