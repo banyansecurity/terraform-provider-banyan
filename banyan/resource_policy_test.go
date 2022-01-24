@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// Use the terraform plugin sdk testing framework for acceptance testing banyan policy lifecycle
+// Use the Terraform plugin SDK testing framework for acceptance testing banyan policy lifecycle.
 func TestAccPolicy_basic(t *testing.T) {
 	var bnnPolicy policy.GetPolicy
 
@@ -117,7 +117,7 @@ resource "banyan_policy" "acceptance" {
 `, name)
 }
 
-// Returns and updated terraform configuration for the policy with one of the roles removed
+// Returns an updated terraform configuration for the policy with one of the roles removed
 func testAccPolicy_update(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_policy" "acceptance" {

@@ -19,6 +19,7 @@ type Role struct {
 	restClient *restclient.RestClient
 }
 
+// NewClient returns a new client for interacting with the role resource
 func NewClient(restClient *restclient.RestClient) RoleClienter {
 	roleClient := Role{
 		restClient: restClient,
@@ -26,6 +27,7 @@ func NewClient(restClient *restclient.RestClient) RoleClienter {
 	return &roleClient
 }
 
+// RoleClienter is used for performing CRUD operations on the role resource
 type RoleClienter interface {
 	Get(id string) (role GetRole, ok bool, err error)
 	Create(role CreateRole) (createdRole GetRole, err error)
@@ -34,6 +36,7 @@ type RoleClienter interface {
 	disable(id string) (err error)
 }
 
+// disable is used to disable a role. This is required before deleting a role.
 func (this *Role) disable(id string) (err error) {
 	if id == "" {
 		err = errors.New("need an id disable a role")
@@ -185,6 +188,7 @@ func (this *Role) Update(role CreateRole) (updatedRole GetRole, err error) {
 	return
 }
 
+// Delete will disable the role and then delete it
 func (this *Role) Delete(id string) (err error) {
 	log.Printf("[ROLE|DELETE] deleting role with id %s", id)
 	err = this.disable(id)
