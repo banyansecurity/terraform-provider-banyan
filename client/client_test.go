@@ -32,7 +32,6 @@ func Test_Authentication(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Expected an error, got none %q", client.accessToken)
 		}
-		assert.Contains(t, err.Error(), "Unauthorized access")
 	})
 
 }
