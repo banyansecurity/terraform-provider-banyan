@@ -32,6 +32,11 @@ func resourceRole() *schema.Resource {
 				Required:    true,
 				Description: "description of your service",
 			},
+			"id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "uuid of the role in banyan",
+			},
 			"metadatatags": {
 				Type:        schema.TypeList,
 				MinItems:    1,
