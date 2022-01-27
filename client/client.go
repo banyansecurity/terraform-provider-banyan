@@ -83,6 +83,7 @@ func (this *Client) exhangeRefreshTokenForAccessToken(clientHostUrl string, refr
 	}
 	if resp.StatusCode != 200 {
 		err = errors.New(fmt.Sprintf("invalid status code %+v", resp))
+		return
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
