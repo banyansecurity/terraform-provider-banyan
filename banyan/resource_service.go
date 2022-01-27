@@ -60,18 +60,18 @@ func resourceService() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of your service",
+				Description: "Name of the service",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "description of your service",
+				Description: "Description of the service",
 			},
 			"cluster": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "description of your service",
+				Description: "Name of the NetAgent cluster which the service is accessible from",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
 			"metadatatags": {
@@ -79,7 +79,7 @@ func resourceService() *schema.Resource {
 				MinItems:    1,
 				MaxItems:    1,
 				Required:    true,
-				Description: "The details regarding setting up an idp. Currently only supports OIDC. SAML support is planned.",
+				Description: "Metadata about the service",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"template": {
@@ -169,7 +169,7 @@ func resourceService() *schema.Resource {
 				MinItems:    1,
 				MaxItems:    1,
 				Required:    true,
-				Description: "The spec",
+				Description: "The spec for the service",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"client_cidrs": {
@@ -1649,7 +1649,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[SERVICE|RES|DELETE] deleting service with id: %q ", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
 
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
@@ -1753,8 +1753,8 @@ func flattenServiceTarget(toFlatten service.Target) (flattened []interface{}) {
 	v := make(map[string]interface{})
 	v["client_certificate"] = toFlatten.ClientCertificate
 	v["name"] = toFlatten.Name
-	v["port"] = toFlatten.Port // might need to convert this to string
-	v["tls"] = toFlatten.TLS // might need to convert this to string
+	v["port"] = toFlatten.Port                // might need to convert this to string
+	v["tls"] = toFlatten.TLS                  // might need to convert this to string
 	v["tls_insecure"] = toFlatten.TLSInsecure // might need to convert this to string
 
 	flattened = append(flattened, v)
