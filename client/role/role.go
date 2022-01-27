@@ -15,12 +15,12 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 )
 
-type role struct {
+type Role struct {
 	restClient *restclient.RestClient
 }
 
 func NewClient(restClient *restclient.RestClient) RoleClienter {
-	roleClient := role{
+	roleClient := Role{
 		restClient: restClient,
 	}
 	return &roleClient
@@ -34,7 +34,7 @@ type RoleClienter interface {
 	disable(id string) (err error)
 }
 
-func (this *role) disable(id string) (err error) {
+func (this *Role) disable(id string) (err error) {
 	if id == "" {
 		err = errors.New("need an id disable a role")
 		return
@@ -67,7 +67,7 @@ func (this *role) disable(id string) (err error) {
 	return
 }
 
-func (this *role) Get(id string) (role GetRole, ok bool, err error) {
+func (this *Role) Get(id string) (role GetRole, ok bool, err error) {
 	log.Printf("[ROLE|GET] reading role")
 	if id == "" {
 		err = errors.New("need an id to get a role")
@@ -107,7 +107,7 @@ func (this *role) Get(id string) (role GetRole, ok bool, err error) {
 		return
 	}
 	if len(getRoleJson) > 1 {
-		err = errors.New("got more than one service")
+		err = errors.New("got more than one role")
 		return
 	}
 	role = getRoleJson[0]
@@ -131,7 +131,7 @@ func (this *role) Get(id string) (role GetRole, ok bool, err error) {
 
 }
 
-func (this *role) Create(role CreateRole) (createdRole GetRole, err error) {
+func (this *Role) Create(role CreateRole) (createdRole GetRole, err error) {
 	path := "api/v1/insert_security_role"
 	body, err := json.Marshal(role)
 	if err != nil {
@@ -175,7 +175,7 @@ func (this *role) Create(role CreateRole) (createdRole GetRole, err error) {
 	return
 }
 
-func (this *role) Update(role CreateRole) (updatedRole GetRole, err error) {
+func (this *Role) Update(role CreateRole) (updatedRole GetRole, err error) {
 	log.Printf("[ROLE|UPDATE] updating role")
 	updatedRole, err = this.Create(role)
 	if err != nil {
@@ -185,7 +185,7 @@ func (this *role) Update(role CreateRole) (updatedRole GetRole, err error) {
 	return
 }
 
-func (this *role) Delete(id string) (err error) {
+func (this *Role) Delete(id string) (err error) {
 	log.Printf("[ROLE|DELETE] deleting role with id %s", id)
 	err = this.disable(id)
 	if err != nil {

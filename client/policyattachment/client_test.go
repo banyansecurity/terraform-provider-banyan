@@ -19,55 +19,47 @@ func Test_GetNonexistentAttachment(t *testing.T) {
 	assert.Equal(t, emptyAttachment, attachment, "expected to get empty attachment")
 }
 
-func Test_GetExistingAttachment(t *testing.T) {
-	client, err := testutil.GetClientHolderForTest()
-	assert.NoError(t, err, "Expected to not get an error here")
-	emptyAttachment := policyattachment.GetBody{}
-
-	attachment, ok, err := client.PolicyAttachment.Get("9e77de1a-c886-4eb0-9548-15fa4085d497", "demo-day-lets-encrypt-2.dev05-banyan.bnn", "service")
-	assert.NoError(t, err, "expected no error here")
-	assert.True(t, ok, "expected to get a value here")
-	assert.NotEqual(t, emptyAttachment, attachment, "expected to a full policy attachment x")
-}
-
 func Test_CreateGetUpdateGetThenDeleteAttachment(t *testing.T) {
-	everyonePolicyID := "9e77de1a-c886-4eb0-9548-15fa4085d497"
-	serviceToAttachToID := "realtftest.dev05-banyan.bnn"
+	everyonePolicyID := "73f0820b-cbf1-4e75-9518-21121a6a271c"
+	everyonePolicyName := "everyone"
+	testServiceID := "testservice.us-west.bnn"
+	testServiceName := "testservice"
+
 	attachedToType := "service"
 	client, err := testutil.GetClientHolderForTest()
 	assert.NoError(t, err, "Expected to not get an error here")
 	createAttachment := policyattachment.CreateBody{
-		AttachedToID:   serviceToAttachToID,
+		AttachedToID:   testServiceID,
 		AttachedToType: attachedToType,
 		IsEnabled:      true,
 		Enabled:        "TRUE",
 	}
 	createdAttachment, err := client.PolicyAttachment.Create(everyonePolicyID, createAttachment)
 	assert.NoError(t, err)
-	retrievedAttachment, ok, err := client.PolicyAttachment.Get(everyonePolicyID, serviceToAttachToID, attachedToType)
+	retrievedAttachment, ok, err := client.PolicyAttachment.Get(everyonePolicyID, testServiceID, attachedToType)
 	assert.NoError(t, err)
 	assert.True(t, ok)
 	// handle slight bug here
-	createdAttachment.PolicyName = "Everyone"
-	createdAttachment.AttachedToName = "realtftest"
+	createdAttachment.PolicyName = everyonePolicyName
+	createdAttachment.AttachedToName = testServiceName
 	assert.Equal(t, createdAttachment, retrievedAttachment)
 	createAttachment.IsEnabled = false
 	createAttachment.Enabled = "FALSE"
 	updatedAttachment, err := client.PolicyAttachment.Update(everyonePolicyID, createAttachment)
 	assert.NoError(t, err)
 	assert.NotEqual(t, updatedAttachment, createdAttachment)
-	retrievedAttachment, ok, err = client.PolicyAttachment.Get(everyonePolicyID, serviceToAttachToID, attachedToType)
+	retrievedAttachment, ok, err = client.PolicyAttachment.Get(everyonePolicyID, testServiceID, attachedToType)
 	assert.NoError(t, err)
 	assert.True(t, ok)
-	updatedAttachment.PolicyName = "Everyone"
-	updatedAttachment.AttachedToName = "realtftest"
+	updatedAttachment.PolicyName = everyonePolicyName
+	updatedAttachment.AttachedToName = testServiceName
 	assert.Equal(t, updatedAttachment, retrievedAttachment)
 
 	client.PolicyAttachment.Delete(everyonePolicyID, policyattachment.DetachBody{
-		AttachedToID: serviceToAttachToID,
+		AttachedToID:   testServiceID,
 		AttachedToType: attachedToType,
 	})
-	retrievedAttachment, ok, err = client.PolicyAttachment.Get(everyonePolicyID, serviceToAttachToID, attachedToType)
+	retrievedAttachment, ok, err = client.PolicyAttachment.Get(everyonePolicyID, testServiceID, attachedToType)
 	assert.NoError(t, err)
 	assert.False(t, ok)
 }

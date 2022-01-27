@@ -191,25 +191,25 @@ type Metadata struct {
 }
 
 type Tags struct {
-	Template          *string   `json:"template,omitempty"`
-	UserFacing        *string   `json:"user_facing,omitempty"`
-	Protocol          *string   `json:"protocol,omitempty"`
-	DescriptionLink   *string   `json:"description_link,omitempty"`
-	Domain            *string   `json:"domain,omitempty"`
-	Port              *string   `json:"port,omitempty"`
-	Icon              *string   `json:"icon,omitempty"`
-	ServiceAppType    *string   `json:"service_app_type,omitempty"`
-	EnforcementMode   *string   `json:"enforcement_mode,omitempty"`
-	SSHServiceType    *string   `json:"ssh_service_type,omitempty"`
-	WriteSSHConfig    *bool     `json:"write_ssh_config,omitempty"`
-	BanyanProxyMode   *string   `json:"banyanproxy_mode,omitempty"`
-	AppListenPort     *string   `json:"app_listen_port,omitempty"`
-	AllowUserOverride *bool     `json:"allow_user_override,omitempty"`
-	SSHChainMode      *bool     `json:"ssh_chain_mode,omitempty"`
-	SSHHostDirective  *string   `json:"ssh_host_directive,omitempty"`
-	KubeClusterName   *string   `json:"kube_cluster_name,omitempty"`
-	KubeCaKey         *string   `json:"kube_ca_key,omitempty"`
-	IncludeDomains    *[]string `json:"include_domains,omitempty"`
+	Template          string   `json:"template,omitempty"`
+	UserFacing        string   `json:"user_facing,omitempty"`
+	Protocol          string   `json:"protocol,omitempty"`
+	DescriptionLink   string   `json:"description_link,omitempty"`
+	Domain            string   `json:"domain,omitempty"`
+	Port              string   `json:"port,omitempty"`
+	Icon              string   `json:"icon,omitempty"`
+	ServiceAppType    string   `json:"service_app_type,omitempty"`
+	EnforcementMode   string   `json:"enforcement_mode,omitempty"`
+	SSHServiceType    string   `json:"ssh_service_type,omitempty"`
+	WriteSSHConfig    bool     `json:"write_ssh_config,omitempty"`
+	BanyanProxyMode   string   `json:"banyanproxy_mode,omitempty"`
+	AppListenPort     string   `json:"app_listen_port,omitempty"`
+	AllowUserOverride bool     `json:"allow_user_override,omitempty"`
+	SSHChainMode      bool     `json:"ssh_chain_mode,omitempty"`
+	SSHHostDirective  string   `json:"ssh_host_directive,omitempty"`
+	KubeClusterName   string   `json:"kube_cluster_name,omitempty"`
+	KubeCaKey         string   `json:"kube_ca_key,omitempty"`
+	IncludeDomains    []string `json:"include_domains,omitempty"`
 	//we aren't using icon here
 }
 
