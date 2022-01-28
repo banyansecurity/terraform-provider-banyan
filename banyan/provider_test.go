@@ -1,6 +1,7 @@
 package banyan
 
 import (
+	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"log"
 	"os"
 	"testing"
@@ -10,12 +11,23 @@ import (
 
 var testAccProviders map[string]*schema.Provider
 var testAccProvider *schema.Provider
+var testAccClient *client.ClientHolder
 
 func init() {
+	testAccPreCheck()
+	testAccClient = NewAccClient()
 	testAccProvider = Provider()
 	testAccProviders = map[string]*schema.Provider{
 		"banyan": testAccProvider,
 	}
+}
+
+func NewAccClient() (c *client.ClientHolder) {
+	c, err := client.NewClientHolder(os.Getenv("BANYAN_HOST"), os.Getenv("BANYAN_API_TOKEN"))
+	if err != nil {
+		log.Fatal("Could not create the test client")
+	}
+	return
 }
 
 func TestProvider(t *testing.T) {

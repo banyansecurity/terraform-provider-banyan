@@ -747,82 +747,82 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			diagnostics = diag.FromErr(errors.New("couldn't type assert issuerUrl"))
 			return
 		}
-		svc.Metadata.Tags.Domain = &domain
+		svc.Metadata.Tags.Domain = domain
 		port, ok := ii["port"].(int)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert port"))
 			return
 		}
 		portTag := strconv.Itoa(port)
-		svc.Metadata.Tags.Port = &portTag
+		svc.Metadata.Tags.Port = portTag
 		protocol, ok := ii["protocol"].(string)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert protocol"))
 			return
 		}
-		svc.Metadata.Tags.Protocol = &protocol
+		svc.Metadata.Tags.Protocol = protocol
 		serviceAppType, ok := ii["service_app_type"].(string)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert service_app_type"))
 			return
 		}
-		svc.Metadata.Tags.ServiceAppType = &serviceAppType
+		svc.Metadata.Tags.ServiceAppType = serviceAppType
 		userFacingMetadataTag, ok := ii["user_facing"].(bool)
 		if !ok {
 			diagnostics = diag.FromErr(errors.New("couldn't type assert user_facing"))
 			return
 		}
 		userFacing := strconv.FormatBool(userFacingMetadataTag)
-		svc.Metadata.Tags.UserFacing = &userFacing
+		svc.Metadata.Tags.UserFacing = userFacing
 		template, ok := ii["template"].(string)
 		if !ok {
 			diagnostics = diag.Errorf("Couldn't type assert template")
 			return
 		}
-		svc.Metadata.Tags.Template = &template
+		svc.Metadata.Tags.Template = template
 		enforcementMode, ok := ii["enforcement_mode"].(string)
 		if !ok {
 			diagnostics = diag.Errorf("Couldn't type enforcement_mode")
 			return
 		}
-		svc.Metadata.Tags.EnforcementMode = &enforcementMode
+		svc.Metadata.Tags.EnforcementMode = enforcementMode
 		sshServiceType, ok := ii["ssh_service_type"].(string)
 		if !ok {
 			diagnostics = diag.Errorf("Couldn't type ssh_service_type")
 			return
 		}
-		svc.Metadata.Tags.SSHServiceType = &sshServiceType
+		svc.Metadata.Tags.SSHServiceType = sshServiceType
 		writeSSHConfig, ok := ii["write_ssh_config"].(bool)
 		if !ok {
 			diagnostics = diag.Errorf("Couldn't type write_ssh_config")
 			return
 		}
-		svc.Metadata.Tags.WriteSSHConfig = &writeSSHConfig
+		svc.Metadata.Tags.WriteSSHConfig = writeSSHConfig
 		appListenPort, ok := ii["app_listen_port"].(int)
 		if !ok {
 			diagnostics = diag.Errorf("Couldn't type assert app_listen_port")
 			return
 		}
 		appListenPortString := strconv.Itoa(appListenPort)
-		svc.Metadata.Tags.AppListenPort = &appListenPortString
+		svc.Metadata.Tags.AppListenPort = appListenPortString
 		allowUserOverride, ok := ii["allow_user_override"].(bool)
 		if !ok {
 			diagnostics = diag.Errorf("Couldn't type enforcement_mode")
 			return
 		}
-		svc.Metadata.Tags.AllowUserOverride = &allowUserOverride
+		svc.Metadata.Tags.AllowUserOverride = allowUserOverride
 		sshChainMode, ok := ii["ssh_chain_mode"].(bool)
 		if !ok {
 			diagnostics = diag.Errorf("Couldn't type ssh_chain_mode")
 			return
 		}
-		svc.Metadata.Tags.SSHChainMode = &sshChainMode
+		svc.Metadata.Tags.SSHChainMode = sshChainMode
 		banyanProxyMode, ok := ii["banyan_proxy_mode"].(string)
 		if !ok {
 			diagnostics = diag.Errorf("Couldn't type banyan_proxy_mode")
 			return
 		}
-		svc.Metadata.Tags.BanyanProxyMode = &banyanProxyMode
+		svc.Metadata.Tags.BanyanProxyMode = banyanProxyMode
 	}
 
 	svc.Spec.Attributes.TLSSNI = append(svc.Spec.Attributes.TLSSNI, "sni")
@@ -1574,17 +1574,17 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	d.Set("name", service.ServiceName)
 	d.Set("description", service.Description)
 	d.Set("cluster", service.ClusterName)
-	port, err := strconv.Atoi(*service.CreateServiceSpec.Metadata.Tags.Port)
+	port, err := strconv.Atoi(service.CreateServiceSpec.Metadata.Tags.Port)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	appListenPort, err := strconv.Atoi(*service.CreateServiceSpec.Metadata.Tags.AppListenPort)
+	appListenPort, err := strconv.Atoi(service.CreateServiceSpec.Metadata.Tags.AppListenPort)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	metadataTagUserFacing, err := strconv.ParseBool(*service.CreateServiceSpec.Metadata.Tags.UserFacing)
+	metadataTagUserFacing, err := strconv.ParseBool(service.CreateServiceSpec.Metadata.Tags.UserFacing)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
