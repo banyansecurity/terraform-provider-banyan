@@ -231,7 +231,7 @@ func resourceService() *schema.Resource {
 										Type:        schema.TypeList,
 										MinItems:    1,
 										Required:    true,
-										Description: "frontend addresses",
+										Description: "frontend address",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cidr": {
@@ -1350,7 +1350,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 				patterns, ok := exemptedPathMap["pattern"].([]interface{})
 				if !ok {
-					diagnostics = createTypeAssertDiagnostic("exempted_paths.pattern", exemptedPathMap["patterns"])
+					diagnostics = createTypeAssertDiagnostic("exempted_paths.pattern", exemptedPathMap["pattern"])
 					return
 				}
 				for pattern_idx, patternItem := range patterns {
@@ -1674,8 +1674,8 @@ func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}) {
 
 func flattenServiceAttributes(toFlatten service.Attributes) (flattened []interface{}) {
 	v := make(map[string]interface{})
-	v["frontend_addresses"] = flattenServiceFrontendAddresses(toFlatten.FrontendAddresses)
-	v["hosttag_selector"] = flattenServiceHostTagSelector(toFlatten.HostTagSelector)
+	v["frontend_address"] = flattenServiceFrontendAddresses(toFlatten.FrontendAddresses)
+	v["host_tag_selector"] = flattenServiceHostTagSelector(toFlatten.HostTagSelector)
 	v["tls_sni"] = toFlatten.TLSSNI
 	flattened = append(flattened, v)
 	return
@@ -1706,11 +1706,11 @@ func flattenServiceHostTagSelector(toFlatten []service.HostTag) (flattened []int
 
 func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}) {
 	v := make(map[string]interface{})
-	v["allow_patterns"] = flattenServiceAllowPatterns(toFlatten.AllowPatterns)
+	v["backend_allow_pattern"] = flattenServiceAllowPatterns(toFlatten.AllowPatterns)
 	v["connector_name"] = toFlatten.ConnectorName
 	v["dns_overrides"] = toFlatten.DNSOverrides
 	v["target"] = flattenServiceTarget(toFlatten.Target)
-	v["allow_list"] = toFlatten.Whitelist
+	v["backend_allowlist"] = toFlatten.Whitelist
 
 	flattened = append(flattened, v)
 	return
@@ -1753,9 +1753,10 @@ func flattenServiceTarget(toFlatten service.Target) (flattened []interface{}) {
 	v := make(map[string]interface{})
 	v["client_certificate"] = toFlatten.ClientCertificate
 	v["name"] = toFlatten.Name
-	v["port"] = toFlatten.Port                // might need to convert this to string
-	v["tls"] = toFlatten.TLS                  // might need to convert this to string
-	v["tls_insecure"] = toFlatten.TLSInsecure // might need to convert this to string
+	// todo: handle this error
+	v["port"], _ = strconv.Atoi(toFlatten.Port) // need to convert this to int
+	v["tls"] = toFlatten.TLS                    // might need to convert this to string
+	v["tls_insecure"] = toFlatten.TLSInsecure   // might need to convert this to string
 
 	flattened = append(flattened, v)
 	return
@@ -1765,7 +1766,7 @@ func flattenServiceCertSettings(toFlatten service.CertSettings) (flattened []int
 	v := make(map[string]interface{})
 	v["custom_tls_cert"] = flattenServiceCustomTLSCert(toFlatten.CustomTLSCert)
 	v["dns_names"] = toFlatten.DNSNames
-	v["lets_encrypt"] = toFlatten.LetsEncrypt
+	v["letsencrypt"] = toFlatten.LetsEncrypt
 
 	flattened = append(flattened, v)
 	return
@@ -1796,7 +1797,7 @@ func flattenServiceExemptedPaths(toFlatten service.ExemptedPaths) (flattened []i
 	v := make(map[string]interface{})
 	v["enabled"] = toFlatten.Enabled
 	v["paths"] = toFlatten.Paths
-	v["patterns"] = flattenServicePatterns(toFlatten.Patterns)
+	v["pattern"] = flattenServicePatterns(toFlatten.Patterns)
 	flattened = append(flattened, v)
 	return
 }
@@ -1834,7 +1835,6 @@ func flattenServiceHTTPHealthCheck(toFlatten service.HTTPHealthCheck) (flattened
 	v["enabled"] = toFlatten.Enabled
 	v["from_address"] = toFlatten.FromAddress
 	v["https"] = toFlatten.HTTPS
-	v["verb"] = toFlatten.Method
 	v["path"] = toFlatten.Path
 	v["user_agent"] = toFlatten.UserAgent
 	flattened = append(flattened, v)
@@ -1859,7 +1859,7 @@ func flattenServiceOIDCSettings(toFlatten service.OIDCSettings) (flattened []int
 	v["post_auth_redirect_path"] = toFlatten.PostAuthRedirectPath
 	v["service_domain_name"] = toFlatten.ServiceDomainName
 	v["suppress_device_trust_verification"] = toFlatten.SuppressDeviceTrustVerification
-	v["trust_call_backs"] = toFlatten.TrustCallBacks
+	v["trust_callbacks"] = toFlatten.TrustCallBacks
 	flattened = append(flattened, v)
 	return
 }
@@ -1869,7 +1869,7 @@ func flattenServiceClientCIDRs(toFlatten []service.ClientCIDRs) (flattened []int
 
 	for idx, item := range toFlatten {
 		v := make(map[string]interface{})
-		v["addresses"] = flattenServiceCIDRAddresses(item.Addresses)
+		v["address"] = flattenServiceCIDRAddresses(item.Addresses)
 		v["clusters"] = item.Clusters
 		v["host_tag_selector"] = item.HostTagSelector
 		flattened[idx] = v
