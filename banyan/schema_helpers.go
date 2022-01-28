@@ -49,7 +49,7 @@ func getStringSliceFromSet(set interface{}, setName string) (slice []string, dia
 	for idx, setItem := range assertedSet.List() {
 		assertedSetItem, ok := setItem.(string)
 		if !ok {
-			diagnostics = createTypeAssertDiagnostic(fmt.Sprintf("%s[%d]", idx), setItem)
+			diagnostics = createTypeAssertDiagnostic(fmt.Sprintf("%q", idx), setItem)
 		}
 		slice = append(slice, assertedSetItem)
 	}

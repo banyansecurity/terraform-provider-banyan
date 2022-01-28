@@ -1,22 +1,15 @@
 package service_test
 
 import (
-	"log"
 	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
-	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_GetNonexistentService(t *testing.T) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
 	client, err := client.NewClientHolder(testhost, testRefreshToken)
@@ -28,27 +21,18 @@ func Test_GetNonexistentService(t *testing.T) {
 }
 
 func Test_GetExistingService(t *testing.T) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
 	client, err := client.NewClientHolder(testhost, testRefreshToken)
 	assert.NoError(t, err, "Expected to not get an error here")
-	svc, ok, err := client.Service.Get("a.dev05-banyan.bnn")
+	svc, ok, err := client.Service.Get("testservice.us-west.bnn")
 	assert.NoError(t, err, "expected no error here")
 	assert.True(t, ok, "expected to get a value here")
 	assert.NotEqual(t, service.GetServiceSpec{}, svc, "expected to get service x")
 }
 
 func Test_CreateService(t *testing.T) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
+	somestring := "test"
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
 	client, err := client.NewClientHolder(testhost, testRefreshToken)
@@ -61,14 +45,14 @@ func Test_CreateService(t *testing.T) {
 			Description: "terraform test",
 			Name:        "terraformtest",
 			Tags: service.Tags{
-				DescriptionLink: "http://hello.com",
-				Domain:          "tf.example.bnntest.com",
-				Icon:            "",
-				Port:            "443",
-				Protocol:        "https",
-				ServiceAppType:  "WEB",
-				Template:        "WEB_USER", // should prefix with TF
-				UserFacing:      "true",
+				DescriptionLink: &somestring,
+				Domain:          &somestring,
+				Icon:            &somestring,
+				Port:            &somestring,
+				Protocol:        &somestring,
+				ServiceAppType:  &somestring,
+				Template:        &somestring,
+				UserFacing:      &somestring,
 			},
 		},
 		Spec: service.Spec{
@@ -125,11 +109,7 @@ func Test_CreateService(t *testing.T) {
 }
 
 func Test_CreateService2(t *testing.T) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
+	somestring := "test"
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
 	client, err := client.NewClientHolder(testhost, testRefreshToken)
@@ -142,14 +122,14 @@ func Test_CreateService2(t *testing.T) {
 			Description: "terraform test",
 			Name:        "terraformtest",
 			Tags: service.Tags{
-				DescriptionLink: "http://hello.com",
-				Domain:          "tf.example.bnntest.com",
-				Icon:            "",
-				Port:            "443",
-				Protocol:        "https",
-				ServiceAppType:  "WEB",
-				Template:        "WEB_USER", // should prefix with TF
-				UserFacing:      "true",
+				DescriptionLink: &somestring,
+				Domain:          &somestring,
+				Icon:            &somestring,
+				Port:            &somestring,
+				Protocol:        &somestring,
+				ServiceAppType:  &somestring,
+				Template:        &somestring,
+				UserFacing:      &somestring,
 			},
 		},
 		Spec: service.Spec{
@@ -206,11 +186,6 @@ func Test_CreateService2(t *testing.T) {
 }
 
 func Test_delete(t *testing.T) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
 	client, err := client.NewClientHolder(testhost, testRefreshToken)
