@@ -32,6 +32,7 @@ func Test_GetExistingService(t *testing.T) {
 }
 
 func Test_CreateService(t *testing.T) {
+	somestring := "test"
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
 	client, err := client.NewClientHolder(testhost, testRefreshToken)
@@ -44,14 +45,14 @@ func Test_CreateService(t *testing.T) {
 			Description: "terraform test",
 			Name:        "terraformtest",
 			Tags: service.Tags{
-				DescriptionLink: "http://hello.com",
-				Domain:          "tf.example.bnntest.com",
-				Icon:            "",
-				Port:            "443",
-				Protocol:        "https",
-				ServiceAppType:  "WEB",
-				Template:        "WEB_USER", // should prefix with TF
-				UserFacing:      "true",
+				DescriptionLink: &somestring,
+				Domain:          &somestring,
+				Icon:            &somestring,
+				Port:            &somestring,
+				Protocol:        &somestring,
+				ServiceAppType:  &somestring,
+				Template:        &somestring,
+				UserFacing:      &somestring,
 			},
 		},
 		Spec: service.Spec{
@@ -108,6 +109,7 @@ func Test_CreateService(t *testing.T) {
 }
 
 func Test_CreateService2(t *testing.T) {
+	somestring := "test"
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
 	client, err := client.NewClientHolder(testhost, testRefreshToken)
@@ -120,14 +122,14 @@ func Test_CreateService2(t *testing.T) {
 			Description: "terraform test",
 			Name:        "terraformtest",
 			Tags: service.Tags{
-				DescriptionLink: "http://hello.com",
-				Domain:          "tf.example.bnntest.com",
-				Icon:            "",
-				Port:            "443",
-				Protocol:        "https",
-				ServiceAppType:  "WEB",
-				Template:        "WEB_USER", // should prefix with TF
-				UserFacing:      "true",
+				DescriptionLink: &somestring,
+				Domain:          &somestring,
+				Icon:            &somestring,
+				Port:            &somestring,
+				Protocol:        &somestring,
+				ServiceAppType:  &somestring,
+				Template:        &somestring,
+				UserFacing:      &somestring,
 			},
 		},
 		Spec: service.Spec{

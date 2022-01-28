@@ -81,11 +81,11 @@ func (this *Client) exhangeRefreshTokenForAccessToken(clientHostUrl string, refr
 		err = errors.WithMessage(err, "Unable to make actual request for accesstoken")
 		return
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		err = errors.New(fmt.Sprintf("invalid status code %+v", resp))
 		return
 	}
-	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		err = errors.WithMessage(err, "Unable to read accessToken body")
