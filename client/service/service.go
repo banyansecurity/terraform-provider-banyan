@@ -210,7 +210,6 @@ type Tags struct {
 	KubeClusterName   *string   `json:"kube_cluster_name,omitempty"`
 	KubeCaKey         *string   `json:"kube_ca_key,omitempty"`
 	IncludeDomains    *[]string `json:"include_domains,omitempty"`
-	//we aren't using icon here
 }
 
 type GetServicesJson struct {
