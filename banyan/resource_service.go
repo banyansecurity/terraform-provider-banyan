@@ -139,7 +139,7 @@ func resourceService() *schema.Resource {
 				MinItems:    1,
 				MaxItems:    1,
 				Required:    true,
-				Description: "The spec for the service",
+				Description: "The spec",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"client_cidrs": {
@@ -1320,7 +1320,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 				patterns, ok := exemptedPathMap["pattern"].([]interface{})
 				if !ok {
-					diagnostics = createTypeAssertDiagnostic("exempted_paths.pattern", exemptedPathMap["patterns"])
+					diagnostics = createTypeAssertDiagnostic("exempted_paths.pattern", exemptedPathMap["pattern"])
 					return
 				}
 				for pattern_idx, patternItem := range patterns {
@@ -1580,40 +1580,40 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		"include_domains":     service.CreateServiceSpec.Metadata.Tags.IncludeDomains,
 	}
 	d.Set("metadatatags", []interface{}{metadatatags})
-	frontendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
-	}
-	backendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
-	}
-	spec := map[string]interface{}{
-		"attributes": map[string]interface{}{
-			//todo make this be able to handle n frontend addresses
-			"frontend_address": map[string]interface{}{
-				"cidr": service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].CIDR,
-				"port": frontendPort,
-			},
-			//todo make this handle n host tag selectors
-			"host_tag_selector": map[string]interface{}{
-				"site_name": service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0],
-			},
-			"tls_sni": service.CreateServiceSpec.Spec.Attributes.TLSSNI,
-		},
-		"backend": map[string]interface{}{
-			"target": map[string]interface{}{
-				"client_certificate": service.CreateServiceSpec.Spec.Backend.Target.ClientCertificate,
-				"name":               service.CreateServiceSpec.Spec.Backend.Target.Name,
-				"port":               backendPort,
-				"tls":                service.CreateServiceSpec.Spec.Backend.Target.TLS,
-				"tls_insecure":       service.CreateServiceSpec.Spec.Backend.Target.TLSInsecure,
-			},
-		},
-	}
-	d.Set("spec", spec)
+	// frontendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
+	// if err != nil {
+	// 	diagnostics = diag.FromErr(err)
+	// 	return
+	// }
+	// backendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
+	// if err != nil {
+	// 	diagnostics = diag.FromErr(err)
+	// 	return
+	// }
+	// spec := map[string]interface{}{
+	// 	"attributes": map[string]interface{}{
+	// 		//todo make this be able to handle n frontend addresses
+	// 		"frontend_address": map[string]interface{}{
+	// 			"cidr": service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].CIDR,
+	// 			"port": frontendPort,
+	// 		},
+	// 		//todo make this handle n host tag selectors
+	// 		"host_tag_selector": map[string]interface{}{
+	// 			"site_name": service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0],
+	// 		},
+	// 		"tls_sni": service.CreateServiceSpec.Spec.Attributes.TLSSNI,
+	// 	},
+	// 	"backend": map[string]interface{}{
+	// 		"target": map[string]interface{}{
+	// 			"client_certificate": service.CreateServiceSpec.Spec.Backend.Target.ClientCertificate,
+	// 			"name":               service.CreateServiceSpec.Spec.Backend.Target.Name,
+	// 			"port":               backendPort,
+	// 			"tls":                service.CreateServiceSpec.Spec.Backend.Target.TLS,
+	// 			"tls_insecure":       service.CreateServiceSpec.Spec.Backend.Target.TLSInsecure,
+	// 		},
+	// 	},
+	// }
+	d.Set("spec", flattenServiceSpec(service.CreateServiceSpec.Spec))
 	d.SetId(service.ServiceID)
 	return
 }
@@ -1627,6 +1627,235 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interf
 		diagnostics = diag.FromErr(err)
 	}
 	log.Printf("[SERVICE|RES|DELETE] deleted service with id: %q \n", d.Id())
+	return
+}
+
+func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}) {
+	s := make(map[string]interface{})
+	s["attributes"] = flattenServiceAttributes(toFlatten.Attributes)
+	s["backend"] = flattenServiceBackend(toFlatten.Backend)
+	s["cert_settings"] = flattenServiceCertSettings(toFlatten.CertSettings)
+	s["http_settings"] = flattenServiceHTTPSettings(toFlatten.HTTPSettings)
+	s["client_cidrs"] = flattenServiceClientCIDRs(toFlatten.ClientCIDRs)
+
+	flattened = append(flattened, s)
+	return
+}
+
+func flattenServiceAttributes(toFlatten service.Attributes) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["frontend_address"] = flattenServiceFrontendAddresses(toFlatten.FrontendAddresses)
+	v["host_tag_selector"] = flattenServiceHostTagSelector(toFlatten.HostTagSelector)
+	v["tls_sni"] = toFlatten.TLSSNI
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceFrontendAddresses(toFlatten []service.FrontendAddress) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["cidr"] = item.CIDR
+		v["cidr"] = item.Port
+		flattened[idx] = v
+	}
+	return
+}
+
+func flattenServiceHostTagSelector(toFlatten []service.HostTag) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["site_name"] = item.ComBanyanopsHosttagSiteName
+		flattened[idx] = v
+	}
+	return
+}
+
+func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["backend_allow_pattern"] = flattenServiceAllowPatterns(toFlatten.AllowPatterns)
+	v["connector_name"] = toFlatten.ConnectorName
+	v["dns_overrides"] = toFlatten.DNSOverrides
+	v["target"] = flattenServiceTarget(toFlatten.Target)
+	v["backend_allowlist"] = toFlatten.Whitelist
+
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceAllowPatterns(toFlatten []service.BackendAllowPattern) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["cidrs"] = item.CIDRs
+		v["hostnames"] = item.Hostnames
+		v["ports"] = flattenServiceBackendAllowPorts(item.Ports)
+		flattened[idx] = v
+	}
+	return
+}
+
+func flattenServiceBackendAllowPorts(toFlatten service.BackendAllowPorts) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["port_list"] = toFlatten.PortList
+	v["port_range"] = flattenServicePortRanges(toFlatten.PortRanges)
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServicePortRanges(toFlatten []service.PortRange) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["max"] = item.Max
+		v["min"] = item.Min
+		flattened[idx] = v
+	}
+	return
+}
+
+func flattenServiceTarget(toFlatten service.Target) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["client_certificate"] = toFlatten.ClientCertificate
+	v["name"] = toFlatten.Name
+	// todo: handle this error
+	v["port"], _ = strconv.Atoi(toFlatten.Port) // need to convert this to int
+	v["tls"] = toFlatten.TLS                    // might need to convert this to string
+	v["tls_insecure"] = toFlatten.TLSInsecure   // might need to convert this to string
+
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceCertSettings(toFlatten service.CertSettings) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["custom_tls_cert"] = flattenServiceCustomTLSCert(toFlatten.CustomTLSCert)
+	v["dns_names"] = toFlatten.DNSNames
+	v["letsencrypt"] = toFlatten.LetsEncrypt
+
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceCustomTLSCert(toFlatten service.CustomTLSCert) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["cert_file"] = toFlatten.CertFile
+	v["enabled"] = toFlatten.Enabled
+	v["key_file"] = toFlatten.KeyFile
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceHTTPSettings(toFlatten service.HTTPSettings) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["enabled"] = toFlatten.Enabled
+	v["exempted_paths"] = flattenServiceExemptedPaths(toFlatten.ExemptedPaths)
+	v["http_health_check"] = flattenServiceHTTPHealthCheck(toFlatten.HTTPHealthCheck)
+	v["http_redirect"] = flattenServiceHTTPRedirect(toFlatten.HTTPRedirect)
+	v["headers"] = toFlatten.Headers
+	v["oidc_settings"] = flattenServiceOIDCSettings(toFlatten.OIDCSettings)
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceExemptedPaths(toFlatten service.ExemptedPaths) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["enabled"] = toFlatten.Enabled
+	v["paths"] = toFlatten.Paths
+	v["pattern"] = flattenServicePatterns(toFlatten.Patterns)
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServicePatterns(toFlatten []service.Pattern) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["hosts"] = flattenServiceHosts(item.Hosts)
+		v["mandatory_headers"] = item.MandatoryHeaders
+		v["methods"] = item.Methods
+		v["paths"] = item.Paths
+		v["source_cidrs"] = item.SourceCIDRs
+		flattened[idx] = v
+	}
+	return
+}
+
+func flattenServiceHosts(toFlatten []service.Host) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["origin_header"] = item.OriginHeader
+		v["target"] = item.Target
+		flattened[idx] = v
+	}
+	return
+}
+
+func flattenServiceHTTPHealthCheck(toFlatten service.HTTPHealthCheck) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["addresses"] = toFlatten.Addresses
+	v["enabled"] = toFlatten.Enabled
+	v["from_address"] = toFlatten.FromAddress
+	v["https"] = toFlatten.HTTPS
+	v["path"] = toFlatten.Path
+	v["user_agent"] = toFlatten.UserAgent
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceHTTPRedirect(toFlatten service.HTTPRedirect) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["addresses"] = toFlatten.Addresses
+	v["enabled"] = toFlatten.Enabled
+	v["from_address"] = toFlatten.FromAddress
+	v["status_code"] = toFlatten.StatusCode
+	v["url"] = toFlatten.URL
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceOIDCSettings(toFlatten service.OIDCSettings) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["api_path"] = toFlatten.APIPath
+	v["enabled"] = toFlatten.Enabled
+	v["post_auth_redirect_path"] = toFlatten.PostAuthRedirectPath
+	v["service_domain_name"] = toFlatten.ServiceDomainName
+	v["suppress_device_trust_verification"] = toFlatten.SuppressDeviceTrustVerification
+	v["trust_callbacks"] = toFlatten.TrustCallBacks
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceClientCIDRs(toFlatten []service.ClientCIDRs) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["address"] = flattenServiceCIDRAddresses(item.Addresses)
+		v["clusters"] = item.Clusters
+		v["host_tag_selector"] = item.HostTagSelector
+		flattened[idx] = v
+	}
+	return
+}
+
+func flattenServiceCIDRAddresses(toFlatten []service.CIDRAddress) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+
+	for idx, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["cidr"] = item.CIDR
+		v["ports"] = item.Ports
+		flattened[idx] = v
+	}
 	return
 }
 
