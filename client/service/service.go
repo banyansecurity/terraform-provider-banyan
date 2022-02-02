@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	restclient "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+	"github.com/pkg/errors"
 	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-
-	restclient "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
-	"github.com/pkg/errors"
 )
 
 type Service struct {
@@ -42,9 +41,9 @@ type HostTag struct {
 	ComBanyanopsHosttagSiteName string `json:"com.banyanops.hosttag.site_name"`
 }
 type Attributes struct {
-	FrontendAddresses []FrontendAddress `json:"frontend_addresses"`
-	HostTagSelector   []HostTag         `json:"host_tag_selector"`
-	TLSSNI            []string          `json:"tls_sni"`
+	FrontendAddresses []FrontendAddress   `json:"frontend_addresses"`
+	HostTagSelector   []map[string]string `json:"host_tag_selector"`
+	TLSSNI            []string            `json:"tls_sni"`
 }
 
 type Backend struct {

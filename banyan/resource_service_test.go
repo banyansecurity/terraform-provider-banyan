@@ -99,36 +99,23 @@ resource "banyan_service" "acceptance" {
         cidr  = "127.127.127.1/32"
         ports = "888"
       }
-      address {
-        cidr  = "255.220.225.1/32"
-        ports = "111"
-      }
-      host_tag_selectors {
-        host_tag_selector = {
-          "map" = "hi"
-        }
-      }
-      host_tag_selectors {
-        host_tag_selector = {
-          "map" = "hi"
-        }
-      }
+      host_tag_selector = [
+        {testkey  = "testvalue"},
+        {testkey2 = "testvalue2"}
+      ]
     }
     attributes {
-      frontend_address {
-        cidr = "127.44.111.13/32"
-        port = "1111"
+      frontend_address { 
+		cidr = "127.44.111.13/32"
+		port = 1111
       }
-      frontend_address {
-        cidr = "127.99.114.15/32"
-        port = 0
+      frontend_address { 
+		cidr = "127.44.111.14/32"
+		port = 1112
       }
-      host_tag_selector {
-        site_name = "sitename"
-      }
-      host_tag_selector {
-        site_name = "sites"
-      }
+      host_tag_selector = [
+        {site_name = "sitename"}
+      ]
       tls_sni = [%q]
     }
     backend {

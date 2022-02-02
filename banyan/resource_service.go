@@ -173,17 +173,13 @@ func resourceService() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"host_tag_selectors": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"host_tag_selector": {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
+									"host_tag_selector": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: `host tag selectors`,
+										Elem: &schema.Schema{
+											Type: schema.TypeMap,
+											Elem: &schema.Schema{Type: schema.TypeString},
 										},
 									},
 								},
@@ -199,36 +195,29 @@ func resourceService() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"frontend_address": {
 										Type:        schema.TypeList,
-										MinItems:    1,
 										Required:    true,
-										Description: "frontend addresses",
+										Description: `frontend_address`,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cidr": {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
 													ValidateFunc: validateCIDR(),
 												},
 												"port": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validatePort(),
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 											},
 										},
 									},
 									"host_tag_selector": {
 										Type:        schema.TypeList,
-										MinItems:    1,
-										Required:    true,
-										Description: "host_tag_selector",
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"site_name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
+										Optional:    true,
+										Description: `host tag selectors`,
+										Elem: &schema.Schema{
+											Type: schema.TypeMap,
+											Elem: &schema.Schema{Type: schema.TypeString},
 										},
 									},
 									"tls_sni": {
@@ -795,8 +784,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 		svc.Metadata.Tags.BanyanProxyMode = &banyanProxyMode
 	}
 
-	svc.Spec.Attributes.TLSSNI = append(svc.Spec.Attributes.TLSSNI, "sni")
-
 	spec, ok := d.Get("spec").([]interface{})
 	if !ok {
 		spec := reflect.TypeOf(d.Get("spec"))
@@ -836,25 +823,18 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 				}
 				clientCIDRs.Clusters = append(clientCIDRs.Clusters, cluster)
 			}
-			hostTagSelectors, ok := clientCIDRItemMap["host_tag_selectors"].([]interface{})
+
+			hts, ok := clientCIDRItemMap["host_tag_selector"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert host_tag_selectors")
+				diagnostics = diag.Errorf("couldn't type assert host_tag_selector with type: %v", reflect.TypeOf(clientCIDRItemMap["host_tag_selector"]))
 				return
 			}
-			for _, hostTagSelectorItem := range hostTagSelectors {
-				hostTagSelectorItemMap, ok := hostTagSelectorItem.(map[string]interface{})
-				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert host tag selector item map, actually has type of: %v", reflect.TypeOf(hostTagSelectorItem))
-					return
-				}
-
-				hostTagSelectors, err := convertEmptyInterfaceToStringMap(hostTagSelectorItemMap["host_tag_selector"])
-				if err != nil {
-					diagnostics = diag.Errorf("found an error: %s Couldn't type assert host_tag_selector, got %v instead", err.Error(), reflect.TypeOf(clientCIDRItemMap["host_tag_selector"]))
-					return
-				}
-				clientCIDRs.HostTagSelector = append(clientCIDRs.HostTagSelector, hostTagSelectors)
+			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
+			if err != nil {
+				diag.Errorf("%s", err)
 			}
+			clientCIDRs.HostTagSelector = hostTagSelector
+
 			addresses, ok := clientCIDRItemMap["address"].([]interface{})
 			if !ok {
 				diagnostics = diag.Errorf("Couldn't type assert address")
@@ -916,52 +896,39 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 			frontEndAddress, ok := jj["frontend_address"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert frontend_address")
+				diagnostics = diag.Errorf("Couldn't type assert frontend_address, has type %v", reflect.TypeOf(jj["frontend_address"]))
 				return
 			}
 			for _, frontEndAddressItem := range frontEndAddress {
+				newFrontEndAddress := service.FrontendAddress{}
 				frontEndAddressItemMap, ok := frontEndAddressItem.(map[string]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert frontend_address item value %+v", reflect.TypeOf(frontEndAddressItem))
-					return
+					diagnostics = diag.Errorf("Couldn't type assert element in frontend_address, has type %v", reflect.TypeOf(frontEndAddressItem))
 				}
 				cidr, ok := frontEndAddressItemMap["cidr"].(string)
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert frontend_address cidr value")
-					return
+					diagnostics = createTypeAssertDiagnostic("cidr", frontEndAddressItemMap["cidr"])
 				}
-				port, ok := frontEndAddressItemMap["port"].(int)
+				newFrontEndAddress.CIDR = cidr
+				port, ok := frontEndAddressItemMap["port"].(string)
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert frontend_address port value")
-					return
+					diagnostics = createTypeAssertDiagnostic("port", frontEndAddressItemMap["port"])
 				}
-				svc.Spec.Attributes.FrontendAddresses = append(svc.Spec.Attributes.FrontendAddresses, service.FrontendAddress{
-					CIDR: cidr,
-					Port: strconv.Itoa(port),
-				})
+				newFrontEndAddress.Port = port
 
+				svc.Spec.Attributes.FrontendAddresses = append(svc.Spec.Attributes.FrontendAddresses, newFrontEndAddress)
 			}
-			hostTagSelector, ok := jj["host_tag_selector"].([]interface{})
+
+			hts, ok := jj["host_tag_selector"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert host_tag_selector")
+				diagnostics = diag.Errorf("couldn't type assert host_tag_selector with type: %v", reflect.TypeOf(jj["host_tag_selector"]))
 				return
 			}
-			for _, hosthostTagSelectorItem := range hostTagSelector {
-				hostTagSelectorMap, ok := hosthostTagSelectorItem.(map[string]interface{})
-				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert host tag selector item value %+v", reflect.TypeOf(hostTagSelectorMap))
-					return
-				}
-				siteName, ok := hostTagSelectorMap["site_name"].(string)
-				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert hosttag selecyot site name value.")
-
-				}
-				svc.Spec.Attributes.HostTagSelector = append(svc.Spec.Attributes.HostTagSelector, service.HostTag{
-					ComBanyanopsHosttagSiteName: siteName,
-				})
+			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
+			if err != nil {
+				diag.Errorf("%s", err)
 			}
-
+			svc.Spec.Attributes.HostTagSelector = hostTagSelector
 		}
 		backend, ok := ii["backend"].([]interface{})
 		if !ok {
@@ -976,7 +943,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			}
 			dnsOverrides, err := convertEmptyInterfaceToStringMap(backendItemMap["dns_overrides"])
 			if err != nil {
-				diagnostics = diag.Errorf("found an error: %s Couldn't type assert host_tag_selector, got %v instead", err.Error(), reflect.TypeOf(backendItemMap["dns_overrides"]))
+				diagnostics = diag.Errorf("found an error: %s Couldn't type assert dns_overrides, got %v instead", err.Error(), reflect.TypeOf(backendItemMap["dns_overrides"]))
 				return
 			}
 			svc.Spec.Backend.DNSOverrides = dnsOverrides
@@ -1645,7 +1612,7 @@ func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}) {
 func flattenServiceAttributes(toFlatten service.Attributes) (flattened []interface{}) {
 	v := make(map[string]interface{})
 	v["frontend_address"] = flattenServiceFrontendAddresses(toFlatten.FrontendAddresses)
-	v["host_tag_selector"] = flattenServiceHostTagSelector(toFlatten.HostTagSelector)
+	v["host_tag_selector"] = toFlatten.HostTagSelector
 	v["tls_sni"] = toFlatten.TLSSNI
 	flattened = append(flattened, v)
 	return
@@ -1657,7 +1624,7 @@ func flattenServiceFrontendAddresses(toFlatten []service.FrontendAddress) (flatt
 	for idx, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["cidr"] = item.CIDR
-		v["cidr"] = item.Port
+		v["port"] = item.Port
 		flattened[idx] = v
 	}
 	return

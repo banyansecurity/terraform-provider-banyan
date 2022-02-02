@@ -55,3 +55,14 @@ func getStringSliceFromSet(set interface{}, setName string) (slice []string, dia
 	}
 	return
 }
+
+func convertSliceInterfaceToSliceMap(original []interface{}) (sliceOfStringMap []map[string]string, err error) {
+	for _, elem := range original {
+		stringMap, err := convertEmptyInterfaceToStringMap(elem)
+		if err != nil {
+			err = errors.New("couldn't convert empty interface to string map")
+		}
+		sliceOfStringMap = append(sliceOfStringMap, stringMap)
+	}
+	return
+}

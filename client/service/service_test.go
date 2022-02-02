@@ -63,9 +63,9 @@ func Test_CreateService(t *testing.T) {
 						Port: "1234",
 					},
 				},
-				HostTagSelector: []service.HostTag{
+				HostTagSelector: []map[string]string{
 					{
-						ComBanyanopsHosttagSiteName: "TEST",
+						"ComBanyanopsHosttagSiteName": "TEST",
 					},
 				},
 				TLSSNI: []string{"tf.tls.sni"},
@@ -140,9 +140,9 @@ func Test_CreateService2(t *testing.T) {
 						Port: "5555",
 					},
 				},
-				HostTagSelector: []service.HostTag{
+				HostTagSelector: []map[string]string{
 					{
-						ComBanyanopsHosttagSiteName: "TEST",
+						"ComBanyanopsHosttagSiteName": "TEST",
 					},
 				},
 				TLSSNI: []string{"tf.tls.sni"},
