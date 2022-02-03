@@ -125,7 +125,7 @@ func resourceService() *schema.Resource {
 							Sensitive: true,
 						},
 						"include_domains": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
@@ -517,38 +517,38 @@ func resourceService() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"enabled": {
 													Type:     schema.TypeBool,
-													Optional: true,
+													Required: true,
 												},
 												"addresses": {
 													Type:     schema.TypeSet,
-													Optional: true,
+													Required: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
 												"method": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 													// TODO: validate permissible http methods ValidateFunc: validateHttpMethods(),
 												},
 												"path": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 												"user_agent": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
-												"from_address": { // todo figure out if this should be from_addresses?
+												"from_address": {
 													Type:     schema.TypeSet,
-													Optional: true,
+													Required: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
 												"https": { //todo naming needs to be better is_https ?
 													Type:     schema.TypeBool,
-													Optional: true,
+													Required: true,
 												},
 											},
 										},
@@ -782,6 +782,16 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			return
 		}
 		svc.Metadata.Tags.BanyanProxyMode = &banyanProxyMode
+		includeDomains, ok := ii["include_domains"].([]interface{})
+		if !ok {
+			diagnostics = diag.Errorf("Couldn't type assert include_domains, has type %v", reflect.TypeOf(ii["include_domains"]))
+			return
+		}
+		includeDomainsList := make([]string, 0)
+		for _, includeDomainItem := range includeDomains {
+			includeDomainsList = append(includeDomainsList, includeDomainItem.(string))
+		}
+		svc.Metadata.Tags.IncludeDomains = &includeDomainsList
 	}
 
 	spec, ok := d.Get("spec").([]interface{})
@@ -794,7 +804,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 	for _, item := range spec {
 		ii, ok := item.(map[string]interface{})
 		if !ok {
-			err := errors.New("Couldn't type assert element in metadatatags")
+			err := errors.New("Couldn't type assert element in spec")
 			diagnostics = diag.FromErr(err)
 			return
 		}
@@ -1547,39 +1557,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		"include_domains":     service.CreateServiceSpec.Metadata.Tags.IncludeDomains,
 	}
 	d.Set("metadatatags", []interface{}{metadatatags})
-	// frontendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
-	// if err != nil {
-	// 	diagnostics = diag.FromErr(err)
-	// 	return
-	// }
-	// backendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
-	// if err != nil {
-	// 	diagnostics = diag.FromErr(err)
-	// 	return
-	// }
-	// spec := map[string]interface{}{
-	// 	"attributes": map[string]interface{}{
-	// 		//todo make this be able to handle n frontend addresses
-	// 		"frontend_address": map[string]interface{}{
-	// 			"cidr": service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].CIDR,
-	// 			"port": frontendPort,
-	// 		},
-	// 		//todo make this handle n host tag selectors
-	// 		"host_tag_selector": map[string]interface{}{
-	// 			"site_name": service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0],
-	// 		},
-	// 		"tls_sni": service.CreateServiceSpec.Spec.Attributes.TLSSNI,
-	// 	},
-	// 	"backend": map[string]interface{}{
-	// 		"target": map[string]interface{}{
-	// 			"client_certificate": service.CreateServiceSpec.Spec.Backend.Target.ClientCertificate,
-	// 			"name":               service.CreateServiceSpec.Spec.Backend.Target.Name,
-	// 			"port":               backendPort,
-	// 			"tls":                service.CreateServiceSpec.Spec.Backend.Target.TLS,
-	// 			"tls_insecure":       service.CreateServiceSpec.Spec.Backend.Target.TLSInsecure,
-	// 		},
-	// 	},
-	// }
 	d.Set("spec", flattenServiceSpec(service.CreateServiceSpec.Spec))
 	d.SetId(service.ServiceID)
 	return
@@ -1647,6 +1624,7 @@ func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}) 
 	v["connector_name"] = toFlatten.ConnectorName
 	v["dns_overrides"] = toFlatten.DNSOverrides
 	v["target"] = flattenServiceTarget(toFlatten.Target)
+	v["http_connect"] = toFlatten.HTTPConnect
 	v["backend_allowlist"] = toFlatten.Whitelist
 
 	flattened = append(flattened, v)
@@ -1770,6 +1748,7 @@ func flattenServiceHTTPHealthCheck(toFlatten service.HTTPHealthCheck) (flattened
 	v := make(map[string]interface{})
 	v["addresses"] = toFlatten.Addresses
 	v["enabled"] = toFlatten.Enabled
+	v["method"] = toFlatten.Method
 	v["from_address"] = toFlatten.FromAddress
 	v["https"] = toFlatten.HTTPS
 	v["path"] = toFlatten.Path
