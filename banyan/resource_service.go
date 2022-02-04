@@ -176,7 +176,7 @@ func resourceService() *schema.Resource {
 									"host_tag_selector": {
 										Type:        schema.TypeList,
 										Optional:    true,
-										Description: `host tag selectors`,
+										Description: "host tag selectors",
 										Elem: &schema.Schema{
 											Type: schema.TypeMap,
 											Elem: &schema.Schema{Type: schema.TypeString},
@@ -488,7 +488,7 @@ func resourceService() *schema.Resource {
 														Type: schema.TypeString,
 													},
 												},
-												"from_address": { // todo figure out if this should be from_addresses?
+												"from_address": {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem: &schema.Schema{
@@ -546,7 +546,7 @@ func resourceService() *schema.Resource {
 														Type: schema.TypeString,
 													},
 												},
-												"https": { //todo naming needs to be better is_https ?
+												"https": {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
