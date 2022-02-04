@@ -417,12 +417,12 @@ func (this *Service) Create(svc CreateService) (service GetServiceSpec, err erro
 		return
 	}
 	getServicesJson.ServiceSpec = html.UnescapeString(getServicesJson.ServiceSpec)
-	var spec Spec
-	err = json.Unmarshal([]byte(getServicesJson.ServiceSpec), &spec)
+	var createdService CreateService
+	err = json.Unmarshal([]byte(getServicesJson.ServiceSpec), &createdService)
 	if err != nil {
 		return
 	}
-	getServicesJson.Spec = spec
+	getServicesJson.Spec = createdService.Spec
 	service = mapToGetServiceSpec(getServicesJson)
 	createdSpec, err := json.MarshalIndent(service, "", "   ")
 	log.Printf("[SVC|CLIENT|CREATE] created spec\n %s", string(createdSpec))
