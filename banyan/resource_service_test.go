@@ -63,7 +63,7 @@ func testAccCheckExistingService(resourceName string, bnnService *service.GetSer
 	}
 }
 
-// Asserts using the API that the frontend addresses for the service were updated
+// Asserts using the API that the Spec.Backend.ConnectorName for the service was updated
 func testAccCheckServiceConnectorNameUpdated(bnnService *service.GetServiceSpec, connectorName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if connectorName != bnnService.CreateServiceSpec.Spec.Backend.ConnectorName {
