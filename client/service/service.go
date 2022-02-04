@@ -332,7 +332,6 @@ func (this *Service) disable(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
-	fmt.Printf("%v", myUrl.String())
 	resp, err := this.restClient.DoPost(myUrl.String(), nil)
 	if err != nil {
 		return
@@ -359,7 +358,6 @@ func (this *Service) Delete(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
-	fmt.Printf("%v", myUrl.String())
 	resp, err := this.restClient.DoDelete(myUrl.String())
 	if err != nil {
 		return
@@ -406,8 +404,6 @@ func (this *Service) Create(svc CreateService) (service GetServiceSpec, err erro
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to create service, message: %s", response.Status, response, string(responseData)))
 		return
 	}
-
-	fmt.Printf("%s", string(responseData))
 	log.Printf("[SVC|CLIENT|CREATE] Created a new service %#v\n", string(responseData))
 	var getServicesJson GetServicesJson
 	err = json.Unmarshal(responseData, &getServicesJson)
