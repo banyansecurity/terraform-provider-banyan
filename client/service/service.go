@@ -291,35 +291,33 @@ func (this *Service) Get(id string) (service GetServiceSpec, ok bool, err error)
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
 		return
 	}
-
+	// Unmarshal the response into a service spec
 	defer response.Body.Close()
 	responseData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return
 	}
-	var getServicesJson []GetServicesJson
-	err = json.Unmarshal(responseData, &getServicesJson)
+	var createdServiceJson []GetServicesJson
+	err = json.Unmarshal(responseData, &createdServiceJson)
 	if err != nil {
 		return
 	}
-	if len(getServicesJson) == 0 {
+	if len(createdServiceJson) == 0 {
 		return
 	}
-	if len(getServicesJson) > 1 {
+	if len(createdServiceJson) > 1 {
 		err = errors.New("got more than one service")
 		return
 	}
-	getServicesJson[0].ServiceSpec = html.UnescapeString(getServicesJson[0].ServiceSpec)
-	var spec CreateService
-	err = json.Unmarshal([]byte(getServicesJson[0].ServiceSpec), &spec)
+	createdServiceJson[0].ServiceSpec = html.UnescapeString(createdServiceJson[0].ServiceSpec)
+	var createdSpec CreateService
+	err = json.Unmarshal([]byte(createdServiceJson[0].ServiceSpec), &createdSpec)
 	if err != nil {
 		return
 	}
-	getServicesJson[0].CreateServiceSpec = spec
+	createdServiceJson[0].CreateServiceSpec = createdSpec
+	service = mapToGetServiceSpec(createdServiceJson[0])
 	ok = true
-	service = mapToGetServiceSpec(getServicesJson[0])
-	createdSpec, err := json.MarshalIndent(service, "", "   ")
-	log.Printf("[SVC|CLIENT|GET] retrieved spec\n %s", string(createdSpec))
 	log.Printf("[SVC|CLIENT|GET] got service with id: %q", id)
 	return
 }
