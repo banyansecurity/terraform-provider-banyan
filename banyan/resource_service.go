@@ -1557,7 +1557,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		"include_domains":     service.CreateServiceSpec.Metadata.Tags.IncludeDomains,
 	}
 	d.Set("metadatatags", []interface{}{metadatatags})
-	d.Set("spec", flattenServiceSpec(service.CreateServiceSpec.Spec))
+	spec, diagnostics := flattenServiceSpec(service.CreateServiceSpec.Spec)
+	d.Set("spec", spec)
 	d.SetId(service.ServiceID)
 	return
 }
@@ -1574,10 +1575,10 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interf
 	return
 }
 
-func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}) {
+func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	s := make(map[string]interface{})
+	s["backend"], diagnostics = flattenServiceBackend(toFlatten.Backend)
 	s["attributes"] = flattenServiceAttributes(toFlatten.Attributes)
-	s["backend"] = flattenServiceBackend(toFlatten.Backend)
 	s["cert_settings"] = flattenServiceCertSettings(toFlatten.CertSettings)
 	s["http_settings"] = flattenServiceHTTPSettings(toFlatten.HTTPSettings)
 	s["client_cidrs"] = flattenServiceClientCIDRs(toFlatten.ClientCIDRs)
@@ -1607,23 +1608,12 @@ func flattenServiceFrontendAddresses(toFlatten []service.FrontendAddress) (flatt
 	return
 }
 
-func flattenServiceHostTagSelector(toFlatten []service.HostTag) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
-		v := make(map[string]interface{})
-		v["site_name"] = item.ComBanyanopsHosttagSiteName
-		flattened[idx] = v
-	}
-	return
-}
-
-func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}) {
+func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	v := make(map[string]interface{})
+	v["target"], diagnostics = flattenServiceTarget(toFlatten.Target)
 	v["backend_allow_pattern"] = flattenServiceAllowPatterns(toFlatten.AllowPatterns)
 	v["connector_name"] = toFlatten.ConnectorName
 	v["dns_overrides"] = toFlatten.DNSOverrides
-	v["target"] = flattenServiceTarget(toFlatten.Target)
 	v["http_connect"] = toFlatten.HTTPConnect
 	v["backend_allowlist"] = toFlatten.Whitelist
 
@@ -1664,15 +1654,17 @@ func flattenServicePortRanges(toFlatten []service.PortRange) (flattened []interf
 	return
 }
 
-func flattenServiceTarget(toFlatten service.Target) (flattened []interface{}) {
+func flattenServiceTarget(toFlatten service.Target) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	v := make(map[string]interface{})
+	port, err := strconv.Atoi(toFlatten.Port) // need to convert this to int
+	if err != nil {
+		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port int to string %v", toFlatten.Port)
+	}
 	v["client_certificate"] = toFlatten.ClientCertificate
 	v["name"] = toFlatten.Name
-	// todo: handle this error
-	v["port"], _ = strconv.Atoi(toFlatten.Port) // need to convert this to int
-	v["tls"] = toFlatten.TLS                    // might need to convert this to string
-	v["tls_insecure"] = toFlatten.TLSInsecure   // might need to convert this to string
-
+	v["tls"] = toFlatten.TLS                  // might need to convert this to string
+	v["tls_insecure"] = toFlatten.TLSInsecure // might need to convert this to string
+	v["port"] = port
 	flattened = append(flattened, v)
 	return
 }
