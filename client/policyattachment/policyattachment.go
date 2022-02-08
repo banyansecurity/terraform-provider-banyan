@@ -15,25 +15,25 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 )
 
-type policyAttachment struct {
+type PolicyAttachment struct {
 	restClient *restclient.RestClient
 }
 
 func NewClient(restClient *restclient.RestClient) Clienter {
-	policyAttachmentClient := policyAttachment{
+	PolicyAttachmentClient := PolicyAttachment{
 		restClient: restClient,
 	}
-	return &policyAttachmentClient
+	return &PolicyAttachmentClient
 }
 
 type Clienter interface {
-	Get(policyID string, attachedToID string, attachedToType string) (attachment GetBody, ok bool, err error)
-	Create(policyID string, policyAttachment CreateBody) (createdAttachment GetBody, err error)
-	Update(policyID string, policyAttachment CreateBody) (updatedAttachment GetBody, err error)
+	Get(attachedToID string, attachedToType string) (attachment GetBody, ok bool, err error)
+	Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error)
+	Update(policyID string, PolicyAttachment CreateBody) (updatedAttachment GetBody, err error)
 	Delete(policyID string, detachBody DetachBody) (err error)
 }
 
-func (this *policyAttachment) Get(policyID string, attachedToID string, attachedToType string) (attachment GetBody, ok bool, err error) {
+func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (attachment GetBody, ok bool, err error) {
 	log.Printf("[POLICYATTACHMENT|GET] reading policyattachment")
 	path := fmt.Sprintf("api/v1/policy/attachment/%s/%s", attachedToType, attachedToID)
 	response, err := this.restClient.DoGet(path)
@@ -84,13 +84,12 @@ func (this *policyAttachment) Get(policyID string, attachedToID string, attached
 	return
 }
 
-func (this *policyAttachment) createServiceAttachment(policyID string, policyAttachment CreateBody) (createdAttachment GetBody, err error) {
+func (this *PolicyAttachment) createServiceAttachment(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error) {
 	path := "/api/v1/insert_security_attach_policy"
-	log.Printf("&&&&& %#v", policyAttachment)
 	form := url.Values{}
 	form.Add("PolicyID", policyID)
-	form.Add("ServiceID", policyAttachment.AttachedToID)
-	form.Add("Enabled", policyAttachment.Enabled)
+	form.Add("ServiceID", PolicyAttachment.AttachedToID)
+	form.Add("Enabled", PolicyAttachment.Enabled)
 
 	request, err := this.restClient.NewRequest(http.MethodPost, path, strings.NewReader(form.Encode()))
 	if err != nil {
@@ -127,17 +126,17 @@ func (this *policyAttachment) createServiceAttachment(policyID string, policyAtt
 		return
 	}
 	createdAttachment.IsEnabled = isEnabled
-
+	log.Printf("[POLICYATTACHMENT|CREATE|ATTACH] attached policyattachment to service")
 	return
 }
 
-func (this *policyAttachment) Create(policyID string, policyAttachment CreateBody) (createdAttachment GetBody, err error) {
-	if policyAttachment.AttachedToType == "service" {
-		return this.createServiceAttachment(policyID, policyAttachment)
+func (this *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error) {
+	if PolicyAttachment.AttachedToType == "service" {
+		return this.createServiceAttachment(policyID, PolicyAttachment)
 	}
 	log.Printf("[POLICYATTACHMENT|CREATE] creating policyattachment")
 	path := fmt.Sprintf("/api/v1/policy/%s/attach", policyID)
-	body, err := json.Marshal(policyAttachment)
+	body, err := json.Marshal(PolicyAttachment)
 	if err != nil {
 		return
 	}
@@ -169,14 +168,14 @@ func (this *policyAttachment) Create(policyID string, policyAttachment CreateBod
 	return
 }
 
-func (this *policyAttachment) Update(policyID string, attachment CreateBody) (updatedAttachment GetBody, err error) {
+func (this *PolicyAttachment) Update(policyID string, attachment CreateBody) (updatedAttachment GetBody, err error) {
 	log.Printf("[POLICYATTACHMENT|UPDATE] updating policyattachment")
 	updatedAttachment, err = this.Create(policyID, attachment)
 	log.Printf("[POLICYATTACHMENT|UPDATE] updated policyattachment")
 	return
 }
 
-func (this *policyAttachment) deleteServiceAttachment(policyID, serviceID string) (err error) {
+func (this *PolicyAttachment) deleteServiceAttachment(policyID, serviceID string) (err error) {
 	path := "/api/v1/delete_security_attach_policy"
 
 	myUrl, err := url.Parse(path)
@@ -201,7 +200,7 @@ func (this *policyAttachment) deleteServiceAttachment(policyID, serviceID string
 	return
 }
 
-func (this *policyAttachment) Delete(policyID string, detachBody DetachBody) (err error) {
+func (this *PolicyAttachment) Delete(policyID string, detachBody DetachBody) (err error) {
 	if detachBody.AttachedToType == "service" {
 		return this.deleteServiceAttachment(policyID, detachBody.AttachedToID)
 	}
