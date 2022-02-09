@@ -196,7 +196,7 @@ func resourceService() *schema.Resource {
 									"frontend_address": {
 										Type:        schema.TypeList,
 										Required:    true,
-										Description: `frontend_address`,
+										Description: "frontend_address",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cidr": {
