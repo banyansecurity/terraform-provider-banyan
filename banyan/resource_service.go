@@ -1529,15 +1529,18 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	log.Printf("#### readService: %#v", service)
 	err = d.Set("name", service.ServiceName)
 	if err != nil {
-		return nil
+		diagnostics = diag.Errorf("Could not set service name: %s", err)
+		return
 	}
 	err = d.Set("description", service.Description)
 	if err != nil {
-		return nil
+		diagnostics = diag.Errorf("Could not set service description: %s", err)
+		return
 	}
 	err = d.Set("cluster", service.ClusterName)
 	if err != nil {
-		return nil
+		diagnostics = diag.Errorf("Could not set service cluster: %s", err)
+		return
 	}
 	port, err := strconv.Atoi(*service.CreateServiceSpec.Metadata.Tags.Port)
 	if err != nil {
