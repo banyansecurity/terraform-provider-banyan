@@ -337,7 +337,8 @@ func resourceService() *schema.Resource {
 																Type:     schema.TypeSet,
 																Optional: true,
 																Elem: &schema.Schema{
-																	Type: schema.TypeInt,
+																	Type:         schema.TypeInt,
+																	ValidateFunc: validatePort(),
 																},
 																Description: "List of allowed ports",
 															},
@@ -348,14 +349,16 @@ func resourceService() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"min": {
-																			Type:        schema.TypeInt,
-																			Optional:    true,
-																			Description: "min value of port range",
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			Description:  "min value of port range",
+																			ValidateFunc: validatePort(),
 																		},
 																		"max": {
-																			Type:        schema.TypeInt,
-																			Optional:    true,
-																			Description: "max value of port range",
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			Description:  "max value of port range",
+																			ValidateFunc: validatePort(),
 																		},
 																	},
 																},
@@ -1680,6 +1683,7 @@ func flattenServiceTarget(toFlatten service.Target) (flattened []interface{}, di
 	port, err := strconv.Atoi(toFlatten.Port) // need to convert this to int
 	if err != nil {
 		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port int to string %v", toFlatten.Port)
+		return
 	}
 	v["client_certificate"] = toFlatten.ClientCertificate
 	v["name"] = toFlatten.Name
@@ -1820,12 +1824,32 @@ func flattenServiceCIDRAddresses(toFlatten []service.CIDRAddress) (flattened []i
 
 func validatePort() func(val interface{}, key string) (warns []string, errs []error) {
 	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(int)
+		v, err := typeSwitchPort(val)
+		if err != nil {
+			errs = append(errs, err)
+			return
+		}
 		if v < 0 || v > math.MaxUint16 {
 			errs = append(errs, fmt.Errorf("%q must be in range 0-%d, got: %d ", key, math.MaxUint16, v))
 		}
 		return
 	}
+}
+
+func typeSwitchPort(val interface{}) (v int, err error) {
+	switch val.(type) {
+	case int:
+		v = val.(int)
+	case string:
+		v, err = strconv.Atoi(val.(string))
+		if err != nil {
+			err = fmt.Errorf("%q could not be converted to an int", val)
+		}
+	default:
+		err = fmt.Errorf("could not validate port %q unknown type", val)
+		v = 0
+	}
+	return
 }
 
 func validateCIDR() func(val interface{}, key string) (warns []string, errs []error) {

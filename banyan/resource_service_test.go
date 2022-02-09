@@ -473,3 +473,22 @@ func Test_templateValidation_invalidValue_returnsError(t *testing.T) {
 	assert.Empty(t, warns)
 	assert.NotEmpty(t, errs)
 }
+
+func Test_typeSwitchPort(t *testing.T) {
+	t.Parallel()
+	var val interface{}
+	_, err := typeSwitchPort(val)
+	if err == nil {
+		t.Errorf("expected error here, got none")
+	}
+	val = 1234
+	v, _ := typeSwitchPort(val)
+	if v != val {
+		t.Errorf("got %T expected %T", v, val)
+	}
+	sVal := "1234"
+	v, _ = typeSwitchPort(sVal)
+	if v != val {
+		t.Errorf("got %T expected %T", v, val)
+	}
+}
