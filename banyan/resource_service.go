@@ -1609,7 +1609,6 @@ func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}, diagno
 	s["cert_settings"] = flattenServiceCertSettings(toFlatten.CertSettings)
 	s["http_settings"] = flattenServiceHTTPSettings(toFlatten.HTTPSettings)
 	s["client_cidrs"] = flattenServiceClientCIDRs(toFlatten.ClientCIDRs)
-
 	flattened = append(flattened, s)
 	return
 }
@@ -1624,13 +1623,11 @@ func flattenServiceAttributes(toFlatten service.Attributes) (flattened []interfa
 }
 
 func flattenServiceFrontendAddresses(toFlatten []service.FrontendAddress) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["cidr"] = item.CIDR
 		v["port"] = item.Port
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
@@ -1643,20 +1640,17 @@ func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}, 
 	v["dns_overrides"] = toFlatten.DNSOverrides
 	v["http_connect"] = toFlatten.HTTPConnect
 	v["backend_allowlist"] = toFlatten.Whitelist
-
 	flattened = append(flattened, v)
 	return
 }
 
 func flattenServiceAllowPatterns(toFlatten []service.BackendAllowPattern) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["cidrs"] = item.CIDRs
 		v["hostnames"] = item.Hostnames
 		v["ports"] = flattenServiceBackendAllowPorts(item.Ports)
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
@@ -1670,13 +1664,11 @@ func flattenServiceBackendAllowPorts(toFlatten service.BackendAllowPorts) (flatt
 }
 
 func flattenServicePortRanges(toFlatten []service.PortRange) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["max"] = item.Max
 		v["min"] = item.Min
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
@@ -1702,7 +1694,6 @@ func flattenServiceCertSettings(toFlatten service.CertSettings) (flattened []int
 	v["custom_tls_cert"] = flattenServiceCustomTLSCert(toFlatten.CustomTLSCert)
 	v["dns_names"] = toFlatten.DNSNames
 	v["letsencrypt"] = toFlatten.LetsEncrypt
-
 	flattened = append(flattened, v)
 	return
 }
@@ -1738,28 +1729,24 @@ func flattenServiceExemptedPaths(toFlatten service.ExemptedPaths) (flattened []i
 }
 
 func flattenServicePatterns(toFlatten []service.Pattern) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["hosts"] = flattenServiceHosts(item.Hosts)
 		v["mandatory_headers"] = item.MandatoryHeaders
 		v["methods"] = item.Methods
 		v["paths"] = item.Paths
 		v["source_cidrs"] = item.SourceCIDRs
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
 
 func flattenServiceHosts(toFlatten []service.Host) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["origin_header"] = item.OriginHeader
 		v["target"] = item.Target
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
@@ -1801,26 +1788,22 @@ func flattenServiceOIDCSettings(toFlatten service.OIDCSettings) (flattened []int
 }
 
 func flattenServiceClientCIDRs(toFlatten []service.ClientCIDRs) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["address"] = flattenServiceCIDRAddresses(item.Addresses)
 		v["clusters"] = item.Clusters
 		v["host_tag_selector"] = item.HostTagSelector
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
 
 func flattenServiceCIDRAddresses(toFlatten []service.CIDRAddress) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["cidr"] = item.CIDR
 		v["ports"] = item.Ports
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
