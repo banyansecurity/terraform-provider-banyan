@@ -205,8 +205,9 @@ func resourceService() *schema.Resource {
 													ValidateFunc: validateCIDR(),
 												},
 												"port": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validatePort(),
 												},
 											},
 										},
@@ -842,6 +843,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
 			if err != nil {
 				diag.Errorf("%s", err)
+				return
 			}
 			clientCIDRs.HostTagSelector = hostTagSelector
 
