@@ -914,15 +914,18 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 				frontEndAddressItemMap, ok := frontEndAddressItem.(map[string]interface{})
 				if !ok {
 					diagnostics = diag.Errorf("Couldn't type assert element in frontend_address, has type %v", reflect.TypeOf(frontEndAddressItem))
+					return
 				}
 				cidr, ok := frontEndAddressItemMap["cidr"].(string)
 				if !ok {
 					diagnostics = createTypeAssertDiagnostic("cidr", frontEndAddressItemMap["cidr"])
+					return
 				}
 				newFrontEndAddress.CIDR = cidr
 				port, ok := frontEndAddressItemMap["port"].(string)
 				if !ok {
 					diagnostics = createTypeAssertDiagnostic("port", frontEndAddressItemMap["port"])
+					return
 				}
 				newFrontEndAddress.Port = port
 
@@ -937,6 +940,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
 			if err != nil {
 				diag.Errorf("%s", err)
+				return
 			}
 			svc.Spec.Attributes.HostTagSelector = hostTagSelector
 		}
@@ -1518,9 +1522,18 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return
 	}
 	log.Printf("#### readService: %#v", service)
-	d.Set("name", service.ServiceName)
-	d.Set("description", service.Description)
-	d.Set("cluster", service.ClusterName)
+	err = d.Set("name", service.ServiceName)
+	if err != nil {
+		return nil
+	}
+	err = d.Set("description", service.Description)
+	if err != nil {
+		return nil
+	}
+	err = d.Set("cluster", service.ClusterName)
+	if err != nil {
+		return nil
+	}
 	port, err := strconv.Atoi(*service.CreateServiceSpec.Metadata.Tags.Port)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
@@ -1556,9 +1569,15 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		"kube_ca_key":         service.CreateServiceSpec.Metadata.Tags.KubeCaKey,
 		"include_domains":     service.CreateServiceSpec.Metadata.Tags.IncludeDomains,
 	}
-	d.Set("metadatatags", []interface{}{metadatatags})
+	err = d.Set("metadatatags", []interface{}{metadatatags})
+	if err != nil {
+		return nil
+	}
 	spec, diagnostics := flattenServiceSpec(service.CreateServiceSpec.Spec)
-	d.Set("spec", spec)
+	err = d.Set("spec", spec)
+	if err != nil {
+		return nil
+	}
 	d.SetId(service.ServiceID)
 	return
 }
