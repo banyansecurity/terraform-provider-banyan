@@ -1683,9 +1683,9 @@ func flattenServicePortRanges(toFlatten []service.PortRange) (flattened []interf
 
 func flattenServiceTarget(toFlatten service.Target) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	v := make(map[string]interface{})
-	port, err := strconv.Atoi(toFlatten.Port) // need to convert this to int
+	port, err := strconv.Atoi(toFlatten.Port)
 	if err != nil {
-		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port int to string %v", toFlatten.Port)
+		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port to int %v", toFlatten.Port)
 		return
 	}
 	v["client_certificate"] = toFlatten.ClientCertificate
