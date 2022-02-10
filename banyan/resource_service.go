@@ -196,7 +196,7 @@ func resourceService() *schema.Resource {
 									"frontend_address": {
 										Type:        schema.TypeList,
 										Required:    true,
-										Description: `frontend_address`,
+										Description: "frontend_address",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cidr": {
@@ -205,8 +205,9 @@ func resourceService() *schema.Resource {
 													ValidateFunc: validateCIDR(),
 												},
 												"port": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validatePort(),
 												},
 											},
 										},
@@ -336,7 +337,8 @@ func resourceService() *schema.Resource {
 																Type:     schema.TypeSet,
 																Optional: true,
 																Elem: &schema.Schema{
-																	Type: schema.TypeInt,
+																	Type:         schema.TypeInt,
+																	ValidateFunc: validatePort(),
 																},
 																Description: "List of allowed ports",
 															},
@@ -347,14 +349,16 @@ func resourceService() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"min": {
-																			Type:        schema.TypeInt,
-																			Optional:    true,
-																			Description: "min value of port range",
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			Description:  "min value of port range",
+																			ValidateFunc: validatePort(),
 																		},
 																		"max": {
-																			Type:        schema.TypeInt,
-																			Optional:    true,
-																			Description: "max value of port range",
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			Description:  "max value of port range",
+																			ValidateFunc: validatePort(),
 																		},
 																	},
 																},
@@ -842,6 +846,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
 			if err != nil {
 				diag.Errorf("%s", err)
+				return
 			}
 			clientCIDRs.HostTagSelector = hostTagSelector
 
@@ -914,15 +919,18 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 				frontEndAddressItemMap, ok := frontEndAddressItem.(map[string]interface{})
 				if !ok {
 					diagnostics = diag.Errorf("Couldn't type assert element in frontend_address, has type %v", reflect.TypeOf(frontEndAddressItem))
+					return
 				}
 				cidr, ok := frontEndAddressItemMap["cidr"].(string)
 				if !ok {
 					diagnostics = createTypeAssertDiagnostic("cidr", frontEndAddressItemMap["cidr"])
+					return
 				}
 				newFrontEndAddress.CIDR = cidr
 				port, ok := frontEndAddressItemMap["port"].(string)
 				if !ok {
 					diagnostics = createTypeAssertDiagnostic("port", frontEndAddressItemMap["port"])
+					return
 				}
 				newFrontEndAddress.Port = port
 
@@ -937,6 +945,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
 			if err != nil {
 				diag.Errorf("%s", err)
+				return
 			}
 			svc.Spec.Attributes.HostTagSelector = hostTagSelector
 		}
@@ -1518,9 +1527,21 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return
 	}
 	log.Printf("#### readService: %#v", service)
-	d.Set("name", service.ServiceName)
-	d.Set("description", service.Description)
-	d.Set("cluster", service.ClusterName)
+	err = d.Set("name", service.ServiceName)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not set service name: %s", err)
+		return
+	}
+	err = d.Set("description", service.Description)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not set service description: %s", err)
+		return
+	}
+	err = d.Set("cluster", service.ClusterName)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not set service cluster: %s", err)
+		return
+	}
 	port, err := strconv.Atoi(*service.CreateServiceSpec.Metadata.Tags.Port)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
@@ -1556,9 +1577,15 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		"kube_ca_key":         service.CreateServiceSpec.Metadata.Tags.KubeCaKey,
 		"include_domains":     service.CreateServiceSpec.Metadata.Tags.IncludeDomains,
 	}
-	d.Set("metadatatags", []interface{}{metadatatags})
+	err = d.Set("metadatatags", []interface{}{metadatatags})
+	if err != nil {
+		return nil
+	}
 	spec, diagnostics := flattenServiceSpec(service.CreateServiceSpec.Spec)
-	d.Set("spec", spec)
+	err = d.Set("spec", spec)
+	if err != nil {
+		return nil
+	}
 	d.SetId(service.ServiceID)
 	return
 }
@@ -1582,7 +1609,6 @@ func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}, diagno
 	s["cert_settings"] = flattenServiceCertSettings(toFlatten.CertSettings)
 	s["http_settings"] = flattenServiceHTTPSettings(toFlatten.HTTPSettings)
 	s["client_cidrs"] = flattenServiceClientCIDRs(toFlatten.ClientCIDRs)
-
 	flattened = append(flattened, s)
 	return
 }
@@ -1597,13 +1623,11 @@ func flattenServiceAttributes(toFlatten service.Attributes) (flattened []interfa
 }
 
 func flattenServiceFrontendAddresses(toFlatten []service.FrontendAddress) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["cidr"] = item.CIDR
 		v["port"] = item.Port
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
@@ -1616,20 +1640,17 @@ func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}, 
 	v["dns_overrides"] = toFlatten.DNSOverrides
 	v["http_connect"] = toFlatten.HTTPConnect
 	v["backend_allowlist"] = toFlatten.Whitelist
-
 	flattened = append(flattened, v)
 	return
 }
 
 func flattenServiceAllowPatterns(toFlatten []service.BackendAllowPattern) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["cidrs"] = item.CIDRs
 		v["hostnames"] = item.Hostnames
 		v["ports"] = flattenServiceBackendAllowPorts(item.Ports)
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
@@ -1643,22 +1664,21 @@ func flattenServiceBackendAllowPorts(toFlatten service.BackendAllowPorts) (flatt
 }
 
 func flattenServicePortRanges(toFlatten []service.PortRange) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["max"] = item.Max
 		v["min"] = item.Min
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
 
 func flattenServiceTarget(toFlatten service.Target) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	v := make(map[string]interface{})
-	port, err := strconv.Atoi(toFlatten.Port) // need to convert this to int
+	port, err := strconv.Atoi(toFlatten.Port)
 	if err != nil {
-		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port int to string %v", toFlatten.Port)
+		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port to int %v", toFlatten.Port)
+		return
 	}
 	v["client_certificate"] = toFlatten.ClientCertificate
 	v["name"] = toFlatten.Name
@@ -1674,7 +1694,6 @@ func flattenServiceCertSettings(toFlatten service.CertSettings) (flattened []int
 	v["custom_tls_cert"] = flattenServiceCustomTLSCert(toFlatten.CustomTLSCert)
 	v["dns_names"] = toFlatten.DNSNames
 	v["letsencrypt"] = toFlatten.LetsEncrypt
-
 	flattened = append(flattened, v)
 	return
 }
@@ -1710,28 +1729,24 @@ func flattenServiceExemptedPaths(toFlatten service.ExemptedPaths) (flattened []i
 }
 
 func flattenServicePatterns(toFlatten []service.Pattern) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["hosts"] = flattenServiceHosts(item.Hosts)
 		v["mandatory_headers"] = item.MandatoryHeaders
 		v["methods"] = item.Methods
 		v["paths"] = item.Paths
 		v["source_cidrs"] = item.SourceCIDRs
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
 
 func flattenServiceHosts(toFlatten []service.Host) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["origin_header"] = item.OriginHeader
 		v["target"] = item.Target
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
@@ -1773,38 +1788,54 @@ func flattenServiceOIDCSettings(toFlatten service.OIDCSettings) (flattened []int
 }
 
 func flattenServiceClientCIDRs(toFlatten []service.ClientCIDRs) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["address"] = flattenServiceCIDRAddresses(item.Addresses)
 		v["clusters"] = item.Clusters
 		v["host_tag_selector"] = item.HostTagSelector
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
 
 func flattenServiceCIDRAddresses(toFlatten []service.CIDRAddress) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-
-	for idx, item := range toFlatten {
+	for _, item := range toFlatten {
 		v := make(map[string]interface{})
 		v["cidr"] = item.CIDR
 		v["ports"] = item.Ports
-		flattened[idx] = v
+		flattened = append(flattened, v)
 	}
 	return
 }
 
 func validatePort() func(val interface{}, key string) (warns []string, errs []error) {
 	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(int)
+		v, err := typeSwitchPort(val)
+		if err != nil {
+			errs = append(errs, err)
+			return
+		}
 		if v < 0 || v > math.MaxUint16 {
 			errs = append(errs, fmt.Errorf("%q must be in range 0-%d, got: %d ", key, math.MaxUint16, v))
 		}
 		return
 	}
+}
+
+func typeSwitchPort(val interface{}) (v int, err error) {
+	switch val.(type) {
+	case int:
+		v = val.(int)
+	case string:
+		v, err = strconv.Atoi(val.(string))
+		if err != nil {
+			err = fmt.Errorf("%q could not be converted to an int", val)
+		}
+	default:
+		err = fmt.Errorf("could not validate port %q unknown type", val)
+		v = 0
+	}
+	return
 }
 
 func validateCIDR() func(val interface{}, key string) (warns []string, errs []error) {
