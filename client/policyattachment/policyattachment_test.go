@@ -12,7 +12,7 @@ func Test_GetNonexistentAttachment(t *testing.T) {
 	emptyAttachment := policyattachment.GetBody{}
 	client, err := testutil.GetClientHolderForTest()
 	assert.NoError(t, err, "Expected to not get an error here")
-	attachment, ok, err := client.PolicyAttachment.Get("heh", "hi", "service")
+	attachment, ok, err := client.PolicyAttachment.Get("hi", "service")
 	assert.NoError(t, err, "expected no error here")
 	assert.False(t, ok, "expected to get a value here")
 
@@ -36,7 +36,7 @@ func Test_CreateGetUpdateGetThenDeleteAttachment(t *testing.T) {
 	}
 	createdAttachment, err := client.PolicyAttachment.Create(everyonePolicyID, createAttachment)
 	assert.NoError(t, err)
-	retrievedAttachment, ok, err := client.PolicyAttachment.Get(everyonePolicyID, testServiceID, attachedToType)
+	retrievedAttachment, ok, err := client.PolicyAttachment.Get(testServiceID, attachedToType)
 	assert.NoError(t, err)
 	assert.True(t, ok)
 	// handle slight bug here
@@ -48,7 +48,7 @@ func Test_CreateGetUpdateGetThenDeleteAttachment(t *testing.T) {
 	updatedAttachment, err := client.PolicyAttachment.Update(everyonePolicyID, createAttachment)
 	assert.NoError(t, err)
 	assert.NotEqual(t, updatedAttachment, createdAttachment)
-	retrievedAttachment, ok, err = client.PolicyAttachment.Get(everyonePolicyID, testServiceID, attachedToType)
+	retrievedAttachment, ok, err = client.PolicyAttachment.Get(testServiceID, attachedToType)
 	assert.NoError(t, err)
 	assert.True(t, ok)
 	updatedAttachment.PolicyName = everyonePolicyName
@@ -59,7 +59,7 @@ func Test_CreateGetUpdateGetThenDeleteAttachment(t *testing.T) {
 		AttachedToID:   testServiceID,
 		AttachedToType: attachedToType,
 	})
-	retrievedAttachment, ok, err = client.PolicyAttachment.Get(everyonePolicyID, testServiceID, attachedToType)
+	retrievedAttachment, ok, err = client.PolicyAttachment.Get(testServiceID, attachedToType)
 	assert.NoError(t, err)
 	assert.False(t, ok)
 }

@@ -133,8 +133,8 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	log.Println("[POLICYATTACHMENT|RES|READ] reading policyAttachment")
 	client := m.(*client.ClientHolder)
 	id := d.Id()
-	policyID, attachedToType, attachedToID := getInfoFromPolicyAttachmentID(id)
-	attachment, ok, err := client.PolicyAttachment.Get(policyID, attachedToID, attachedToType)
+	_, attachedToType, attachedToID := getInfoFromPolicyAttachmentID(id)
+	attachment, ok, err := client.PolicyAttachment.Get(attachedToID, attachedToType)
 	if err != nil {
 		diagnostics = diag.FromErr(errors.WithMessagef(err, "couldn't get policyAttachment with id: %s", id))
 		return
