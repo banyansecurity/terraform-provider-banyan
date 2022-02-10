@@ -788,7 +788,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 		svc.Metadata.Tags.BanyanProxyMode = &banyanProxyMode
 		includeDomains, ok := ii["include_domains"].([]interface{})
 		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert include_domains, has type %v", reflect.TypeOf(ii["include_domains"]))
+			diagnostics = diag.Errorf("Couldn't type assert include_domains, has type %T", ii["include_domains"])
 			return
 		}
 		includeDomainsList := make([]string, 0)
@@ -808,31 +808,30 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 	for _, item := range spec {
 		ii, ok := item.(map[string]interface{})
 		if !ok {
-			err := errors.New("Couldn't type assert element in spec")
-			diagnostics = diag.FromErr(err)
+			diagnostics = diag.Errorf("Couldn't type assert element in spec")
 			return
 		}
 		clientCIDRS, ok := ii["client_cidrs"].([]interface{})
 		if !ok {
-			diagnostics = diag.Errorf("couldn't type assert client_cidrs with type: %v", reflect.TypeOf(ii["client_cidrs"]))
+			diagnostics = diag.Errorf("couldn't type assert client_cidrs with type: %T", ii["client_cidrs"])
 			return
 		}
 		for _, clientCIDRItem := range clientCIDRS {
 			clientCIDRs := service.ClientCIDRs{}
 			clientCIDRItemMap, ok := clientCIDRItem.(map[string]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert element in clientCIDRItem: %v", reflect.TypeOf(clientCIDRItem))
+				diagnostics = diag.Errorf("Couldn't type assert element in clientCIDRItem: %T", clientCIDRItem)
 				return
 			}
 			clustersSet, ok := clientCIDRItemMap["clusters"].(*schema.Set)
 			if !ok {
-				diagnostics = diag.Errorf("couldn't type assert spec.client_cidrs.clusters, has type of: %v", reflect.TypeOf(clientCIDRItemMap["clusters"]))
+				diagnostics = diag.Errorf("couldn't type assert spec.client_cidrs.clusters, has type of: %T", clientCIDRItemMap["clusters"])
 				return
 			}
 			for _, clusterItem := range clustersSet.List() {
 				cluster, ok := clusterItem.(string)
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert spec.client_cidrs.clusters.cluster, actually has type of: %v", reflect.TypeOf(clusterItem))
+					diagnostics = diag.Errorf("Couldn't type assert spec.client_cidrs.clusters.cluster, actually has type of: %T", clusterItem)
 					return
 				}
 				clientCIDRs.Clusters = append(clientCIDRs.Clusters, cluster)
@@ -840,7 +839,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 			hts, ok := clientCIDRItemMap["host_tag_selector"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("couldn't type assert host_tag_selector with type: %v", reflect.TypeOf(clientCIDRItemMap["host_tag_selector"]))
+				diagnostics = diag.Errorf("couldn't type assert host_tag_selector with type: %T", clientCIDRItemMap["host_tag_selector"])
 				return
 			}
 			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
@@ -859,7 +858,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 				newAddress := service.CIDRAddress{}
 				addressMap, ok := address.(map[string]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert element in addressMap: %v", reflect.TypeOf(address))
+					diagnostics = diag.Errorf("Couldn't type assert element in addressMap: %T", address)
 					return
 				}
 				cidr, ok := addressMap["cidr"].(string)
@@ -911,14 +910,13 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 			frontEndAddress, ok := jj["frontend_address"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert frontend_address, has type %v", reflect.TypeOf(jj["frontend_address"]))
+				diagnostics = diag.Errorf("Couldn't type assert frontend_address, has type %T", jj["frontend_address"])
 				return
 			}
 			for _, frontEndAddressItem := range frontEndAddress {
-				newFrontEndAddress := service.FrontendAddress{}
 				frontEndAddressItemMap, ok := frontEndAddressItem.(map[string]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert element in frontend_address, has type %v", reflect.TypeOf(frontEndAddressItem))
+					diagnostics = diag.Errorf("Couldn't type assert element in frontend_address, has type %T", frontEndAddressItem)
 					return
 				}
 				cidr, ok := frontEndAddressItemMap["cidr"].(string)
@@ -926,20 +924,23 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 					diagnostics = createTypeAssertDiagnostic("cidr", frontEndAddressItemMap["cidr"])
 					return
 				}
-				newFrontEndAddress.CIDR = cidr
 				port, ok := frontEndAddressItemMap["port"].(string)
 				if !ok {
 					diagnostics = createTypeAssertDiagnostic("port", frontEndAddressItemMap["port"])
 					return
 				}
-				newFrontEndAddress.Port = port
-
-				svc.Spec.Attributes.FrontendAddresses = append(svc.Spec.Attributes.FrontendAddresses, newFrontEndAddress)
+				svc.Spec.Attributes.FrontendAddresses = append(
+					svc.Spec.Attributes.FrontendAddresses,
+					service.FrontendAddress{
+						CIDR: cidr,
+						Port: port,
+					},
+				)
 			}
 
 			hts, ok := jj["host_tag_selector"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("couldn't type assert host_tag_selector with type: %v", reflect.TypeOf(jj["host_tag_selector"]))
+				diagnostics = diag.Errorf("couldn't type assert host_tag_selector with type: %T", jj["host_tag_selector"])
 				return
 			}
 			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
@@ -962,7 +963,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			}
 			dnsOverrides, err := convertEmptyInterfaceToStringMap(backendItemMap["dns_overrides"])
 			if err != nil {
-				diagnostics = diag.Errorf("found an error: %s Couldn't type assert dns_overrides, got %v instead", err.Error(), reflect.TypeOf(backendItemMap["dns_overrides"]))
+				diagnostics = diag.Errorf("found an error: %s Couldn't type assert dns_overrides, got %T instead", err.Error(), backendItemMap["dns_overrides"])
 				return
 			}
 			svc.Spec.Backend.DNSOverrides = dnsOverrides
@@ -1154,7 +1155,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 			dnsNames, ok := certSettingsMap["dns_names"].(*schema.Set)
 			if !ok {
-				diagnostics = diag.Errorf("couldn't type assert dns_names to type: %+v", reflect.TypeOf(certSettingsMap["dns_names"]))
+				diagnostics = diag.Errorf("couldn't type assert dns_names to type: %T", certSettingsMap["dns_names"])
 				return
 			}
 			for _, dnsName := range dnsNames.List() {
@@ -1266,7 +1267,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 				trustCallbacks, err := convertEmptyInterfaceToStringMap(oidcSettingsMap["trust_callbacks"])
 				if err != nil {
-					diagnostics = diag.Errorf("found an error: %s Couldn't type assert http_settings.oidc_settings[%d].trust_callbacks, got %v instead", err.Error(), oidcSettingsIdx, reflect.TypeOf(httpSettingsMap["headers"]))
+					diagnostics = diag.Errorf("found an error: %s Couldn't type assert http_settings.oidc_settings[%d].trust_callbacks, got %T instead", err.Error(), oidcSettingsIdx, httpSettingsMap["headers"])
 					return
 				}
 				svc.Spec.HTTPSettings.OIDCSettings.TrustCallBacks = trustCallbacks
@@ -1379,7 +1380,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 			headers, err := convertEmptyInterfaceToStringMap(httpSettingsMap["headers"])
 			if err != nil {
-				diagnostics = diag.Errorf("found an error: %s Couldn't type assert http_settings.headers, got %v instead", err.Error(), reflect.TypeOf(httpSettingsMap["headers"]))
+				diagnostics = diag.Errorf("found an error: %s Couldn't type assert http_settings.headers, got %T instead", err.Error(), httpSettingsMap["headers"])
 				return
 			}
 			svc.Spec.HTTPSettings.Headers = headers
@@ -1605,6 +1606,9 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interf
 func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	s := make(map[string]interface{})
 	s["backend"], diagnostics = flattenServiceBackend(toFlatten.Backend)
+	if diagnostics.HasError() {
+		return
+	}
 	s["attributes"] = flattenServiceAttributes(toFlatten.Attributes)
 	s["cert_settings"] = flattenServiceCertSettings(toFlatten.CertSettings)
 	s["http_settings"] = flattenServiceHTTPSettings(toFlatten.HTTPSettings)
