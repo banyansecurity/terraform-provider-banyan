@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 )
 
@@ -30,6 +31,7 @@ type PolicyClienter interface {
 	Get(id string) (policy GetPolicy, ok bool, err error)
 	Create(policy CreatePolicy) (createdPolicy GetPolicy, err error)
 	Update(policy CreatePolicy) (updatedPolicy GetPolicy, err error)
+	Detach(id string) (err error)
 	Delete(id string) (err error)
 }
 
@@ -134,6 +136,41 @@ func (this *policy) Update(policy CreatePolicy) (updatedPolicy GetPolicy, err er
 	updatedPolicy, err = this.Create(policy)
 	log.Printf("[POLICY|UPDATE] updated policy")
 	return
+}
+
+func (this *policy) Detach(id string) (err error) {
+	path := fmt.Sprintf("api/v1/policy/%s/attachment", id)
+	myUrl, _ := url.Parse(path)
+	response, err := this.restClient.DoGet(myUrl.String())
+	if err != nil {
+		return
+	}
+	if response.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %v", response))
+	}
+	defer response.Body.Close()
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return
+	}
+	var policyAttachments []policyattachment.GetBody
+	err = json.Unmarshal(responseData, &policyAttachments)
+	if err != nil {
+		return
+	}
+	for _, policyAtt := range policyAttachments {
+		log.Printf("[POLICY|DETACH] detaching policy %s from %s", id, policyAtt.AttachedToID)
+		policyAttachmentClient := policyattachment.NewClient(this.restClient)
+		detachBody := policyattachment.DetachBody{
+			AttachedToID:   policyAtt.AttachedToID,
+			AttachedToType: policyAtt.AttachedToType,
+		}
+		err = policyAttachmentClient.Delete(policyAtt.PolicyID, detachBody)
+		if err != nil {
+			return
+		}
+	}
+	return nil
 }
 
 func (this *policy) Delete(id string) (err error) {

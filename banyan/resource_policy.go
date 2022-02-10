@@ -497,7 +497,12 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	log.Println("[POLICY|RES|DELETE] deleting policy")
 
 	client := m.(*client.ClientHolder)
-	err := client.Policy.Delete(d.Id())
+	err := client.Policy.Detach(d.Id())
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	err = client.Policy.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
