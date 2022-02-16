@@ -1546,12 +1546,12 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		diagnostics = diag.Errorf("Could not set service cluster: %s", err)
 		return
 	}
-	port, err := strconv.Atoi(*service.CreateServiceSpec.Metadata.Tags.Port)
+	port, err := typeSwitchPortPtr(service.CreateServiceSpec.Metadata.Tags.Port)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	appListenPort, err := strconv.Atoi(*service.CreateServiceSpec.Metadata.Tags.AppListenPort)
+	appListenPort, err := typeSwitchPortPtr(service.CreateServiceSpec.Metadata.Tags.AppListenPort)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
@@ -1583,7 +1583,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	err = d.Set("metadatatags", []interface{}{metadatatags})
 	if err != nil {
-		return nil
+		return diag.FromErr(err)
 	}
 	spec, diagnostics := flattenServiceSpec(service.CreateServiceSpec.Spec)
 	err = d.Set("spec", spec)
@@ -1839,9 +1839,32 @@ func typeSwitchPort(val interface{}) (v int, err error) {
 			err = fmt.Errorf("%q could not be converted to an int", val)
 		}
 	default:
-		err = fmt.Errorf("could not validate port %q unknown type", val)
-		v = 0
+		err = fmt.Errorf("could not validate port %q unsupported type", val)
 	}
+	return
+}
+
+// typeSwitchPort type switches a string pointer to an int pointer if possible
+func typeSwitchPortPtr(val interface{}) (ptrv *int, err error) {
+	var v int
+	switch val.(type) {
+	case *int:
+		v = val.(int)
+	case *string:
+		if val.(*string) == nil {
+			ptrv = nil
+			return
+		}
+		vstring := val.(*string)
+		vstringval := *vstring
+		v, err = strconv.Atoi(vstringval)
+		if err != nil {
+			err = fmt.Errorf("%q could not be converted to an int", val)
+		}
+	default:
+		err = fmt.Errorf("could not validate port %q unsupported type", val)
+	}
+	ptrv = &v
 	return
 }
 
