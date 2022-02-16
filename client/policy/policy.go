@@ -161,11 +161,13 @@ func (this *policy) Detach(id string) (err error) {
 	for _, policyAtt := range policyAttachments {
 		log.Printf("[POLICY|DETACH] detaching policy %s from %s", id, policyAtt.AttachedToID)
 		policyAttachmentClient := policyattachment.NewClient(this.restClient)
-		detachBody := policyattachment.DetachBody{
+		createBody := policyattachment.CreateBody{
 			AttachedToID:   policyAtt.AttachedToID,
 			AttachedToType: policyAtt.AttachedToType,
+			Enabled:        "false",
+			IsEnabled:      false,
 		}
-		err = policyAttachmentClient.Delete(policyAtt.PolicyID, detachBody)
+		_, err = policyAttachmentClient.Create(id, createBody)
 		if err != nil {
 			return
 		}
