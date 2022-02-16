@@ -388,6 +388,7 @@ func resourceService() *schema.Resource {
 										Type:        schema.TypeList,
 										MaxItems:    1,
 										Optional:    true,
+										Computed:    true,
 										Description: "generally used for usecases as CORS/Source IP exception",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -478,6 +479,7 @@ func resourceService() *schema.Resource {
 										Type:        schema.TypeList,
 										MaxItems:    1,
 										Optional:    true,
+										Computed:    true,
 										Description: "http_redirect",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -618,6 +620,7 @@ func resourceService() *schema.Resource {
 										Type:        schema.TypeList,
 										MaxItems:    1,
 										Optional:    true,
+										Computed:    true,
 										Description: "cert settings used for x",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -1845,6 +1848,9 @@ func typeSwitchPort(val interface{}) (v int, err error) {
 func validateCIDR() func(val interface{}, key string) (warns []string, errs []error) {
 	return func(val interface{}, key string) (warns []string, errs []error) {
 		v := val.(string)
+		if v == "" {
+			return
+		}
 		_, _, err := net.ParseCIDR(v)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%q must be a CIDR, got: %q", key, v))
