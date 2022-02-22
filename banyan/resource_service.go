@@ -1609,6 +1609,9 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interf
 func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	s := make(map[string]interface{})
 	s["backend"], diagnostics = flattenServiceBackend(toFlatten.Backend)
+	if diagnostics.HasError() {
+		return
+	}
 	s["attributes"] = flattenServiceAttributes(toFlatten.Attributes)
 	s["cert_settings"] = flattenServiceCertSettings(toFlatten.CertSettings)
 	s["http_settings"] = flattenServiceHTTPSettings(toFlatten.HTTPSettings)
@@ -1639,6 +1642,9 @@ func flattenServiceFrontendAddresses(toFlatten []service.FrontendAddress) (flatt
 func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	v := make(map[string]interface{})
 	v["target"], diagnostics = flattenServiceTarget(toFlatten.Target)
+	if diagnostics.HasError() {
+		return
+	}
 	v["backend_allow_pattern"] = flattenServiceAllowPatterns(toFlatten.AllowPatterns)
 	v["connector_name"] = toFlatten.ConnectorName
 	v["dns_overrides"] = toFlatten.DNSOverrides
