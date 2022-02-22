@@ -3,6 +3,7 @@ package banyan
 import (
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -65,4 +66,11 @@ func convertSliceInterfaceToSliceMap(original []interface{}) (sliceOfStringMap [
 		sliceOfStringMap = append(sliceOfStringMap, stringMap)
 	}
 	return
+}
+
+func handleNotFoundError(d *schema.ResourceData, resource string) (diagnostics diag.Diagnostics) {
+	log.Printf("[WARN] Removing %s because it's gone", resource)
+	// The resource doesn't exist anymore
+	d.SetId("")
+	return nil
 }
