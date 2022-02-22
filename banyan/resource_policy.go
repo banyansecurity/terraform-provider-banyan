@@ -275,7 +275,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 			}
 			srcAddr, ok := exceptionItemMap["src_addr"].(*schema.Set)
 			if !ok {
-				diagnostics = diag.Errorf("couldn't type assert src_addr to type: %+v", reflect.TypeOf(exceptionItemMap["src_addr"]))
+				diagnostics = diag.Errorf("couldn't type assert src_addr to type: %T", exceptionItemMap["src_addr"])
 				return
 			}
 			for _, srcAddr := range srcAddr.List() {
@@ -329,7 +329,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 			access := policy.Access{}
 			accessItemMap, ok := accessItem.(map[string]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert access value %+v", reflect.TypeOf(accessItem))
+				diagnostics = diag.Errorf("Couldn't type assert access value %T", accessItem)
 				return
 			}
 			roles, ok := accessItemMap["roles"].(*schema.Set)
@@ -358,29 +358,29 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 			access.Roles = append(access.Roles, rolesSlice...)
 			rules, ok := accessItemMap["rules"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert rules list value %+v", reflect.TypeOf(rules))
+				diagnostics = diag.Errorf("Couldn't type assert rules list value %T", rules)
 				return
 			}
 			for _, rulesItem := range rules {
 				rulesItemMap, ok := rulesItem.(map[string]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert rules item %+v", reflect.TypeOf(rulesItem))
+					diagnostics = diag.Errorf("Couldn't type assert rules item %T", rulesItem)
 					return
 				}
 				conditions, ok := rulesItemMap["conditions"].([]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert conditions %+v", reflect.TypeOf(rulesItemMap["conditions"]))
+					diagnostics = diag.Errorf("Couldn't type assert conditions %T", rulesItemMap["conditions"])
 					return
 				}
 				for _, condition := range conditions {
 					conditionItemMap, ok := condition.(map[string]interface{})
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert conditions %+v", reflect.TypeOf(condition))
+						diagnostics = diag.Errorf("Couldn't type assert conditions %T", condition)
 						return
 					}
 					trustLevel, ok := conditionItemMap["trust_level"].(string)
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert trust_level %+v", reflect.TypeOf(conditionItemMap["trust_level"]))
+						diagnostics = diag.Errorf("Couldn't type assert trust_level %T", conditionItemMap["trust_level"])
 						return
 					}
 					access.Rules.Conditions.TrustLevel = trustLevel
@@ -388,19 +388,19 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 				l7Access, ok := rulesItemMap["l7_access"].([]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert l7Access %+v", reflect.TypeOf(rulesItemMap["l7_access"]))
+					diagnostics = diag.Errorf("Couldn't type assert l7Access %T", rulesItemMap["l7_access"])
 					return
 				}
 				for _, l7AccessItem := range l7Access {
 					l7AccessToCreate := policy.L7Access{}
 					l7AccessItemMap, ok := l7AccessItem.(map[string]interface{})
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert l7access item %+v", reflect.TypeOf(l7AccessItem))
+						diagnostics = diag.Errorf("Couldn't type assert l7access item %T", l7AccessItem)
 						return
 					}
 					actionsSet, ok := l7AccessItemMap["actions"].((*schema.Set))
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert actions %+v", reflect.TypeOf(l7AccessItemMap["actions"]))
+						diagnostics = diag.Errorf("Couldn't type assert actions %T", l7AccessItemMap["actions"])
 						return
 					}
 					actions := []string{}
@@ -425,7 +425,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 					resourcesSet, ok := l7AccessItemMap["resources"].(*schema.Set)
 					if !ok {
-						diagnostics = diag.Errorf("Couldn't type assert resources  %+v", reflect.TypeOf(l7AccessItemMap["resources"]))
+						diagnostics = diag.Errorf("Couldn't type assert resources %T", l7AccessItemMap["resources"])
 						return
 					}
 					resources := []string{}
