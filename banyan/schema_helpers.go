@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"reflect"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -38,7 +36,7 @@ func convertEmptyInterfaceToStringMap(original interface{}) (stringMap map[strin
 }
 
 func createTypeAssertDiagnostic(itemName string, original interface{}) diag.Diagnostics {
-	return diag.Errorf("Couldn't type assert %s in addressMap: %v", itemName, reflect.TypeOf(original))
+	return diag.Errorf("Couldn't type assert %s in addressMap: %T", itemName, original)
 }
 
 func getStringSliceFromSet(set interface{}, setName string) (slice []string, diagnostics []diag.Diagnostic) {

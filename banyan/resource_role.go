@@ -181,27 +181,27 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 		knownDeviceOnly, ok := ii["known_device_only"].(bool)
 		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert known_device_only, got type: %v", reflect.TypeOf(ii["known_device_only"]))
+			diagnostics = diag.Errorf("Couldn't type assert known_device_only, got type: %T", ii["known_device_only"])
 			return
 		}
 		roleToCreate.Spec.KnownDeviceOnly = knownDeviceOnly
 
 		mdmPresent, ok := ii["mdm_present"].(bool)
 		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert mdm_present, got type: %v", reflect.TypeOf(ii["mdm_present"]))
+			diagnostics = diag.Errorf("Couldn't type assert mdm_present, got type: %T", ii["mdm_present"])
 			return
 		}
 		roleToCreate.Spec.MDMPresent = mdmPresent
 
 		deviceOwnershipSet, ok := ii["device_ownership"].(*schema.Set)
 		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert deviceOwnership, got type: %v", reflect.TypeOf(ii["device_ownership"]))
+			diagnostics = diag.Errorf("Couldn't type assert deviceOwnership, got type: %T", ii["device_ownership"])
 			return
 		}
 		for _, deviceOwnerShipOption := range deviceOwnershipSet.List() {
 			deviceOwnerShipOptionValue, ok := deviceOwnerShipOption.(string)
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert deviceOwnershipValue, got type: %v", reflect.TypeOf(deviceOwnerShipOption))
+				diagnostics = diag.Errorf("Couldn't type assert deviceOwnershipValue, got type: %T", deviceOwnerShipOption)
 				return
 			}
 			roleToCreate.Spec.DeviceOwnership = append(roleToCreate.Spec.DeviceOwnership, deviceOwnerShipOptionValue)
@@ -209,13 +209,13 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 		emailSet, ok := ii["email"].(*schema.Set)
 		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert email, got type: %v", reflect.TypeOf(ii["email"]))
+			diagnostics = diag.Errorf("Couldn't type assert email, got type: %T", ii["email"])
 			return
 		}
 		for _, email := range emailSet.List() {
 			emailValue, ok := email.(string)
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert email value, got type: %v", reflect.TypeOf(email))
+				diagnostics = diag.Errorf("Couldn't type assert email value, got type: %T", email)
 				return
 			}
 			roleToCreate.Spec.Email = append(roleToCreate.Spec.Email, emailValue)
@@ -223,13 +223,13 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 		groupSet, ok := ii["group"].(*schema.Set)
 		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert group, got type: %v", reflect.TypeOf(ii["group"]))
+			diagnostics = diag.Errorf("Couldn't type assert group, got type: %T", ii["group"])
 			return
 		}
 		for _, group := range groupSet.List() {
 			groupValue, ok := group.(string)
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert group value, got type: %v", reflect.TypeOf(group))
+				diagnostics = diag.Errorf("Couldn't type assert group value, got type: %T", group)
 				return
 			}
 			roleToCreate.Spec.Group = append(roleToCreate.Spec.Group, groupValue)
@@ -237,13 +237,13 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 		platformSet, ok := ii["platform"].(*schema.Set)
 		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert platform, got type: %v", reflect.TypeOf(ii["platform"]))
+			diagnostics = diag.Errorf("Couldn't type assert platform, got type: %T", ii["platform"])
 			return
 		}
 		for _, platform := range platformSet.List() {
 			platformValue, ok := platform.(string)
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert platform value, got type: %v", reflect.TypeOf(platform))
+				diagnostics = diag.Errorf("Couldn't type assert platform value, got type: %T", platform)
 				return
 			}
 			roleToCreate.Spec.Platform = append(roleToCreate.Spec.Platform, platformValue)
