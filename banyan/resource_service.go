@@ -914,7 +914,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 				return
 			}
 			for _, frontEndAddressItem := range frontEndAddress {
-				newFrontEndAddress := service.FrontendAddress{}
 				frontEndAddressItemMap, ok := frontEndAddressItem.(map[string]interface{})
 				if !ok {
 					diagnostics = diag.Errorf("Couldn't type assert element in frontend_address, has type %v", reflect.TypeOf(frontEndAddressItem))
@@ -925,15 +924,18 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 					diagnostics = createTypeAssertDiagnostic("cidr", frontEndAddressItemMap["cidr"])
 					return
 				}
-				newFrontEndAddress.CIDR = cidr
 				port, ok := frontEndAddressItemMap["port"].(string)
 				if !ok {
 					diagnostics = createTypeAssertDiagnostic("port", frontEndAddressItemMap["port"])
 					return
 				}
-				newFrontEndAddress.Port = port
-
-				svc.Spec.Attributes.FrontendAddresses = append(svc.Spec.Attributes.FrontendAddresses, newFrontEndAddress)
+				svc.Spec.Attributes.FrontendAddresses = append(
+					svc.Spec.Attributes.FrontendAddresses,
+					service.FrontendAddress{
+						CIDR: cidr,
+						Port: port,
+					},
+				)
 			}
 
 			hts, ok := jj["host_tag_selector"].([]interface{})
