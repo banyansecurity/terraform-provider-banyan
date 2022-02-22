@@ -808,8 +808,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 	for _, item := range spec {
 		ii, ok := item.(map[string]interface{})
 		if !ok {
-			err := errors.New("Couldn't type assert element in spec")
-			diagnostics = diag.FromErr(err)
+			diagnostics = diag.Errorf("Couldn't type assert element in spec")
 			return
 		}
 		clientCIDRS, ok := ii["client_cidrs"].([]interface{})
