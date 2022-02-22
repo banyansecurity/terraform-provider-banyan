@@ -1583,6 +1583,9 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return nil
 	}
 	spec, diagnostics := flattenServiceSpec(service.CreateServiceSpec.Spec)
+	if diagnostics.HasError() {
+		return
+	}
 	err = d.Set("spec", spec)
 	if err != nil {
 		return nil
@@ -1639,6 +1642,9 @@ func flattenServiceFrontendAddresses(toFlatten []service.FrontendAddress) (flatt
 func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	v := make(map[string]interface{})
 	v["target"], diagnostics = flattenServiceTarget(toFlatten.Target)
+	if diagnostics.HasError() {
+		return
+	}
 	v["backend_allow_pattern"] = flattenServiceAllowPatterns(toFlatten.AllowPatterns)
 	v["connector_name"] = toFlatten.ConnectorName
 	v["dns_overrides"] = toFlatten.DNSOverrides
