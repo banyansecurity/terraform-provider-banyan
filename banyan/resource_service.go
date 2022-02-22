@@ -1582,6 +1582,9 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return nil
 	}
 	spec, diagnostics := flattenServiceSpec(service.CreateServiceSpec.Spec)
+	if diagnostics.HasError() {
+		return
+	}
 	err = d.Set("spec", spec)
 	if err != nil {
 		return nil
