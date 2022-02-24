@@ -65,8 +65,8 @@ func testAccCheckExistingRole(resourceName string, bnnRole *role.GetRole) resour
 // Asserts using the API that the groups for the role were updated
 func testAccCheckRoleGroupsUpdated(t *testing.T, bnnRole *role.GetRole, group []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !assert.ElementsMatch(t, bnnRole.UnmarshalledSpec.Spec.Group, group) {
-			return fmt.Errorf("incorrect groups, expected %s, got: %s", group, bnnRole.UnmarshalledSpec.Spec.Group)
+		if !assert.ElementsMatch(t, bnnRole.UnmarshalledSpec.Spec.UserGroup, group) {
+			return fmt.Errorf("incorrect groups, expected %s, got: %s", group, bnnRole.UnmarshalledSpec.Spec.UserGroup)
 		}
 		return nil
 	}
@@ -91,14 +91,13 @@ resource "banyan_role" "acceptance" {
   metadatatags {
     template = "USER"
   }
-  spec {
-    known_device_only = true
-    platform = ["macOS", "Android"]
-    group = ["group1"]
-    email = ["john@marsha.com"]
-    device_ownership = ["Corporate Dedicated", "Employee Owned"]
-    mdm_present = true
-  }
+  container_fqdn = ["asdf.asdf"]
+  known_device_only = true
+  platform = ["macOS", "Android"]
+  user_group = ["group1"]
+  email = ["john@marsha.com"]
+  device_ownership = ["Corporate Dedicated", "Employee Owned"]
+  mdm_present = true
 }
 `, name)
 }
@@ -108,18 +107,17 @@ func testAccRole_update(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_role" "acceptance" {
  name = %q
-  description = "realdescriptionnn"
+  description = "realdescription"
   metadatatags {
     template = "USER"
   }
-  spec {
-    known_device_only = true
-    platform = ["macOS", "Android"]
-    group = ["group1", "group2"]
-    email = ["john@marsha.com"]
-    device_ownership = ["Corporate Dedicated", "Employee Owned"]
-    mdm_present = true
-  }
+  container_fqdn = ["asdf.asdf"]
+  known_device_only = true
+  platform = ["macOS", "Android"]
+  user_group = ["group1", "group2"]
+  email = ["john@marsha.com"]
+  device_ownership = ["Corporate Dedicated", "Employee Owned"]
+  mdm_present = true
 }
 `, name)
 }
