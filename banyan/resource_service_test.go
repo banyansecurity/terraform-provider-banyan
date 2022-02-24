@@ -67,7 +67,7 @@ func testAccCheckExistingService(resourceName string, bnnService *service.GetSer
 func testAccCheckServiceConnectorNameUpdated(bnnService *service.GetServiceSpec, connectorName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if connectorName != bnnService.CreateServiceSpec.Spec.Backend.ConnectorName {
-			return fmt.Errorf("incorrect connector_name, expected %s, got: %s", connectorName, bnnService.Spec.Backend.ConnectorName)
+			return fmt.Errorf("incorrect connector_name, expected %s, got: %s", connectorName, bnnService.CreateServiceSpec.Spec.Backend.ConnectorName)
 		}
 		return nil
 	}
@@ -100,139 +100,94 @@ resource "banyan_service" "acceptance" {
     app_listen_port  = 9191
     include_domains  = ["test2v.com"]
   }
-  spec {
-    client_cidrs {
-      clusters = ["cluster"]
-      address {
-        cidr  = "127.127.127.1/32"
-        ports = "888"
-      }
-      host_tag_selector = [
-        {testkey  = "testvalue"},
-        {testkey2 = "testvalue2"}
-      ]
-    }
-    attributes {
-      frontend_address { 
-		cidr = "127.44.111.13/32"
-		port = 1111
-      }
-      frontend_address { 
-		cidr = "127.44.111.14/32"
-		port = 1112
-      }
-      host_tag_selector = [
-        {site_name = "sitename"}
-      ]
-      tls_sni = [%q]
-    }
-    backend {
-      target {
-        client_certificate = true
-        name               = "targetbacknd"
-        port               = 1515
-        tls                = true
-        tls_insecure       = true
-      }
-      dns_overrides = {
-        "internal.mysvc.com" = "10.23.0.1"
-        "exposed.service.com" : "internal.myservice.com"
-      }
-      backend_allowlist = ["allowme.com", "newurl.org"]
-      http_connect      = true
-      connector_name    = "hahah-connector-name"
-      backend_allow_pattern {
-        hostnames = ["backendallowhostName1", "hostname.com"]
-        cidrs     = ["99.99.99.99/9"]
-        ports {
-          port_list = [111, 222]
-          port_range {
-            min = 1
-            max = 5
-          }
-        }
-      }
-      backend_allow_pattern {
-        hostnames = ["differentone.com", "foo.bar.baz"]
-        cidrs     = ["55.55.55.55/5"]
-        ports {
-          port_list = [88, 99]
-          port_range {
-            min = 8
-            max = 9
-          }
-        }
-      }
-    }
-    cert_settings {
-      letsencrypt = false
-      dns_names   = ["hello_dns_name", "dns_name2"]
-      custom_tls_cert {
-        enabled   = false
-        cert_file = "asdf"
-        key_file  = "asdf"
-      }
-    }
-    http_settings {
-      enabled = true
 
-      http_health_check {
-        enabled      = true
-        addresses    = ["88.99.101.2"]
-        method       = "GET"
-        path         = "/path"
-        user_agent   = "chrome"
-        from_address = ["11.11.11.99"]
-        https        = true
+  client_cidrs {
+    clusters = ["cluster"]
+    address {
+      cidr  = "127.127.127.1/32"
+      ports = "888"
+    }
+    host_tag_selector = [
+      { testkey = "testvalue" },
+      { testkey2 = "testvalue2" }
+    ]
+  }
+  
+  frontend_address {
+    cidr = "127.44.111.14/32"
+    port = 1112
+  }
+  
+  host_tag_selector = [
+    { site_name = "sitename" }
+  ]
+  
+  tls_sni = [ %q ]
+  
+  target {
+    client_certificate = true
+    name               = "targetbacknd"
+    port               = 1515
+    tls                = true
+    tls_insecure       = true
+  }
+  
+  dns_overrides = {
+    "internal.mysvc.com" = "10.23.0.1"
+    "exposed.service.com" : "internal.myservice.com"
+  }
+  
+  whitelist = ["allowme.com", "newurl.org"]
+  
+  http_connect      = true
+  
+  connector_name    = "hahah-connector-name"
+  
+  backend_allow_patterns {
+    hostnames = ["differentone.com", "foo.bar.baz"]
+    cidrs     = ["55.55.55.55/5"]
+    ports {
+      port_list = [88, 99]
+      port_range {
+        min = 8
+        max = 9
       }
-      http_redirect {
-        enabled      = true
-        addresses    = ["127.98.2.1"]
-        from_address = ["43.12.31.1"]
-        url          = "hello.com"
-        status_code  = 209
-      }
-      oidc_settings {
-        enabled                            = true
-        service_domain_name                = "service2.domain.name"
-        post_auth_redirect_path            = "/new/path"
-        api_path                           = "/api/path"
-        suppress_device_trust_verification = true
-        trust_callbacks = {
-          "h" = "y"
-          "b" = "j"
-        }
-      }
-      headers = {
-        "header1" = "headers"
-      }
-      exempted_paths {
-        enabled = true
-        paths   = ["/path1", "/path2"]
-        pattern {
-          source_cidrs      = ["222.222.222.222/8"]
-          methods           = ["GET"]
-          paths             = ["/path9000"]
-          mandatory_headers = ["mandatory_header"]
-          hosts {
-            origin_header = [
-            "https://originheader.org:80"]
-            target = [
-            "http://target.io:70"]
-          }
-        }
-        pattern {
-          source_cidrs      = ["111.111.111.111/8"]
-          methods           = ["POST"]
-          paths             = ["/newPath"]
-          mandatory_headers = ["other_header"]
-          hosts {
-            origin_header = [
-            "http://other_originheader.com:90"]
-            target = [
-            "http://other_target.net:8080"]
-          }
-        }
+    }
+  }
+  
+  cert_settings {
+    letsencrypt = false
+    dns_names   = ["hello_dns_name", "dns_name2"]
+    custom_tls_cert {
+      enabled   = false
+      cert_file = "asdf"
+      key_file  = "asdf"
+    }
+  }
+  
+  http_health_check {
+	  enabled      = true
+	  addresses    = ["88.99.101.2"]
+	  method       = "GET"
+	  path         = "/path"
+	  user_agent   = "chrome"
+	  from_address = ["11.11.11.99"]
+	  https        = true
+  }
+  
+  exempted_paths {
+    enabled = true
+    patterns {
+      source_cidrs      = ["222.222.222.222/8"]
+      methods           = ["GET"]
+      mandatory_headers = ["mandatory_header"]
+      hosts {
+        origin_header = [
+          "https://originheader.org:80"
+        ]
+        target = [
+          "http://target.io:70"
+        ]
       }
     }
   }
@@ -257,139 +212,94 @@ resource "banyan_service" "acceptance" {
     app_listen_port  = 9191
     include_domains  = ["test2v.com"]
   }
-  spec {
-    client_cidrs {
-      clusters = ["cluster"]
-      address {
-        cidr  = "127.127.127.1/32"
-        ports = "888"
-      }
-      host_tag_selector = [
-        {testkey  = "testvalue"},
-        {testkey2 = "testvalue2"}
-      ]
-    }
-    attributes {
-      frontend_address { 
-		cidr = "127.44.111.13/32"
-		port = 1111
-      }
-      frontend_address { 
-		cidr = "127.44.111.14/32"
-		port = 1112
-      }
-      host_tag_selector = [
-        {site_name = "sitename"}
-      ]
-      tls_sni = [%q]
-    }
-    backend {
-      target {
-        client_certificate = true
-        name               = "targetbacknd"
-        port               = 1515
-        tls                = true
-        tls_insecure       = true
-      }
-      dns_overrides = {
-        "internal.mysvc.com" = "10.23.0.1"
-        "exposed.service.com" : "internal.myservice.com"
-      }
-      backend_allowlist = ["allowme.com", "newurl.org"]
-      http_connect      = true
-      connector_name    = "some-new-connector-name"
-      backend_allow_pattern {
-        hostnames = ["backendallowhostName1", "hostname.com"]
-        cidrs     = ["99.99.99.99/9"]
-        ports {
-          port_list = [111, 222]
-          port_range {
-            min = 1
-            max = 5
-          }
-        }
-      }
-      backend_allow_pattern {
-        hostnames = ["differentone.com", "foo.bar.baz"]
-        cidrs     = ["55.55.55.55/5"]
-        ports {
-          port_list = [88, 99]
-          port_range {
-            min = 8
-            max = 9
-          }
-        }
-      }
-    }
-    cert_settings {
-      letsencrypt = false
-      dns_names   = ["hello_dns_name", "dns_name2"]
-      custom_tls_cert {
-        enabled   = false
-        cert_file = "asdf"
-        key_file  = "asdf"
-      }
-    }
-    http_settings {
-      enabled = true
 
-      http_health_check {
-        enabled      = true
-        addresses    = ["88.99.101.2"]
-        method       = "GET"
-        path         = "/path"
-        user_agent   = "chrome"
-        from_address = ["11.11.11.99"]
-        https        = true
+  client_cidrs {
+    clusters = ["cluster"]
+    address {
+      cidr  = "127.127.127.1/32"
+      ports = "888"
+    }
+    host_tag_selector = [
+      { testkey = "testvalue" },
+      { testkey2 = "testvalue2" }
+    ]
+  }
+  
+  frontend_address {
+    cidr = "127.44.111.14/32"
+    port = 1112
+  }
+  
+  host_tag_selector = [
+    { site_name = "sitename" }
+  ]
+  
+  tls_sni = [ %q ]
+  
+  target {
+    client_certificate = true
+    name               = "targetbacknd"
+    port               = 1515
+    tls                = true
+    tls_insecure       = true
+  }
+  
+  dns_overrides = {
+    "internal.mysvc.com" = "10.23.0.1"
+    "exposed.service.com" : "internal.myservice.com"
+  }
+  
+  whitelist = ["allowme.com", "newurl.org"]
+  
+  http_connect      = true
+  
+  connector_name    = "some-new-connector-name"
+  
+  backend_allow_patterns {
+    hostnames = ["differentone.com", "foo.bar.baz"]
+    cidrs     = ["55.55.55.55/5"]
+    ports {
+      port_list = [88, 99]
+      port_range {
+        min = 8
+        max = 9
       }
-      http_redirect {
-        enabled      = true
-        addresses    = ["127.98.2.1"]
-        from_address = ["43.12.31.1"]
-        url          = "hello.com"
-        status_code  = 209
-      }
-      oidc_settings {
-        enabled                            = true
-        service_domain_name                = "service2.domain.name"
-        post_auth_redirect_path            = "/new/path"
-        api_path                           = "/api/path"
-        suppress_device_trust_verification = true
-        trust_callbacks = {
-          "h" = "y"
-          "b" = "j"
-        }
-      }
-      headers = {
-        "header1" = "headers"
-      }
-      exempted_paths {
-        enabled = true
-        paths   = ["/path1", "/path2"]
-        pattern {
-          source_cidrs      = ["222.222.222.222/8"]
-          methods           = ["GET"]
-          paths             = ["/path9000"]
-          mandatory_headers = ["mandatory_header"]
-          hosts {
-            origin_header = [
-            "https://originheader.org:80"]
-            target = [
-            "http://target.io:70"]
-          }
-        }
-        pattern {
-          source_cidrs      = ["111.111.111.111/8"]
-          methods           = ["POST"]
-          paths             = ["/newPath"]
-          mandatory_headers = ["other_header"]
-          hosts {
-            origin_header = [
-            "http://other_originheader.com:90"]
-            target = [
-            "http://other_target.net:8080"]
-          }
-        }
+    }
+  }
+  
+  cert_settings {
+    letsencrypt = false
+    dns_names   = ["hello_dns_name", "dns_name2"]
+    custom_tls_cert {
+      enabled   = false
+      cert_file = "asdf"
+      key_file  = "asdf"
+    }
+  }
+  
+  http_health_check {
+	  enabled      = true
+	  addresses    = ["88.99.101.2"]
+	  method       = "GET"
+	  path         = "/path"
+	  user_agent   = "chrome"
+	  from_address = ["11.11.11.99"]
+	  https        = true
+  }
+  
+  exempted_paths {
+    enabled = true
+    patterns {
+      source_cidrs      = ["222.222.222.222/8"]
+      methods           = ["GET"]
+      mandatory_headers = ["mandatory_header"]
+      hosts {
+        origin_header = [
+          "https://originheader.org:80"
+        ]
+        target = [
+          "http://target.io:70"
+        ]
       }
     }
   }
