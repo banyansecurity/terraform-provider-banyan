@@ -19,6 +19,7 @@ type PolicyAttachment struct {
 	restClient *restclient.RestClient
 }
 
+// NewClient returns a new policyAttachment client
 func NewClient(restClient *restclient.RestClient) Clienter {
 	PolicyAttachmentClient := PolicyAttachment{
 		restClient: restClient,
@@ -26,6 +27,7 @@ func NewClient(restClient *restclient.RestClient) Clienter {
 	return &PolicyAttachmentClient
 }
 
+// Clienter is used to perform CRUD operations against the policy attachment resource
 type Clienter interface {
 	Get(attachedToID string, attachedToType string) (attachment GetBody, ok bool, err error)
 	Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error)

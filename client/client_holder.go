@@ -17,6 +17,7 @@ type ClientHolder struct {
 	Admin            *admin.Admin
 }
 
+// NewClientHolder returns a new client which is used to perform CRUD operations on all Banyan resources.
 func NewClientHolder(hostUrl string, refreshToken string) (client *ClientHolder, err error) {
 	restClient, err := restclient.New(hostUrl, refreshToken)
 	if err != nil {

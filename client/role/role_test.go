@@ -47,7 +47,7 @@ func Test_CreateRole(t *testing.T) {
 		Type: "USER",
 		Spec: role.Spec{
 			DeviceOwnership: []string{"Corporate Dedicated", "Employee Owned", "Corporate Shared", "Other"},
-			Group:           []string{"group1", "group2"},
+			UserGroup:       []string{"group1", "group2"},
 			Email:           []string{"john@john.com"},
 			KnownDeviceOnly: true,
 			MDMPresent:      true,
@@ -88,7 +88,7 @@ func Test_Delete(t *testing.T) {
 		Type: "USER",
 		Spec: role.Spec{
 			DeviceOwnership: []string{"Corporate Dedicated", "Employee Owned", "Corporate Shared", "Other"},
-			Group:           []string{"group1", "group2"},
+			UserGroup:       []string{"group1", "group2"},
 			Email:           []string{"john@john.com"},
 			KnownDeviceOnly: true,
 			MDMPresent:      true,

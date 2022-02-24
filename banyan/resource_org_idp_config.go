@@ -15,9 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// Resource for IdP settings. There can only be one OrgIdpConfig per organization.
 func resourceOrgIdpConfig() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This is an org wide setting. There can only be one of these per organization.",
+		Description:   "Organization identity provider configuration. This is an org wide setting. There can only be one of these per organization.",
 		CreateContext: resourceOrgIdpConfigCreate,
 		ReadContext:   resourceOrgIdpConfigRead,
 		UpdateContext: resourceOrgIdpConfigUpdate,
@@ -40,13 +41,13 @@ func resourceOrgIdpConfig() *schema.Resource {
 				MinItems:    1,
 				MaxItems:    1,
 				Required:    true,
-				Description: "The details regarding setting up an idp. Currently only supports OIDC. SAML support is planned.",
+				Description: "The details regarding setting up an IdP. Currently only supports OIDC. SAML support is planned.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"redirect_url": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "**ADVANCED USAGE ONLY** No need to set, banyan sets up your default for you.",
+							Description: "**ADVANCED USAGE ONLY** No need to set, Banyan sets up your default for you.",
 						},
 						"issuer_url": {
 							Type:     schema.TypeString,
@@ -69,7 +70,7 @@ func resourceOrgIdpConfig() *schema.Resource {
 }
 
 func resourceOrgIdpConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("#### creating org\n")
+	log.Printf("Creating org IdP settings\n")
 	client := m.(*client.ClientHolder)
 	idpName, ok := d.Get("idp_name").(string)
 	if !ok {
@@ -169,11 +170,9 @@ func resourceOrgIdpConfigRead(ctx context.Context, d *schema.ResourceData, m int
 		"client_secret": orgIdpConfig.IdpConfig.ClientSecret,
 	}
 	d.Set("idp_config", idpConfig)
-
 	return
 }
 
 func resourceOrgIdpConfigDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-
 	return
 }

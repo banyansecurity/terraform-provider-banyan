@@ -1,66 +1,51 @@
 package banyan
 
 import (
-	"errors"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"log"
 )
 
-func convertInterfaceMapToStringMap(original map[string]interface{}) (newMap map[string]string, err error) {
+func convertInterfaceMapToStringMap(original map[string]interface{}) (newMap map[string]string) {
 	newMap = make(map[string]string)
 	for key, value := range original {
-		stringifiedValue, ok := value.(string)
-		if !ok {
-			err = errors.New("couldn't type assert value to be string")
-			return
-		}
+		stringifiedValue := value.(string)
 		newMap[key] = stringifiedValue
 	}
 	return
 }
 
-func convertEmptyInterfaceToStringMap(original interface{}) (stringMap map[string]string, err error) {
-	stringMap, ok := original.(map[string]string)
-	if ok {
-		return
-	}
-	semiStringMap, ok := original.(map[string]interface{})
-	if !ok {
-		err = errors.New("couldn't type assert value to be a map of string to empty interface")
-		return
-	}
-	stringMap, err = convertInterfaceMapToStringMap(semiStringMap)
+func convertEmptyInterfaceToStringMap(original interface{}) (stringMap map[string]string) {
+	semiStringMap := original.(map[string]interface{})
+	stringMap = convertInterfaceMapToStringMap(semiStringMap)
 	return
 }
 
-func createTypeAssertDiagnostic(itemName string, original interface{}) diag.Diagnostics {
-	return diag.Errorf("Couldn't type assert %s in addressMap: %T", itemName, original)
-}
-
-func getStringSliceFromSet(set interface{}, setName string) (slice []string, diagnostics []diag.Diagnostic) {
-	assertedSet, ok := set.(*schema.Set)
-	if !ok {
-		diagnostics = createTypeAssertDiagnostic(setName, set)
-		return
-	}
-	for idx, setItem := range assertedSet.List() {
-		assertedSetItem, ok := setItem.(string)
-		if !ok {
-			diagnostics = createTypeAssertDiagnostic(fmt.Sprintf("%q", idx), setItem)
-		}
-		slice = append(slice, assertedSetItem)
+func convertSliceInterfaceToSliceStringMap(original []interface{}) (sliceStringMap []map[string]string) {
+	for _, v := range original {
+		stringMap := convertEmptyInterfaceToStringMap(v.(interface{}))
+		sliceStringMap = append(sliceStringMap, stringMap)
 	}
 	return
 }
 
-func convertSliceInterfaceToSliceMap(original []interface{}) (sliceOfStringMap []map[string]string, err error) {
-	for _, elem := range original {
-		stringMap, err := convertEmptyInterfaceToStringMap(elem)
-		if err != nil {
-			err = errors.New("couldn't convert empty interface to string map")
-		}
-		sliceOfStringMap = append(sliceOfStringMap, stringMap)
+func convertSchemaSetToStringSlice(original *schema.Set) (stringSlice []string) {
+	for _, v := range original.List() {
+		stringSlice = append(stringSlice, v.(string))
 	}
 	return
+}
+
+func convertSchemaSetToIntSlice(original *schema.Set) (stringSlice []int) {
+	for _, v := range original.List() {
+		stringSlice = append(stringSlice, v.(int))
+	}
+	return
+}
+
+func handleNotFoundError(d *schema.ResourceData, resource string) (diagnostics diag.Diagnostics) {
+	log.Printf("[WARN] Removing %s because it's gone", resource)
+	// The resource doesn't exist anymore
+	d.SetId("")
+	return nil
 }

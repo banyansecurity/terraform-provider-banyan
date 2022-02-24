@@ -20,6 +20,7 @@ type policy struct {
 	restClient *restclient.RestClient
 }
 
+// NewClient returns a new policy client
 func NewClient(restClient *restclient.RestClient) PolicyClienter {
 	policyClient := policy{
 		restClient: restClient,
@@ -27,6 +28,7 @@ func NewClient(restClient *restclient.RestClient) PolicyClienter {
 	return &policyClient
 }
 
+// PolicyClienter is used for CRUD operations against the policy resource
 type PolicyClienter interface {
 	Get(id string) (policy GetPolicy, ok bool, err error)
 	Create(policy CreatePolicy) (createdPolicy GetPolicy, err error)

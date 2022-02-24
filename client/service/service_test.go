@@ -41,7 +41,7 @@ func Test_CreateService(t *testing.T) {
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanService",
 		Metadata: service.Metadata{
-			Cluster:     "dev05-banyan",
+			ClusterName: "dev05-banyan",
 			Description: "terraform test",
 			Name:        "terraformtest",
 			Tags: service.Tags{
@@ -86,7 +86,7 @@ func Test_CreateService(t *testing.T) {
 			CertSettings: service.CertSettings{
 				CustomTLSCert: service.CustomTLSCert{},
 				DNSNames:      []string{"https://service.domain.name"},
-				LetsEncrypt:   false,
+				Letsencrypt:   false,
 			},
 			// ClientCIDRs: ,
 			HTTPSettings: service.HTTPSettings{
@@ -118,7 +118,7 @@ func Test_CreateService2(t *testing.T) {
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanService",
 		Metadata: service.Metadata{
-			Cluster:     "dev05-banyan",
+			ClusterName: "dev05-banyan",
 			Description: "terraform test",
 			Name:        "terraformtest",
 			Tags: service.Tags{
@@ -163,7 +163,7 @@ func Test_CreateService2(t *testing.T) {
 			CertSettings: service.CertSettings{
 				CustomTLSCert: service.CustomTLSCert{},
 				DNSNames:      []string{"https://service.domain.name"},
-				LetsEncrypt:   false,
+				Letsencrypt:   false,
 			},
 			// ClientCIDRs: ,
 			HTTPSettings: service.HTTPSettings{
