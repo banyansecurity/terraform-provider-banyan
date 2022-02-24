@@ -112,49 +112,49 @@ resource "banyan_service" "acceptance" {
       { testkey2 = "testvalue2" }
     ]
   }
-  
+
+  backend {
+    allow_patterns {
+      hostnames = ["differentone.com", "foo.bar.baz"]
+      cidrs     = ["55.55.55.55/5"]
+      ports {
+        port_list = [88, 99]
+        port_range {
+          min = 8
+          max = 9
+        }
+      }
+    }
+
+    dns_overrides = {
+      "internal.mysvc.com" = "10.23.0.1"
+      "exposed.service.com" : "internal.myservice.com"
+    }
+
+    connector_name = "hahah-connector-name"
+    http_connect = true
+    whitelist = ["allowme.com", "newurl.org"]
+
+    target {
+      client_certificate = true
+      name               = "targetbacknd"
+      port               = 1515
+      tls                = true
+      tls_insecure       = true
+    }
+  }
+
   frontend_address {
     cidr = "127.44.111.14/32"
     port = 1112
   }
-  
+
   host_tag_selector = [
     { site_name = "sitename" }
   ]
-  
-  tls_sni = [ %q ]
-  
-  target {
-    client_certificate = true
-    name               = "targetbacknd"
-    port               = 1515
-    tls                = true
-    tls_insecure       = true
-  }
-  
-  dns_overrides = {
-    "internal.mysvc.com" = "10.23.0.1"
-    "exposed.service.com" : "internal.myservice.com"
-  }
-  
-  whitelist = ["allowme.com", "newurl.org"]
-  
-  http_connect      = true
-  
-  connector_name    = "hahah-connector-name"
-  
-  backend_allow_patterns {
-    hostnames = ["differentone.com", "foo.bar.baz"]
-    cidrs     = ["55.55.55.55/5"]
-    ports {
-      port_list = [88, 99]
-      port_range {
-        min = 8
-        max = 9
-      }
-    }
-  }
-  
+
+  tls_sni = [%q]
+
   cert_settings {
     letsencrypt = false
     dns_names   = ["hello_dns_name", "dns_name2"]
@@ -164,35 +164,49 @@ resource "banyan_service" "acceptance" {
       key_file  = "asdf"
     }
   }
-  
-  http_health_check {
-	  enabled      = true
-	  addresses    = ["88.99.101.2"]
-	  method       = "GET"
-	  path         = "/path"
-	  user_agent   = "chrome"
-	  from_address = ["11.11.11.99"]
-	  https        = true
-  }
-  
-  exempted_paths {
+
+  http_settings {
     enabled = true
-    patterns {
-      source_cidrs      = ["222.222.222.222/8"]
-      methods           = ["GET"]
-      mandatory_headers = ["mandatory_header"]
-      hosts {
-        origin_header = [
-          "https://originheader.org:80"
-        ]
-        target = [
-          "http://target.io:70"
-        ]
+    oidc_settings {
+      enabled = true
+      service_domain_name = %q
+      post_auth_redirect_path = "/some/path"
+      api_path = "/api"
+      suppress_device_trust_verification = false
+      trust_callbacks = {
+        "somecallback" : "ohhey"
       }
+    }
+    http_health_check {
+      enabled      = true
+      addresses    = ["88.99.101.2"]
+      method       = "GET"
+      path         = "/path"
+      user_agent   = "chrome"
+      from_address = ["11.11.11.99"]
+      https        = true
+    }
+    exempted_paths {
+      enabled = true
+      patterns {
+        template          = "USER"
+        source_cidrs      = ["10.0.0.1/24"]
+        methods           = ["GET", "POST"]
+        paths             = ["/path1", "/path2"]
+        mandatory_headers = ["someheader", "other_header"]
+      }
+    }
+    headers = {
+      "foo" = "bar"
+    }
+    token_loc {
+      query_param = "somequeryparam"
+      authorization_header = true
+      custom_header = "customheaderhere"
     }
   }
 }
-`, name, name)
+`, name, name, name)
 }
 
 // Returns updated terraform configuration for the service
@@ -224,49 +238,49 @@ resource "banyan_service" "acceptance" {
       { testkey2 = "testvalue2" }
     ]
   }
-  
+
+  backend {
+    allow_patterns {
+      hostnames = ["differentone.com", "foo.bar.baz"]
+      cidrs     = ["55.55.55.55/5"]
+      ports {
+        port_list = [88, 99]
+        port_range {
+          min = 8
+          max = 9
+        }
+      }
+    }
+
+    dns_overrides = {
+      "internal.mysvc.com" = "10.23.0.1"
+      "exposed.service.com" : "internal.myservice.com"
+    }
+
+    connector_name = "some-new-connector-name"
+    http_connect = true
+    whitelist = ["allowme.com", "newurl.org"]
+
+    target {
+      client_certificate = true
+      name               = "targetbacknd"
+      port               = 1515
+      tls                = true
+      tls_insecure       = true
+    }
+  }
+
   frontend_address {
     cidr = "127.44.111.14/32"
     port = 1112
   }
-  
+
   host_tag_selector = [
     { site_name = "sitename" }
   ]
-  
-  tls_sni = [ %q ]
-  
-  target {
-    client_certificate = true
-    name               = "targetbacknd"
-    port               = 1515
-    tls                = true
-    tls_insecure       = true
-  }
-  
-  dns_overrides = {
-    "internal.mysvc.com" = "10.23.0.1"
-    "exposed.service.com" : "internal.myservice.com"
-  }
-  
-  whitelist = ["allowme.com", "newurl.org"]
-  
-  http_connect      = true
-  
-  connector_name    = "some-new-connector-name"
-  
-  backend_allow_patterns {
-    hostnames = ["differentone.com", "foo.bar.baz"]
-    cidrs     = ["55.55.55.55/5"]
-    ports {
-      port_list = [88, 99]
-      port_range {
-        min = 8
-        max = 9
-      }
-    }
-  }
-  
+
+  tls_sni = [%q]
+
   cert_settings {
     letsencrypt = false
     dns_names   = ["hello_dns_name", "dns_name2"]
@@ -276,35 +290,49 @@ resource "banyan_service" "acceptance" {
       key_file  = "asdf"
     }
   }
-  
-  http_health_check {
-	  enabled      = true
-	  addresses    = ["88.99.101.2"]
-	  method       = "GET"
-	  path         = "/path"
-	  user_agent   = "chrome"
-	  from_address = ["11.11.11.99"]
-	  https        = true
-  }
-  
-  exempted_paths {
+
+  http_settings {
     enabled = true
-    patterns {
-      source_cidrs      = ["222.222.222.222/8"]
-      methods           = ["GET"]
-      mandatory_headers = ["mandatory_header"]
-      hosts {
-        origin_header = [
-          "https://originheader.org:80"
-        ]
-        target = [
-          "http://target.io:70"
-        ]
+    oidc_settings {
+      enabled = true
+      service_domain_name = %q
+      post_auth_redirect_path = "/some/path"
+      api_path = "/api"
+      suppress_device_trust_verification = false
+      trust_callbacks = {
+        "somecallback" : "ohhey"
       }
+    }
+    http_health_check {
+      enabled      = true
+      addresses    = ["88.99.101.2"]
+      method       = "GET"
+      path         = "/path"
+      user_agent   = "chrome"
+      from_address = ["11.11.11.99"]
+      https        = true
+    }
+    exempted_paths {
+      enabled = true
+      patterns {
+        template          = "USER"
+        source_cidrs      = ["10.0.0.1/24"]
+        methods           = ["GET", "POST"]
+        paths             = ["/path1", "/path2"]
+        mandatory_headers = ["someheader", "other_header"]
+      }
+    }
+    headers = {
+      "foo" = "bar"
+    }
+    token_loc {
+      query_param = "somequeryparam"
+      authorization_header = true
+      custom_header = "customheaderhere"
     }
   }
 }
-`, name, name)
+`, name, name, name)
 }
 
 func Test_validateCIDR_tooLargeSuffixBitSize(t *testing.T) {

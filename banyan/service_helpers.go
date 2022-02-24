@@ -11,6 +11,9 @@ import (
 )
 
 func expandMetatdataTags(m []interface{}) (metadatatags service.Tags) {
+	if len(m) == 0 {
+		return
+	}
 	tags := m[0].(map[string]interface{})
 	template := tags["template"].(string)
 	userFacingMetadataTag := tags["user_facing"].(bool)
@@ -62,36 +65,23 @@ func expandMetatdataTags(m []interface{}) (metadatatags service.Tags) {
 	return
 }
 
-func expandServiceSpec(d *schema.ResourceData) (spec service.Spec, err error) {
+func expandServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	spec = service.Spec{
 		Attributes:   expandAttributes(d),
 		Backend:      expandBackend(d),
 		CertSettings: expandCertSettings(d),
+		HTTPSettings: expandHTTPSettings(d.Get("http_settings").([]interface{})),
 		ClientCIDRs:  expandClientCIDRs(d.Get("client_cidrs").([]interface{})),
-		HTTPSettings: expandHTTPSettings(d),
 		TagSlice:     expandTagSlice(d.Get("tag_slice").([]interface{})),
 	}
 	return
 }
 
 func expandAttributes(d *schema.ResourceData) (attributes service.Attributes) {
-	var tlsSNI []string
-	tlsSNIs := d.Get("tls_sni").([]interface{})
-	for _, i := range tlsSNIs {
-		tlsSNI = append(tlsSNI, i.(string))
-	}
-
-	var hostTagSelector []map[string]string
-	hostTagSelectors := d.Get("host_tag_selector").([]interface{})
-	for _, i := range hostTagSelectors {
-		hostTagSelectorMap, _ := convertEmptyInterfaceToStringMap(i)
-		hostTagSelector = append(hostTagSelector, hostTagSelectorMap)
-	}
-
 	attributes = service.Attributes{
-		TLSSNI:            tlsSNI,
+		TLSSNI:            convertSchemaSetToStringSlice(d.Get("tls_sni").(*schema.Set)),
 		FrontendAddresses: expandFrontendAddresses(d),
-		HostTagSelector:   hostTagSelector,
+		HostTagSelector:   convertSliceInterfaceToSliceStringMap(d.Get("host_tag_selector").([]interface{})),
 	}
 	return
 }
@@ -112,22 +102,13 @@ func expandFrontendAddresses(d *schema.ResourceData) (frontendAddresses []servic
 }
 
 func expandBackend(d *schema.ResourceData) (backend service.Backend) {
-	var whitelist []string
-	whitelistSet := d.Get("whitelist").(*schema.Set)
-	for _, whitelistItem := range whitelistSet.List() {
-		whitelist = append(whitelist, whitelistItem.(string))
-	}
-
-	dnsOverridesMap := d.Get("dns_overrides").(map[string]interface{})
-	dnsOverrides, _ := convertEmptyInterfaceToStringMap(dnsOverridesMap)
-
 	backend = service.Backend{
-		AllowPatterns: expandAllowPatterns(d.Get("backend_allow_patterns").([]interface{})),
-		DNSOverrides:  dnsOverrides,
-		ConnectorName: d.Get("connector_name").(string),
-		HTTPConnect:   d.Get("http_connect").(bool),
-		Target:        expandTarget(d.Get("target").([]interface{})),
-		Whitelist:     whitelist,
+		AllowPatterns: expandAllowPatterns(d.Get("backend.0.allow_patterns").([]interface{})),
+		DNSOverrides:  convertEmptyInterfaceToStringMap(d.Get("backend.0.dns_overrides").(map[string]interface{})),
+		ConnectorName: d.Get("backend.0.connector_name").(string),
+		HTTPConnect:   d.Get("backend.0.http_connect").(bool),
+		Target:        expandTarget(d.Get("backend.0.target").([]interface{})),
+		Whitelist:     convertSchemaSetToStringSlice(d.Get("backend.0.whitelist").(*schema.Set)),
 	}
 	return
 }
@@ -135,22 +116,9 @@ func expandBackend(d *schema.ResourceData) (backend service.Backend) {
 func expandAllowPatterns(m []interface{}) (allowPatterns []service.BackendAllowPattern) {
 	for _, backendAllowPatternItem := range m {
 		item := backendAllowPatternItem.(map[string]interface{})
-
-		var hostnames []string
-		hostnamesSet := item["hostnames"].(*schema.Set)
-		for _, hostname := range hostnamesSet.List() {
-			hostnames = append(hostnames, hostname.(string))
-		}
-
-		var cidrs []string
-		cidrsSet := item["cidrs"].(*schema.Set)
-		for _, cidr := range cidrsSet.List() {
-			cidrs = append(cidrs, cidr.(string))
-		}
-
 		allowPatterns = append(allowPatterns, service.BackendAllowPattern{
-			Hostnames: hostnames,
-			CIDRs:     cidrs,
+			Hostnames: convertSchemaSetToStringSlice(item["hostnames"].(*schema.Set)),
+			CIDRs:     convertSchemaSetToStringSlice(item["cidrs"].(*schema.Set)),
 			Ports:     expandBackendAllowPorts(item["ports"].([]interface{})),
 		})
 	}
@@ -158,14 +126,12 @@ func expandAllowPatterns(m []interface{}) (allowPatterns []service.BackendAllowP
 }
 
 func expandBackendAllowPorts(m []interface{}) (backendAllowPorts service.BackendAllowPorts) {
-	itemMap := m[0].(map[string]interface{})
-	var portList []int
-	portListSet := itemMap["port_list"].(*schema.Set)
-	for _, port := range portListSet.List() {
-		portList = append(portList, port.(int))
+	if len(m) == 0 {
+		return
 	}
+	itemMap := m[0].(map[string]interface{})
 	backendAllowPorts = service.BackendAllowPorts{
-		PortList:   portList,
+		PortList:   convertSchemaSetToIntSlice(itemMap["port_list"].(*schema.Set)),
 		PortRanges: expandPortRanges(itemMap["port_range"].([]interface{})),
 	}
 	return
@@ -184,6 +150,9 @@ func expandPortRanges(m []interface{}) (portRanges []service.PortRange) {
 }
 
 func expandTarget(m []interface{}) (target service.Target) {
+	if len(m) == 0 {
+		return
+	}
 	targetItemMap := m[0].(map[string]interface{})
 	return service.Target{
 		Name:              targetItemMap["name"].(string),
@@ -196,16 +165,12 @@ func expandTarget(m []interface{}) (target service.Target) {
 
 func expandCertSettings(d *schema.ResourceData) (certSettings service.CertSettings) {
 	m := d.Get("cert_settings").([]interface{})
-	itemMap := m[0].(map[string]interface{})
-
-	var dnsNames []string
-	dnsNamesSet := itemMap["dns_names"].(*schema.Set)
-	for _, dnsNamesItem := range dnsNamesSet.List() {
-		dnsNames = append(dnsNames, dnsNamesItem.(string))
+	if len(m) == 0 {
+		return
 	}
-
+	itemMap := m[0].(map[string]interface{})
 	certSettings = service.CertSettings{
-		DNSNames:      dnsNames,
+		DNSNames:      convertSchemaSetToStringSlice(itemMap["dns_names"].(*schema.Set)),
 		CustomTLSCert: expandCustomTLSCert(itemMap["custom_tls_cert"].([]interface{})),
 		Letsencrypt:   itemMap["letsencrypt"].(bool),
 	}
@@ -215,24 +180,10 @@ func expandCertSettings(d *schema.ResourceData) (certSettings service.CertSettin
 func expandClientCIDRs(m []interface{}) (clientCIDRs []service.ClientCIDRs) {
 	for _, clientCIDR := range m {
 		clientCIDRItemMap := clientCIDR.(map[string]interface{})
-
-		var hostTagSelector []map[string]string
-		hostTagSelectorList := clientCIDRItemMap["host_tag_selector"].([]interface{})
-		for _, hostTagSelectorItem := range hostTagSelectorList {
-			hostTagSelectorItemMap, _ := convertEmptyInterfaceToStringMap(hostTagSelectorItem)
-			hostTagSelector = append(hostTagSelector, hostTagSelectorItemMap)
-		}
-
-		var clusters []string
-		clustersSet := clientCIDRItemMap["clusters"].(*schema.Set)
-		for _, clustersItem := range clustersSet.List() {
-			clusters = append(clusters, clustersItem.(string))
-		}
-
 		clientCIDRs = append(clientCIDRs, service.ClientCIDRs{
 			Addresses:       expandCIDRAddress(clientCIDRItemMap["address"].([]interface{})),
-			HostTagSelector: hostTagSelector,
-			Clusters:        clusters,
+			HostTagSelector: convertSliceInterfaceToSliceStringMap(clientCIDRItemMap["host_tag_selector"].([]interface{})),
+			Clusters:        convertSchemaSetToStringSlice(clientCIDRItemMap["clusters"].(*schema.Set)),
 		})
 	}
 	return
@@ -249,26 +200,29 @@ func expandCIDRAddress(m []interface{}) (addresses []service.CIDRAddress) {
 	return
 }
 
-func expandHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSettings) {
-	tokenLoc := expandTokenLoc(d.Get("token_loc").([]interface{}))
-
-	headersMap := d.Get("headers").(map[string]interface{})
-	headers, _ := convertInterfaceMapToStringMap(headersMap)
-
+func expandHTTPSettings(m []interface{}) (httpSettings service.HTTPSettings) {
+	if len(m) == 0 {
+		return
+	}
+	itemMap := m[0].(map[string]interface{})
+	tokenLoc := expandTokenLoc(itemMap["token_loc"].([]interface{}))
 	httpSettings = service.HTTPSettings{
-		Enabled:         d.Get("http_settings_enabled").(bool),
-		OIDCSettings:    expandOIDCSettings(d.Get("oidc_settings").([]interface{})),
-		HTTPHealthCheck: expandHTTPHealthCheck(d.Get("http_health_check").([]interface{})),
+		Enabled:         itemMap["enabled"].(bool),
+		OIDCSettings:    expandOIDCSettings(itemMap["oidc_settings"].([]interface{})),
+		HTTPHealthCheck: expandHTTPHealthCheck(itemMap["http_health_check"].([]interface{})),
 		// will be deprecated from api
 		HTTPRedirect:  service.HTTPRedirect{},
-		ExemptedPaths: expandExemptedPaths(d),
-		Headers:       headers,
+		ExemptedPaths: expandExemptedPaths(itemMap["exempted_paths"].([]interface{})),
+		Headers:       convertInterfaceMapToStringMap(itemMap["headers"].(map[string]interface{})),
 		TokenLoc:      &tokenLoc,
 	}
 	return
 }
 
 func expandCustomTLSCert(m []interface{}) (customTLSCert service.CustomTLSCert) {
+	if len(m) == 0 {
+		return
+	}
 	itemMap := m[0].(map[string]interface{})
 	customTLSCert = service.CustomTLSCert{
 		Enabled:  itemMap["enabled"].(bool),
@@ -297,16 +251,12 @@ func expandOIDCSettings(m []interface{}) (oidcSettings service.OIDCSettings) {
 		return
 	}
 	itemMap := m[0].(map[string]interface{})
-
-	trustCallBacksMap := itemMap["trust_callbacks"].(map[string]interface{})
-	trustCallBacks, _ := convertInterfaceMapToStringMap(trustCallBacksMap)
-
 	oidcSettings = service.OIDCSettings{
 		Enabled:                         itemMap["enabled"].(bool),
 		ServiceDomainName:               itemMap["service_domain_name"].(string),
 		PostAuthRedirectPath:            itemMap["post_auth_redirect_path"].(string),
 		APIPath:                         itemMap["api_path"].(string),
-		TrustCallBacks:                  trustCallBacks,
+		TrustCallBacks:                  convertInterfaceMapToStringMap(itemMap["trust_callbacks"].(map[string]interface{})),
 		SuppressDeviceTrustVerification: itemMap["suppress_device_trust_verification"].(bool),
 	}
 	return
@@ -317,43 +267,28 @@ func expandHTTPHealthCheck(m []interface{}) (httpHealthCheck service.HTTPHealthC
 		return
 	}
 	itemMap := m[0].(map[string]interface{})
-
-	var addresses []string
-	itemMapSet := itemMap["addresses"].(*schema.Set)
-	for _, addressesItem := range itemMapSet.List() {
-		addresses = append(addresses, addressesItem.(string))
-	}
-
-	var fromAddress []string
-	fromAddressSet := itemMap["from_address"].(*schema.Set)
-	for _, fromAddressItem := range fromAddressSet.List() {
-		fromAddress = append(fromAddress, fromAddressItem.(string))
-	}
-
 	httpHealthCheck = service.HTTPHealthCheck{
 		Enabled:     itemMap["enabled"].(bool),
-		Addresses:   addresses,
+		Addresses:   convertSchemaSetToStringSlice(itemMap["addresses"].(*schema.Set)),
 		Method:      itemMap["method"].(string),
 		Path:        itemMap["path"].(string),
 		UserAgent:   itemMap["user_agent"].(string),
-		FromAddress: fromAddress,
+		FromAddress: convertSchemaSetToStringSlice(itemMap["from_address"].(*schema.Set)),
 		HTTPS:       itemMap["https"].(bool),
 	}
 	return
 }
 
-func expandExemptedPaths(d *schema.ResourceData) (exemptedPaths service.ExemptedPaths) {
-	m := d.Get("exempted_paths").([]interface{})
+func expandExemptedPaths(m []interface{}) (exemptedPaths service.ExemptedPaths) {
 	if len(m) == 0 {
 		return
 	}
 	itemMap := m[0].(map[string]interface{})
-	patterns := expandPatterns(itemMap["patterns"].([]interface{}))
 	exemptedPaths = service.ExemptedPaths{
 		Enabled: itemMap["enabled"].(bool),
 		// will be deprecated from API
 		Paths:    make([]string, 0),
-		Patterns: patterns,
+		Patterns: expandPatterns(itemMap["patterns"].([]interface{})),
 	}
 	return
 }
@@ -361,40 +296,13 @@ func expandExemptedPaths(d *schema.ResourceData) (exemptedPaths service.Exempted
 func expandPatterns(m []interface{}) (patterns []service.Pattern) {
 	for _, raw := range m {
 		data := raw.(map[string]interface{})
-
-		hosts := expandHosts(data["hosts"].([]interface{}))
-
-		var paths []string
-		pathsSet := data["paths"].(*schema.Set)
-		for _, pathItem := range pathsSet.List() {
-			paths = append(paths, pathItem.(string))
-		}
-
-		var sourceCIRDs []string
-		sourceCIRDsSet := data["source_cidrs"].(*schema.Set)
-		for _, sourceCIRDsItem := range sourceCIRDsSet.List() {
-			sourceCIRDs = append(sourceCIRDs, sourceCIRDsItem.(string))
-		}
-
-		var methods []string
-		methodsSet := data["methods"].(*schema.Set)
-		for _, methodsItem := range methodsSet.List() {
-			methods = append(methods, methodsItem.(string))
-		}
-
-		var mandatoryHeaders []string
-		mandatoryHeadersSet := data["mandatory_headers"].(*schema.Set)
-		for _, mandatoryHeadersItem := range mandatoryHeadersSet.List() {
-			mandatoryHeaders = append(mandatoryHeaders, mandatoryHeadersItem.(string))
-		}
-
 		patterns = append(patterns, service.Pattern{
 			Template:         data["template"].(string),
-			SourceCIDRs:      sourceCIRDs,
-			Hosts:            hosts,
-			Methods:          methods,
-			Paths:            paths,
-			MandatoryHeaders: mandatoryHeaders,
+			SourceCIDRs:      convertSchemaSetToStringSlice(data["source_cidrs"].(*schema.Set)),
+			Hosts:            expandHosts(data["hosts"].([]interface{})),
+			Methods:          convertSchemaSetToStringSlice(data["methods"].(*schema.Set)),
+			Paths:            convertSchemaSetToStringSlice(data["paths"].(*schema.Set)),
+			MandatoryHeaders: convertSchemaSetToStringSlice(data["mandatory_headers"].(*schema.Set)),
 		})
 	}
 	return
@@ -403,22 +311,9 @@ func expandPatterns(m []interface{}) (patterns []service.Pattern) {
 func expandHosts(m []interface{}) (hosts []service.Host) {
 	for _, raw := range m {
 		data := raw.(map[string]interface{})
-
-		var originHeader []string
-		originHeaderSet := data["origin_header"].(*schema.Set)
-		for _, originHeaderItem := range originHeaderSet.List() {
-			originHeader = append(originHeader, originHeaderItem.(string))
-		}
-
-		var target []string
-		targetSet := data["target"].(*schema.Set)
-		for _, targetItem := range targetSet.List() {
-			target = append(target, targetItem.(string))
-		}
-
 		hosts = append(hosts, service.Host{
-			OriginHeader: originHeader,
-			Target:       target,
+			OriginHeader: convertSchemaSetToStringSlice(data["origin_header"].(*schema.Set)),
+			Target:       convertSchemaSetToStringSlice(data["target"].(*schema.Set)),
 		})
 	}
 	return
@@ -434,15 +329,6 @@ func expandTokenLoc(m []interface{}) (tokenLoc service.TokenLocation) {
 		AuthorizationHeader: tokenLocItem["authorization_header"].(bool),
 		CustomHeader:        tokenLocItem["custom_header"].(string),
 	}
-	return
-}
-
-func flattenServiceAttributes(toFlatten service.Attributes) (flattened []interface{}) {
-	v := make(map[string]interface{})
-	v["frontend_address"] = flattenServiceFrontendAddresses(toFlatten.FrontendAddresses)
-	v["host_tag_selector"] = toFlatten.HostTagSelector
-	v["tls_sni"] = toFlatten.TLSSNI
-	flattened = append(flattened, v)
 	return
 }
 
@@ -467,34 +353,15 @@ func flattenBackendAllowPatterns(toFlatten []service.BackendAllowPattern) (flatt
 	return
 }
 
-func flattenBackendExemptedPaths(toFlatten service.ExemptedPaths) (flattened []interface{}) {
-	v := make(map[string]interface{})
-	v["enabled"] = toFlatten.Enabled
-	v["patterns"] = flattenServicePatterns(toFlatten.Patterns)
-	flattened = append(flattened, v)
-	return
-}
-
 func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}, diagnostics diag.Diagnostics) {
 	v := make(map[string]interface{})
 	v["target"], diagnostics = flattenServiceTarget(toFlatten.Target)
-	v["backend_allow_pattern"] = flattenServiceAllowPatterns(toFlatten.AllowPatterns)
+	v["allow_patterns"] = flattenBackendAllowPatterns(toFlatten.AllowPatterns)
 	v["connector_name"] = toFlatten.ConnectorName
 	v["dns_overrides"] = toFlatten.DNSOverrides
 	v["http_connect"] = toFlatten.HTTPConnect
-	v["backend_allowlist"] = toFlatten.Whitelist
+	v["whitelist"] = toFlatten.Whitelist
 	flattened = append(flattened, v)
-	return
-}
-
-func flattenServiceAllowPatterns(toFlatten []service.BackendAllowPattern) (flattened []interface{}) {
-	for _, item := range toFlatten {
-		v := make(map[string]interface{})
-		v["cidrs"] = item.CIDRs
-		v["hostnames"] = item.Hostnames
-		v["ports"] = flattenServiceBackendAllowPorts(item.Ports)
-		flattened = append(flattened, v)
-	}
 	return
 }
 
@@ -555,9 +422,9 @@ func flattenServiceHTTPSettings(toFlatten service.HTTPSettings) (flattened []int
 	v["enabled"] = toFlatten.Enabled
 	v["exempted_paths"] = flattenServiceExemptedPaths(toFlatten.ExemptedPaths)
 	v["http_health_check"] = flattenServiceHTTPHealthCheck(toFlatten.HTTPHealthCheck)
-	v["http_redirect"] = flattenServiceHTTPRedirect(toFlatten.HTTPRedirect)
 	v["headers"] = toFlatten.Headers
 	v["oidc_settings"] = flattenServiceOIDCSettings(toFlatten.OIDCSettings)
+	v["token_loc"] = flattenTokenLoc(toFlatten.TokenLoc)
 	flattened = append(flattened, v)
 	return
 }
@@ -565,8 +432,7 @@ func flattenServiceHTTPSettings(toFlatten service.HTTPSettings) (flattened []int
 func flattenServiceExemptedPaths(toFlatten service.ExemptedPaths) (flattened []interface{}) {
 	v := make(map[string]interface{})
 	v["enabled"] = toFlatten.Enabled
-	v["paths"] = toFlatten.Paths
-	v["pattern"] = flattenServicePatterns(toFlatten.Patterns)
+	v["patterns"] = flattenServicePatterns(toFlatten.Patterns)
 	flattened = append(flattened, v)
 	return
 }
@@ -604,17 +470,6 @@ func flattenServiceHTTPHealthCheck(toFlatten service.HTTPHealthCheck) (flattened
 	v["https"] = toFlatten.HTTPS
 	v["path"] = toFlatten.Path
 	v["user_agent"] = toFlatten.UserAgent
-	flattened = append(flattened, v)
-	return
-}
-
-func flattenServiceHTTPRedirect(toFlatten service.HTTPRedirect) (flattened []interface{}) {
-	v := make(map[string]interface{})
-	v["addresses"] = toFlatten.Addresses
-	v["enabled"] = toFlatten.Enabled
-	v["from_address"] = toFlatten.FromAddress
-	v["status_code"] = toFlatten.StatusCode
-	v["url"] = toFlatten.URL
 	flattened = append(flattened, v)
 	return
 }
@@ -665,7 +520,7 @@ func flattenServiceTagSlice(toFlatten []service.ResourceTag) (flattened []interf
 	return
 }
 
-func flattenTokenLoc(toFlatten *service.TokenLocation) (flattened interface{}) {
+func flattenTokenLoc(toFlatten *service.TokenLocation) (flattened []interface{}) {
 	if toFlatten == nil {
 		return
 	}
@@ -673,6 +528,7 @@ func flattenTokenLoc(toFlatten *service.TokenLocation) (flattened interface{}) {
 	v["query_param"] = toFlatten.QueryParam
 	v["authorization_header"] = toFlatten.AuthorizationHeader
 	v["custom_header"] = toFlatten.CustomHeader
+	flattened = append(flattened, v)
 	return
 }
 
