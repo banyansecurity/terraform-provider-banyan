@@ -17,37 +17,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func validatePort() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(int)
-		if v < 0 || v > math.MaxUint16 {
-			errs = append(errs, fmt.Errorf("%q must be in range 0-%d, got: %d ", key, math.MaxUint16, v))
-		}
-		return
-	}
-}
-
-func validateCIDR() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		_, _, err := net.ParseCIDR(v)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("%q must be a CIDR, got: %q", key, v))
-		}
-		return
-	}
-}
-
-func validateTemplate() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if v != "WEB_USER" && v != "" {
-			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "WEB_USER", v))
-		}
-		return
-	}
-}
-
+// Schema for the service resource. For more information on Banyan services, see the documentation:
 func resourceService() *schema.Resource {
 	log.Println("getting resource")
 	return &schema.Resource{
@@ -60,18 +30,18 @@ func resourceService() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of your service",
+				Description: "Name of the service",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "description of your service",
+				Description: "Description of the service",
 			},
 			"cluster": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "description of your service",
+				Description: "Name of the NetAgent cluster which the service is accessible from",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
 			"metadatatags": {
@@ -79,7 +49,7 @@ func resourceService() *schema.Resource {
 				MinItems:    1,
 				MaxItems:    1,
 				Required:    true,
-				Description: "The details regarding setting up an idp. Currently only supports OIDC. SAML support is planned.",
+				Description: "Metadata about the service",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"template": {
@@ -155,7 +125,7 @@ func resourceService() *schema.Resource {
 							Sensitive: true,
 						},
 						"include_domains": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
@@ -203,17 +173,13 @@ func resourceService() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"host_tag_selectors": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"host_tag_selector": {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
+									"host_tag_selector": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: "host tag selectors",
+										Elem: &schema.Schema{
+											Type: schema.TypeMap,
+											Elem: &schema.Schema{Type: schema.TypeString},
 										},
 									},
 								},
@@ -229,19 +195,18 @@ func resourceService() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"frontend_address": {
 										Type:        schema.TypeList,
-										MinItems:    1,
 										Required:    true,
-										Description: "frontend addresses",
+										Description: "frontend_address",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cidr": {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
 													ValidateFunc: validateCIDR(),
 												},
 												"port": {
-													Type:         schema.TypeInt,
-													Required:     true,
+													Type:         schema.TypeString,
+													Optional:     true,
 													ValidateFunc: validatePort(),
 												},
 											},
@@ -249,16 +214,11 @@ func resourceService() *schema.Resource {
 									},
 									"host_tag_selector": {
 										Type:        schema.TypeList,
-										MinItems:    1,
-										Required:    true,
-										Description: "host_tag_selector",
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"site_name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
+										Optional:    true,
+										Description: `host tag selectors`,
+										Elem: &schema.Schema{
+											Type: schema.TypeMap,
+											Elem: &schema.Schema{Type: schema.TypeString},
 										},
 									},
 									"tls_sni": {
@@ -377,7 +337,8 @@ func resourceService() *schema.Resource {
 																Type:     schema.TypeSet,
 																Optional: true,
 																Elem: &schema.Schema{
-																	Type: schema.TypeInt,
+																	Type:         schema.TypeInt,
+																	ValidateFunc: validatePort(),
 																},
 																Description: "List of allowed ports",
 															},
@@ -388,14 +349,16 @@ func resourceService() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"min": {
-																			Type:        schema.TypeInt,
-																			Optional:    true,
-																			Description: "min value of port range",
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			Description:  "min value of port range",
+																			ValidateFunc: validatePort(),
 																		},
 																		"max": {
-																			Type:        schema.TypeInt,
-																			Optional:    true,
-																			Description: "max value of port range",
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			Description:  "max value of port range",
+																			ValidateFunc: validatePort(),
 																		},
 																	},
 																},
@@ -529,7 +492,7 @@ func resourceService() *schema.Resource {
 														Type: schema.TypeString,
 													},
 												},
-												"from_address": { // todo figure out if this should be from_addresses?
+												"from_address": {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem: &schema.Schema{
@@ -558,38 +521,38 @@ func resourceService() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"enabled": {
 													Type:     schema.TypeBool,
-													Optional: true,
+													Required: true,
 												},
 												"addresses": {
 													Type:     schema.TypeSet,
-													Optional: true,
+													Required: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
 												"method": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 													// TODO: validate permissible http methods ValidateFunc: validateHttpMethods(),
 												},
 												"path": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 												"user_agent": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
-												"from_address": { // todo figure out if this should be from_addresses?
+												"from_address": {
 													Type:     schema.TypeSet,
-													Optional: true,
+													Required: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
-												"https": { //todo naming needs to be better is_https ?
+												"https": {
 													Type:     schema.TypeBool,
-													Optional: true,
+													Required: true,
 												},
 											},
 										},
@@ -823,9 +786,17 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			return
 		}
 		svc.Metadata.Tags.BanyanProxyMode = &banyanProxyMode
+		includeDomains, ok := ii["include_domains"].([]interface{})
+		if !ok {
+			diagnostics = diag.Errorf("Couldn't type assert include_domains, has type %T", ii["include_domains"])
+			return
+		}
+		includeDomainsList := make([]string, 0)
+		for _, includeDomainItem := range includeDomains {
+			includeDomainsList = append(includeDomainsList, includeDomainItem.(string))
+		}
+		svc.Metadata.Tags.IncludeDomains = &includeDomainsList
 	}
-
-	svc.Spec.Attributes.TLSSNI = append(svc.Spec.Attributes.TLSSNI, "sni")
 
 	spec, ok := d.Get("spec").([]interface{})
 	if !ok {
@@ -837,54 +808,47 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 	for _, item := range spec {
 		ii, ok := item.(map[string]interface{})
 		if !ok {
-			err := errors.New("Couldn't type assert element in metadatatags")
-			diagnostics = diag.FromErr(err)
+			diagnostics = diag.Errorf("Couldn't type assert element in spec")
 			return
 		}
 		clientCIDRS, ok := ii["client_cidrs"].([]interface{})
 		if !ok {
-			diagnostics = diag.Errorf("couldn't type assert client_cidrs with type: %v", reflect.TypeOf(ii["client_cidrs"]))
+			diagnostics = diag.Errorf("couldn't type assert client_cidrs with type: %T", ii["client_cidrs"])
 			return
 		}
 		for _, clientCIDRItem := range clientCIDRS {
 			clientCIDRs := service.ClientCIDRs{}
 			clientCIDRItemMap, ok := clientCIDRItem.(map[string]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert element in clientCIDRItem: %v", reflect.TypeOf(clientCIDRItem))
+				diagnostics = diag.Errorf("Couldn't type assert element in clientCIDRItem: %T", clientCIDRItem)
 				return
 			}
 			clustersSet, ok := clientCIDRItemMap["clusters"].(*schema.Set)
 			if !ok {
-				diagnostics = diag.Errorf("couldn't type assert spec.client_cidrs.clusters, has type of: %v", reflect.TypeOf(clientCIDRItemMap["clusters"]))
+				diagnostics = diag.Errorf("couldn't type assert spec.client_cidrs.clusters, has type of: %T", clientCIDRItemMap["clusters"])
 				return
 			}
 			for _, clusterItem := range clustersSet.List() {
 				cluster, ok := clusterItem.(string)
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert spec.client_cidrs.clusters.cluster, actually has type of: %v", reflect.TypeOf(clusterItem))
+					diagnostics = diag.Errorf("Couldn't type assert spec.client_cidrs.clusters.cluster, actually has type of: %T", clusterItem)
 					return
 				}
 				clientCIDRs.Clusters = append(clientCIDRs.Clusters, cluster)
 			}
-			hostTagSelectors, ok := clientCIDRItemMap["host_tag_selectors"].([]interface{})
+
+			hts, ok := clientCIDRItemMap["host_tag_selector"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert host_tag_selectors")
+				diagnostics = diag.Errorf("couldn't type assert host_tag_selector with type: %T", clientCIDRItemMap["host_tag_selector"])
 				return
 			}
-			for _, hostTagSelectorItem := range hostTagSelectors {
-				hostTagSelectorItemMap, ok := hostTagSelectorItem.(map[string]interface{})
-				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert host tag selector item map, actually has type of: %v", reflect.TypeOf(hostTagSelectorItem))
-					return
-				}
-
-				hostTagSelectors, err := convertEmptyInterfaceToStringMap(hostTagSelectorItemMap["host_tag_selector"])
-				if err != nil {
-					diagnostics = diag.Errorf("found an error: %s Couldn't type assert host_tag_selector, got %v instead", err.Error(), reflect.TypeOf(clientCIDRItemMap["host_tag_selector"]))
-					return
-				}
-				clientCIDRs.HostTagSelector = append(clientCIDRs.HostTagSelector, hostTagSelectors)
+			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
+			if err != nil {
+				diag.Errorf("%s", err)
+				return
 			}
+			clientCIDRs.HostTagSelector = hostTagSelector
+
 			addresses, ok := clientCIDRItemMap["address"].([]interface{})
 			if !ok {
 				diagnostics = diag.Errorf("Couldn't type assert address")
@@ -894,7 +858,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 				newAddress := service.CIDRAddress{}
 				addressMap, ok := address.(map[string]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert element in addressMap: %v", reflect.TypeOf(address))
+					diagnostics = diag.Errorf("Couldn't type assert element in addressMap: %T", address)
 					return
 				}
 				cidr, ok := addressMap["cidr"].(string)
@@ -946,52 +910,45 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 			frontEndAddress, ok := jj["frontend_address"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert frontend_address")
+				diagnostics = diag.Errorf("Couldn't type assert frontend_address, has type %T", jj["frontend_address"])
 				return
 			}
 			for _, frontEndAddressItem := range frontEndAddress {
 				frontEndAddressItemMap, ok := frontEndAddressItem.(map[string]interface{})
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert frontend_address item value %+v", reflect.TypeOf(frontEndAddressItem))
+					diagnostics = diag.Errorf("Couldn't type assert element in frontend_address, has type %T", frontEndAddressItem)
 					return
 				}
 				cidr, ok := frontEndAddressItemMap["cidr"].(string)
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert frontend_address cidr value")
+					diagnostics = createTypeAssertDiagnostic("cidr", frontEndAddressItemMap["cidr"])
 					return
 				}
-				port, ok := frontEndAddressItemMap["port"].(int)
+				port, ok := frontEndAddressItemMap["port"].(string)
 				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert frontend_address port value")
+					diagnostics = createTypeAssertDiagnostic("port", frontEndAddressItemMap["port"])
 					return
 				}
-				svc.Spec.Attributes.FrontendAddresses = append(svc.Spec.Attributes.FrontendAddresses, service.FrontendAddress{
-					CIDR: cidr,
-					Port: strconv.Itoa(port),
-				})
-
+				svc.Spec.Attributes.FrontendAddresses = append(
+					svc.Spec.Attributes.FrontendAddresses,
+					service.FrontendAddress{
+						CIDR: cidr,
+						Port: port,
+					},
+				)
 			}
-			hostTagSelector, ok := jj["host_tag_selector"].([]interface{})
+
+			hts, ok := jj["host_tag_selector"].([]interface{})
 			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert host_tag_selector")
+				diagnostics = diag.Errorf("couldn't type assert host_tag_selector with type: %T", jj["host_tag_selector"])
 				return
 			}
-			for _, hosthostTagSelectorItem := range hostTagSelector {
-				hostTagSelectorMap, ok := hosthostTagSelectorItem.(map[string]interface{})
-				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert host tag selector item value %+v", reflect.TypeOf(hostTagSelectorMap))
-					return
-				}
-				siteName, ok := hostTagSelectorMap["site_name"].(string)
-				if !ok {
-					diagnostics = diag.Errorf("Couldn't type assert hosttag selecyot site name value.")
-
-				}
-				svc.Spec.Attributes.HostTagSelector = append(svc.Spec.Attributes.HostTagSelector, service.HostTag{
-					ComBanyanopsHosttagSiteName: siteName,
-				})
+			hostTagSelector, err := convertSliceInterfaceToSliceMap(hts)
+			if err != nil {
+				diag.Errorf("%s", err)
+				return
 			}
-
+			svc.Spec.Attributes.HostTagSelector = hostTagSelector
 		}
 		backend, ok := ii["backend"].([]interface{})
 		if !ok {
@@ -1006,7 +963,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 			}
 			dnsOverrides, err := convertEmptyInterfaceToStringMap(backendItemMap["dns_overrides"])
 			if err != nil {
-				diagnostics = diag.Errorf("found an error: %s Couldn't type assert host_tag_selector, got %v instead", err.Error(), reflect.TypeOf(backendItemMap["dns_overrides"]))
+				diagnostics = diag.Errorf("found an error: %s Couldn't type assert dns_overrides, got %T instead", err.Error(), backendItemMap["dns_overrides"])
 				return
 			}
 			svc.Spec.Backend.DNSOverrides = dnsOverrides
@@ -1198,7 +1155,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 			dnsNames, ok := certSettingsMap["dns_names"].(*schema.Set)
 			if !ok {
-				diagnostics = diag.Errorf("couldn't type assert dns_names to type: %+v", reflect.TypeOf(certSettingsMap["dns_names"]))
+				diagnostics = diag.Errorf("couldn't type assert dns_names to type: %T", certSettingsMap["dns_names"])
 				return
 			}
 			for _, dnsName := range dnsNames.List() {
@@ -1310,7 +1267,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 				trustCallbacks, err := convertEmptyInterfaceToStringMap(oidcSettingsMap["trust_callbacks"])
 				if err != nil {
-					diagnostics = diag.Errorf("found an error: %s Couldn't type assert http_settings.oidc_settings[%d].trust_callbacks, got %v instead", err.Error(), oidcSettingsIdx, reflect.TypeOf(httpSettingsMap["headers"]))
+					diagnostics = diag.Errorf("found an error: %s Couldn't type assert http_settings.oidc_settings[%d].trust_callbacks, got %T instead", err.Error(), oidcSettingsIdx, httpSettingsMap["headers"])
 					return
 				}
 				svc.Spec.HTTPSettings.OIDCSettings.TrustCallBacks = trustCallbacks
@@ -1350,7 +1307,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 				patterns, ok := exemptedPathMap["pattern"].([]interface{})
 				if !ok {
-					diagnostics = createTypeAssertDiagnostic("exempted_paths.pattern", exemptedPathMap["patterns"])
+					diagnostics = createTypeAssertDiagnostic("exempted_paths.pattern", exemptedPathMap["pattern"])
 					return
 				}
 				for pattern_idx, patternItem := range patterns {
@@ -1423,7 +1380,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 			headers, err := convertEmptyInterfaceToStringMap(httpSettingsMap["headers"])
 			if err != nil {
-				diagnostics = diag.Errorf("found an error: %s Couldn't type assert http_settings.headers, got %v instead", err.Error(), reflect.TypeOf(httpSettingsMap["headers"]))
+				diagnostics = diag.Errorf("found an error: %s Couldn't type assert http_settings.headers, got %T instead", err.Error(), httpSettingsMap["headers"])
 				return
 			}
 			svc.Spec.HTTPSettings.Headers = headers
@@ -1571,9 +1528,21 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return
 	}
 	log.Printf("#### readService: %#v", service)
-	d.Set("name", service.ServiceName)
-	d.Set("description", service.Description)
-	d.Set("cluster", service.ClusterName)
+	err = d.Set("name", service.ServiceName)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not set service name: %s", err)
+		return
+	}
+	err = d.Set("description", service.Description)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not set service description: %s", err)
+		return
+	}
+	err = d.Set("cluster", service.ClusterName)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not set service cluster: %s", err)
+		return
+	}
 	port, err := strconv.Atoi(*service.CreateServiceSpec.Metadata.Tags.Port)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
@@ -1609,41 +1578,18 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		"kube_ca_key":         service.CreateServiceSpec.Metadata.Tags.KubeCaKey,
 		"include_domains":     service.CreateServiceSpec.Metadata.Tags.IncludeDomains,
 	}
-	d.Set("metadatatags", []interface{}{metadatatags})
-	frontendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
+	err = d.Set("metadatatags", []interface{}{metadatatags})
 	if err != nil {
-		diagnostics = diag.FromErr(err)
+		return nil
+	}
+	spec, diagnostics := flattenServiceSpec(service.CreateServiceSpec.Spec)
+	if diagnostics.HasError() {
 		return
 	}
-	backendPort, err := strconv.Atoi(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].Port)
+	err = d.Set("spec", spec)
 	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
+		return nil
 	}
-	spec := map[string]interface{}{
-		"attributes": map[string]interface{}{
-			//todo make this be able to handle n frontend addresses
-			"frontend_address": map[string]interface{}{
-				"cidr": service.CreateServiceSpec.Spec.Attributes.FrontendAddresses[0].CIDR,
-				"port": frontendPort,
-			},
-			//todo make this handle n host tag selectors
-			"host_tag_selector": map[string]interface{}{
-				"site_name": service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0],
-			},
-			"tls_sni": service.CreateServiceSpec.Spec.Attributes.TLSSNI,
-		},
-		"backend": map[string]interface{}{
-			"target": map[string]interface{}{
-				"client_certificate": service.CreateServiceSpec.Spec.Backend.Target.ClientCertificate,
-				"name":               service.CreateServiceSpec.Spec.Backend.Target.Name,
-				"port":               backendPort,
-				"tls":                service.CreateServiceSpec.Spec.Backend.Target.TLS,
-				"tls_insecure":       service.CreateServiceSpec.Spec.Backend.Target.TLSInsecure,
-			},
-		},
-	}
-	d.Set("spec", spec)
 	d.SetId(service.ServiceID)
 	return
 }
@@ -1658,4 +1604,267 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interf
 	}
 	log.Printf("[SERVICE|RES|DELETE] deleted service with id: %q \n", d.Id())
 	return
+}
+
+func flattenServiceSpec(toFlatten service.Spec) (flattened []interface{}, diagnostics diag.Diagnostics) {
+	s := make(map[string]interface{})
+	s["backend"], diagnostics = flattenServiceBackend(toFlatten.Backend)
+	if diagnostics.HasError() {
+		return
+	}
+	s["attributes"] = flattenServiceAttributes(toFlatten.Attributes)
+	s["cert_settings"] = flattenServiceCertSettings(toFlatten.CertSettings)
+	s["http_settings"] = flattenServiceHTTPSettings(toFlatten.HTTPSettings)
+	s["client_cidrs"] = flattenServiceClientCIDRs(toFlatten.ClientCIDRs)
+	flattened = append(flattened, s)
+	return
+}
+
+func flattenServiceAttributes(toFlatten service.Attributes) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["frontend_address"] = flattenServiceFrontendAddresses(toFlatten.FrontendAddresses)
+	v["host_tag_selector"] = toFlatten.HostTagSelector
+	v["tls_sni"] = toFlatten.TLSSNI
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceFrontendAddresses(toFlatten []service.FrontendAddress) (flattened []interface{}) {
+	for _, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["cidr"] = item.CIDR
+		v["port"] = item.Port
+		flattened = append(flattened, v)
+	}
+	return
+}
+
+func flattenServiceBackend(toFlatten service.Backend) (flattened []interface{}, diagnostics diag.Diagnostics) {
+	v := make(map[string]interface{})
+	v["target"], diagnostics = flattenServiceTarget(toFlatten.Target)
+	if diagnostics.HasError() {
+		return
+	}
+	v["backend_allow_pattern"] = flattenServiceAllowPatterns(toFlatten.AllowPatterns)
+	v["connector_name"] = toFlatten.ConnectorName
+	v["dns_overrides"] = toFlatten.DNSOverrides
+	v["http_connect"] = toFlatten.HTTPConnect
+	v["backend_allowlist"] = toFlatten.Whitelist
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceAllowPatterns(toFlatten []service.BackendAllowPattern) (flattened []interface{}) {
+	for _, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["cidrs"] = item.CIDRs
+		v["hostnames"] = item.Hostnames
+		v["ports"] = flattenServiceBackendAllowPorts(item.Ports)
+		flattened = append(flattened, v)
+	}
+	return
+}
+
+func flattenServiceBackendAllowPorts(toFlatten service.BackendAllowPorts) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["port_list"] = toFlatten.PortList
+	v["port_range"] = flattenServicePortRanges(toFlatten.PortRanges)
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServicePortRanges(toFlatten []service.PortRange) (flattened []interface{}) {
+	for _, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["max"] = item.Max
+		v["min"] = item.Min
+		flattened = append(flattened, v)
+	}
+	return
+}
+
+func flattenServiceTarget(toFlatten service.Target) (flattened []interface{}, diagnostics diag.Diagnostics) {
+	v := make(map[string]interface{})
+	port, err := strconv.Atoi(toFlatten.Port)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port to int %v", toFlatten.Port)
+		return
+	}
+	v["client_certificate"] = toFlatten.ClientCertificate
+	v["name"] = toFlatten.Name
+	v["tls"] = toFlatten.TLS                  // might need to convert this to string
+	v["tls_insecure"] = toFlatten.TLSInsecure // might need to convert this to string
+	v["port"] = port
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceCertSettings(toFlatten service.CertSettings) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["custom_tls_cert"] = flattenServiceCustomTLSCert(toFlatten.CustomTLSCert)
+	v["dns_names"] = toFlatten.DNSNames
+	v["letsencrypt"] = toFlatten.LetsEncrypt
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceCustomTLSCert(toFlatten service.CustomTLSCert) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["cert_file"] = toFlatten.CertFile
+	v["enabled"] = toFlatten.Enabled
+	v["key_file"] = toFlatten.KeyFile
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceHTTPSettings(toFlatten service.HTTPSettings) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["enabled"] = toFlatten.Enabled
+	v["exempted_paths"] = flattenServiceExemptedPaths(toFlatten.ExemptedPaths)
+	v["http_health_check"] = flattenServiceHTTPHealthCheck(toFlatten.HTTPHealthCheck)
+	v["http_redirect"] = flattenServiceHTTPRedirect(toFlatten.HTTPRedirect)
+	v["headers"] = toFlatten.Headers
+	v["oidc_settings"] = flattenServiceOIDCSettings(toFlatten.OIDCSettings)
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceExemptedPaths(toFlatten service.ExemptedPaths) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["enabled"] = toFlatten.Enabled
+	v["paths"] = toFlatten.Paths
+	v["pattern"] = flattenServicePatterns(toFlatten.Patterns)
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServicePatterns(toFlatten []service.Pattern) (flattened []interface{}) {
+	for _, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["hosts"] = flattenServiceHosts(item.Hosts)
+		v["mandatory_headers"] = item.MandatoryHeaders
+		v["methods"] = item.Methods
+		v["paths"] = item.Paths
+		v["source_cidrs"] = item.SourceCIDRs
+		flattened = append(flattened, v)
+	}
+	return
+}
+
+func flattenServiceHosts(toFlatten []service.Host) (flattened []interface{}) {
+	for _, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["origin_header"] = item.OriginHeader
+		v["target"] = item.Target
+		flattened = append(flattened, v)
+	}
+	return
+}
+
+func flattenServiceHTTPHealthCheck(toFlatten service.HTTPHealthCheck) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["addresses"] = toFlatten.Addresses
+	v["enabled"] = toFlatten.Enabled
+	v["method"] = toFlatten.Method
+	v["from_address"] = toFlatten.FromAddress
+	v["https"] = toFlatten.HTTPS
+	v["path"] = toFlatten.Path
+	v["user_agent"] = toFlatten.UserAgent
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceHTTPRedirect(toFlatten service.HTTPRedirect) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["addresses"] = toFlatten.Addresses
+	v["enabled"] = toFlatten.Enabled
+	v["from_address"] = toFlatten.FromAddress
+	v["status_code"] = toFlatten.StatusCode
+	v["url"] = toFlatten.URL
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceOIDCSettings(toFlatten service.OIDCSettings) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["api_path"] = toFlatten.APIPath
+	v["enabled"] = toFlatten.Enabled
+	v["post_auth_redirect_path"] = toFlatten.PostAuthRedirectPath
+	v["service_domain_name"] = toFlatten.ServiceDomainName
+	v["suppress_device_trust_verification"] = toFlatten.SuppressDeviceTrustVerification
+	v["trust_callbacks"] = toFlatten.TrustCallBacks
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenServiceClientCIDRs(toFlatten []service.ClientCIDRs) (flattened []interface{}) {
+	for _, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["address"] = flattenServiceCIDRAddresses(item.Addresses)
+		v["clusters"] = item.Clusters
+		v["host_tag_selector"] = item.HostTagSelector
+		flattened = append(flattened, v)
+	}
+	return
+}
+
+func flattenServiceCIDRAddresses(toFlatten []service.CIDRAddress) (flattened []interface{}) {
+	for _, item := range toFlatten {
+		v := make(map[string]interface{})
+		v["cidr"] = item.CIDR
+		v["ports"] = item.Ports
+		flattened = append(flattened, v)
+	}
+	return
+}
+
+func validatePort() func(val interface{}, key string) (warns []string, errs []error) {
+	return func(val interface{}, key string) (warns []string, errs []error) {
+		v, err := typeSwitchPort(val)
+		if err != nil {
+			errs = append(errs, err)
+			return
+		}
+		if v < 0 || v > math.MaxUint16 {
+			errs = append(errs, fmt.Errorf("%q must be in range 0-%d, got: %d ", key, math.MaxUint16, v))
+		}
+		return
+	}
+}
+
+func typeSwitchPort(val interface{}) (v int, err error) {
+	switch val.(type) {
+	case int:
+		v = val.(int)
+	case string:
+		v, err = strconv.Atoi(val.(string))
+		if err != nil {
+			err = fmt.Errorf("%q could not be converted to an int", val)
+		}
+	default:
+		err = fmt.Errorf("could not validate port %q unknown type", val)
+		v = 0
+	}
+	return
+}
+
+func validateCIDR() func(val interface{}, key string) (warns []string, errs []error) {
+	return func(val interface{}, key string) (warns []string, errs []error) {
+		v := val.(string)
+		_, _, err := net.ParseCIDR(v)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("%q must be a CIDR, got: %q", key, v))
+		}
+		return
+	}
+}
+
+func validateTemplate() func(val interface{}, key string) (warns []string, errs []error) {
+	return func(val interface{}, key string) (warns []string, errs []error) {
+		v := val.(string)
+		if v != "WEB_USER" && v != "" {
+			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "WEB_USER", v))
+		}
+		return
+	}
 }

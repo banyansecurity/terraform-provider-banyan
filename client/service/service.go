@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	restclient "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+	"github.com/pkg/errors"
 	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-
-	restclient "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
-	"github.com/pkg/errors"
 )
 
 type Service struct {
@@ -42,9 +41,9 @@ type HostTag struct {
 	ComBanyanopsHosttagSiteName string `json:"com.banyanops.hosttag.site_name"`
 }
 type Attributes struct {
-	FrontendAddresses []FrontendAddress `json:"frontend_addresses"`
-	HostTagSelector   []HostTag         `json:"host_tag_selector"`
-	TLSSNI            []string          `json:"tls_sni"`
+	FrontendAddresses []FrontendAddress   `json:"frontend_addresses"`
+	HostTagSelector   []map[string]string `json:"host_tag_selector"`
+	TLSSNI            []string            `json:"tls_sni"`
 }
 
 type Backend struct {
@@ -292,35 +291,33 @@ func (this *Service) Get(id string) (service GetServiceSpec, ok bool, err error)
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
 		return
 	}
-
+	// Unmarshal the response into a service spec
 	defer response.Body.Close()
 	responseData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return
 	}
-	var getServicesJson []GetServicesJson
-	err = json.Unmarshal(responseData, &getServicesJson)
+	var createdServiceJson []GetServicesJson
+	err = json.Unmarshal(responseData, &createdServiceJson)
 	if err != nil {
 		return
 	}
-	if len(getServicesJson) == 0 {
+	if len(createdServiceJson) == 0 {
 		return
 	}
-	if len(getServicesJson) > 1 {
+	if len(createdServiceJson) > 1 {
 		err = errors.New("got more than one service")
 		return
 	}
-	getServicesJson[0].ServiceSpec = html.UnescapeString(getServicesJson[0].ServiceSpec)
-	var spec CreateService
-	err = json.Unmarshal([]byte(getServicesJson[0].ServiceSpec), &spec)
+	createdServiceJson[0].ServiceSpec = html.UnescapeString(createdServiceJson[0].ServiceSpec)
+	var createdSpec CreateService
+	err = json.Unmarshal([]byte(createdServiceJson[0].ServiceSpec), &createdSpec)
 	if err != nil {
 		return
 	}
-	getServicesJson[0].CreateServiceSpec = spec
+	createdServiceJson[0].CreateServiceSpec = createdSpec
+	service = mapToGetServiceSpec(createdServiceJson[0])
 	ok = true
-	service = mapToGetServiceSpec(getServicesJson[0])
-	createdSpec, err := json.MarshalIndent(service, "", "   ")
-	log.Printf("[SVC|CLIENT|GET] retrieved spec\n %s", string(createdSpec))
 	log.Printf("[SVC|CLIENT|GET] got service with id: %q", id)
 	return
 }
@@ -335,7 +332,6 @@ func (this *Service) disable(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
-	fmt.Printf("%v", myUrl.String())
 	resp, err := this.restClient.DoPost(myUrl.String(), nil)
 	if err != nil {
 		return
@@ -362,7 +358,6 @@ func (this *Service) Delete(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
-	fmt.Printf("%v", myUrl.String())
 	resp, err := this.restClient.DoDelete(myUrl.String())
 	if err != nil {
 		return
@@ -409,8 +404,6 @@ func (this *Service) Create(svc CreateService) (service GetServiceSpec, err erro
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to create service, message: %s", response.Status, response, string(responseData)))
 		return
 	}
-
-	fmt.Printf("%s", string(responseData))
 	log.Printf("[SVC|CLIENT|CREATE] Created a new service %#v\n", string(responseData))
 	var getServicesJson GetServicesJson
 	err = json.Unmarshal(responseData, &getServicesJson)
@@ -418,12 +411,12 @@ func (this *Service) Create(svc CreateService) (service GetServiceSpec, err erro
 		return
 	}
 	getServicesJson.ServiceSpec = html.UnescapeString(getServicesJson.ServiceSpec)
-	var spec Spec
-	err = json.Unmarshal([]byte(getServicesJson.ServiceSpec), &spec)
+	var createdService CreateService
+	err = json.Unmarshal([]byte(getServicesJson.ServiceSpec), &createdService)
 	if err != nil {
 		return
 	}
-	getServicesJson.Spec = spec
+	getServicesJson.Spec = createdService.Spec
 	service = mapToGetServiceSpec(getServicesJson)
 	createdSpec, err := json.MarshalIndent(service, "", "   ")
 	log.Printf("[SVC|CLIENT|CREATE] created spec\n %s", string(createdSpec))
