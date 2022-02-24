@@ -3,14 +3,12 @@ package banyan
 import (
 	"context"
 	"fmt"
-	"log"
-	"reflect"
-
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+	"log"
 )
 
 // The role resource. For more information on Banyan roles, please see the documentation:
@@ -54,224 +52,134 @@ func resourceRole() *schema.Resource {
 					},
 				},
 			},
-			"spec": {
-				Type:        schema.TypeList,
-				MinItems:    1,
-				MaxItems:    1,
-				Required:    true,
-				Description: "The spec for the role",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"email": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Description: "Email address for the user or group of users in the role",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"group": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Description: "Name of the group (from your IdP) which will be included in the role",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"platform": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Description: "Platform type which is required by the role",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"device_ownership": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Description: "Device ownership specification for the role",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"known_device_only": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "Enforces whether the role requires known devices only for access",
-						},
-						"mdm_present": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "Enforces whether the role requires an MDM to be present on the device",
-						},
-					},
+			"container_fqdn": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "FQDN for the containers",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
+			},
+			"image": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Image",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"repo_tag": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Repo Tag",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"service_accounts": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Repo Tag",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"user_group": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Name of the group (from your IdP) which will be included in the role",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"email": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Email address for the user or group of users in the role",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"device_ownership": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Device ownership specification for the role",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"platform": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Platform type which is required by the role",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"known_device_only": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforces whether the role requires known devices only for access",
+			},
+			"mdm_present": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforces whether the role requires an MDM to be present on the device",
 			},
 		},
 	}
 }
 
-func validateRoleTemplate() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if v != "USER" && v != "" {
-			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "USER", v))
-		}
-		return
-	}
-}
-
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[ROLE|RES|CREATE] creating role")
+	log.Printf("[ROLE|RES|CREATE] creating role %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
-	name, ok := d.Get("name").(string)
-	if !ok {
-		diagnostics = diag.Errorf("Couldn't type assert name")
-		return
-	}
-	description, ok := d.Get("description").(string)
-	if !ok {
-		diagnostics = diag.Errorf("Couldn't type assert description")
-
-		return
-	}
 	roleToCreate := role.CreateRole{
 		Metadata: role.Metadata{
-			Name:        name,
-			Description: description,
+			ID:          d.Get("id").(string),
+			Name:        d.Get("name").(string),
+			Description: d.Get("description").(string),
+			Tags: role.Tags{
+				Template: d.Get("metadatatags.0.template").(string),
+			},
 		},
 		Kind:       "BanyanRole",
 		APIVersion: "rbac.banyanops.com/v1",
 		Type:       "origin",
+		Spec: role.Spec{
+			ContainerFQDN:   convertSchemaSetToStringSlice(d.Get("container_fqdn").(*schema.Set)),
+			Image:           convertSchemaSetToStringSlice(d.Get("image").(*schema.Set)),
+			RepoTag:         convertSchemaSetToStringSlice(d.Get("repo_tag").(*schema.Set)),
+			LabelSelector:   []role.LabSel{},
+			ServiceAccts:    convertSchemaSetToStringSlice(d.Get("service_accounts").(*schema.Set)),
+			UserGroup:       convertSchemaSetToStringSlice(d.Get("user_group").(*schema.Set)),
+			Email:           convertSchemaSetToStringSlice(d.Get("email").(*schema.Set)),
+			DeviceOwnership: convertSchemaSetToStringSlice(d.Get("device_ownership").(*schema.Set)),
+			Platform:        convertSchemaSetToStringSlice(d.Get("platform").(*schema.Set)),
+			KnownDeviceOnly: d.Get("known_device_only").(bool),
+			MDMPresent:      d.Get("mdm_present").(bool),
+		},
 	}
-
-	metadatatags, ok := d.Get("metadatatags").([]interface{})
-	if !ok {
-		metadatatags := reflect.TypeOf(d.Get("metadatatags"))
-		diagnostics = diag.Errorf("Couldn't type assert metadatags, type is " + fmt.Sprintf("%+v", metadatatags))
-		return
-	}
-	for _, item := range metadatatags {
-		ii, ok := item.(map[string]interface{})
-		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert element in metadatatags")
-			return
-		}
-
-		roleToCreate.Metadata.Tags.Template, ok = ii["template"].(string)
-		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert template")
-			return
-		}
-	}
-
-	spec, ok := d.Get("spec").([]interface{})
-	if !ok {
-		spec := reflect.TypeOf(d.Get("spec"))
-		err := errors.New("Couldn't type assert spec, type is " + fmt.Sprintf("%+v", spec))
-		diagnostics = diag.FromErr(err)
-		return
-	}
-	for _, item := range spec {
-		ii, ok := item.(map[string]interface{})
-		if !ok {
-			err := errors.New("Couldn't type assert element in spec")
-			diagnostics = diag.FromErr(err)
-			return
-		}
-
-		knownDeviceOnly, ok := ii["known_device_only"].(bool)
-		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert known_device_only, got type: %v", reflect.TypeOf(ii["known_device_only"]))
-			return
-		}
-		roleToCreate.Spec.KnownDeviceOnly = knownDeviceOnly
-
-		mdmPresent, ok := ii["mdm_present"].(bool)
-		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert mdm_present, got type: %v", reflect.TypeOf(ii["mdm_present"]))
-			return
-		}
-		roleToCreate.Spec.MDMPresent = mdmPresent
-
-		deviceOwnershipSet, ok := ii["device_ownership"].(*schema.Set)
-		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert deviceOwnership, got type: %v", reflect.TypeOf(ii["device_ownership"]))
-			return
-		}
-		for _, deviceOwnerShipOption := range deviceOwnershipSet.List() {
-			deviceOwnerShipOptionValue, ok := deviceOwnerShipOption.(string)
-			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert deviceOwnershipValue, got type: %v", reflect.TypeOf(deviceOwnerShipOption))
-				return
-			}
-			roleToCreate.Spec.DeviceOwnership = append(roleToCreate.Spec.DeviceOwnership, deviceOwnerShipOptionValue)
-		}
-
-		emailSet, ok := ii["email"].(*schema.Set)
-		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert email, got type: %v", reflect.TypeOf(ii["email"]))
-			return
-		}
-		for _, email := range emailSet.List() {
-			emailValue, ok := email.(string)
-			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert email value, got type: %v", reflect.TypeOf(email))
-				return
-			}
-			roleToCreate.Spec.Email = append(roleToCreate.Spec.Email, emailValue)
-		}
-
-		groupSet, ok := ii["group"].(*schema.Set)
-		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert group, got type: %v", reflect.TypeOf(ii["group"]))
-			return
-		}
-		for _, group := range groupSet.List() {
-			groupValue, ok := group.(string)
-			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert group value, got type: %v", reflect.TypeOf(group))
-				return
-			}
-			roleToCreate.Spec.Group = append(roleToCreate.Spec.Group, groupValue)
-		}
-
-		platformSet, ok := ii["platform"].(*schema.Set)
-		if !ok {
-			diagnostics = diag.Errorf("Couldn't type assert platform, got type: %v", reflect.TypeOf(ii["platform"]))
-			return
-		}
-		for _, platform := range platformSet.List() {
-			platformValue, ok := platform.(string)
-			if !ok {
-				diagnostics = diag.Errorf("Couldn't type assert platform value, got type: %v", reflect.TypeOf(platform))
-				return
-			}
-			roleToCreate.Spec.Platform = append(roleToCreate.Spec.Platform, platformValue)
-		}
-	}
-
-	log.Printf("[ROLE|RES|CREATE] to be created %#v\n", roleToCreate)
 	createdRole, err := client.Role.Create(roleToCreate)
 	if err != nil {
 		diag.FromErr(errors.WithMessage(err, "couldn't create new role"))
 		return
 	}
-	log.Printf("[ROLE|RES|CREATE] created role %#v\n", createdRole)
+
+	log.Printf("[ROLE|RES|CREATE] created role %s : %s", d.Get("name"), d.Id())
 	d.SetId(createdRole.ID)
 	diagnostics = resourceRoleRead(ctx, d, m)
 	return
 }
 
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[ROLE|RES|UPDATE] updating role")
+	log.Printf("[ROLE|RES|UPDATE] updating role %s : %s", d.Get("name"), d.Id())
 	diagnostics = resourceRoleCreate(ctx, d, m)
-	log.Println("[ROLE|RES|UPDATE] updated role")
+	log.Printf("[ROLE|RES|UPDATE] updated role %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[ROLE|RES|READ] reading role")
+	log.Printf("[ROLE|RES|READ] reading role %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
 	role, ok, err := client.Role.Get(id)
@@ -285,27 +193,25 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	log.Printf("[ROLE|RES|READ] got role: %#v", role)
 	d.Set("name", role.Name)
 	d.Set("description", role.Description)
-	metadatatags := []interface{}{map[string]interface{}{
+	d.Set("id", role.ID)
+	d.Set("metadatatags", []interface{}{map[string]interface{}{
 		"template": role.UnmarshalledSpec.Metadata.Tags.Template,
-	}}
-	d.Set("metadatatags", metadatatags)
-	spec := []interface{}{map[string]interface{}{
-		"known_device_only": role.UnmarshalledSpec.Spec.KnownDeviceOnly,
-		"group":             role.UnmarshalledSpec.Spec.Group,
-		"email":             role.UnmarshalledSpec.Spec.Email,
-		"mdm_present":       role.UnmarshalledSpec.Spec.MDMPresent,
-		"device_ownership":  role.UnmarshalledSpec.Spec.DeviceOwnership,
-		"platform":          role.UnmarshalledSpec.Spec.Platform,
-	}}
-
-	d.Set("spec", spec)
-	d.SetId(role.ID)
-	log.Println("[ROLE|RES|READ] read role")
+	}})
+	d.Set("container_fqdn", role.UnmarshalledSpec.Spec.ContainerFQDN)
+	d.Set("image", role.UnmarshalledSpec.Spec.Image)
+	d.Set("repo_tag", role.UnmarshalledSpec.Spec.RepoTag)
+	d.Set("user_group", role.UnmarshalledSpec.Spec.UserGroup)
+	d.Set("email", role.UnmarshalledSpec.Spec.Email)
+	d.Set("device_ownership", role.UnmarshalledSpec.Spec.DeviceOwnership)
+	d.Set("platform", role.UnmarshalledSpec.Spec.Platform)
+	d.Set("known_device_only", role.UnmarshalledSpec.Spec.KnownDeviceOnly)
+	d.Set("mdm_present", role.UnmarshalledSpec.Spec.MDMPresent)
+	log.Printf("[ROLE|RES|READ] read role %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[ROLE|RES|DELETE] deleting role")
+	log.Printf("[ROLE|RES|DELETE] deleting role %s : %s", d.Get("name"), d.Id())
 
 	client := m.(*client.ClientHolder)
 	err := client.Role.Delete(d.Id())
@@ -313,6 +219,16 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	log.Println("[ROLE|RES|DELETE] deleted role")
+	log.Printf("[ROLE|RES|DELETE] deleted role %s : %s", d.Get("name"), d.Id())
 	return
+}
+
+func validateRoleTemplate() func(val interface{}, key string) (warns []string, errs []error) {
+	return func(val interface{}, key string) (warns []string, errs []error) {
+		v := val.(string)
+		if v != "USER" && v != "" {
+			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "USER", v))
+		}
+		return
+	}
 }
