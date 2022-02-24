@@ -13,7 +13,6 @@ import (
 
 // The role resource. For more information on Banyan roles, please see the documentation:
 func resourceRole() *schema.Resource {
-	log.Println("[ROLE|RES] getting resource schema")
 	return &schema.Resource{
 		Description:   "A role represents a group of users in the organization.",
 		CreateContext: resourceRoleCreate,
@@ -212,7 +211,6 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[ROLE|RES|DELETE] deleting role %s : %s", d.Get("name"), d.Id())
-
 	client := m.(*client.ClientHolder)
 	err := client.Role.Delete(d.Id())
 	if err != nil {
