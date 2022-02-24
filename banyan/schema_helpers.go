@@ -34,6 +34,27 @@ func convertEmptyInterfaceToStringMap(original interface{}) (stringMap map[strin
 	return
 }
 
+func convertEmptyInterfaceToStringMapTwo(original interface{}) (stringMap map[string]string) {
+	stringMap, _ = original.(map[string]string)
+	semiStringMap := original.(map[string]interface{})
+	stringMap, _ = convertInterfaceMapToStringMap(semiStringMap)
+	return
+}
+
+func convertEmptyInterfaceSliceToStringSlice(original []interface{}) (stringSlice []string) {
+	for _, v := range original {
+		stringSlice = append(stringSlice, v.(string))
+	}
+	return
+}
+
+func convertSchemaSetToStringSlice(original *schema.Set) (stringSlice []string) {
+	for _, v := range original.List() {
+		stringSlice = append(stringSlice, v.(string))
+	}
+	return
+}
+
 func handleNotFoundError(d *schema.ResourceData, resource string) (diagnostics diag.Diagnostics) {
 	log.Printf("[WARN] Removing %s because it's gone", resource)
 	// The resource doesn't exist anymore
