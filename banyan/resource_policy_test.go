@@ -92,27 +92,23 @@ resource "banyan_policy" "acceptance" {
   metadatatags {
     template = "USER"
   }
-  spec {
-    access {
-      roles = ["ANY", "HI"]
-      rules {
-        conditions {
-          trust_level = "High"
-        }
-        l7_access {
-          resources = ["*"]
-          actions   = ["*"]
-        }
+  access {
+    roles = ["ANY", "HI"]
+    rules {
+      conditions {
+        trust_level = "High"
+      }
+      l7_access {
+        resources = ["*"]
+        actions   = ["*"]
       }
     }
-    options {
-      disable_tls_client_authentication = true
-      l7_protocol                       = "http"
-    }
-    exception {
-      src_addr = ["127.0.0.1"]
-    }
   }
+  exception {
+    source_address = ["127.0.0.1"]
+  }
+  disable_tls_client_authentication = true
+  l7_protocol                       = "http"
 }
 `, name)
 }
@@ -126,27 +122,23 @@ resource "banyan_policy" "acceptance" {
   metadatatags {
     template = "USER"
   }
-  spec {
-    access {
-      roles = ["ANY"]
-      rules {
-        conditions {
-          trust_level = "High"
-        }
-        l7_access {
-          resources = ["*"]
-          actions   = ["*"]
-        }
+  access {
+    roles = ["ANY"]
+    rules {
+      conditions {
+        trust_level = "High"
+      }
+      l7_access {
+        resources = ["*"]
+        actions   = ["*"]
       }
     }
-    options {
-      disable_tls_client_authentication = true
-      l7_protocol                       = "http"
-    }
-    exception {
-      src_addr = ["127.0.0.1"]
-    }
   }
+  exception {
+    source_address = ["127.0.0.1"]
+  }
+  disable_tls_client_authentication = true
+  l7_protocol                       = "http"
 }
 `, name)
 }
