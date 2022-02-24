@@ -48,22 +48,3 @@ install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 	mv $(ARTIFACT_NAME) ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 .PHONY: install
-
-test: set-go-version
-	go test ./...
-.PHONY: test
-
-test-terraform-init: install build
-	cd examples && terraform init
-.PHONY: test-init
-
-test-terraform-plan: test-terraform-init
-	cd  examples && terraform plan
-.PHONY: test-terraform-plan
-
-test-all: test test-terraform-init test-terraform-plan
-.PHONY: test-all
-
-clean:
-	rm $(ARTIFACT_NAME)
-.PHONY: clean
