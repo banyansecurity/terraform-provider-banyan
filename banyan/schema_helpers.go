@@ -2,12 +2,9 @@ package banyan
 
 import (
 	"errors"
-	"fmt"
-	"log"
-	"reflect"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"log"
 )
 
 func convertInterfaceMapToStringMap(original map[string]interface{}) (newMap map[string]string, err error) {
@@ -34,37 +31,6 @@ func convertEmptyInterfaceToStringMap(original interface{}) (stringMap map[strin
 		return
 	}
 	stringMap, err = convertInterfaceMapToStringMap(semiStringMap)
-	return
-}
-
-func createTypeAssertDiagnostic(itemName string, original interface{}) diag.Diagnostics {
-	return diag.Errorf("Couldn't type assert %s in addressMap: %v", itemName, reflect.TypeOf(original))
-}
-
-func getStringSliceFromSet(set interface{}, setName string) (slice []string, diagnostics []diag.Diagnostic) {
-	assertedSet, ok := set.(*schema.Set)
-	if !ok {
-		diagnostics = createTypeAssertDiagnostic(setName, set)
-		return
-	}
-	for idx, setItem := range assertedSet.List() {
-		assertedSetItem, ok := setItem.(string)
-		if !ok {
-			diagnostics = createTypeAssertDiagnostic(fmt.Sprintf("%q", idx), setItem)
-		}
-		slice = append(slice, assertedSetItem)
-	}
-	return
-}
-
-func convertSliceInterfaceToSliceMap(original []interface{}) (sliceOfStringMap []map[string]string, err error) {
-	for _, elem := range original {
-		stringMap, err := convertEmptyInterfaceToStringMap(elem)
-		if err != nil {
-			err = errors.New("couldn't convert empty interface to string map")
-		}
-		sliceOfStringMap = append(sliceOfStringMap, stringMap)
-	}
 	return
 }
 
