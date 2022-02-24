@@ -140,8 +140,7 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 		return
 	}
 	if !ok {
-		diagnostics = diag.Errorf("couldn't find expected resource")
-		return
+		return handleNotFoundError(d, fmt.Sprintf("policy attachment %q", d.Id()))
 	}
 	log.Printf("[POLICYATTACHMENT|RES|READ] got policyAttachment: %#v", attachment)
 	d.Set("policy_id", attachment.PolicyID)

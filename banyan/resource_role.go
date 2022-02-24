@@ -279,8 +279,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return
 	}
 	if !ok {
-		diagnostics = diag.Errorf("couldn't find expected resource")
-		return
+		return handleNotFoundError(d, fmt.Sprintf("role %q", d.Id()))
 	}
 	log.Printf("[ROLE|RES|READ] got role: %#v", role)
 	d.Set("name", role.Name)

@@ -1527,8 +1527,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return
 	}
 	if !ok {
-		diagnostics = diag.Errorf("couldn't find expected resource")
-		return
+		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
 	log.Printf("#### readService: %#v", service)
 	err = d.Set("name", service.ServiceName)

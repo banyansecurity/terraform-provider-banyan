@@ -476,8 +476,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 		return
 	}
 	if !ok {
-		diagnostics = diag.Errorf("couldn't find expected resource")
-		return
+		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
 	log.Printf("[POLICY|RES|READ]: go policy: %#v", policy)
 	d.Set("name", policy.Name)
