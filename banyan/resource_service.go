@@ -362,7 +362,7 @@ func resourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cidr": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							// TODO: verify this
 							Description:  "A list of IP addresses in string format specified in CIDR notation that the Service should match",
 							ValidateFunc: validation.IsCIDRNetwork(0, 32),

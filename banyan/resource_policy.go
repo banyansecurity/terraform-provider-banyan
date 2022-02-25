@@ -26,6 +26,11 @@ func resourcePolicy() *schema.Resource {
 				Required:    true,
 				Description: "Name of the policy",
 			},
+			"id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "ID of the policy in Banyan",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -50,23 +55,24 @@ func resourcePolicy() *schema.Resource {
 			"access": {
 				Type:        schema.TypeList,
 				MinItems:    0,
-				Optional:    true,
+				Required:    true,
 				Description: "Access describes the access rights for a set of roles",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"roles": {
-							Type: schema.TypeSet,
+							Type:        schema.TypeSet,
+							Description: "Roles that all have the access rights given by rules",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Optional: true,
+							Required: true,
 						},
 						"rules": {
 							Type:        schema.TypeList,
 							MinItems:    1,
 							MaxItems:    1,
-							Optional:    true,
-							Description: "Rules lists a set of access rights, along with any required conditions that must be satisfied for the access rights to be enabled",
+							Required:    true,
+							Description: "Access rights, along with any required conditions that must be satisfied for the access rights to be enabled",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"conditions": {
@@ -123,11 +129,15 @@ func resourcePolicy() *schema.Resource {
 				},
 			},
 			"disable_tls_client_authentication": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Description: "Prevents the service from asking for a client TLS cert",
+				Optional:    true,
 			},
 			"l7_protocol": {
-				Type:         schema.TypeString,
+				Type: schema.TypeString,
+				Description: `
+					L7Protocol specifies the application-level protocol: "http", "kafka", or empty string.
+					If L7Protocol is not empty, then all Access rules must have L7Access entries.`,
 				Optional:     true,
 				ValidateFunc: validateL7Protocol(),
 			},
