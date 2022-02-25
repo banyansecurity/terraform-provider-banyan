@@ -44,13 +44,13 @@ func resourceService() *schema.Resource {
 				Type:        schema.TypeList,
 				MinItems:    1,
 				MaxItems:    1,
-				Required:    true,
-				Description: "Metadata about the service",
+				Optional:    true,
+				Description: "Metadata about the service presented to the UI and the Banyan App",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"template": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							Description:  "Must be set to WEB_USER, TCP_USER, or CUSTOM",
 							ValidateFunc: validation.StringInSlice([]string{"WEB_USER", "TCP_USER"}, false),
 						},
@@ -297,13 +297,14 @@ func resourceService() *schema.Resource {
 							MinItems:    1,
 							MaxItems:    1,
 							Required:    true,
-							Description: "BackendTarget specifies the backend workload instance's address or name ports, and TLS properties.",
+							Description: "Specifies the backend workload instance's address or name ports, and TLS properties.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_certificate": {
 										Type:        schema.TypeBool,
 										Description: "Indicates whether to provide Netagent's client TLS certificate to the server if the server asks for it in the TLS handshake.",
-										Required:    true,
+										Optional:    true,
+										Default:     false,
 									},
 									"name": {
 										Type: schema.TypeString,
@@ -312,23 +313,26 @@ func resourceService() *schema.Resource {
 											If it is the empty string, then Netagent will use the destination
 											IP address of the incoming frontend connection as the workload 
 											instance's address`,
-										Required: true,
+										Optional: true,
+										Default:  "",
 									},
 									"port": {
 										Type:         schema.TypeInt,
-										Description:  "Port specifies the backend server's TCP port number.",
+										Description:  "Port specifies the backend server's TCP port number",
 										Required:     true,
 										ValidateFunc: validatePort(),
 									},
 									"tls": {
 										Type:        schema.TypeBool,
 										Description: "TLS indicates whether the connection to the backend server uses TLS.",
-										Required:    true,
+										Optional:    true,
+										Default:     true,
 									},
 									"tls_insecure": {
 										Type:        schema.TypeBool,
 										Description: "TLSInsecure indicates whether the backend TLS connection does not validate the server's TLS certificate",
-										Required:    true,
+										Optional:    true,
+										Default:     false,
 									},
 								},
 							},
@@ -358,7 +362,7 @@ func resourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cidr": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							// TODO: verify this
 							Description:  "A list of IP addresses in string format specified in CIDR notation that the Service should match",
 							ValidateFunc: validation.IsCIDRNetwork(0, 32),
