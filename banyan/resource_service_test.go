@@ -103,8 +103,8 @@ resource "banyan_service" "acceptance" {
 
   client_cidrs {
     clusters = ["cluster"]
-    address {
-      cidr  = "127.127.127.1/32"
+    cidr_address {
+      cidr  = "10.0.1.0/24"
       ports = "888"
     }
     host_tag_selector = [
@@ -116,7 +116,7 @@ resource "banyan_service" "acceptance" {
   backend {
     allow_patterns {
       hostnames = ["differentone.com", "foo.bar.baz"]
-      cidrs     = ["55.55.55.55/5"]
+      cidrs     = ["10.0.1.0/24"]
       ports {
         port_list = [88, 99]
         port_range {
@@ -229,8 +229,8 @@ resource "banyan_service" "acceptance" {
 
   client_cidrs {
     clusters = ["cluster"]
-    address {
-      cidr  = "127.127.127.1/32"
+    cidr_address {
+      cidr  = "10.0.1.0/24"
       ports = "888"
     }
     host_tag_selector = [
@@ -242,7 +242,7 @@ resource "banyan_service" "acceptance" {
   backend {
     allow_patterns {
       hostnames = ["differentone.com", "foo.bar.baz"]
-      cidrs     = ["55.55.55.55/5"]
+      cidrs     = ["10.0.1.0/24"]
       ports {
         port_list = [88, 99]
         port_range {
@@ -333,100 +333,4 @@ resource "banyan_service" "acceptance" {
   }
 }
 `, name, name, name)
-}
-
-func Test_validateCIDR_tooLargeSuffixBitSize(t *testing.T) {
-	t.Parallel()
-	warns, errs := validateCIDR()("10.1.2.1/3666", "key")
-	assert.Empty(t, warns)
-	assert.NotEmpty(t, errs)
-}
-
-func Test_validateCIDR_0SuffixBitSize(t *testing.T) {
-	t.Parallel()
-	warns, errs := validateCIDR()("10.1.2.1/0", "key")
-	assert.Empty(t, warns)
-	assert.Empty(t, errs)
-}
-
-func Test_validateCIDR_validCIDR(t *testing.T) {
-	t.Parallel()
-	warns, errs := validateCIDR()("10.1.2.1/32", "key")
-	assert.Empty(t, warns)
-	assert.Empty(t, errs)
-}
-
-func Test_validateCIDR_invalidIPValues(t *testing.T) {
-	t.Parallel()
-	warns, errs := validateCIDR()("300.1.2.1/32", "key")
-	assert.Empty(t, warns)
-	assert.NotEmpty(t, errs)
-}
-
-func Test_portValidation_zeroPort(t *testing.T) {
-	t.Parallel()
-	warns, errs := validatePort()(0, "key")
-	assert.Empty(t, warns)
-	assert.Empty(t, errs)
-}
-
-func Test_portValidation_maxPortValue(t *testing.T) {
-	t.Parallel()
-	warns, errs := validatePort()(65535, "key")
-	assert.Empty(t, warns)
-	assert.Empty(t, errs)
-}
-
-func Test_portValidation_negativePortValue(t *testing.T) {
-	t.Parallel()
-	warns, errs := validatePort()(-1, "key")
-	assert.Empty(t, warns)
-	assert.NotEmpty(t, errs)
-}
-
-func Test_portValidation_tooLargePortValue(t *testing.T) {
-	t.Parallel()
-	warns, errs := validatePort()(65536, "key")
-	assert.Empty(t, warns)
-	assert.NotEmpty(t, errs)
-}
-
-func Test_templateValidation_validNonEmpty(t *testing.T) {
-	t.Parallel()
-	warns, errs := validateTemplate()("WEB_USER", "key")
-	assert.Empty(t, warns)
-	assert.Empty(t, errs)
-}
-
-func Test_templateValidation_validEmpty(t *testing.T) {
-	t.Parallel()
-	warns, errs := validateTemplate()("", "key")
-	assert.Empty(t, warns)
-	assert.Empty(t, errs)
-}
-
-func Test_templateValidation_invalidValue_returnsError(t *testing.T) {
-	t.Parallel()
-	warns, errs := validateTemplate()("invalid", "key")
-	assert.Empty(t, warns)
-	assert.NotEmpty(t, errs)
-}
-
-func Test_typeSwitchPort(t *testing.T) {
-	t.Parallel()
-	var val interface{}
-	_, err := typeSwitchPort(val)
-	if err == nil {
-		t.Errorf("expected error here, got none")
-	}
-	val = 1234
-	v, _ := typeSwitchPort(val)
-	if v != val {
-		t.Errorf("got %T expected %T", v, val)
-	}
-	sVal := "1234"
-	v, _ = typeSwitchPort(sVal)
-	if v != val {
-		t.Errorf("got %T expected %T", v, val)
-	}
 }

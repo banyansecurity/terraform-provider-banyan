@@ -107,8 +107,8 @@ resource "banyan_service" "acceptance" {
 
   client_cidrs {
     clusters = ["cluster"]
-    address {
-      cidr  = "127.127.127.1/32"
+    cidr_address {
+      cidr  = "10.0.1.0/24"
       ports = "888"
     }
     host_tag_selector = [
@@ -120,7 +120,7 @@ resource "banyan_service" "acceptance" {
   backend {
     allow_patterns {
       hostnames = ["differentone.com", "foo.bar.baz"]
-      cidrs     = ["55.55.55.55/5"]
+      cidrs     = ["10.0.1.0/24"]
       ports {
         port_list = [88, 99]
         port_range {
@@ -265,8 +265,8 @@ resource "banyan_service" "acceptance" {
 
   client_cidrs {
     clusters = ["cluster"]
-    address {
-      cidr  = "127.127.127.1/32"
+    cidr_address {
+      cidr  = "10.0.1.0/24"
       ports = "888"
     }
     host_tag_selector = [
@@ -278,7 +278,7 @@ resource "banyan_service" "acceptance" {
   backend {
     allow_patterns {
       hostnames = ["differentone.com", "foo.bar.baz"]
-      cidrs     = ["55.55.55.55/5"]
+      cidrs     = ["10.0.1.0/24"]
       ports {
         port_list = [88, 99]
         port_range {
