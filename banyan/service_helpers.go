@@ -84,7 +84,7 @@ func expandAttributes(d *schema.ResourceData) (attributes service.Attributes) {
 }
 
 func expandFrontendAddresses(d *schema.ResourceData) (frontendAddresses []service.FrontendAddress) {
-	frontEndAddressList := d.Get("frontend_address").([]interface{})
+	frontEndAddressList := d.Get("frontend").([]interface{})
 	for _, frontEndAddressItem := range frontEndAddressList {
 		frontEndAddressItemMap := frontEndAddressItem.(map[string]interface{})
 		frontendAddresses = append(

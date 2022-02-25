@@ -144,7 +144,7 @@ resource "banyan_service" "acceptance" {
     }
   }
 
-  frontend_address {
+  frontend {
     cidr = "127.44.111.14/32"
     port = 1112
   }
@@ -270,7 +270,7 @@ resource "banyan_service" "acceptance" {
     }
   }
 
-  frontend_address {
+  frontend {
     cidr = "127.44.111.14/32"
     port = 1112
   }

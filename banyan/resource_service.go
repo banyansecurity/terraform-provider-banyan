@@ -31,7 +31,7 @@ func resourceService() *schema.Resource {
 			},
 			"description": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "Description of the service",
 			},
 			"cluster": {
@@ -350,7 +350,7 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"frontend_address": {
+			"frontend": {
 				Type:        schema.TypeList,
 				Required:    true,
 				Description: "Specifies the IP addresses and ports the frontend of the service listens on",
@@ -860,7 +860,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("frontend_address", flattenServiceFrontendAddresses(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses))
+	err = d.Set("frontend", flattenServiceFrontendAddresses(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses))
 	if err != nil {
 		return diag.FromErr(err)
 	}
