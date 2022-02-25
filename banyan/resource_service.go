@@ -3,6 +3,7 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 	"strconv"
 
@@ -50,15 +51,19 @@ func resourceService() *schema.Resource {
 						"template": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateTemplate(),
+							Description:  "Must be set to WEB_USER, TCP_USER, or CUSTOM",
+							ValidateFunc: validation.StringInSlice([]string{"WEB_USER", "TCP_USER"}, false),
 						},
 						"user_facing": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:        schema.TypeBool,
+							Description: "Whether the service is user-facing or not",
+							Optional:    true,
 						},
 						"protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Description:  "The protocol of the service, must be http or https",
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"http", "https", "tcp"}, false),
 						},
 						"domain": {
 							Type:     schema.TypeString,
@@ -74,8 +79,10 @@ func resourceService() *schema.Resource {
 							Optional: true,
 						},
 						"service_app_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Description:  "Must be WEB, GENERIC or CUSTOM",
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"WEB", "GENERIC", "CUSTOM"}, false),
 						},
 						"enforcement_mode": {
 							Type:     schema.TypeString,
@@ -136,30 +143,36 @@ func resourceService() *schema.Resource {
 			"client_cidrs": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Description: `
+					ClientCIDRs is used in environments with Network Address Translation (NAT) to list
+					the IP addresses that are used to access the Service; Netagent will then automatically
+					intercept traffic to these IP addresses.`,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
-							Type:     schema.TypeList,
-							Optional: true,
+						"cidr_address": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "CIDRAddress uses the Classless Inter-Domain Routing (CIDR) format for flexible allocation of IP addresses",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cidr": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateCIDR(),
+										Description:  "Must be in CIDR format i.e. 192.168.0.0/16",
+										ValidateFunc: validation.IsCIDRNetwork(0, 32),
 									},
 									"ports": {
-										Type: schema.TypeString,
-										// TODO figure out if this is comma separated or ranges or both and add Description: "",
-										// todo validate on above
-										Optional: true,
+										Type:        schema.TypeString,
+										Description: "",
+										Optional:    true,
 									},
 								},
 							},
 						},
 						"clusters": {
-							Type:     schema.TypeSet,
-							Optional: true,
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Description: "Tells Netagent to set Client CIDRs on only a specific subset of clusters",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -167,7 +180,7 @@ func resourceService() *schema.Resource {
 						"host_tag_selector": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Description: "host tag selectors",
+							Description: "Tells Netagent to set Client CIDRs on only a specific subset of hosts and ports",
 							Elem: &schema.Schema{
 								Type: schema.TypeMap,
 								Elem: &schema.Schema{Type: schema.TypeString},
@@ -177,22 +190,24 @@ func resourceService() *schema.Resource {
 				},
 			},
 			"backend": {
-				Type:        schema.TypeList,
-				Required:    true,
-				Description: "backend settings",
+				Type:     schema.TypeList,
+				Required: true,
+				Description: `
+					Backend specifies how Netagent, when acting as a reverse proxy, forwards incoming 
+					“frontend connections” to a backend workload instance that implements a registered service`,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allow_patterns": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Description: `
-					BackendAllowPatterns is an optional section defines the patterns for the backend workload
-					instance. If BackendWhitelist/BackendAllowPatterns are both not populated, then all backend
-					address/name/port are allowed. This field is effective only when BackendWhitelist is not populated.
-					If the BackendAllowPatterns is not populated, then the backend must match at least one entry
-					in this list to establish connection with the backend service.  This could be used
-					for both httpConnect and non-httpConnect cases.  In non-httpConnect cases only backend
-					hostnames are effective and other fields are ignored.`,
+								Defines the patterns for the backend workload instance. If the BackendAllowPatterns is set,
+								then the backend must match at least one entry in this list to establish connection with the backend service. 
+   								Note that this field is effective only when BackendWhitelist is not populated.
+   								If BackendWhitelist and BackendAllowPatterns are both not populated, then all backend
+   								address/name/port are allowed. This field could be used with httpConnect set to TRUE or FALSE. With HttpConnect set to FALSE, 
+   								only backend hostnames are supported, all other fields are ignored. With HttpConnect set to TRUE, 
+   								all fields of BackendAllowPatterns are supported and effective.`,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"hostnames": {
@@ -207,7 +222,8 @@ func resourceService() *schema.Resource {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Schema{
-											Type: schema.TypeString,
+											Type:         schema.TypeString,
+											ValidateFunc: validation.IsCIDRNetwork(0, 32),
 										},
 										Description: "Host may be a CIDR such as 10.1.1.0/24",
 									},
@@ -236,13 +252,13 @@ func resourceService() *schema.Resource {
 															"min": {
 																Type:         schema.TypeInt,
 																Optional:     true,
-																Description:  "min value of port range",
+																Description:  "Minimum value of port range",
 																ValidateFunc: validatePort(),
 															},
 															"max": {
 																Type:         schema.TypeInt,
 																Optional:     true,
-																Description:  "max value of port range",
+																Description:  "Maximum value of port range",
 																ValidateFunc: validatePort(),
 															},
 														},
@@ -257,58 +273,76 @@ func resourceService() *schema.Resource {
 						"dns_overrides": {
 							Type:     schema.TypeMap,
 							Optional: true,
-							Description: `is an optional section that specifies name-to-address or name-to-name mappings.
-										 Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
-										 Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
-										 Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
-										          name-to-name    ->    "exposed.service.com" : "internal.myservice.com"
+							Description: `
+								Specifies name-to-address or name-to-name mappings.
+								Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
+								Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
+								Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
+								ame-to-name    ->    "exposed.service.com" : "internal.myservice.com"
 										`,
 							Elem: &schema.Schema{Type: schema.TypeString},
 						},
 						"connector_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Description: "If Banyan Connector is used to access this service, this must be set to the name of the connector with network access to the service",
+							Optional:    true,
 						},
 						"http_connect": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:        schema.TypeBool,
+							Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+							Optional:    true,
 						},
 						"target": {
 							Type:        schema.TypeList,
 							MinItems:    1,
 							MaxItems:    1,
 							Required:    true,
-							Description: "target",
+							Description: "BackendTarget specifies the backend workload instance's address or name ports, and TLS properties.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_certificate": {
-										Type:     schema.TypeBool,
-										Required: true,
+										Type:        schema.TypeBool,
+										Description: "Indicates whether to provide Netagent's client TLS certificate to the server if the server asks for it in the TLS handshake.",
+										Required:    true,
 									},
 									"name": {
-										Type:     schema.TypeString,
+										Type: schema.TypeString,
+										Description: `
+											Name specifies the DNS name of the backend workload instance. 
+											If it is the empty string, then Netagent will use the destination
+											IP address of the incoming frontend connection as the workload 
+											instance's address`,
 										Required: true,
 									},
 									"port": {
 										Type:         schema.TypeInt,
+										Description:  "Port specifies the backend server's TCP port number.",
 										Required:     true,
 										ValidateFunc: validatePort(),
 									},
 									"tls": {
-										Type:     schema.TypeBool,
-										Required: true,
+										Type:        schema.TypeBool,
+										Description: "TLS indicates whether the connection to the backend server uses TLS.",
+										Required:    true,
 									},
 									"tls_insecure": {
-										Type:     schema.TypeBool,
-										Required: true,
+										Type:        schema.TypeBool,
+										Description: "TLSInsecure indicates whether the backend TLS connection does not validate the server's TLS certificate",
+										Required:    true,
 									},
 								},
 							},
 						},
 						"whitelist": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Description: "also called backend allowlist ",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Description: `
+								Indicates the allowed names for the backend workload instance. 
+								If this field is populated, then the backend name must match at least one entry
+								in this field list to establish connection with the backend service.
+								The names in this list are allowed to start with the wildcard character "*" to match more
+								than one backend name. This field is used generally with HttpConnect=FALSE. For all HttpConnect=TRUE cases, or where 
+								more advanced backend defining patterns are required, use BackendAllowPatterns.`,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -319,17 +353,20 @@ func resourceService() *schema.Resource {
 			"frontend_address": {
 				Type:        schema.TypeList,
 				Required:    true,
-				Description: "frontend_address",
+				Description: "Specifies the IP addresses and ports the frontend of the service listens on",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateCIDR(),
+							Type:     schema.TypeString,
+							Optional: true,
+							// TODO: verify this
+							Description:  "A list of IP addresses in string format specified in CIDR notation that the Service should match",
+							ValidateFunc: validation.IsCIDRNetwork(0, 32),
 						},
 						"port": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
+							Description:  "The port that the service listens on",
 							ValidateFunc: validatePort(),
 						},
 					},
@@ -338,7 +375,7 @@ func resourceService() *schema.Resource {
 			"host_tag_selector": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: `host tag selectors`,
+				Description: "Tells Netagent to intercept FrontendAddresses on only a specific subset of hosts",
 				Elem: &schema.Schema{
 					Type: schema.TypeMap,
 					Elem: &schema.Schema{Type: schema.TypeString},
@@ -347,6 +384,9 @@ func resourceService() *schema.Resource {
 			"tls_sni": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Description: `
+					If TLSSNI is set, Netagent will reject all non-TLS connections.
+					It will only forward on TLS connections where the SNI matches for Policy validation"`,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -355,45 +395,60 @@ func resourceService() *schema.Resource {
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Optional:    true,
-				Description: "http health check",
+				Description: "Used by HTTP services for use-case specific functionality",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:        schema.TypeBool,
+							Description: "Enables http service specific settings",
+							Required:    true,
 						},
 						"oidc_settings": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Computed:    true,
-							Description: "oidc settings",
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Description: `
+								OIDCSettings provides Netagent specific parameters needed to use 
+								OpenID Connect to authenticate an Entity for access to a Service
+								`,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
-										Type:     schema.TypeBool,
-										Required: true,
+										Type:        schema.TypeBool,
+										Description: "Turns on the OIDC capability",
+										Required:    true,
 									},
 									"service_domain_name": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:        schema.TypeString,
+										Description: "The URL used to access the service",
+										Required:    true,
 									},
 									"post_auth_redirect_path": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:        schema.TypeString,
+										Default:     "/",
+										Description: "The path to return the user to after OpenID Connect flow",
+										Optional:    true,
 									},
 									"api_path": {
-										Type:     schema.TypeString,
+										Type: schema.TypeString,
+										Description: `
+											default: /api) is the path serving AJAX requests. 
+											If a request is not authenticated, paths starting with the APIPath 
+											will receive a 403 Unauthorized response
+											instead of a 302 Redirect to the authentication provider`,
 										Optional: true,
 									},
 									"suppress_device_trust_verification": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Description: "SuppressDeviceTrustVerification disables Device Trust Verification for a service if set to true",
 									},
 									"trust_callbacks": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Description: "",
+										Elem:        &schema.Schema{Type: schema.TypeString},
 									},
 								},
 							},
@@ -402,43 +457,51 @@ func resourceService() *schema.Resource {
 							Type:        schema.TypeList,
 							MaxItems:    1,
 							Optional:    true,
-							Description: "http health check",
+							Description: "Tells Netagent that specific HTTP paths should be exempted from access control policies",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
-										Type:     schema.TypeBool,
-										Required: true,
+										Type:        schema.TypeBool,
+										Description: "Turns on the HTTP health check capability",
+										Required:    true,
 									},
 									"addresses": {
-										Type:     schema.TypeSet,
-										Required: true,
+										Type:        schema.TypeSet,
+										Required:    true,
+										Description: "Addresses of the http health check",
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
 									"method": {
-										Type:     schema.TypeString,
-										Required: true,
-										// TODO: validate permissible http methods ValidateFunc: validateHttpMethods(),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "GET",
+										Description:  "Specifies the health check HTTP method",
+										ValidateFunc: validateHttpMethods(),
 									},
 									"path": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:        schema.TypeString,
+										Description: "Specifies the HTTP health check path",
+										Required:    true,
 									},
 									"user_agent": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:        schema.TypeString,
+										Description: "A string to check for in the HTTP user-agent header (no check if omitted)",
+										Optional:    true,
 									},
 									"from_address": {
-										Type:     schema.TypeSet,
-										Required: true,
+										Type:        schema.TypeSet,
+										Required:    true,
+										Description: "Allowed source addresses of the health checker (all allowed if omitted)",
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
 									"https": {
-										Type:     schema.TypeBool,
-										Required: true,
+										Type:        schema.TypeBool,
+										Required:    true,
+										Description: "Specifies that the health check uses https instead of https",
 									},
 								},
 							},
@@ -448,43 +511,73 @@ func resourceService() *schema.Resource {
 							MaxItems:    1,
 							Optional:    true,
 							Computed:    true,
-							Description: "generally used for usecases as CORS/Source IP exception",
+							Description: "Tells Netagent that specific HTTP paths should be whitelisted/exempted from OIDC authentication",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
-										Type:     schema.TypeBool,
-										Required: true,
+										Type:        schema.TypeBool,
+										Description: "Turns on the HTTP exempted paths capability",
+										Required:    true,
 									},
 									"patterns": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Description: `
+											Pattern tells Netagent to exempt HTTP requests based on matching HTTP request attributes 
+											such as source IP, host, headers, methods, paths, etc. 
+											For example, use this section when exempting CORS requests by source IP address.
+											`,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"template": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:        schema.TypeString,
+													Description: "",
+													Optional:    true,
 												},
 												"source_cidrs": {
-													Type:     schema.TypeSet,
+													Type: schema.TypeSet,
+													Description: `
+														Specifies the source IP address of the HTTP request. 
+														The matching request should match or should be in the range of the CIDR specified.
+														SourceCIDRs is an array and multiple CIDRs with/without prefix 
+														could be specified like, 127.0.0.1, 192.168.1.0/29, 10.0.0.0/8 etc.
+														If source-ip matching is not required, please skip this field`,
 													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
 												"hosts": {
-													Type:     schema.TypeList,
-													Optional: true,
+													Type:        schema.TypeList,
+													Optional:    true,
+													Description: "The host/origin header values in the HTTP request",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"origin_header": {
-																Type:     schema.TypeSet,
+																Type: schema.TypeSet,
+																Description: `
+																	OriginHeader (mandatory)-is list of web host address. 
+																	The web-host address matches to contents of Origin header in the HTTP request.
+																	The value should have "scheme:host:port", ex: "https://www.banyansecurity.io:443".
+																	This field supports single domain wildcards also, like 
+																	https://*.banyansecurity.com or https://api.*.banyansecurity.com:443
+																	`,
 																Optional: true,
 																Elem: &schema.Schema{
 																	Type: schema.TypeString,
 																},
 															},
 															"target": {
-																Type:     schema.TypeSet,
+																Type: schema.TypeSet,
+																Description: `
+																	Target (mandatory) list of web host address. In this web-host address,
+																	the hostname matches to host header in the HTTP request.
+																	The value should have "scheme:host:port",
+																	ex: https://www.banyansecurity.io:443. This field supports single domain wildcards also,
+																	like https://*.banyansecurity.com or https://api.*.banyansecurity.com:443.
+																	This should be filled only while hosting multi-domain services. In single domain
+																	service deployments, this field to be filled as [*] to have "DONT CARE" effect.
+																	`,
 																Optional: true,
 																Elem: &schema.Schema{
 																	Type: schema.TypeString,
@@ -494,21 +587,34 @@ func resourceService() *schema.Resource {
 													},
 												},
 												"methods": {
-													Type:     schema.TypeSet,
+													Type: schema.TypeSet,
+													Description: `
+														Matches the HTTP request methods. The matching request 
+														will have any one of the listed methods.
+														To list all the methods supported "like GET/POST/OPTIONS etc.
+														["*"] value will have "DONT CARE" effect and will skip matching methods.
+														`,
 													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
 												"paths": {
-													Type:     schema.TypeSet,
-													Optional: true,
+													Type:        schema.TypeSet,
+													Description: "Matches the HTTP request URI. The matching request will have any one of the paths/strings listed.",
+													Optional:    true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
 												"mandatory_headers": {
-													Type:     schema.TypeSet,
+													Type: schema.TypeSet,
+													Description: `
+														MandatoryHeaders (mandatory) matches the HTTP request headers.
+														The matching request will have all of the headers listed.
+														To list all the headers that a matching HTTP request should have for instance
+														"Content-Type"/"Access-Control-Allow-Origin" etc.
+														["*"] will have "DONT CARE" effect and will skip matching headers.`,
 													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
@@ -561,41 +667,52 @@ func resourceService() *schema.Resource {
 				MaxItems:    1,
 				MinItems:    1,
 				Optional:    true,
-				Description: "cert settings used for x",
+				Description: "Specifies the X.509 server certificate to use for this Service",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"letsencrypt": {
 							Type:     schema.TypeBool,
+							Default:  "Letsencrypt flag will be used whether to request a letsencrypt certificate for given domains",
 							Optional: true,
 						},
 						"dns_names": {
-							Type:     schema.TypeSet,
+							Type: schema.TypeSet,
+							Description: `
+								DNSNames specifies how to populate the CommonName field in the X.509
+								server certificate for this Service. If DNSNames is not specified the 
+								CommonName field will be set to the ServiceName`,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"custom_tls_cert": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Computed:    true,
-							Description: "cert settings used for x",
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Description: `
+								CustomTLSCert enables Netagent to override the default behavior
+								of obtaining a X.509 server certificate for this Service from Shield,
+								and instead use a TLS certificate on the local file system`,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
-										Type:     schema.TypeBool,
-										Required: true,
+										Type:        schema.TypeBool,
+										Description: "Turns on the custom TLS certificate capability",
+										Required:    true,
 									},
 									"cert_file": {
-										Type:      schema.TypeString,
-										Sensitive: true,
-										Required:  true,
+										Type:        schema.TypeString,
+										Sensitive:   true,
+										Description: "Specifies the local path of the public certificate (ex: /etc/letsencrypt/live/intks.net-0001/fullchain.pem) on the netagent / connector filesystem",
+										Required:    true,
 									},
 									"key_file": {
-										Type:      schema.TypeString,
-										Required:  true,
-										Sensitive: true,
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "Specifies the local path of the private key (ex: /etc/letsencrypt/live/intks.net-0001/fullchain.pem) on the netagent / connector filesystem",
+										Sensitive:   true,
 									},
 								},
 							},
