@@ -7,6 +7,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -24,19 +25,19 @@ func resourcePolicy() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of your service",
+				Description: "Name of the policy",
 			},
 			"description": {
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "description of your service",
+				Optional:    true,
+				Description: "Description of the policy",
 			},
 			"metadatatags": {
 				Type:        schema.TypeList,
 				MinItems:    1,
 				MaxItems:    1,
-				Required:    true,
-				Description: "The details regarding setting up an idp. Currently only supports OIDC. SAML support is planned.",
+				Optional:    true,
+				Description: "Metadata about the policy used by the UI and Banyan app",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"template": {
@@ -51,7 +52,7 @@ func resourcePolicy() *schema.Resource {
 				Type:        schema.TypeList,
 				MinItems:    0,
 				Optional:    true,
-				Description: "access",
+				Description: "Access describes the access rights for a set of roles",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"roles": {
@@ -66,7 +67,7 @@ func resourcePolicy() *schema.Resource {
 							MinItems:    1,
 							MaxItems:    1,
 							Optional:    true,
-							Description: "rules for enforcing security policy",
+							Description: "Rules lists a set of access rights, along with any required conditions that must be satisfied for the access rights to be enabled",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"conditions": {
@@ -78,6 +79,7 @@ func resourcePolicy() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"trust_level": {
 													Type:         schema.TypeString,
+													Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\"",
 													Required:     true,
 													ValidateFunc: validateTrustLevel(),
 												},
@@ -88,19 +90,26 @@ func resourcePolicy() *schema.Resource {
 										Type:        schema.TypeList,
 										MinItems:    1,
 										Optional:    true,
-										Description: "ha",
+										Description: "Specifies a set of access rights to application level (OSI Layer-7) resources.\n\n",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"resources": {
-													Type:     schema.TypeSet,
+													Type: schema.TypeSet,
+													Description: `
+														Resources are a list of application level resources.
+														Each resource can have wildcard prefix or suffix, or both.
+														A resource can be prefixed with "!", meaning DENY.
+														Any DENY rule overrides any other rule that would allow the access.
+														`,
 													Required: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
 												"actions": {
-													Type:     schema.TypeSet,
-													Required: true,
+													Type:        schema.TypeSet,
+													Description: "Actions are a list of application-level actions: \"READ\", \"WRITE\", \"CREATE\", \"UPDATE\", \"*\"",
+													Required:    true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -119,14 +128,16 @@ func resourcePolicy() *schema.Resource {
 				MaxItems:    1,
 				MinItems:    1,
 				Optional:    true,
-				Description: "HTTP settings used for x",
+				Description: "Exceptional cases that bypass regular policy enforcement",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source_address": {
-							Type:     schema.TypeSet,
-							Optional: true,
+						"source_addresses": {
+							Type:        schema.TypeSet,
+							Description: "A list of CIDRs describing source addresses that do not need to use TLS to gain access",
+							Optional:    true,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsCIDRNetwork(0, 32),
 							},
 						},
 					},
@@ -310,7 +321,7 @@ func expandPolicyException(m []interface{}) (exception policy.Exception) {
 	}
 	itemMap := m[0].(map[string]interface{})
 	exception = policy.Exception{
-		SourceAddress: convertSchemaSetToStringSlice(itemMap["source_address"].(*schema.Set)),
+		SourceAddress: convertSchemaSetToStringSlice(itemMap["source_addresses"].(*schema.Set)),
 	}
 	return
 }
@@ -342,7 +353,7 @@ func flattenPolicyOptions(toFlatten policy.Options) (flattened []interface{}) {
 
 func flattenPolicyException(toFlatten policy.Exception) (flattened []interface{}) {
 	e := make(map[string]interface{})
-	e["source_address"] = toFlatten.SourceAddress
+	e["source_addresses"] = toFlatten.SourceAddress
 	flattened = append(flattened, e)
 	return
 }

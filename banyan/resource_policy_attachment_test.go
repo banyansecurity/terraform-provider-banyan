@@ -230,7 +230,7 @@ resource "banyan_policy" "acceptance" {
     }
   }
   exception {
-    source_address = ["127.0.0.1"]
+    source_addresses = ["127.0.0.1"]
   }
   disable_tls_client_authentication = true
   l7_protocol                       = "http"
@@ -388,7 +388,7 @@ resource "banyan_policy" "acceptance" {
     }
   }
   exception {
-    source_address = ["127.0.0.1"]
+    source_addresses = ["127.0.0.1"]
   }
   disable_tls_client_authentication = true
   l7_protocol                       = "http"
