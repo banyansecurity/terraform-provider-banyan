@@ -7,7 +7,6 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -123,26 +122,6 @@ func resourcePolicy() *schema.Resource {
 					},
 				},
 			},
-			"exception": {
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				MinItems:    1,
-				Optional:    true,
-				Description: "Exceptional cases that bypass regular policy enforcement",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_addresses": {
-							Type:        schema.TypeSet,
-							Description: "A list of CIDRs describing source addresses that do not need to use TLS to gain access",
-							Optional:    true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsCIDRNetwork(0, 32),
-							},
-						},
-					},
-				},
-			},
 			"disable_tls_client_authentication": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -170,8 +149,9 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		},
 		Type: "USER",
 		Spec: policy.Spec{
-			Access:    expandPolicyAccess(d.Get("access").([]interface{})),
-			Exception: expandPolicyException(d.Get("exception").([]interface{})),
+			Access: expandPolicyAccess(d.Get("access").([]interface{})),
+			// TODO: implement workaround or fix api for this returning empty list after creation
+			Exception: policy.Exception{},
 			Options:   expandPolicyOptions(d),
 		},
 	}
@@ -221,10 +201,6 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 	err = d.Set("access", flattenPolicyAccess(policy.UnmarshalledPolicy.Spec.Access))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("exception", flattenPolicyException(policy.UnmarshalledPolicy.Spec.Exception))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -315,46 +291,11 @@ func expandPolicyConditions(m []interface{}) (conditions policy.Conditions) {
 	return
 }
 
-func expandPolicyException(m []interface{}) (exception policy.Exception) {
-	if len(m) == 0 {
-		return
-	}
-	itemMap := m[0].(map[string]interface{})
-	exception = policy.Exception{
-		SourceAddress: convertSchemaSetToStringSlice(itemMap["source_addresses"].(*schema.Set)),
-	}
-	return
-}
-
 func expandPolicyOptions(d *schema.ResourceData) (options policy.Options) {
 	options = policy.Options{
 		DisableTLSClientAuthentication: d.Get("disable_tls_client_authentication").(bool),
 		L7Protocol:                     d.Get("l7_protocol").(string),
 	}
-	return
-}
-
-func flattenPolicySpec(toFlatten policy.Spec) (flattened []interface{}) {
-	s := make(map[string]interface{})
-	s["options"] = flattenPolicyOptions(toFlatten.Options)
-	s["exception"] = flattenPolicyException(toFlatten.Exception)
-	s["access"] = flattenPolicyAccess(toFlatten.Access)
-	flattened = append(flattened, s)
-	return
-}
-
-func flattenPolicyOptions(toFlatten policy.Options) (flattened []interface{}) {
-	o := make(map[string]interface{})
-	o["disable_tls_client_authentication"] = toFlatten.DisableTLSClientAuthentication
-	o["l7_protocol"] = toFlatten.L7Protocol
-	flattened = append(flattened, o)
-	return
-}
-
-func flattenPolicyException(toFlatten policy.Exception) (flattened []interface{}) {
-	e := make(map[string]interface{})
-	e["source_addresses"] = toFlatten.SourceAddress
-	flattened = append(flattened, e)
 	return
 }
 
