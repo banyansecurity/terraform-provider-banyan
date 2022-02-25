@@ -145,37 +145,6 @@ func resourcePolicy() *schema.Resource {
 	}
 }
 
-func validateL7Protocol() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if v != "http" && v != "" {
-			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "WEB_USER", v))
-		}
-		return
-	}
-}
-
-func validateTrustLevel() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if v != "High" && v != "Medium" && v != "Low" && v != "" {
-			// this error message might need to be cleaned up to handle the empty trustlevel
-			errs = append(errs, fmt.Errorf("%q must be one of the following %q, got: %q", key, []string{"High", "Medium", "Low", ""}, v))
-		}
-		return
-	}
-}
-
-func validatePolicyTemplate() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if v != "USER" && v != "" {
-			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "WEB_USER", v))
-		}
-		return
-	}
-}
-
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[POLICY|RES|CREATE] creating policy %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)

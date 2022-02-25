@@ -1,12 +1,9 @@
 package banyan
 
 import (
-	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"math"
-	"net"
 	"strconv"
 )
 
@@ -181,7 +178,7 @@ func expandClientCIDRs(m []interface{}) (clientCIDRs []service.ClientCIDRs) {
 	for _, clientCIDR := range m {
 		clientCIDRItemMap := clientCIDR.(map[string]interface{})
 		clientCIDRs = append(clientCIDRs, service.ClientCIDRs{
-			Addresses:       expandCIDRAddress(clientCIDRItemMap["address"].([]interface{})),
+			Addresses:       expandCIDRAddress(clientCIDRItemMap["cidr_address"].([]interface{})),
 			HostTagSelector: convertSliceInterfaceToSliceStringMap(clientCIDRItemMap["host_tag_selector"].([]interface{})),
 			Clusters:        convertSchemaSetToStringSlice(clientCIDRItemMap["clusters"].(*schema.Set)),
 		})
@@ -489,7 +486,7 @@ func flattenServiceOIDCSettings(toFlatten service.OIDCSettings) (flattened []int
 func flattenServiceClientCIDRs(toFlatten []service.ClientCIDRs) (flattened []interface{}) {
 	for _, item := range toFlatten {
 		v := make(map[string]interface{})
-		v["address"] = flattenServiceCIDRAddresses(item.Addresses)
+		v["cidr_address"] = flattenServiceCIDRAddresses(item.Addresses)
 		v["clusters"] = item.Clusters
 		v["host_tag_selector"] = item.HostTagSelector
 		flattened = append(flattened, v)
@@ -530,81 +527,4 @@ func flattenTokenLoc(toFlatten *service.TokenLocation) (flattened []interface{})
 	v["custom_header"] = toFlatten.CustomHeader
 	flattened = append(flattened, v)
 	return
-}
-
-func validatePort() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v, err := typeSwitchPort(val)
-		if err != nil {
-			errs = append(errs, err)
-			return
-		}
-		if v < 0 || v > math.MaxUint16 {
-			errs = append(errs, fmt.Errorf("%q must be in range 0-%d, got: %d ", key, math.MaxUint16, v))
-		}
-		return
-	}
-}
-
-func typeSwitchPort(val interface{}) (v int, err error) {
-	switch val.(type) {
-	case int:
-		v = val.(int)
-	case string:
-		v, err = strconv.Atoi(val.(string))
-		if err != nil {
-			err = fmt.Errorf("%q could not be converted to an int", val)
-		}
-	default:
-		err = fmt.Errorf("could not validate port %q unsupported type", val)
-	}
-	return
-}
-
-// typeSwitchPort type switches a string pointer to an int pointer if possible
-func typeSwitchPortPtr(val interface{}) (ptrv *int, err error) {
-	var v int
-	switch val.(type) {
-	case *int:
-		v = val.(int)
-	case *string:
-		if val.(*string) == nil {
-			ptrv = nil
-			return
-		}
-		vstring := val.(*string)
-		vstringval := *vstring
-		v, err = strconv.Atoi(vstringval)
-		if err != nil {
-			err = fmt.Errorf("%q could not be converted to an int", val)
-		}
-	default:
-		err = fmt.Errorf("could not validate port %q unsupported type", val)
-	}
-	ptrv = &v
-	return
-}
-
-func validateCIDR() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if v == "" {
-			return
-		}
-		_, _, err := net.ParseCIDR(v)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("%q must be a CIDR, got: %q", key, v))
-		}
-		return
-	}
-}
-
-func validateTemplate() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if v != "WEB_USER" && v != "" {
-			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "WEB_USER", v))
-		}
-		return
-	}
 }
