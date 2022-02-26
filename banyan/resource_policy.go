@@ -54,7 +54,7 @@ func resourcePolicy() *schema.Resource {
 			},
 			"access": {
 				Type:        schema.TypeList,
-				MinItems:    0,
+				MinItems:    1,
 				Required:    true,
 				Description: "Access describes the access rights for a set of roles",
 				Elem: &schema.Resource{
@@ -67,59 +67,38 @@ func resourcePolicy() *schema.Resource {
 							},
 							Required: true,
 						},
-						"rules": {
+						"trust_level": {
+							Type:         schema.TypeString,
+							Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\"",
+							Required:     true,
+							ValidateFunc: validateTrustLevel(),
+						},
+						"l7_access": {
 							Type:        schema.TypeList,
 							MinItems:    1,
-							MaxItems:    1,
-							Required:    true,
-							Description: "Access rights, along with any required conditions that must be satisfied for the access rights to be enabled",
+							Optional:    true,
+							Description: "Specifies a set of access rights to application level (OSI Layer-7) resources.\n\n",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"conditions": {
-										Type:     schema.TypeList,
-										MinItems: 1,
-										MaxItems: 1,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"trust_level": {
-													Type:         schema.TypeString,
-													Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\"",
-													Required:     true,
-													ValidateFunc: validateTrustLevel(),
-												},
-											},
-										},
-									},
-									"l7_access": {
-										Type:        schema.TypeList,
-										MinItems:    1,
-										Optional:    true,
-										Description: "Specifies a set of access rights to application level (OSI Layer-7) resources.\n\n",
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"resources": {
-													Type: schema.TypeSet,
-													Description: `
+									"resources": {
+										Type: schema.TypeSet,
+										Description: `
 														Resources are a list of application level resources.
 														Each resource can have wildcard prefix or suffix, or both.
 														A resource can be prefixed with "!", meaning DENY.
 														Any DENY rule overrides any other rule that would allow the access.
 														`,
-													Required: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
-												"actions": {
-													Type:        schema.TypeSet,
-													Description: "Actions are a list of application-level actions: \"READ\", \"WRITE\", \"CREATE\", \"UPDATE\", \"*\"",
-													Required:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
-											},
+										Required: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"actions": {
+										Type:        schema.TypeSet,
+										Description: "Actions are a list of application-level actions: \"READ\", \"WRITE\", \"CREATE\", \"UPDATE\", \"*\"",
+										Required:    true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
 										},
 									},
 								},
@@ -259,10 +238,12 @@ func expandPolicyMetatdataTags(m []interface{}) (metadatatags policy.Tags) {
 func expandPolicyAccess(m []interface{}) (access []policy.Access) {
 	for _, raw := range m {
 		data := raw.(map[string]interface{})
-		access = append(access, policy.Access{
+		a := policy.Access{
 			Roles: convertSchemaSetToStringSlice(data["roles"].(*schema.Set)),
-			Rules: expandPolicyRules(data["rules"].([]interface{})),
-		})
+		}
+		a.Rules.Conditions.TrustLevel = data["trust_level"].(string)
+		a.Rules.L7Access = expandPolicyL7Access(data["l7_access"].([]interface{}))
+		access = append(access, a)
 	}
 	return
 }
@@ -314,7 +295,8 @@ func flattenPolicyAccess(toFlatten []policy.Access) (flattened []interface{}) {
 	for idx, accessItem := range toFlatten {
 		ai := make(map[string]interface{})
 		ai["roles"] = accessItem.Roles
-		ai["rules"] = flattenPolicyRules(accessItem.Rules)
+		ai["trust_level"] = accessItem.Rules.Conditions.TrustLevel
+		ai["l7_access"] = flattenPolicyL7Access(accessItem.Rules.L7Access)
 		flattened[idx] = ai
 	}
 	return
