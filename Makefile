@@ -22,17 +22,7 @@ VERSION=0.1
 
 default: install
 
-install-go: 
-	gvm install $(GO_VERSION)
-.PHONY: install-go
-
-# issue using "$gvm use" detailed https://github.com/moovweb/gvm/issues/188 
-# so using the source gvm to get around the issue
-set-go-version: install-go
-	source ~/.gvm/scripts/gvm && gvm use $(GO_VERSION)
-.PHONY: set-go-version
-
-build: set-go-version clean-examples
+build: clean-examples
 	go build -o $(ARTIFACT_NAME)
 	cp $(ARTIFACT_NAME) examples/
 .PHONY: build
