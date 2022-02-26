@@ -218,15 +218,11 @@ resource "banyan_policy" "acceptance" {
     template = "USER"
   }
   access {
-    roles = ["ANY", "HI"]
-    rules {
-      conditions {
-        trust_level = "High"
-      }
-      l7_access {
-        resources = ["*"]
-        actions   = ["*"]
-      }
+    roles                             = ["ANY", "HI"]
+    trust_level                       = "High"
+    l7_access {
+      resources = ["*"]
+      actions   = ["*"]
     }
   }
   disable_tls_client_authentication = true
@@ -373,15 +369,11 @@ resource "banyan_policy" "acceptance" {
     template = "USER"
   }
   access {
-    roles = ["ANY", "HI"]
-    rules {
-      conditions {
-        trust_level = "High"
-      }
-      l7_access {
-        resources = ["*"]
-        actions   = ["*"]
-      }
+    roles                             = ["ANY", "HI"]
+    trust_level                       = "High"
+    l7_access {
+      resources = ["*"]
+      actions   = ["*"]
     }
   }
   disable_tls_client_authentication = true
