@@ -378,7 +378,7 @@ func resourceService() *schema.Resource {
 			},
 			"host_tag_selector": {
 				Type:        schema.TypeList,
-				Optional:    true,
+				Required:    true,
 				Description: "Tells Netagent to intercept FrontendAddresses on only a specific subset of hosts",
 				Elem: &schema.Schema{
 					Type: schema.TypeMap,
