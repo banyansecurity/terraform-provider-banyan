@@ -830,11 +830,16 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	metadataTagUserFacing, err := strconv.ParseBool(*service.CreateServiceSpec.Metadata.Tags.UserFacing)
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
+	var metadataTagUserFacing bool
+	metadataTagUserFacingPtr := service.CreateServiceSpec.Metadata.Tags.UserFacing
+	if metadataTagUserFacingPtr != nil {
+		metadataTagUserFacing, err = strconv.ParseBool(*service.CreateServiceSpec.Metadata.Tags.UserFacing)
+		if err != nil {
+			diagnostics = diag.FromErr(err)
+			return
+		}
 	}
+
 	metadatatags := map[string]interface{}{
 		"template":            service.CreateServiceSpec.Metadata.Tags.Template,
 		"user_facing":         metadataTagUserFacing,
