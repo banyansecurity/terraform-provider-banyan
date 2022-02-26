@@ -1,10 +1,3 @@
-
-locals {
-  project_id       = "terraform-dev-330921"
-  region           = "us-west1"
-  banyan_site_name = "mattorg"
-}
-
 terraform {
   required_providers {
     banyan = {
