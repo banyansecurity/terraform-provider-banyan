@@ -20,7 +20,7 @@ resource "banyan_service" "example" {
     port = 443
   }
   host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
+    { "com.banyanops.hosttag.site_name" = "us-west-1" }
   ]
   backend {
     target {
