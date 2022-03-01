@@ -41,8 +41,8 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck() {
-	if err := os.Getenv("BANYAN_REFRESH_TOKEN"); err == "" {
-		log.Fatal("BANYAN_REFRESH_TOKEN must be set for acceptance tests")
+	if err := os.Getenv("BANYAN_API_TOKEN"); err == "" {
+		log.Fatal("BANYAN_API_TOKEN must be set for acceptance tests")
 	}
 	if err := os.Getenv("BANYAN_HOST"); err == "" {
 		log.Fatal("BANYAN_HOST must be set for acceptance tests")
