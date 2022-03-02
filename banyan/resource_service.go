@@ -785,7 +785,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return resourceServiceRead(ctx, d, m)
+	return
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
