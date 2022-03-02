@@ -16,7 +16,7 @@ import (
 func resourcePolicy() *schema.Resource {
 	log.Println("[POLICY|RES] getting resource schema")
 	return &schema.Resource{
-		Description:   "Banyan policy for controlling access to a service",
+		Description:   "Banyan policies control access to a service. For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
 		CreateContext: resourcePolicyCreate,
 		ReadContext:   resourcePolicyRead,
 		UpdateContext: resourcePolicyUpdate,
@@ -40,6 +40,7 @@ func resourcePolicy() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				Description:  "Description of the policy",
 				Default:      "USER",
 				ValidateFunc: validation.StringInSlice([]string{"INFRASTRUCTURE", "USER"}, false),
