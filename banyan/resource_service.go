@@ -45,6 +45,7 @@ func resourceService() *schema.Resource {
 				MinItems:    1,
 				MaxItems:    1,
 				Optional:    true,
+				Computed:    true,
 				Description: "Metadata about the service presented to the UI and the Banyan App",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -399,6 +400,7 @@ func resourceService() *schema.Resource {
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Optional:    true,
+				Computed:    true,
 				Description: "Used by HTTP services for use-case specific functionality",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -671,6 +673,7 @@ func resourceService() *schema.Resource {
 				MaxItems:    1,
 				MinItems:    1,
 				Optional:    true,
+				Computed:    true,
 				Description: "Specifies the X.509 server certificate to use for this Service",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -782,7 +785,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return
+	return resourceServiceRead(ctx, d, m)
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
