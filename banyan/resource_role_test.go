@@ -22,7 +22,29 @@ func TestAccRole_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Creates the role with the given terraform configuration and asserts that the role is created
 			{
-				Config: testAccRole_create(rName),
+				Config: testAccRole_basic_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingRole("banyan_role.acceptance", &bnnRole),
+					resource.TestCheckResourceAttr("banyan_role.acceptance", "name", rName),
+					resource.TestCheckResourceAttrPtr("banyan_role.acceptance", "id", &bnnRole.ID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRole_complex(t *testing.T) {
+	var bnnRole role.GetRole
+
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoleDestroy(t, &bnnRole.ID),
+		Steps: []resource.TestStep{
+			// Creates the role with the given terraform configuration and asserts that the role is created
+			{
+				Config: testAccRole_complex_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingRole("banyan_role.acceptance", &bnnRole),
 					resource.TestCheckResourceAttr("banyan_role.acceptance", "name", rName),
@@ -31,7 +53,7 @@ func TestAccRole_basic(t *testing.T) {
 			},
 			// Updates the same role with a different configuration and asserts that the same role was updated correctly
 			{
-				Config: testAccRole_update(rName),
+				Config: testAccRole_complex_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingRole("banyan_role.acceptance", &bnnRole),
 					testAccCheckRoleGroupsUpdated(t, &bnnRole, []string{"group1", "group2"}),
@@ -83,7 +105,17 @@ func testAccCheckRoleDestroy(t *testing.T, id *string) resource.TestCheckFunc {
 }
 
 // Returns terraform configuration for the role. Takes in custom name.
-func testAccRole_create(name string) string {
+func testAccRole_basic_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_role" "acceptance" {
+ name = %q
+  description = "realdescription"
+  user_group = ["group1"]
+}
+`, name)
+}
+
+func testAccRole_complex_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_role" "acceptance" {
  name = %q
@@ -103,7 +135,7 @@ resource "banyan_role" "acceptance" {
 }
 
 // Returns terraform configuration for an updated version of the role with additional groups. Takes in custom name.
-func testAccRole_update(name string) string {
+func testAccRole_complex_update(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_role" "acceptance" {
  name = %q
