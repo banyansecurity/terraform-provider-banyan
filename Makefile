@@ -7,13 +7,12 @@ MAKEFLAGS += --no-builtin-rules
 
 #Constants
 ARTIFACT_NAME = terraform-provider-banyan
-GO_VERSION = go1.16.6
 
 HOSTNAME=github.com
 NAMESPACE=banyansecurity
 NAME=banyan
 OS_ARCH=darwin_amd64
-VERSION=0.1
+VERSION=0.4-beta
 
 # ifeq ($(origin .RECIPEPREFIX), undefined)
 #   $(error This Make does not support .RECIPEPREFIX. Please use GNU Make 4.0 or later)
