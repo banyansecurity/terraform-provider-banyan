@@ -7,6 +7,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -35,6 +36,13 @@ func resourcePolicy() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the policy",
+			},
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Description of the policy",
+				Default:      "USER",
+				ValidateFunc: validation.StringInSlice([]string{"INFRASTRUCTURE", "USER"}, false),
 			},
 			"metadatatags": {
 				Type:        schema.TypeList,
