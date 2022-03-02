@@ -22,17 +22,10 @@ VERSION=0.1
 
 default: install
 
-build: clean-examples
+build:
 	go build -o $(ARTIFACT_NAME)
 	cp $(ARTIFACT_NAME) examples/
 .PHONY: build
-
-clean-examples:
-	echo "Cleaning"
-	rm -rf examples/.terraform
-	rm -f examples/.terraform.lock.hcl
-	rm -f examples/terraform-provider-banyan examples/terraform.tfstate examples/terraform.tfstate.backup
-.PHONY: clean-examples
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
