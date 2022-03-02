@@ -675,9 +675,9 @@ func resourceService() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"letsencrypt": {
-							Type:     schema.TypeBool,
-							Default:  "Letsencrypt flag will be used whether to request a letsencrypt certificate for given domains",
-							Optional: true,
+							Type:        schema.TypeBool,
+							Description: "Letsencrypt flag will be used whether to request a letsencrypt certificate for given domains",
+							Optional:    true,
 						},
 						"dns_names": {
 							Type: schema.TypeSet,
