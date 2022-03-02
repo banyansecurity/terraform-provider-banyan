@@ -8,47 +8,46 @@ terraform {
 }
 
 provider "banyan" {
-  refresh_token = var.banyan_refresh_token
+  api_token = var.banyan_api_token
   host          = var.banyan_host
 }
 
-
 resource "banyan_service" "example" {
-  name = "example"
+  name = local.service_name
   cluster = "us-west1"
   frontend {
-    port = 443
+    port = local.frontend_port
   }
   host_tag_selector = [
     { "com.banyanops.hosttag.site_name" = "us-west-1" }
   ]
   backend {
     target {
-      port = 443
+      port = local.backend_port
     }
   }
 }
 
-resource "banyan_policy" "example" {
+resource "banyan_policy" "high-trust-any" {
   name        = "example"
-  description = "realdescription"
+  description = "Allows any user with a high trust score"
   metadatatags {
     template = "USER"
   }
   access {
-    roles                             = ["ANY", "HI"]
-    trust_level                       = "High"
-    l7_access {
-      resources = ["*"]
-      actions   = ["*"]
-    }
+    roles                             = [banyan_role.everyone.name]
+    trust_level                       = "Low"
   }
-  disable_tls_client_authentication = true
-  l7_protocol                       = "http"
 }
 
-resource "banyan_policy_attachment" "example" {
-  policy_id        = banyan_policy.example.id
+resource "banyan_role" "everyone" {
+  name = "everyone"
+  description = "all users"
+  user_group = ["Everyone"]
+}
+
+resource "banyan_policy_attachment" "example-high-trust-any" {
+  policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
   attached_to_id   = banyan_service.example.id
   is_enforcing     = true
