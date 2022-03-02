@@ -12,7 +12,7 @@ import (
 )
 
 // Use the terraform plugin sdk testing framework for acceptance testing banyan service lifecycle
-func TestAccService_basic(t *testing.T) {
+func TestAccService_basic_web(t *testing.T) {
 	var bnnService service.GetServiceSpec
 
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
@@ -23,20 +23,42 @@ func TestAccService_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create the service using terraform config and check that it exists
 			{
-				Config: testAccService_create(rName),
+				Config: testAccService_basic_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service.acceptance", &bnnService),
-					resource.TestCheckResourceAttr("banyan_service.acceptance", "name", rName),
-					resource.TestCheckResourceAttrPtr("banyan_service.acceptance", "id", &bnnService.ServiceID),
+					testAccCheckExistingService("banyan_service.acctest-basic", &bnnService),
+					resource.TestCheckResourceAttr("banyan_service.acctest-basic", "name", rName),
+					resource.TestCheckResourceAttrPtr("banyan_service.acctest-basic", "id", &bnnService.ServiceID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccService_complex(t *testing.T) {
+	var bnnService service.GetServiceSpec
+
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		Steps: []resource.TestStep{
+			// Create the service using terraform config and check that it exists
+			{
+				Config: testAccService_complex_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingService("banyan_service.acctest-complex", &bnnService),
+					resource.TestCheckResourceAttr("banyan_service.acctest-complex", "name", rName),
+					resource.TestCheckResourceAttrPtr("banyan_service.acctest-complex", "id", &bnnService.ServiceID),
 				),
 			},
 			// Update the resource with terraform and ensure it was correctly updated
 			{
-				Config: testAccService_update(rName),
+				Config: testAccService_complex_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service.acceptance", &bnnService),
+					testAccCheckExistingService("banyan_service.acctest-complex", &bnnService),
 					testAccCheckServiceConnectorNameUpdated(&bnnService, "some-new-connector-name"),
-					resource.TestCheckResourceAttrPtr("banyan_service.acceptance", "id", &bnnService.ServiceID),
+					resource.TestCheckResourceAttrPtr("banyan_service.acctest-complex", "id", &bnnService.ServiceID),
 				),
 			},
 		},
@@ -46,7 +68,6 @@ func TestAccService_basic(t *testing.T) {
 // Checks that the resource with the name resourceName exists and returns the role object from the Banyan API
 func testAccCheckExistingService(resourceName string, bnnService *service.GetServiceSpec) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource not found %q", rs)
@@ -83,10 +104,31 @@ func testAccCheckService_destroy(t *testing.T, id *string) resource.TestCheckFun
 	}
 }
 
-// Returns terraform configuration for the service
-func testAccService_create(name string) string {
+// Returns terraform configuration for a typical basic service
+func testAccService_basic_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service" "acceptance" {
+resource "banyan_service" "acctest-basic" {
+  name = %q
+  cluster = "us-west1"
+  frontend {
+    port = 443
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west-1" }
+  ]
+  backend {
+    target {
+      port = 443
+    }
+  }
+}
+`, name)
+}
+
+// service with every option possible
+func testAccService_complex_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_service" "acctest-complex" {
   cluster     = "dev05-banyan"
   name        = %q
   description = "acceptance test service"
@@ -210,9 +252,9 @@ resource "banyan_service" "acceptance" {
 }
 
 // Returns updated terraform configuration for the service
-func testAccService_update(name string) string {
+func testAccService_complex_update(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service" "acceptance" {
+resource "banyan_service" "acctest-complex" {
   cluster     = "dev05-banyan"
   name        = %q
   description = "acceptance test service"
