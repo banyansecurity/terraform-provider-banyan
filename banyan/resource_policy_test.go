@@ -23,7 +23,29 @@ func TestAccPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create the policy using terraform config and check that it exists
 			{
-				Config: testAccPolicy_create(rName),
+				Config: testAccPolicy_basic_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingPolicy("banyan_policy.acceptance", &bnnPolicy),
+					resource.TestCheckResourceAttr("banyan_policy.acceptance", "name", rName),
+					resource.TestCheckResourceAttrPtr("banyan_policy.acceptance", "id", &bnnPolicy.ID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPolicy_complex(t *testing.T) {
+	var bnnPolicy policy.GetPolicy
+
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckPolicy_destroy(t, &bnnPolicy.ID),
+		Steps: []resource.TestStep{
+			// Create the policy using terraform config and check that it exists
+			{
+				Config: testAccPolicy_complex_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingPolicy("banyan_policy.acceptance", &bnnPolicy),
 					resource.TestCheckResourceAttr("banyan_policy.acceptance", "name", rName),
@@ -32,7 +54,7 @@ func TestAccPolicy_basic(t *testing.T) {
 			},
 			// Update the policy using terraform config and ensure the update was applied correctly
 			{
-				Config: testAccPolicy_update(rName),
+				Config: testAccPolicy_complex_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingPolicy("banyan_policy.acceptance", &bnnPolicy),
 					testAccCheckPolicyAccessUpdated(t, &bnnPolicy, []string{"ANY"}),
@@ -84,7 +106,22 @@ func testAccCheckPolicy_destroy(t *testing.T, id *string) resource.TestCheckFunc
 }
 
 // Returns terraform configuration for the policy
-func testAccPolicy_create(name string) string {
+func testAccPolicy_basic_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_policy" "acceptance" {
+  name        = %q
+  description = "realdescription"
+  type = "USER"
+  access {
+    roles                             = ["ANY", "HI"]
+    trust_level                       = "High"
+  }
+}
+`, name)
+}
+
+// Returns terraform configuration for the policy
+func testAccPolicy_complex_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_policy" "acceptance" {
   name        = %q
@@ -92,6 +129,7 @@ resource "banyan_policy" "acceptance" {
   metadatatags {
     template = "USER"
   }
+  type = "USER"
   access {
     roles                             = ["ANY", "HI"]
     trust_level                       = "High"
@@ -107,7 +145,7 @@ resource "banyan_policy" "acceptance" {
 }
 
 // Returns an updated terraform configuration for the policy with one of the roles removed
-func testAccPolicy_update(name string) string {
+func testAccPolicy_complex_update(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_policy" "acceptance" {
   name        = %q
@@ -115,6 +153,7 @@ resource "banyan_policy" "acceptance" {
   metadatatags {
     template = "USER"
   }
+  type = "USER"
   access {
     roles                             = ["ANY"]
     trust_level                       = "High"
