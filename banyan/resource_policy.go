@@ -49,6 +49,7 @@ func resourcePolicy() *schema.Resource {
 				MinItems:    1,
 				MaxItems:    1,
 				Optional:    true,
+				Computed:    true,
 				Description: "Metadata about the policy used by the UI and Banyan app",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
