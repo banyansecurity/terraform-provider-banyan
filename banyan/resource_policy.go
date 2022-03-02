@@ -42,7 +42,6 @@ func resourcePolicy() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				Description:  "Description of the policy",
-				Default:      "USER",
 				ValidateFunc: validation.StringInSlice([]string{"INFRASTRUCTURE", "USER"}, false),
 			},
 			"metadatatags": {
