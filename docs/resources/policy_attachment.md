@@ -14,6 +14,13 @@ Typically this resource is used in conjuction with a service and a policy. The f
 
 ## Example
 ```
+resource "banyan_policy_attachment" "example-high-trust-any" {
+  policy_id        = banyan_policy.high-trust-any.id
+  attached_to_type = "service"
+  attached_to_id   = banyan_service.example.id
+  is_enforcing     = true
+}
+
 resource "banyan_service" "example" {
   name = "some-administrative-service"
   cluster = "us-west1"
@@ -37,19 +44,6 @@ resource "banyan_policy" "high-trust-any" {
     roles                             = [banyan_role.everyone.name]
     trust_level                       = "High"
   }
-}
-
-resource "banyan_role" "everyone" {
-  name = "everyone"
-  description = "all users"
-  user_group = ["Admins"]
-}
-
-resource "banyan_policy_attachment" "example-high-trust-any" {
-  policy_id        = banyan_policy.high-trust-any.id
-  attached_to_type = "service"
-  attached_to_id   = banyan_service.example.id
-  is_enforcing     = true
 }
 ```
 
