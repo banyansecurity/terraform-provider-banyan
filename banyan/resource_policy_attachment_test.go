@@ -11,6 +11,26 @@ import (
 )
 
 // Use the terraform plugin sdk testing framework for acceptance testing policyattachment lifecycle
+func TestAccPolicyAttachment_lifecycle(t *testing.T) {
+
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyAttachment_lifecycle_create(rName),
+			},
+			{
+				Config: testAccPolicyAttachment_lifecycle_attach_multiple(rName),
+			},
+			{
+				Config: testAccPolicyAttachment_lifecycle_detach(rName),
+			},
+		},
+	})
+}
+
 func TestAccPolicyAttachment_basic(t *testing.T) {
 	var bnnPolicyAttachment policyattachment.GetBody
 
@@ -22,7 +42,7 @@ func TestAccPolicyAttachment_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Create the policy attachment and validate it
-				Config: testAccPolicyAttachment_create(rName),
+				Config: testAccPolicyAttachment_complex_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingPolicyAttachment("banyan_policy_attachment.acceptance", &bnnPolicyAttachment),
 					resource.TestCheckResourceAttrPtr("banyan_policy_attachment.acceptance", "attached_to_id", &bnnPolicyAttachment.AttachedToID),
@@ -31,7 +51,7 @@ func TestAccPolicyAttachment_basic(t *testing.T) {
 			},
 			{
 				// Update the policy attachment to use banyan_policy.acceptance_update and assert this change is reflected correctly
-				Config: testAccPolicyAttachment_update(rName),
+				Config: testAccPolicyAttachment_complex_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingPolicyAttachment("banyan_policy_attachment.acceptance", &bnnPolicyAttachment),
 					testAccCheckPolicyAttachmentUpdated(t, &bnnPolicyAttachment, "banyan_policy_attachment.acceptance"),
@@ -87,8 +107,160 @@ func testAccCheckPolicyAttachmentDestroy(t *testing.T, policyAttachment *policya
 	}
 }
 
+func testAccPolicyAttachment_lifecycle_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_service" "example" {
+  name = %q
+  cluster = "us-west1"
+  frontend {
+    port = 443
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west-1" }
+  ]
+  backend {
+    target {
+      port = 443
+    }
+  }
+}
+
+resource "banyan_policy" "high-trust-any" {
+  name        = %q
+  description = "Allows any user with a high trust score"
+  metadatatags {
+    template = "USER"
+  }
+  access {
+    roles                             = [banyan_role.everyone.name]
+    trust_level                       = "High"
+  }
+}
+
+resource "banyan_role" "everyone" {
+  name = %q
+  description = "all users"
+  user_group = ["Everyone"]
+}
+
+resource "banyan_policy_attachment" "example-high-trust-any" {
+  policy_id        = banyan_policy.high-trust-any.id
+  attached_to_type = "service"
+  attached_to_id   = banyan_service.example.id
+  is_enforcing     = true
+}
+`, name, name, name)
+}
+
+func testAccPolicyAttachment_lifecycle_attach_multiple(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_service" "example" {
+  name = %q
+  cluster = "us-west1"
+  frontend {
+    port = 443
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west-1" }
+  ]
+  backend {
+    target {
+      port = 443
+    }
+  }
+}
+
+resource "banyan_service" "example-two" {
+  name = "%s-two"
+  cluster = "us-west1"
+  frontend {
+    port = 80
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west-1" }
+  ]
+  backend {
+    target {
+      port = 80
+    }
+  }
+}
+
+resource "banyan_policy" "high-trust-any" {
+  name        = %q
+  description = "Allows any user with a high trust score"
+  metadatatags {
+    template = "USER"
+  }
+  access {
+    roles                             = [banyan_role.everyone.name]
+    trust_level                       = "High"
+  }
+}
+
+resource "banyan_role" "everyone" {
+  name = %q
+  description = "all users"
+  user_group = ["Everyone"]
+}
+
+resource "banyan_policy_attachment" "example" {
+  policy_id        = banyan_policy.high-trust-any.id
+  attached_to_type = "service"
+  attached_to_id   = banyan_service.example.id
+  is_enforcing     = true
+}
+
+resource "banyan_policy_attachment" "example-two" {
+  policy_id        = banyan_policy.high-trust-any.id
+  attached_to_type = "service"
+  attached_to_id   = banyan_service.example-two.id
+  is_enforcing     = true
+}
+`, name, name, name, name)
+}
+
+func testAccPolicyAttachment_lifecycle_detach(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_service" "example" {
+  name = %q
+  cluster = "us-west1"
+  frontend {
+    port = 443
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west-1" }
+  ]
+  backend {
+    target {
+      port = 443
+    }
+  }
+}
+
+resource "banyan_policy" "high-trust-any" {
+  name        = %q
+  description = "Allows any user with a high trust score"
+  metadatatags {
+    template = "USER"
+  }
+  access {
+    roles                             = [banyan_role.everyone.name]
+    trust_level                       = "High"
+  }
+}
+
+resource "banyan_role" "everyone" {
+  name = %q
+  description = "all users"
+  user_group = ["Everyone"]
+}
+
+`, name, name, name)
+}
+
 // Returns terraform configuration for the policyattachment. Takes in custom name.
-func testAccPolicyAttachment_create(name string) string {
+func testAccPolicyAttachment_complex_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service" "acceptance" {
   cluster     = "dev05-banyan"
@@ -239,7 +411,7 @@ resource "banyan_policy_attachment" "acceptance" {
 }
 
 // Returns terraform configuration for an updated version of the policyattachment with additional groups. Takes in custom name.
-func testAccPolicyAttachment_update(name string) string {
+func testAccPolicyAttachment_complex_update(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service" "acceptance" {
   cluster     = "dev05-banyan"
