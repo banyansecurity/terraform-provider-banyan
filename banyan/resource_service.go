@@ -29,6 +29,11 @@ func resourceService() *schema.Resource {
 				Description: "Name of the service",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
+			"id": {
+				Type:        schema.TypeString,
+				Description: "Id of the service",
+				Computed:    true,
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -807,7 +812,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
-	log.Printf("#### readService: %#v", service)
 	err = d.Set("name", service.ServiceName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
