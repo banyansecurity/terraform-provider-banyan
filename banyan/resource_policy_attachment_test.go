@@ -128,9 +128,6 @@ resource "banyan_service" "example" {
 resource "banyan_policy" "high-trust-any" {
   name        = %q
   description = "Allows any user with a high trust score"
-  metadatatags {
-    template = "USER"
-  }
   access {
     roles                             = [banyan_role.everyone.name]
     trust_level                       = "High"
