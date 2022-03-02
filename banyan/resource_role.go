@@ -37,15 +37,17 @@ func resourceRole() *schema.Resource {
 			},
 			"metadatatags": {
 				Type:        schema.TypeList,
-				MinItems:    1,
+				MinItems:    0,
 				MaxItems:    1,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Metadata about the role",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"template": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Default:      "USER",
 							ValidateFunc: validateRoleTemplate(),
 						},
 					},
