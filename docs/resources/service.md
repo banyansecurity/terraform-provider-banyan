@@ -38,12 +38,13 @@ resource "banyan_service" "example-web-service" {
 
 ### Required
 
+- **name** (String) Name of the service
+- **description** (String) Description of the service
 - **backend** (Block List, Min: 1) Backend specifies how Netagent, when acting as a reverse proxy, forwards incoming 
-					“frontend connections” to a backend workload instance that implements a registered service (see [below for nested schema](#nestedblock--backend))
+                    “frontend connections” to a backend workload instance that implements a registered service (see [below for nested schema](#nestedblock--backend))
 - **cluster** (String) Name of the NetAgent cluster which the service is accessible from
 - **frontend** (Block List, Min: 1) Specifies the IP addresses and ports the frontend of the service listens on (see [below for nested schema](#nestedblock--frontend))
 - **host_tag_selector** (List of Map of String) Tells Netagent to intercept FrontendAddresses on only a specific subset of hosts
-- **name** (String) Name of the service
 
 ### Optional
 
@@ -51,7 +52,6 @@ resource "banyan_service" "example-web-service" {
 - **client_cidrs** (Block List) ClientCIDRs is used in environments with Network Address Translation (NAT) to list
 					the IP addresses that are used to access the Service; Netagent will then automatically
 					intercept traffic to these IP addresses. (see [below for nested schema](#nestedblock--client_cidrs))
-- **description** (String) Description of the service
 - **http_settings** (Block List, Max: 1) Used by HTTP services for use-case specific functionality (see [below for nested schema](#nestedblock--http_settings))
 - **metadatatags** (Block List, Max: 1) Metadata about the service presented to the UI and the Banyan App (see [below for nested schema](#nestedblock--metadatatags))
 - **tag_slice** (Block List) TagSlice to hold all the tags for Registered Service (see [below for nested schema](#nestedblock--tag_slice))

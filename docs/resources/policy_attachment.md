@@ -13,7 +13,7 @@ A Banyan policy attachment attaches a policy to a service.
 Typically this resource is used in conjuction with a service and a policy. The following example shows a policy, a service, and a policy attachment referencing each other
 
 ## Example
-```
+```hcl
 resource "banyan_policy_attachment" "example-high-trust-any" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"

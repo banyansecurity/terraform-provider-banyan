@@ -15,6 +15,7 @@ Banyan policies control access to a service. For more information on Banyan poli
 resource "banyan_policy" "high-trust-any" {
   name        = "high-trust-any"
   description = "Allows any user with a high trust score"
+  type = "USER"	
   access {
     roles                             = ["some-role-name", "another-role-name"]
     trust_level                       = "High"
@@ -30,6 +31,7 @@ resource "banyan_policy" "high-trust-any" {
 
 - **access** (Block List, Min: 1) Access describes the access rights for a set of roles (see [below for nested schema](#nestedblock--access))
 - **name** (String) Name of the policy
+- **type** (String) The type of policy, must be one of: "INFRASTRUCTURE", "USER"
 
 ### Optional
 
@@ -38,7 +40,6 @@ resource "banyan_policy" "high-trust-any" {
 - **l7_protocol** (String) L7Protocol specifies the application-level protocol: "http", "kafka", or empty string.
 					If L7Protocol is not empty, then all Access rules must have L7Access entries.
 - **metadatatags** (Block List, Max: 1) Metadata about the policy used by the UI and Banyan app (see [below for nested schema](#nestedblock--metadatatags))
-- **type** (String) The type of policy, must be one of: "INFRASTRUCTURE", "USER"
 
 ### Read-Only
 
