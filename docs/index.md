@@ -7,14 +7,21 @@ description: |-
 ---
 
 # Banyan Terraform Provider
+### Currently in Beta
+
 Banyan replaces your traditional network access boxes – VPNs, bastion hosts, and gateways – with a cloud-based zero trust access solution.
 
-The Banyan Terraform provider is used for lifecycle management management of Banyan resources including roles, policies, and services. Learn more about Banyan [here.](https://www.banyansecurity.io/)
+The Banyan Terraform provider is used for lifecycle management of Banyan resources including roles, policies, and services. Learn more about Banyan [here.](https://www.banyansecurity.io/)
 
 Use the navigation to the left to read about the available resources.
 
 To learn the basics of the Banyan components, check out the documentation [here.](https://docs.banyanops.com/)
 
+### Known Issues
+* Required fields for resources may not match the UI exactly
+* Some fields missing descriptions
+* Some examples missing
+* Some defaults for fields have not yet been implemented
 
 ### Security Best Practices
 Ensure to create a Banyan API token exclusive to Terraform. This will ensure that all actions taken by Terraform automation will appear in the console logs with the API key as the actor.
@@ -66,19 +73,23 @@ provider "banyan" {
   api_token = "banyan-api-token-here-exclusive-to-terraform"
 }
 
-resource "banyan_service" "example" {
-  name = "some-administrative-service"
-  cluster = "us-west1"
+resource "banyan_service" "example-web-service" {
+  name    = "example-web-service"
+  cluster = "cluster-name"
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "site-name" }
+  ]
   frontend {
     port = 443
   }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
-  ]
   backend {
     target {
       port = 443
     }
+  }
+  metadatatags {
+    service_app_type = "WEB"
+    user_facing = true
   }
 }
 
@@ -94,13 +105,13 @@ resource "banyan_policy" "high-trust-any" {
 resource "banyan_role" "everyone" {
   name = "everyone"
   description = "all users"
-  user_group = ["Admins"]
+  user_group = ["Everyone"]
 }
 
 resource "banyan_policy_attachment" "example-high-trust-any" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
-  attached_to_id   = banyan_service.example.id
+  attached_to_id   = banyan_service.example-web-service.id
   is_enforcing     = true
 }
 ```

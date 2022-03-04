@@ -12,20 +12,24 @@ The banyan_service resource is used to manage Banyan services. The service resou
 
 ## Example TCP Service
 ```hcl
-resource "banyan_service" "example" {
-  name = "some-service"
-  cluster = "us-west1"
-  frontend {
-    port = 443
-  }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
-  ]
-  backend {
-    target {
-      port = 443
-    }
-  }
+resource "banyan_service" "example-web-service" {
+	name    = "example-web-service"
+	cluster = "cluster-name"
+	host_tag_selector = [
+		{ "com.banyanops.hosttag.site_name" = "site-name" }
+	]
+	frontend {
+		port = 443
+	}
+	backend {
+		target {
+			port = 443
+		}
+	}
+	metadatatags {
+		service_app_type = "WEB"
+		user_facing = true
+	}
 }
 ```
 
