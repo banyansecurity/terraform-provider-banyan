@@ -112,6 +112,7 @@ func testAccPolicyAttachment_lifecycle_create(name string) string {
 resource "banyan_service" "example" {
   name = %q
   cluster = "us-west1"
+  description = "some description"
   frontend {
     port = 443
   }
@@ -153,6 +154,7 @@ func testAccPolicyAttachment_lifecycle_attach_multiple(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service" "example" {
   name = %q
+  description = "some description"
   cluster = "us-west1"
   frontend {
     port = 443
@@ -169,6 +171,7 @@ resource "banyan_service" "example" {
 
 resource "banyan_service" "example-two" {
   name = "%s-two"
+  description = "some description"
   cluster = "us-west1"
   frontend {
     port = 80
@@ -221,6 +224,7 @@ func testAccPolicyAttachment_lifecycle_detach(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service" "example" {
   name = %q
+  description = "some description"
   cluster = "us-west1"
   frontend {
     port = 443

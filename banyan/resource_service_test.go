@@ -109,6 +109,7 @@ func testAccService_basic_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service" "acctest-basic" {
   name = %q
+  description = "some description"
   cluster = "us-west1"
   frontend {
     port = 443

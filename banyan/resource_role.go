@@ -27,7 +27,7 @@ func resourceRole() *schema.Resource {
 			},
 			"description": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "Description of the role",
 			},
 			"id": {
