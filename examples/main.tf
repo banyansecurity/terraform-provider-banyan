@@ -13,8 +13,9 @@ provider "banyan" {
 }
 
 resource "banyan_service" "example-web-service" {
-  name    = "example-web-service"
-  cluster = "us-west"
+  name        = "example-web-service"
+  description = "some description"
+  cluster     = "us-west"
   host_tag_selector = [
     { "com.banyanops.hosttag.site_name" = "us-west1" }
   ]
@@ -28,7 +29,7 @@ resource "banyan_service" "example-web-service" {
   }
   metadatatags {
     service_app_type = "WEB"
-    user_facing = true
+    user_facing      = true
   }
 }
 
