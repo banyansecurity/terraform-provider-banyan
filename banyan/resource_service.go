@@ -139,6 +139,7 @@ func resourceService() *schema.Resource {
 						"include_domains": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -279,6 +280,7 @@ func resourceService() *schema.Resource {
 						"dns_overrides": {
 							Type:     schema.TypeMap,
 							Optional: true,
+							Computed: true,
 							Description: `
 								Specifies name-to-address or name-to-name mappings.
 								Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
@@ -346,6 +348,7 @@ func resourceService() *schema.Resource {
 						"whitelist": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							Description: `
 								Indicates the allowed names for the backend workload instance. 
 								If this field is populated, then the backend name must match at least one entry
@@ -394,6 +397,7 @@ func resourceService() *schema.Resource {
 			"tls_sni": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Description: `
 					If TLSSNI is set, Netagent will reject all non-TLS connections.
 					It will only forward on TLS connections where the SNI matches for Policy validation"`,
@@ -790,7 +794,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return
+	return resourceServiceRead(ctx, d, m)
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {

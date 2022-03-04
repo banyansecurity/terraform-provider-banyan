@@ -56,7 +56,8 @@ func resourceRole() *schema.Resource {
 			"container_fqdn": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "FQDN for the containers",
+				Computed:    true,
+				Description: "FQDN for the container",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -64,6 +65,7 @@ func resourceRole() *schema.Resource {
 			"image": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "Image",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -72,6 +74,7 @@ func resourceRole() *schema.Resource {
 			"repo_tag": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "Repo Tag",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -88,6 +91,7 @@ func resourceRole() *schema.Resource {
 			"user_group": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "Name of the group (from your IdP) which will be included in the role",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -96,6 +100,7 @@ func resourceRole() *schema.Resource {
 			"email": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "Email address for the user or group of users in the role",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -104,6 +109,7 @@ func resourceRole() *schema.Resource {
 			"device_ownership": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "Device ownership specification for the role",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -112,6 +118,7 @@ func resourceRole() *schema.Resource {
 			"platform": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "Platform type which is required by the role",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
