@@ -99,8 +99,9 @@ func resourceService() *schema.Resource {
 							Optional: true,
 						},
 						"ssh_service_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"TRUSTCERT", "BOTH"}, false),
 						},
 						"write_ssh_config": {
 							Type:     schema.TypeBool,
@@ -118,6 +119,7 @@ func resourceService() *schema.Resource {
 						"allow_user_override": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"ssh_chain_mode": {
 							Type:     schema.TypeBool,
