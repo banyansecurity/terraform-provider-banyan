@@ -49,35 +49,34 @@ func resourceService() *schema.Resource {
 				Type:        schema.TypeList,
 				MinItems:    1,
 				MaxItems:    1,
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Metadata about the service presented to the UI and the Banyan App",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"template": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							Description:  "Must be set to WEB_USER, TCP_USER, or CUSTOM",
 							ValidateFunc: validation.StringInSlice([]string{"WEB_USER", "TCP_USER"}, false),
 						},
 						"user_facing": {
 							Type:        schema.TypeBool,
 							Description: "Whether the service is user-facing or not",
-							Optional:    true,
+							Required:    true,
 						},
 						"protocol": {
 							Type:         schema.TypeString,
-							Description:  "The protocol of the service, must be http or https",
-							Optional:     true,
+							Description:  "The protocol of the service, must be tcp, http or https",
+							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"http", "https", "tcp"}, false),
 						},
 						"domain": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"port": {
 							Type:         schema.TypeInt,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validatePort(),
 						},
 						"icon": {
@@ -86,9 +85,9 @@ func resourceService() *schema.Resource {
 						},
 						"service_app_type": {
 							Type:         schema.TypeString,
-							Description:  "Must be WEB, GENERIC or CUSTOM",
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"WEB", "GENERIC", "CUSTOM"}, false),
+							Description:  "Must be WEB, GENERIC, RDP, SSH, or CUSTOM",
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"WEB", "GENERIC", "RDP", "SSH", "CUSTOM"}, false),
 						},
 						"enforcement_mode": {
 							Type:     schema.TypeString,
@@ -223,7 +222,7 @@ func resourceService() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
-										Description: "Allowed hostnames my include a leading and/or trailing wildcard character \"*\" to match multiple hostnames",
+										Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
 									},
 									"cidrs": {
 										Type:     schema.TypeSet,

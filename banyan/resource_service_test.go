@@ -14,9 +14,7 @@ import (
 // Use the terraform plugin sdk testing framework for acceptance testing banyan service lifecycle
 func TestAccService_basic_web(t *testing.T) {
 	var bnnService service.GetServiceSpec
-
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
@@ -27,7 +25,40 @@ func TestAccService_basic_web(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service.acctest-basic", &bnnService),
 					resource.TestCheckResourceAttr("banyan_service.acctest-basic", "name", rName),
-					resource.TestCheckResourceAttrPtr("banyan_service.acctest-basic", "id", &bnnService.ServiceID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccService_ssh(t *testing.T) {
+	var bnnService service.GetServiceSpec
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccService_ssh_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingService("banyan_service.acctest-ssh", &bnnService),
+				),
+			},
+		},
+	})
+}
+
+func TestAccService_rdp(t *testing.T) {
+	var bnnService service.GetServiceSpec
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccService_rdp_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingService("banyan_service.acctest-rdp", &bnnService),
 				),
 			},
 		},
@@ -36,9 +67,7 @@ func TestAccService_basic_web(t *testing.T) {
 
 func TestAccService_complex(t *testing.T) {
 	var bnnService service.GetServiceSpec
-
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
@@ -124,6 +153,86 @@ resource "banyan_service" "acctest-basic" {
   }
 }
 `, name)
+}
+
+// Returns terraform configuration for a typical ssh service
+func testAccService_ssh_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_service" "acctest-ssh" {
+  name        = %q
+  description = "some ssh service"
+  cluster     = "us-west"
+  tls_sni     = ["%s.mattorg.bnntest.com"]
+  frontend {
+    port = 8443
+  }
+  backend {
+    target {
+      name               = "%s.internal"
+      port               = 22
+      tls                = false
+      tls_insecure       = false
+      client_certificate = false
+    }
+  }
+  cert_settings {
+    dns_names = ["%s.mattorg.bnntest.com"]
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west1" }
+  ]
+  metadatatags {
+    template           = "TCP_USER"
+    user_facing        = true
+    protocol           = "tcp"
+    domain             = "%s.mattorg.bnntest.com"
+    port               = 8443
+    service_app_type   = "SSH"
+    ssh_service_type   = "TRUSTCERT"
+    write_ssh_config   = true
+    ssh_chain_mode     = false
+    ssh_host_directive = "%s.mattorg.bnntest.com"
+  }
+}
+`, name, name, name, name, name, name)
+}
+
+// Returns terraform configuration for a typical rdp service
+func testAccService_rdp_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_service" "acctest-rdp" {
+  name        = "%s"
+  description = "some rdp service description"
+  cluster     = "us-west"
+  tls_sni     = ["%s.corp.com"]
+  frontend {
+    port = 8443
+  }
+  backend {
+    target {
+      name = "%s.internal"
+      port = 3389
+    }
+  }
+  cert_settings {
+    dns_names = ["%s.corp.com"]
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west1" }
+  ]
+  metadatatags {
+    template            = "TCP_USER"
+    user_facing         = true
+    protocol            = "tcp"
+    domain              = "service.domainname"
+    port                = 8443
+    service_app_type    = "RDP"
+    banyan_proxy_mode    = "TCP"
+    app_listen_port     = 3389
+    allow_user_override = true
+  }
+}
+`, name, name, name, name)
 }
 
 // service with every option possible
