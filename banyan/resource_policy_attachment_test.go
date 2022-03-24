@@ -124,6 +124,17 @@ resource "banyan_service" "example" {
       port = 443
     }
   }
+  metadatatags {
+    template            = "TCP_USER"
+    user_facing         = true
+    protocol            = "tcp"
+    domain              = "%s.corp.com"
+    port                = 8443
+    service_app_type    = "GENERIC"
+    banyan_proxy_mode   = "TCP"
+    app_listen_port     = 8443
+    allow_user_override = true
+  }
 }
 
 resource "banyan_policy" "high-trust-any" {
@@ -141,13 +152,13 @@ resource "banyan_role" "everyone" {
   user_group = ["Everyone"]
 }
 
-resource "banyan_policy_attachment" "example-high-trust-any" {
+resource "banyan_policy_attachment" "example" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
   attached_to_id   = banyan_service.example.id
   is_enforcing     = true
 }
-`, name, name, name)
+`, name, name, name, name)
 }
 
 func testAccPolicyAttachment_lifecycle_attach_multiple(name string) string {
@@ -167,6 +178,17 @@ resource "banyan_service" "example" {
       port = 443
     }
   }
+  metadatatags {
+    template            = "TCP_USER"
+    user_facing         = true
+    protocol            = "tcp"
+    domain              = "%s.corp.com"
+    port                = 8443
+    service_app_type    = "GENERIC"
+    banyan_proxy_mode   = "TCP"
+    app_listen_port     = 8443
+    allow_user_override = true
+  }
 }
 
 resource "banyan_service" "example-two" {
@@ -184,13 +206,24 @@ resource "banyan_service" "example-two" {
       port = 80
     }
   }
+  metadatatags {
+    template            = "TCP_USER"
+    user_facing         = true
+    protocol            = "tcp"
+    domain              = "%s.corp.com"
+    port                = 8443
+    service_app_type    = "GENERIC"
+    banyan_proxy_mode   = "TCP"
+    app_listen_port     = 8443
+    allow_user_override = true
+  }
 }
 
 resource "banyan_policy" "high-trust-any" {
   name        = %q
   description = "Allows any user with a high trust score"
   metadatatags {
-    template = "USER"
+    template = "INFRASTRUCTURE"
   }
   access {
     roles                             = [banyan_role.everyone.name]
@@ -217,7 +250,7 @@ resource "banyan_policy_attachment" "example-two" {
   attached_to_id   = banyan_service.example-two.id
   is_enforcing     = true
 }
-`, name, name, name, name)
+`, name, name, name, name, name, name)
 }
 
 func testAccPolicyAttachment_lifecycle_detach(name string) string {
@@ -236,6 +269,17 @@ resource "banyan_service" "example" {
     target {
       port = 443
     }
+  }
+  metadatatags {
+    template            = "TCP_USER"
+    user_facing         = true
+    protocol            = "tcp"
+    domain              = "%s.corp.com"
+    port                = 8443
+    service_app_type    = "GENERIC"
+    banyan_proxy_mode   = "TCP"
+    app_listen_port     = 8443
+    allow_user_override = true
   }
 }
 
@@ -257,7 +301,7 @@ resource "banyan_role" "everyone" {
   user_group = ["Everyone"]
 }
 
-`, name, name, name)
+`, name, name, name, name)
 }
 
 // Returns terraform configuration for the policyattachment. Takes in custom name.
