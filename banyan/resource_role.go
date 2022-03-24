@@ -35,24 +35,6 @@ func resourceRole() *schema.Resource {
 				Computed:    true,
 				Description: "ID of the role in Banyan",
 			},
-			"metadatatags": {
-				Type:        schema.TypeList,
-				MinItems:    0,
-				MaxItems:    1,
-				Optional:    true,
-				Computed:    true,
-				Description: "Metadata about the role",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"template": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "USER",
-							ValidateFunc: validateRoleTemplate(),
-						},
-					},
-				},
-			},
 			"container_fqdn": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -147,7 +129,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
 			Tags: role.Tags{
-				Template: d.Get("metadatatags.0.template").(string),
+				Template: "USER",
 			},
 		},
 		Kind:       "BanyanRole",
@@ -201,9 +183,6 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	d.Set("name", role.Name)
 	d.Set("description", role.Description)
 	d.Set("id", role.ID)
-	d.Set("metadatatags", []interface{}{map[string]interface{}{
-		"template": role.UnmarshalledSpec.Metadata.Tags.Template,
-	}})
 	d.Set("container_fqdn", role.UnmarshalledSpec.Spec.ContainerFQDN)
 	d.Set("image", role.UnmarshalledSpec.Spec.Image)
 	d.Set("repo_tag", role.UnmarshalledSpec.Spec.RepoTag)
