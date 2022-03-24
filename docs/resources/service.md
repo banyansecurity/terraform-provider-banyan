@@ -13,6 +13,10 @@ The banyan_service resource is used to manage Banyan services. The service resou
 In the current API implementation, each service type uses a specific combination of keys in the service resource. This will be abstracted away in a future release in order to reduce complexity. Please see the following implementations of each service type:
 * [Web Service](#web-service)
 * [SSH Service](#ssh-service)
+* [RDP Service](#rdp-service)
+* [Database Service](#database-service)
+* [Kubernetes Service](#k8s-service)
+* [TCP Service](#tcp-service)
 
 <a id="web-service"></a>
 # Web Service
