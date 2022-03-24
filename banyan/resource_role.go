@@ -7,6 +7,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -34,24 +35,6 @@ func resourceRole() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "ID of the role in Banyan",
-			},
-			"metadatatags": {
-				Type:        schema.TypeList,
-				MinItems:    0,
-				MaxItems:    1,
-				Optional:    true,
-				Computed:    true,
-				Description: "Metadata about the role",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"template": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "USER",
-							ValidateFunc: validateRoleTemplate(),
-						},
-					},
-				},
 			},
 			"container_fqdn": {
 				Type:        schema.TypeSet,
@@ -83,7 +66,7 @@ func resourceRole() *schema.Resource {
 			"service_accounts": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Repo Tag",
+				Description: "Service accounts to be included in the role",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -112,7 +95,8 @@ func resourceRole() *schema.Resource {
 				Computed:    true,
 				Description: "Device ownership specification for the role",
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"Corporate Dedicated", "Corporate Shared", "Employee Owned", "Other"}, false),
 				},
 			},
 			"platform": {
@@ -121,7 +105,8 @@ func resourceRole() *schema.Resource {
 				Computed:    true,
 				Description: "Platform type which is required by the role",
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"Windows", "macOS", "Linux", "iOS", "Android", "Unregistered"}, false),
 				},
 			},
 			"known_device_only": {
@@ -147,7 +132,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
 			Tags: role.Tags{
-				Template: d.Get("metadatatags.0.template").(string),
+				Template: "USER",
 			},
 		},
 		Kind:       "BanyanRole",
@@ -192,8 +177,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	id := d.Id()
 	role, ok, err := client.Role.Get(id)
 	if err != nil {
-		diagnostics = diag.FromErr(errors.WithMessagef(err, "couldn't get role with id: %s", id))
-		return
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get role with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("role %q", d.Id()))
@@ -202,9 +186,6 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	d.Set("name", role.Name)
 	d.Set("description", role.Description)
 	d.Set("id", role.ID)
-	d.Set("metadatatags", []interface{}{map[string]interface{}{
-		"template": role.UnmarshalledSpec.Metadata.Tags.Template,
-	}})
 	d.Set("container_fqdn", role.UnmarshalledSpec.Spec.ContainerFQDN)
 	d.Set("image", role.UnmarshalledSpec.Spec.Image)
 	d.Set("repo_tag", role.UnmarshalledSpec.Spec.RepoTag)
@@ -223,8 +204,7 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface
 	client := m.(*client.ClientHolder)
 	err := client.Role.Delete(d.Id())
 	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
+		return diag.FromErr(err)
 	}
 	log.Printf("[ROLE|RES|DELETE] deleted role %s : %s", d.Get("name"), d.Id())
 	return

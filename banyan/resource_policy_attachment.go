@@ -115,12 +115,11 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[POLICYATTACHMENT|RES|CREATE] to be created: %#v\n", creatPolicyAttachment)
 	createdPolicyAttachment, err := client.PolicyAttachment.Create(policyID, creatPolicyAttachment)
 	if err != nil {
-		diag.FromErr(errors.WithMessage(err, "couldn't create new policyAttachment"))
+		diagnostics = diag.FromErr(err)
 		return
 	}
 	log.Printf("[POLICYATTACHMENT|RES|CREATE] createdpolicyAttachment %#v\n", createdPolicyAttachment)
 	d.SetId(getPolicyAttachmentID(createdPolicyAttachment))
-	diagnostics = resourcePolicyAttachmentRead(ctx, d, m)
 	return
 }
 
@@ -138,8 +137,7 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	_, attachedToType, attachedToID := getInfoFromPolicyAttachmentID(id)
 	attachment, ok, err := client.PolicyAttachment.Get(attachedToID, attachedToType)
 	if err != nil {
-		diagnostics = diag.FromErr(errors.WithMessagef(err, "couldn't get policyAttachment with id: %s", id))
-		return
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get policyAttachment with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("policy attachment %q", d.Id()))

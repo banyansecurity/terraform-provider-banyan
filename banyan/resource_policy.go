@@ -7,7 +7,6 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -37,30 +36,6 @@ func resourcePolicy() *schema.Resource {
 				Required:    true,
 				Description: "Description of the policy",
 			},
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				Description:  "Description of the policy",
-				ValidateFunc: validation.StringInSlice([]string{"INFRASTRUCTURE", "USER"}, false),
-			},
-			"metadatatags": {
-				Type:        schema.TypeList,
-				MinItems:    1,
-				MaxItems:    1,
-				Optional:    true,
-				Computed:    true,
-				Description: "Metadata about the policy used by the UI and Banyan app",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"template": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validatePolicyTemplate(),
-						},
-					},
-				},
-			},
 			"access": {
 				Type:        schema.TypeList,
 				MinItems:    1,
@@ -78,7 +53,7 @@ func resourcePolicy() *schema.Resource {
 						},
 						"trust_level": {
 							Type:         schema.TypeString,
-							Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\"",
+							Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\", or \"\"",
 							Required:     true,
 							ValidateFunc: validateTrustLevel(),
 						},
@@ -143,7 +118,9 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		Metadata: policy.Metadata{
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
-			Tags:        expandPolicyMetatdataTags(d.Get("metadatatags").([]interface{})),
+			Tags: policy.Tags{
+				Template: "USER",
+			},
 		},
 		Type: "USER",
 		Spec: policy.Spec{
@@ -155,8 +132,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 	createdPolicy, err := client.Policy.Create(policyToCreate)
 	if err != nil {
-		diag.FromErr(errors.WithMessage(err, "couldn't create new policy"))
-		return
+		return diag.FromErr(errors.WithMessage(err, "couldn't create new policy"))
 	}
 	log.Printf("[POLICY|RES|CREATE] created policy %s : %s", d.Get("name"), d.Id())
 	d.SetId(createdPolicy.ID)
@@ -177,8 +153,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 	id := d.Id()
 	policy, ok, err := client.Policy.Get(id)
 	if err != nil {
-		diagnostics = diag.FromErr(errors.WithMessagef(err, "couldn't get policy with id: %s", id))
-		return
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get policy with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
@@ -188,13 +163,6 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 	err = d.Set("description", policy.Description)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	metadatatags := map[string]interface{}{
-		"template": policy.UnmarshalledPolicy.Metadata.Tags.Template,
-	}
-	err = d.Set("metadatatags", []interface{}{metadatatags})
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -233,17 +201,6 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	return
 }
 
-func expandPolicyMetatdataTags(m []interface{}) (metadatatags policy.Tags) {
-	if len(m) == 0 {
-		return
-	}
-	itemMap := m[0].(map[string]interface{})
-	metadatatags = policy.Tags{
-		Template: itemMap["template"].(string),
-	}
-	return
-}
-
 func expandPolicyAccess(m []interface{}) (access []policy.Access) {
 	for _, raw := range m {
 		data := raw.(map[string]interface{})
@@ -257,18 +214,6 @@ func expandPolicyAccess(m []interface{}) (access []policy.Access) {
 	return
 }
 
-func expandPolicyRules(m []interface{}) (rules policy.Rules) {
-	if len(m) == 0 {
-		return
-	}
-	itemMap := m[0].(map[string]interface{})
-	rules = policy.Rules{
-		Conditions: expandPolicyConditions(itemMap["conditions"].([]interface{})),
-		L7Access:   expandPolicyL7Access(itemMap["l7_access"].([]interface{})),
-	}
-	return
-}
-
 func expandPolicyL7Access(m []interface{}) (l7Access []policy.L7Access) {
 	for _, raw := range m {
 		data := raw.(map[string]interface{})
@@ -276,17 +221,6 @@ func expandPolicyL7Access(m []interface{}) (l7Access []policy.L7Access) {
 			Actions:   convertSchemaSetToStringSlice(data["actions"].(*schema.Set)),
 			Resources: convertSchemaSetToStringSlice(data["resources"].(*schema.Set)),
 		})
-	}
-	return
-}
-
-func expandPolicyConditions(m []interface{}) (conditions policy.Conditions) {
-	if len(m) == 0 {
-		return
-	}
-	itemMap := m[0].(map[string]interface{})
-	conditions = policy.Conditions{
-		TrustLevel: itemMap["trust_level"].(string),
 	}
 	return
 }
@@ -308,21 +242,6 @@ func flattenPolicyAccess(toFlatten []policy.Access) (flattened []interface{}) {
 		ai["l7_access"] = flattenPolicyL7Access(accessItem.Rules.L7Access)
 		flattened[idx] = ai
 	}
-	return
-}
-
-func flattenPolicyRules(toFlatten policy.Rules) (flattened []interface{}) {
-	r := make(map[string]interface{})
-	r["conditions"] = flattenPolicyConditions(toFlatten.Conditions)
-	r["l7_access"] = flattenPolicyL7Access(toFlatten.L7Access)
-	flattened = append(flattened, r)
-	return
-}
-
-func flattenPolicyConditions(toFlatten policy.Conditions) (flattened []interface{}) {
-	c := make(map[string]interface{})
-	c["trust_level"] = toFlatten.TrustLevel
-	flattened = append(flattened, c)
 	return
 }
 

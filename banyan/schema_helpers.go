@@ -69,7 +69,7 @@ func validateL7Protocol() func(val interface{}, key string) (warns []string, err
 func validateTrustLevel() func(val interface{}, key string) (warns []string, errs []error) {
 	return func(val interface{}, key string) (warns []string, errs []error) {
 		v := val.(string)
-		valid := []string{"High", "Medium", "Low"}
+		valid := []string{"High", "Medium", "Low", ""}
 		if !contains(valid, v) {
 			errs = append(errs, fmt.Errorf("%q must be one of %q", v, valid))
 		}

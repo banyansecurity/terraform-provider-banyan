@@ -45,39 +45,43 @@ func resourceService() *schema.Resource {
 				Description: "Name of the NetAgent cluster which the service is accessible from",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
+			"site_name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Site name which the service is accessible from",
+			},
 			"metadatatags": {
 				Type:        schema.TypeList,
 				MinItems:    1,
 				MaxItems:    1,
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Metadata about the service presented to the UI and the Banyan App",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"template": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							Description:  "Must be set to WEB_USER, TCP_USER, or CUSTOM",
 							ValidateFunc: validation.StringInSlice([]string{"WEB_USER", "TCP_USER"}, false),
 						},
 						"user_facing": {
 							Type:        schema.TypeBool,
 							Description: "Whether the service is user-facing or not",
-							Optional:    true,
+							Required:    true,
 						},
 						"protocol": {
 							Type:         schema.TypeString,
-							Description:  "The protocol of the service, must be http or https",
-							Optional:     true,
+							Description:  "The protocol of the service, must be tcp, http or https",
+							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"http", "https", "tcp"}, false),
 						},
 						"domain": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"port": {
 							Type:         schema.TypeInt,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validatePort(),
 						},
 						"icon": {
@@ -86,17 +90,18 @@ func resourceService() *schema.Resource {
 						},
 						"service_app_type": {
 							Type:         schema.TypeString,
-							Description:  "Must be WEB, GENERIC or CUSTOM",
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"WEB", "GENERIC", "CUSTOM"}, false),
+							Description:  "Must be WEB, GENERIC, RDP, SSH, DATABASE, K8S, or CUSTOM",
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"WEB", "GENERIC", "RDP", "SSH", "DATABASE", "K8S", "CUSTOM"}, false),
 						},
 						"enforcement_mode": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"ssh_service_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"TRUSTCERT", "BOTH"}, false),
 						},
 						"write_ssh_config": {
 							Type:     schema.TypeBool,
@@ -114,6 +119,7 @@ func resourceService() *schema.Resource {
 						"allow_user_override": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"ssh_chain_mode": {
 							Type:     schema.TypeBool,
@@ -223,7 +229,7 @@ func resourceService() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
-										Description: "Allowed hostnames my include a leading and/or trailing wildcard character \"*\" to match multiple hostnames",
+										Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
 									},
 									"cidrs": {
 										Type:     schema.TypeSet,
@@ -383,15 +389,6 @@ func resourceService() *schema.Resource {
 							ValidateFunc: validatePort(),
 						},
 					},
-				},
-			},
-			"host_tag_selector": {
-				Type:        schema.TypeList,
-				Required:    true,
-				Description: "Tells Netagent to intercept FrontendAddresses on only a specific subset of hosts",
-				Elem: &schema.Schema{
-					Type: schema.TypeMap,
-					Elem: &schema.Schema{Type: schema.TypeString},
 				},
 			},
 			"tls_sni": {
@@ -789,8 +786,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		diagnostics = diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
-		return
+		return diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
@@ -810,8 +806,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
-		diagnostics = diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
-		return
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
@@ -822,6 +817,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return
 	}
 	err = d.Set("description", service.Description)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
+	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
+	err = d.Set("site_name", siteName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
@@ -881,10 +883,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return diag.FromErr(err)
 	}
 	err = d.Set("frontend", flattenServiceFrontendAddresses(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("host_tag_selector", service.CreateServiceSpec.Spec.Attributes.HostTagSelector)
 	if err != nil {
 		return diag.FromErr(err)
 	}

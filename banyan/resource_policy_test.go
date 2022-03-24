@@ -34,6 +34,46 @@ func TestAccPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccPolicy_web(t *testing.T) {
+	var bnnPolicy policy.GetPolicy
+
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckPolicy_destroy(t, &bnnPolicy.ID),
+		Steps: []resource.TestStep{
+			// Create the policy using terraform config and check that it exists
+			{
+				Config: testAccPolicy_web_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingPolicy("banyan_policy.web-policy", &bnnPolicy),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPolicy_infrastructure(t *testing.T) {
+	var bnnPolicy policy.GetPolicy
+
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckPolicy_destroy(t, &bnnPolicy.ID),
+		Steps: []resource.TestStep{
+			// Create the policy using terraform config and check that it exists
+			{
+				Config: testAccPolicy_infrastructure_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingPolicy("banyan_policy.infrastructure-policy", &bnnPolicy),
+				),
+			},
+		},
+	})
+}
+
 func TestAccPolicy_complex(t *testing.T) {
 	var bnnPolicy policy.GetPolicy
 
@@ -111,11 +151,45 @@ func testAccPolicy_basic_create(name string) string {
 resource "banyan_policy" "acceptance" {
   name        = %q
   description = "realdescription"
-  type = "USER"
   access {
     roles                             = ["ANY", "HI"]
     trust_level                       = "High"
   }
+}
+`, name)
+}
+
+// Returns terraform configuration for the policy
+func testAccPolicy_web_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_policy" "web-policy" {
+  name        = "%s"
+  description = "some web policy description"
+  access {
+    roles       = ["Everyone"]
+    trust_level = "High"
+    l7_access {
+      resources = ["*"]
+      actions   = ["*"]
+    }
+  }
+  l7_protocol                       = "http"
+  disable_tls_client_authentication = true
+}
+`, name)
+}
+
+// Returns terraform configuration for the policy
+func testAccPolicy_infrastructure_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_policy" "infrastructure-policy" {
+  name        = "%s"
+  description = "some infrastructure policy description"
+  access {
+    roles       = ["Everyone"]
+    trust_level = "High"
+  }
+  disable_tls_client_authentication = false
 }
 `, name)
 }
@@ -126,10 +200,6 @@ func testAccPolicy_complex_create(name string) string {
 resource "banyan_policy" "acceptance" {
   name        = %q
   description = "realdescription"
-  metadatatags {
-    template = "USER"
-  }
-  type = "USER"
   access {
     roles                             = ["ANY", "HI"]
     trust_level                       = "High"
@@ -150,10 +220,6 @@ func testAccPolicy_complex_update(name string) string {
 resource "banyan_policy" "acceptance" {
   name        = %q
   description = "realdescription"
-  metadatatags {
-    template = "USER"
-  }
-  type = "USER"
   access {
     roles                             = ["ANY"]
     trust_level                       = "High"

@@ -108,9 +108,13 @@ func testAccCheckRoleDestroy(t *testing.T, id *string) resource.TestCheckFunc {
 func testAccRole_basic_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_role" "acceptance" {
- name = %q
-  description = "realdescription"
-  user_group = ["group1"]
+  name              = "%s"
+  description       = "realdescription"
+  user_group        = ["group1"]
+  device_ownership  = ["Corporate Dedicated", "Corporate Shared", "Employee Owned", "Other"]
+  known_device_only = true
+  mdm_present       = true
+  platform          = ["Windows", "macOS", "Linux", "iOS", "Android", "Unregistered"]
 }
 `, name)
 }
@@ -120,9 +124,6 @@ func testAccRole_complex_create(name string) string {
 resource "banyan_role" "acceptance" {
  name = %q
   description = "realdescription"
-  metadatatags {
-    template = "USER"
-  }
   container_fqdn = ["asdf.asdf"]
   known_device_only = true
   platform = ["macOS", "Android"]
@@ -140,9 +141,6 @@ func testAccRole_complex_update(name string) string {
 resource "banyan_role" "acceptance" {
  name = %q
   description = "realdescription"
-  metadatatags {
-    template = "USER"
-  }
   container_fqdn = ["asdf.asdf"]
   known_device_only = true
   platform = ["macOS", "Android"]
