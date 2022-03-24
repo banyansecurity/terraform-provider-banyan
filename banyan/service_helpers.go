@@ -75,10 +75,13 @@ func expandServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 }
 
 func expandAttributes(d *schema.ResourceData) (attributes service.Attributes) {
+	var hostTagSelector []map[string]string
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("site_name").(string)}
+	hostTagSelector = append(hostTagSelector, siteNameSelector)
 	attributes = service.Attributes{
 		TLSSNI:            convertSchemaSetToStringSlice(d.Get("tls_sni").(*schema.Set)),
 		FrontendAddresses: expandFrontendAddresses(d),
-		HostTagSelector:   convertSliceInterfaceToSliceStringMap(d.Get("host_tag_selector").([]interface{})),
+		HostTagSelector:   hostTagSelector,
 	}
 	return
 }

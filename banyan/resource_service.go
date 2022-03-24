@@ -45,6 +45,11 @@ func resourceService() *schema.Resource {
 				Description: "Name of the NetAgent cluster which the service is accessible from",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
+			"site_name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Site name which the service is accessible from",
+			},
 			"metadatatags": {
 				Type:        schema.TypeList,
 				MinItems:    1,
@@ -382,15 +387,6 @@ func resourceService() *schema.Resource {
 							ValidateFunc: validatePort(),
 						},
 					},
-				},
-			},
-			"host_tag_selector": {
-				Type:        schema.TypeList,
-				Required:    true,
-				Description: "Tells Netagent to intercept FrontendAddresses on only a specific subset of hosts",
-				Elem: &schema.Schema{
-					Type: schema.TypeMap,
-					Elem: &schema.Schema{Type: schema.TypeString},
 				},
 			},
 			"tls_sni": {
@@ -823,6 +819,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		diagnostics = diag.FromErr(err)
 		return
 	}
+	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
+	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
+	err = d.Set("site_name", siteName)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
 	err = d.Set("cluster", service.ClusterName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
@@ -878,10 +881,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return diag.FromErr(err)
 	}
 	err = d.Set("frontend", flattenServiceFrontendAddresses(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("host_tag_selector", service.CreateServiceSpec.Spec.Attributes.HostTagSelector)
 	if err != nil {
 		return diag.FromErr(err)
 	}

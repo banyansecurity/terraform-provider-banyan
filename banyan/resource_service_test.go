@@ -190,6 +190,7 @@ resource banyan_service acctest-web {
   name        = "%s"
   description = "some web service description"
   cluster     = "us-west"
+  site_name = "us-west1"
   tls_sni     = ["%s.corp.com"]
   frontend {
     port = 443
@@ -203,9 +204,6 @@ resource banyan_service acctest-web {
   cert_settings {
     dns_names = ["%s.corp.com"]
   }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
-  ]
   metadatatags {
     template            = "WEB_USER"
     user_facing         = true
@@ -225,6 +223,7 @@ resource "banyan_service" "acctest-ssh" {
   name        = %q
   description = "some ssh service"
   cluster     = "us-west"
+  site_name = "us-west1"
   tls_sni     = ["%s.mattorg.bnntest.com"]
   frontend {
     port = 8443
@@ -241,9 +240,6 @@ resource "banyan_service" "acctest-ssh" {
   cert_settings {
     dns_names = ["%s.mattorg.bnntest.com"]
   }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
-  ]
   metadatatags {
     template           = "TCP_USER"
     user_facing        = true
@@ -267,6 +263,7 @@ resource "banyan_service" "acctest-rdp" {
   name        = "%s"
   description = "some rdp service description"
   cluster     = "us-west"
+  site_name   = "us-west1"
   tls_sni     = ["%s.corp.com"]
   frontend {
     port = 8443
@@ -280,9 +277,6 @@ resource "banyan_service" "acctest-rdp" {
   cert_settings {
     dns_names = ["%s.corp.com"]
   }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
-  ]
   metadatatags {
     template            = "TCP_USER"
     user_facing         = true
@@ -305,6 +299,7 @@ resource banyan_service acctest-database {
   name        = "%s"
   description = "some database service description"
   cluster     = "us-west"
+  site_name = "us-west1"
   tls_sni     = ["%s.corp.com"]
   frontend {
     port = 845
@@ -318,9 +313,6 @@ resource banyan_service acctest-database {
   cert_settings {
     dns_names = ["%s.corp.com"]
   }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
-  ]
   metadatatags {
     template            = "TCP_USER"
     user_facing         = true
@@ -343,6 +335,7 @@ resource banyan_service acctest-k8s {
   name        = "%s"
   description = "some k8s service description"
   cluster     = "us-west"
+  site_name = "us-west1"
   tls_sni     = ["%s.corp.com"]
   frontend {
     port = 8443
@@ -356,9 +349,6 @@ resource banyan_service acctest-k8s {
   cert_settings {
     dns_names = ["%s.corp.com"]
   }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
-  ]
   metadatatags {
     template            = "TCP_USER"
     user_facing         = true
@@ -383,6 +373,7 @@ resource banyan_service acctest-tcp {
   name        = "%s"
   description = "some tcp service description"
   cluster     = "us-west"
+  site_name = "us-west1"
   tls_sni     = ["%s.corp.com"]
   frontend {
     port = 8443
@@ -396,9 +387,6 @@ resource banyan_service acctest-tcp {
   cert_settings {
     dns_names = ["%s.corp.com"]
   }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
-  ]
   metadatatags {
     template            = "TCP_USER"
     user_facing         = true
@@ -419,6 +407,7 @@ func testAccService_complex_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service" "acctest-complex" {
   cluster     = "dev05-banyan"
+  site_name = "us-west1"
   name        = %q
   description = "acceptance test service"
   metadatatags {
@@ -438,10 +427,6 @@ resource "banyan_service" "acctest-complex" {
       cidr  = "10.0.1.0/24"
       ports = "888"
     }
-    host_tag_selector = [
-      { testkey = "testvalue" },
-      { testkey2 = "testvalue2" }
-    ]
   }
 
   backend {
@@ -479,10 +464,6 @@ resource "banyan_service" "acctest-complex" {
     cidr = "127.44.111.14/32"
     port = 1112
   }
-
-  host_tag_selector = [
-    { site_name = "sitename" }
-  ]
 
   tls_sni = [%q]
 
@@ -545,6 +526,7 @@ func testAccService_complex_update(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service" "acctest-complex" {
   cluster     = "dev05-banyan"
+  site_name = "us-west1"
   name        = %q
   description = "acceptance test service"
   metadatatags {
@@ -564,10 +546,6 @@ resource "banyan_service" "acctest-complex" {
       cidr  = "10.0.1.0/24"
       ports = "888"
     }
-    host_tag_selector = [
-      { testkey = "testvalue" },
-      { testkey2 = "testvalue2" }
-    ]
   }
 
   backend {
@@ -605,10 +583,6 @@ resource "banyan_service" "acctest-complex" {
     cidr = "127.44.111.14/32"
     port = 1112
   }
-
-  host_tag_selector = [
-    { site_name = "sitename" }
-  ]
 
   tls_sni = [%q]
 
