@@ -22,7 +22,7 @@ In the current API implementation, each service type uses a specific combination
 # Web Service
 ### Example
 ```hcl
-resource banyan_service web-service {
+resource "banyan_service"" web-service" {
 	name        = "web-service"
 	description = "some web service description"
 	cluster     = "us-west"
@@ -85,7 +85,7 @@ metadatatags {
 # SSH Service
 ### Example
 ```hcl
-resource banyan_service ssh-service {
+resource "banyan_service" "ssh-service" {
 	name        = "ssh-service"
 	description = "some ssh service"
 	cluster     = "us-west"
@@ -163,7 +163,7 @@ metadatatags {
 # RDP Service
 ### Example
 ```hcl
-resource banyan_service rdp-service {
+resource "banyan_service" "rdp-service" {
 	name        = "rdp-service"
 	description = "some rdp service description"
 	cluster     = "us-west"
@@ -233,7 +233,7 @@ metadatatags {
 # Database Service
 ### Example
 ```hcl
-resource banyan_service database-service {
+resource "banyan_service" "database-service" {
 	name        = "database-service"
 	description = "some database service description"
 	cluster     = "us-west"
@@ -304,7 +304,7 @@ metadatatags {
 # Kubernetes Service
 ### Example
 ```hcl
-resource banyan_service k8s-service {
+resource "banyan_service" "k8s-service" {
 	name        = "k8s-service"
 	description = "some k8s service description"
 	cluster     = "us-west"
@@ -379,7 +379,7 @@ metadatatags {
 # TCP Service
 ### Example
 ```hcl
-resource banyan_service tcp-service {
+resource "banyan_service" "tcp-service" {
 	name        = "tcp-service"
 	description = "some tcp service description"
 	cluster     = "us-west"

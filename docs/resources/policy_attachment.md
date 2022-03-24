@@ -14,36 +14,11 @@ Typically this resource is used in conjuction with a service and a policy. The f
 
 ## Example
 ```hcl
-resource "banyan_policy_attachment" "example-high-trust-any" {
-  policy_id        = banyan_policy.high-trust-any.id
+resource "banyan_policy_attachment" "example" {
+  policy_id        = banyan_policy.some-policy.id
   attached_to_type = "service"
-  attached_to_id   = banyan_service.example.id
+  attached_to_id   = banyan_service.some-service.id
   is_enforcing     = true
-}
-
-resource "banyan_service" "example" {
-  name = "some-administrative-service"
-  cluster = "us-west1"
-  frontend {
-    port = 443
-  }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west1" }
-  ]
-  backend {
-    target {
-      port = 443
-    }
-  }
-}
-
-resource "banyan_policy" "high-trust-any" {
-  name        = "high-trust-any"
-  description = "Allows any user with a high trust score"
-  access {
-    roles                             = [banyan_role.everyone.name]
-    trust_level                       = "High"
-  }
 }
 ```
 
@@ -52,12 +27,12 @@ resource "banyan_policy" "high-trust-any" {
 
 ### Required
 
-- **attached_to_id** (String) ID of the resource the policy will be attached to
-- **attached_to_type** (String) Type which the policy is attached to (i.e. service / saasapp)
-- **is_enforcing** (Boolean) Sets whether the policy is enforcing or not
 - **policy_id** (String) Name of the policy
+- **attached_to_type** (String) Type which the policy is attached to (i.e. service / saasapp)
+- **attached_to_id** (String) ID of the resource the policy will be attached to
+- **is_enforcing** (Boolean) Sets whether the policy is enforcing or not
 
-### Optional
+### Read-Only
 
 - **id** (String) The ID of this resource.
 
