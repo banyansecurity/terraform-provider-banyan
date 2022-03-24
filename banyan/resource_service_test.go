@@ -21,10 +21,9 @@ func TestAccService_basic_web(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create the service using terraform config and check that it exists
 			{
-				Config: testAccService_basic_create(rName),
+				Config: testAccService_basic_web_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service.acctest-basic", &bnnService),
-					resource.TestCheckResourceAttr("banyan_service.acctest-basic", "name", rName),
+					testAccCheckExistingService("banyan_service.acctest-web", &bnnService),
 				),
 			},
 		},
@@ -59,6 +58,57 @@ func TestAccService_rdp(t *testing.T) {
 				Config: testAccService_rdp_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service.acctest-rdp", &bnnService),
+				),
+			},
+		},
+	})
+}
+
+func TestAccService_database(t *testing.T) {
+	var bnnService service.GetServiceSpec
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccService_database_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingService("banyan_service.acctest-database", &bnnService),
+				),
+			},
+		},
+	})
+}
+
+func TestAccService_k8s(t *testing.T) {
+	var bnnService service.GetServiceSpec
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccService_k8s_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingService("banyan_service.acctest-k8s", &bnnService),
+				),
+			},
+		},
+	})
+}
+
+func TestAccService_tcp(t *testing.T) {
+	var bnnService service.GetServiceSpec
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccService_tcp_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingService("banyan_service.acctest-tcp", &bnnService),
 				),
 			},
 		},
@@ -134,25 +184,38 @@ func testAccCheckService_destroy(t *testing.T, id *string) resource.TestCheckFun
 }
 
 // Returns terraform configuration for a typical basic service
-func testAccService_basic_create(name string) string {
+func testAccService_basic_web_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service" "acctest-basic" {
-  name = %q
-  description = "some description"
-  cluster = "us-west1"
+resource banyan_service acctest-web {
+  name        = "%s"
+  description = "some web service description"
+  cluster     = "us-west"
+  tls_sni     = ["%s.corp.com"]
   frontend {
     port = 443
   }
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "us-west-1" }
-  ]
   backend {
     target {
-      port = 443
+      name = "%s.internal"
+      port = 8443
     }
   }
+  cert_settings {
+    dns_names = ["%s.corp.com"]
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west1" }
+  ]
+  metadatatags {
+    template            = "WEB_USER"
+    user_facing         = true
+    protocol            = "https"
+    domain              = "%s.corp.com"
+    port                = 443
+    service_app_type    = "WEB"
+  }
 }
-`, name)
+`, name, name, name, name, name)
 }
 
 // Returns terraform configuration for a typical ssh service
@@ -233,6 +296,122 @@ resource "banyan_service" "acctest-rdp" {
   }
 }
 `, name, name, name, name)
+}
+
+// Returns terraform configuration for a typical database service
+func testAccService_database_create(name string) string {
+	return fmt.Sprintf(`
+resource banyan_service acctest-database {
+  name        = "%s"
+  description = "some database service description"
+  cluster     = "us-west"
+  tls_sni     = ["%s.corp.com"]
+  frontend {
+    port = 845
+  }
+  backend {
+    target {
+      name = "%s.internal"
+      port = 8845
+    }
+  }
+  cert_settings {
+    dns_names = ["%s.corp.com"]
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west1" }
+  ]
+  metadatatags {
+    template            = "TCP_USER"
+    user_facing         = true
+    protocol            = "tcp"
+    domain              = "%s.corp.com"
+    port                = 845
+    service_app_type    = "DATABASE"
+    banyan_proxy_mode   = "TCP"
+    app_listen_port     = 8845
+    allow_user_override = true
+  }
+}
+`, name, name, name, name, name)
+}
+
+// Returns terraform configuration for a typical k8s service
+func testAccService_k8s_create(name string) string {
+	return fmt.Sprintf(`
+resource banyan_service acctest-k8s {
+  name        = "%s"
+  description = "some k8s service description"
+  cluster     = "us-west"
+  tls_sni     = ["%s.corp.com"]
+  frontend {
+    port = 8443
+  }
+  backend {
+    target {
+      name = "%s.internal"
+      port = 3389
+    }
+  }
+  cert_settings {
+    dns_names = ["%s.corp.com"]
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west1" }
+  ]
+  metadatatags {
+    template            = "TCP_USER"
+    user_facing         = true
+    protocol            = "tcp"
+    domain              = "%s.corp.com"
+    port                = 8443
+    service_app_type    = "K8S"
+    banyan_proxy_mode   = "CHAIN"
+    app_listen_port     = 8443
+    allow_user_override = true
+    kube_cluster_name = "k8s-cluster"
+    kube_ca_key = "k8scAk3yH3re"
+  }
+}
+`, name, name, name, name, name)
+}
+
+// Returns terraform configuration for a typical k8s service
+func testAccService_tcp_create(name string) string {
+	return fmt.Sprintf(`
+resource banyan_service acctest-tcp {
+  name        = "%s"
+  description = "some tcp service description"
+  cluster     = "us-west"
+  tls_sni     = ["%s.corp.com"]
+  frontend {
+    port = 8443
+  }
+  backend {
+    target {
+      name = "%s.internal"
+      port = 3389
+    }
+  }
+  cert_settings {
+    dns_names = ["%s.corp.com"]
+  }
+  host_tag_selector = [
+    { "com.banyanops.hosttag.site_name" = "us-west1" }
+  ]
+  metadatatags {
+    template            = "TCP_USER"
+    user_facing         = true
+    protocol            = "tcp"
+    domain              = "%s.corp.com"
+    port                = 8443
+    service_app_type    = "GENERIC"
+    banyan_proxy_mode   = "TCP"
+    app_listen_port     = 8443
+    allow_user_override = true
+  }
+}
+`, name, name, name, name, name)
 }
 
 // service with every option possible
