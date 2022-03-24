@@ -155,8 +155,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 	createdPolicy, err := client.Policy.Create(policyToCreate)
 	if err != nil {
-		diag.FromErr(errors.WithMessage(err, "couldn't create new policy"))
-		return
+		return diag.FromErr(errors.WithMessage(err, "couldn't create new policy"))
 	}
 	log.Printf("[POLICY|RES|CREATE] created policy %s : %s", d.Get("name"), d.Id())
 	d.SetId(createdPolicy.ID)
@@ -177,8 +176,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 	id := d.Id()
 	policy, ok, err := client.Policy.Get(id)
 	if err != nil {
-		diagnostics = diag.FromErr(errors.WithMessagef(err, "couldn't get policy with id: %s", id))
-		return
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get policy with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))

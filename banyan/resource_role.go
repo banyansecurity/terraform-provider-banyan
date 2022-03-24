@@ -192,8 +192,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	id := d.Id()
 	role, ok, err := client.Role.Get(id)
 	if err != nil {
-		diagnostics = diag.FromErr(errors.WithMessagef(err, "couldn't get role with id: %s", id))
-		return
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get role with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("role %q", d.Id()))
@@ -223,8 +222,7 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface
 	client := m.(*client.ClientHolder)
 	err := client.Role.Delete(d.Id())
 	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
+		return diag.FromErr(err)
 	}
 	log.Printf("[ROLE|RES|DELETE] deleted role %s : %s", d.Get("name"), d.Id())
 	return
