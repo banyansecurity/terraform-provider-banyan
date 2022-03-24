@@ -124,9 +124,6 @@ func testAccRole_complex_create(name string) string {
 resource "banyan_role" "acceptance" {
  name = %q
   description = "realdescription"
-  metadatatags {
-    template = "USER"
-  }
   container_fqdn = ["asdf.asdf"]
   known_device_only = true
   platform = ["macOS", "Android"]
@@ -144,9 +141,6 @@ func testAccRole_complex_update(name string) string {
 resource "banyan_role" "acceptance" {
  name = %q
   description = "realdescription"
-  metadatatags {
-    template = "USER"
-  }
   container_fqdn = ["asdf.asdf"]
   known_device_only = true
   platform = ["macOS", "Android"]

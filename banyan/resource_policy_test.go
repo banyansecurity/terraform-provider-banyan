@@ -151,7 +151,6 @@ func testAccPolicy_basic_create(name string) string {
 resource "banyan_policy" "acceptance" {
   name        = %q
   description = "realdescription"
-  type = "USER"
   access {
     roles                             = ["ANY", "HI"]
     trust_level                       = "High"
@@ -201,10 +200,6 @@ func testAccPolicy_complex_create(name string) string {
 resource "banyan_policy" "acceptance" {
   name        = %q
   description = "realdescription"
-  metadatatags {
-    template = "USER"
-  }
-  type = "USER"
   access {
     roles                             = ["ANY", "HI"]
     trust_level                       = "High"
@@ -225,10 +220,6 @@ func testAccPolicy_complex_update(name string) string {
 resource "banyan_policy" "acceptance" {
   name        = %q
   description = "realdescription"
-  metadatatags {
-    template = "USER"
-  }
-  type = "USER"
   access {
     roles                             = ["ANY"]
     trust_level                       = "High"
