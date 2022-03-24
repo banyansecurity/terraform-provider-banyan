@@ -44,23 +44,6 @@ func resourcePolicy() *schema.Resource {
 				Description:  "Description of the policy",
 				ValidateFunc: validation.StringInSlice([]string{"INFRASTRUCTURE", "USER"}, false),
 			},
-			"metadatatags": {
-				Type:        schema.TypeList,
-				MinItems:    1,
-				MaxItems:    1,
-				Optional:    true,
-				Computed:    true,
-				Description: "Metadata about the policy used by the UI and Banyan app",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"template": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validatePolicyTemplate(),
-						},
-					},
-				},
-			},
 			"access": {
 				Type:        schema.TypeList,
 				MinItems:    1,
@@ -143,7 +126,9 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		Metadata: policy.Metadata{
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
-			Tags:        expandPolicyMetatdataTags(d.Get("metadatatags").([]interface{})),
+			Tags: policy.Tags{
+				Template: "USER",
+			},
 		},
 		Type: "USER",
 		Spec: policy.Spec{
@@ -189,13 +174,6 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	metadatatags := map[string]interface{}{
-		"template": policy.UnmarshalledPolicy.Metadata.Tags.Template,
-	}
-	err = d.Set("metadatatags", []interface{}{metadatatags})
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	err = d.Set("access", flattenPolicyAccess(policy.UnmarshalledPolicy.Spec.Access))
 	if err != nil {
 		return diag.FromErr(err)
@@ -228,17 +206,6 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 		return
 	}
 	log.Println("[POLICY|RES|DELETE] deleted policy")
-	return
-}
-
-func expandPolicyMetatdataTags(m []interface{}) (metadatatags policy.Tags) {
-	if len(m) == 0 {
-		return
-	}
-	itemMap := m[0].(map[string]interface{})
-	metadatatags = policy.Tags{
-		Template: itemMap["template"].(string),
-	}
 	return
 }
 
