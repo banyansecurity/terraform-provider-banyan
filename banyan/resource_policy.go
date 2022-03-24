@@ -7,7 +7,6 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -37,13 +36,6 @@ func resourcePolicy() *schema.Resource {
 				Required:    true,
 				Description: "Description of the policy",
 			},
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				Description:  "Description of the policy",
-				ValidateFunc: validation.StringInSlice([]string{"INFRASTRUCTURE", "USER"}, false),
-			},
 			"access": {
 				Type:        schema.TypeList,
 				MinItems:    1,
@@ -61,7 +53,7 @@ func resourcePolicy() *schema.Resource {
 						},
 						"trust_level": {
 							Type:         schema.TypeString,
-							Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\"",
+							Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\", or \"\"",
 							Required:     true,
 							ValidateFunc: validateTrustLevel(),
 						},
@@ -222,18 +214,6 @@ func expandPolicyAccess(m []interface{}) (access []policy.Access) {
 	return
 }
 
-func expandPolicyRules(m []interface{}) (rules policy.Rules) {
-	if len(m) == 0 {
-		return
-	}
-	itemMap := m[0].(map[string]interface{})
-	rules = policy.Rules{
-		Conditions: expandPolicyConditions(itemMap["conditions"].([]interface{})),
-		L7Access:   expandPolicyL7Access(itemMap["l7_access"].([]interface{})),
-	}
-	return
-}
-
 func expandPolicyL7Access(m []interface{}) (l7Access []policy.L7Access) {
 	for _, raw := range m {
 		data := raw.(map[string]interface{})
@@ -241,17 +221,6 @@ func expandPolicyL7Access(m []interface{}) (l7Access []policy.L7Access) {
 			Actions:   convertSchemaSetToStringSlice(data["actions"].(*schema.Set)),
 			Resources: convertSchemaSetToStringSlice(data["resources"].(*schema.Set)),
 		})
-	}
-	return
-}
-
-func expandPolicyConditions(m []interface{}) (conditions policy.Conditions) {
-	if len(m) == 0 {
-		return
-	}
-	itemMap := m[0].(map[string]interface{})
-	conditions = policy.Conditions{
-		TrustLevel: itemMap["trust_level"].(string),
 	}
 	return
 }
@@ -273,21 +242,6 @@ func flattenPolicyAccess(toFlatten []policy.Access) (flattened []interface{}) {
 		ai["l7_access"] = flattenPolicyL7Access(accessItem.Rules.L7Access)
 		flattened[idx] = ai
 	}
-	return
-}
-
-func flattenPolicyRules(toFlatten policy.Rules) (flattened []interface{}) {
-	r := make(map[string]interface{})
-	r["conditions"] = flattenPolicyConditions(toFlatten.Conditions)
-	r["l7_access"] = flattenPolicyL7Access(toFlatten.L7Access)
-	flattened = append(flattened, r)
-	return
-}
-
-func flattenPolicyConditions(toFlatten policy.Conditions) (flattened []interface{}) {
-	c := make(map[string]interface{})
-	c["trust_level"] = toFlatten.TrustLevel
-	flattened = append(flattened, c)
 	return
 }
 
