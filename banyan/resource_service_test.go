@@ -186,7 +186,7 @@ func testAccCheckService_destroy(t *testing.T, id *string) resource.TestCheckFun
 // Returns terraform configuration for a typical basic service
 func testAccService_basic_web_create(name string) string {
 	return fmt.Sprintf(`
-resource banyan_service acctest-web {
+resource "banyan_service" "acctest-web" {
   name        = "%s"
   description = "some web service description"
   cluster     = "us-west"
@@ -258,7 +258,7 @@ resource "banyan_service" "acctest-ssh" {
 // Returns terraform configuration for a typical rdp service
 func testAccService_rdp_create(name string) string {
 	return fmt.Sprintf(`
-resource banyan_service acctest-rdp {
+resource "banyan_service" "acctest-rdp" {
   name        = "%s"
   description = "some rdp service description"
   cluster     = "us-west"
@@ -294,7 +294,7 @@ resource banyan_service acctest-rdp {
 // Returns terraform configuration for a typical database service
 func testAccService_database_create(name string) string {
 	return fmt.Sprintf(`
-resource banyan_service acctest-database {
+resource "banyan_service" "acctest-database" {
   name        = "%s"
   description = "some database service description"
   cluster     = "us-west"
@@ -329,7 +329,7 @@ resource banyan_service acctest-database {
 // Returns terraform configuration for a typical k8s service
 func testAccService_k8s_create(name string) string {
 	return fmt.Sprintf(`
-resource banyan_service acctest-k8s {
+resource "banyan_service" "acctest-k8s" {
   name        = "%s"
   description = "some k8s service description"
   cluster     = "us-west"
@@ -366,7 +366,7 @@ resource banyan_service acctest-k8s {
 // Returns terraform configuration for a typical k8s service
 func testAccService_tcp_create(name string) string {
 	return fmt.Sprintf(`
-resource banyan_service acctest-tcp {
+resource "banyan_service" "acctest-tcp" {
   name        = "%s"
   description = "some tcp service description"
   cluster     = "us-west"
