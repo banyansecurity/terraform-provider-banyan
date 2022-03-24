@@ -66,7 +66,7 @@ func resourceRole() *schema.Resource {
 			"service_accounts": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Repo Tag",
+				Description: "Service accounts to be included in the role",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
