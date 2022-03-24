@@ -190,8 +190,7 @@ resource banyan_service acctest-web {
   name        = "%s"
   description = "some web service description"
   cluster     = "us-west"
-  site_name = "us-west1"
-  tls_sni     = ["%s.corp.com"]
+  site_name   = "us-west1"
   frontend {
     port = 443
   }
@@ -213,14 +212,14 @@ resource banyan_service acctest-web {
     service_app_type    = "WEB"
   }
 }
-`, name, name, name, name, name)
+`, name, name, name, name)
 }
 
 // Returns terraform configuration for a typical ssh service
 func testAccService_ssh_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service" "acctest-ssh" {
-  name        = %q
+  name        = "%s"
   description = "some ssh service"
   cluster     = "us-west"
   site_name = "us-west1"
@@ -259,7 +258,7 @@ resource "banyan_service" "acctest-ssh" {
 // Returns terraform configuration for a typical rdp service
 func testAccService_rdp_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service" "acctest-rdp" {
+resource banyan_service acctest-rdp {
   name        = "%s"
   description = "some rdp service description"
   cluster     = "us-west"
@@ -284,9 +283,9 @@ resource "banyan_service" "acctest-rdp" {
     domain              = "service.domainname"
     port                = 8443
     service_app_type    = "RDP"
-    banyan_proxy_mode    = "TCP"
+    banyan_proxy_mode   = "TCP"
     app_listen_port     = 3389
-    allow_user_override = true
+    
   }
 }
 `, name, name, name, name)
@@ -299,7 +298,7 @@ resource banyan_service acctest-database {
   name        = "%s"
   description = "some database service description"
   cluster     = "us-west"
-  site_name = "us-west1"
+  site_name   = "us-west1"
   tls_sni     = ["%s.corp.com"]
   frontend {
     port = 845
@@ -322,7 +321,6 @@ resource banyan_service acctest-database {
     service_app_type    = "DATABASE"
     banyan_proxy_mode   = "TCP"
     app_listen_port     = 8845
-    allow_user_override = true
   }
 }
 `, name, name, name, name, name)
@@ -358,7 +356,6 @@ resource banyan_service acctest-k8s {
     service_app_type    = "K8S"
     banyan_proxy_mode   = "CHAIN"
     app_listen_port     = 8443
-    allow_user_override = true
     kube_cluster_name = "k8s-cluster"
     kube_ca_key = "k8scAk3yH3re"
   }
@@ -396,7 +393,6 @@ resource banyan_service acctest-tcp {
     service_app_type    = "GENERIC"
     banyan_proxy_mode   = "TCP"
     app_listen_port     = 8443
-    allow_user_override = true
   }
 }
 `, name, name, name, name, name)
