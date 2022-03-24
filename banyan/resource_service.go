@@ -85,9 +85,9 @@ func resourceService() *schema.Resource {
 						},
 						"service_app_type": {
 							Type:         schema.TypeString,
-							Description:  "Must be WEB, GENERIC, RDP, SSH, or CUSTOM",
+							Description:  "Must be WEB, GENERIC, RDP, SSH, DATABASE, K8S, or CUSTOM",
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"WEB", "GENERIC", "RDP", "SSH", "CUSTOM"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"WEB", "GENERIC", "RDP", "SSH", "DATABASE", "K8S", "CUSTOM"}, false),
 						},
 						"enforcement_mode": {
 							Type:     schema.TypeString,
@@ -788,8 +788,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		diagnostics = diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
-		return
+		return diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
@@ -809,8 +808,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
-		diagnostics = diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
-		return
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
