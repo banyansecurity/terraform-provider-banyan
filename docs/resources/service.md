@@ -3,10 +3,9 @@
 page_title: "banyan_service Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  This is an org wide setting. There can only be one of these per organization.
 ---
 
-# banyan_service (Resource)
+# banyan_service (Rsesource)
 
 The banyan_service resource is used to manage Banyan services. The service resource is the core configuration resource in the Banyan Command Center. For more information on services, please see the documentation [here.](https://docs.banyanops.com/docs/intro/concepts/services/)
 
@@ -19,10 +18,10 @@ In the current API implementation, each service type uses a specific combination
 * [TCP Service](#tcp-service)
 
 <a id="web-service"></a>
-# Web Service
+## Web Service
 ### Example
 ```hcl
-resource "banyan_service"" web-service" {
+resource "banyan_service" "web-service" {
 	name        = "web-service"
 	description = "some web service description"
 	cluster     = "us-west"
@@ -49,8 +48,8 @@ resource "banyan_service"" web-service" {
 	}
 }
 ```
-## Web Service Schema
-### Required
+### Web Service Schema
+#### Required
 - **name** (String) Name of the service
 - **description** (String) Description of the service
 - **cluster** (String) Name of the NetAgent cluster which the service is accessible from
@@ -71,23 +70,23 @@ metadatatags {
 		icon                = #(string) (optional) icon to be shown to end users (example: "cloud") (names available in Banyan UI)
 	}
 ```
-[metadatatags field descriptions](#metadatnestedblock--cert_settings)
-### Optional
+[metadatatags field descriptions](#nestedblock--metadatatags)
+#### Optional
 - **http_settings** (Block List, Max: 1) Used by HTTP services for use-case specific functionality (see [below for nested schema](#nestedblock--http_settings))
 - **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
-  It will only forward on TLS connections where the SNI matches for Policy validation"
+  It will only forward on TLS connections where the SNI matches for Policy validation
 
-### Read-Only
+#### Read-Only
 
-- **id** (String) Id of the service
+- **id** (String) ID of the service
 
 <a id="ssh-service"></a>
-# SSH Service
+## SSH Service
 ### Example
 ```hcl
 resource "banyan_service" "ssh-service" {
 	name        = "ssh-service"
-	description = "some ssh service"
+	description = "some SSH service"
 	cluster     = "us-west"
 	site_name   = "us-west1"
 	frontend {
@@ -116,8 +115,8 @@ resource "banyan_service" "ssh-service" {
 	}
 }
 ```
-## SSH Service Schema
-### Required
+### SSH Service Schema
+#### Required
 - **name** (String) Name of the service
 - **description** (String) Description of the service
 - **cluster** (String) Name of the NetAgent cluster which the service is accessible from
@@ -135,37 +134,34 @@ metadatatags {
 		port                = #(int) frontend port here
 		service_app_type    = "SSH"
 	    ssh_service_type    = #(string) must be "TRUSTCERT" or "BOTH" 
-		write_ssh_config    = #(bool) should the client app write to the users ssh config file
-		ssh_chain_mode      = #(bool) enable ssh chain mode
-		ssh_host_directive  = #(string) Creates and entry in the ssh config file using the Host keyword
+		write_ssh_config    = #(bool) should the client app write to the users SSH config file
+		ssh_chain_mode      = #(bool) enable SSH chain mode
+		ssh_host_directive  = #(string) Creates an entry in the SSH config file using the Host keyword
 		link                = #(string) (optional) link shown to end users
 		icon                = #(string) (optional) icon to be shown to end users (example: "cloud") (names available in Banyan UI)
 
 	}
 ```
-[metadatatags field descriptions](#metadatnestedblock--cert_settings)
+[metadatatags field descriptions](#nestedblock--metadatatags)
 
 
-### Optional
-- **client_cidrs** (Block List) ClientCIDRs is used in environments with Network Address Translation (NAT) to list
-					the IP addresses that are used to access the Service; Netagent will then automatically
-					intercept traffic to these IP addresses. (see [below for nested schema](#nestedblock--client_cidrs))
+#### Optional
 - **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
 					It will only forward on TLS connections where the SNI matches for Policy validation"
 
-### Read-Only
-- **id** (String) Id of the service
+#### Read-Only
+- **id** (String) ID of the service
 
 
 
 
 <a id="rdp-service"></a>
-# RDP Service
+## RDP Service
 ### Example
 ```hcl
 resource "banyan_service" "rdp-service" {
 	name        = "rdp-service"
-	description = "some rdp service description"
+	description = "some RDP service description"
 	cluster     = "us-west"
 	site_name   = "us-west1"
 	frontend {
@@ -192,8 +188,8 @@ resource "banyan_service" "rdp-service" {
 	}
 }
 ```
-## RDP Service Schema
-### Required
+### RDP Service Schema
+#### Required
 - **name** (String) Name of the service
 - **description** (String) Description of the service
 - **cluster** (String) Name of the NetAgent cluster which the service is accessible from
@@ -216,21 +212,21 @@ metadatatags {
 		icon                = #(string) (optional) icon to be shown to end users (example: "cloud") (names available in Banyan UI)
 	}
 ```
-[metadatatags field descriptions](#metadatnestedblock--cert_settings)
+[metadatatags field descriptions](#nestedblock--metadatatags)
 
 
-### Optional
+#### Optional
 - **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
   It will only forward on TLS connections where the SNI matches for Policy validation"
 
-### Read-Only
-- **id** (String) Id of the service
+#### Read-Only
+- **id** (String) ID of the service
 
 
 
 
 <a id="database-service"></a>
-# Database Service
+## Database Service
 ### Example
 ```hcl
 resource "banyan_service" "database-service" {
@@ -263,8 +259,8 @@ resource "banyan_service" "database-service" {
 	}
 }
 ```
-## Database Service Schema
-### Required
+### Database Service Schema
+#### Required
 - **name** (String) Name of the service
 - **description** (String) Description of the service
 - **cluster** (String) Name of the NetAgent cluster which the service is accessible from
@@ -287,21 +283,21 @@ metadatatags {
 		icon                = #(string) (optional) icon to be shown to end users (example: "cloud") (names available in Banyan UI)
 	}
 ```
-[metadatatags field descriptions](#metadatnestedblock--cert_settings)
+[metadatatags field descriptions](#nestedblock--metadatatags)
 
 
-### Optional
+#### Optional
 - **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
   It will only forward on TLS connections where the SNI matches for Policy validation"
 
-### Read-Only
-- **id** (String) Id of the service
+#### Read-Only
+- **id** (String) ID of the service
 
 
 
 
 <a id="k8s-service"></a>
-# Kubernetes Service
+## Kubernetes Service
 ### Example
 ```hcl
 resource "banyan_service" "k8s-service" {
@@ -336,8 +332,8 @@ resource "banyan_service" "k8s-service" {
 	}
 }
 ```
-## Kubernetes Service Schema
-### Required
+### Kubernetes Service Schema
+#### Required
 - **name** (String) Name of the service
 - **description** (String) Description of the service
 - **cluster** (String) Name of the NetAgent cluster which the service is accessible from
@@ -362,21 +358,21 @@ metadatatags {
 		icon                = #(string) (optional) icon to be shown to end users (example: "cloud") (names available in Banyan UI)
 	}
 ```
-[metadatatags field descriptions](#metadatnestedblock--cert_settings)
+[metadatatags field descriptions](#nestedblock--metadatatags)
 
 
-### Optional
+#### Optional
 - **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
   It will only forward on TLS connections where the SNI matches for Policy validation"
 
-### Read-Only
-- **id** (String) Id of the service
+#### Read-Only
+- **id** (String) ID of the service
 
 
 
 
 <a id="tcp-service"></a>
-# TCP Service
+## TCP Service
 ### Example
 ```hcl
 resource "banyan_service" "tcp-service" {
@@ -391,7 +387,7 @@ resource "banyan_service" "tcp-service" {
 	backend {
 		target {
 			name = "tcp-service.internal"
-			port = 3389
+			port = 443
 		}
 	}
 	cert_settings {
@@ -405,7 +401,7 @@ resource "banyan_service" "tcp-service" {
 		port                = 8443
 		service_app_type    = "GENERIC"
 		banyan_proxy_mode   = "TCP"
-		app_listen_port     = 8443
+		app_listen_port     = 443
 	}
 }
 ```
@@ -433,7 +429,7 @@ metadatatags {
 		icon                = #(string) (optional) icon to be shown to end users (example: "cloud") (names available in Banyan UI)
 	}
 ```
-[metadatatags field descriptions](#metadatnestedblock--cert_settings)
+[metadatatags field descriptions](#nestedblock--metadatatags)
 
 
 ### Optional
@@ -441,12 +437,12 @@ metadatatags {
   It will only forward on TLS connections where the SNI matches for Policy validation"
 
 ### Read-Only
-- **id** (String) Id of the service
+- **id** (String) ID of the service
 
 
 
 
-
+## Nested Schemas
 <a id="nestedblock--backend"></a>
 ### Nested Schema for `backend`
 Required:
@@ -706,25 +702,25 @@ Required:
 
 Optional:
 
-- **allow_user_override** (Boolean) Allows for the user to change metadatatags. Not recommended for terraform configured services.
-- **app_listen_port** (Number)
-- **banyan_proxy_mode** (String)
-- **description_link** (String)
-- **domain** (String)
-- **enforcement_mode** (String)
-- **icon** (String)
+- **template** (String) Must be set to WEB_USER, TCP_USER, or CUSTOM
+- **app_listen_port** (Number) Port the backend application is listening on
+- **user_facing** (Boolean) Whether the service is user-facing or not
+- **banyan_proxy_mode** (String) Changes the Banyan proxy mode if set. Can be set to "TCP" or "CHAIN"
+- **description_link** (String) Link to the description for the service displayed to the end user
+- **domain** (String) The frontend service domain name 
+- **enforcement_mode** (String) Controls the enforcement mode for the service, must be set to "Permissive" or "Enforcing"
+- **icon** (String) Name of the icon to be displayed to the end user. Icon names are available in the Banyan UI
 - **include_domains** (List of String)
-- **kube_ca_key** (String, Sensitive)
-- **kube_cluster_name** (String)
-- **port** (Number)
+- **kube_ca_key** (String, Sensitive) Kube-OIDC-Proxy CA Public Key
+- **kube_cluster_name** (String) The kubernetes cluster name
+- **port** (Number) The port number of the frontend service
 - **protocol** (String) The protocol of the service, must be http or https
 - **service_app_type** (String) Must be WEB, GENERIC or CUSTOM
-- **ssh_chain_mode** (Boolean)
-- **ssh_host_directive** (String)
-- **ssh_service_type** (String)
-- **template** (String) Must be set to WEB_USER, TCP_USER, or CUSTOM
-- **user_facing** (Boolean) Whether the service is user-facing or not
-- **write_ssh_config** (Boolean)
+- **ssh_chain_mode** (Boolean) Whether SSH chain mode should be enabled
+- **ssh_host_directive** (String) Creates and entry in the SSH config file using the Host keyword
+- **ssh_service_type** (String) The SSH certificate authentication type. Must be "TRUSTCERT" or "BOTH". "BOTH" indicates that SSHCert and TRUSTCERT are used when authenticating a user
+- **write_ssh_config** (Boolean) Whether the client app should write to the users SSH config file
+- **allow_user_override** (Boolean) Allows for the user to change metadatatags. Not recommended for terraform configured services.
 
 
 <a id="nestedblock--tag_slice"></a>
