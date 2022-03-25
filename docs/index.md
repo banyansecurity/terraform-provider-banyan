@@ -48,7 +48,7 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.4.4"
+      version = "0.4.5"
     }
   }
 }
@@ -64,7 +64,7 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.4.3"
+      version = "0.4.5"
     }
   }
 }
@@ -73,45 +73,62 @@ provider "banyan" {
   api_token = "banyan-api-token-here-exclusive-to-terraform"
 }
 
-resource "banyan_service" "example-web-service" {
-  name    = "example-web-service"
-  cluster = "cluster-name"
-  host_tag_selector = [
-    { "com.banyanops.hosttag.site_name" = "site-name" }
-  ]
+resource "banyan_service" "admin-console" {
+  name        = "admin-console"
+  description = "Super sensitive administrator console"
+  cluster     = "us-west"
+  site_name   = "us-west1"
   frontend {
     port = 443
   }
   backend {
     target {
-      port = 443
+      name = "admin-console.internal"
+      port = 8443
     }
   }
+  cert_settings {
+    dns_names = ["admin-console.corp.com"]
+  }
   metadatatags {
-    service_app_type = "WEB"
-    user_facing = true
+    template            = "WEB_USER"
+    user_facing         = true
+    protocol            = "https"
+    domain              = "admin-console.corp.com"
+    port                = 443
+    service_app_type    = "WEB"
   }
 }
 
-resource "banyan_policy" "high-trust-any" {
-  name        = "high-trust-any"
-  description = "Allows any user with a high trust score"
+resource "banyan_policy" "admin-web-high" {
+  name        = "web-policy"
+  description = "Allows web access to admins with a high trust level"
   access {
-    roles                             = [banyan_role.everyone.name]
-    trust_level                       = "High"
+    roles       = [banyan_role.admin.name]
+    trust_level = "High"
+    l7_access {
+      resources = ["*"]
+      actions   = ["*"]
+    }
   }
+  l7_protocol                       = "http"
+  disable_tls_client_authentication = true
 }
 
-resource "banyan_role" "everyone" {
-  name = "everyone"
-  description = "all users"
-  user_group = ["Everyone"]
+resource "banyan_role" "admin" {
+  name              = "admin"
+  description       = "Strict role for Admin access"
+  user_group        = ["admin"]
+  device_ownership  = ["Corporate Dedicated"]
+  known_device_only = true
+  mdm_present       = true
+  platform          = ["Windows", "macOS", "Linux"]
 }
 
 resource "banyan_policy_attachment" "example-high-trust-any" {
-  policy_id        = banyan_policy.high-trust-any.id
+  policy_id        = banyan_policy.admin-web-high.id
   attached_to_type = "service"
-  attached_to_id   = banyan_service.example-web-service.id
+  attached_to_id   = banyan_service.admin-console.id
   is_enforcing     = true
 }
 ```
