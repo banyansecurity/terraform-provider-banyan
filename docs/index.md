@@ -49,7 +49,7 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.4.6"
+      version = "0.4.7"
     }
   }
 }
@@ -66,7 +66,7 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.4.6"
+      version = "0.4.7"
     }
   }
 }
