@@ -39,7 +39,7 @@ resource "banyan_policy" "web-policy" {
 - **access** (Block List, Min: 1) Access describes the access rights for a set of roles (see [below for nested schema](#nestedblock--access))
 - **l7_protocol** (String) L7Protocol specifies the application-level protocol: "http", "kafka", or empty string.
   If L7Protocol is not empty, then all Access rules must have L7Access entries.
-- **disable_tls_client_authentication** (Boolean) (**set to false**) Prevents the service from asking for a client TLS cert
+- **disable_tls_client_authentication** (Boolean) (**set to true**) Prevents the service from asking for a client TLS cert
 
 ### Read-Only
 

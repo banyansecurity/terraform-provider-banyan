@@ -30,6 +30,7 @@ For production use cases, ensure that the API token is stored in an environment 
 ```hcl
 provider "banyan" {
   api_token = "banyan-api-token-here-exclusive-to-terraform"
+  host = "https://preview.console.banyanops.com/"
 }
 ```
 
@@ -48,13 +49,14 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.4.5"
+      version = "0.4.6"
     }
   }
 }
 
 provider "banyan" {
   api_token = "banyan-api-token-here-exclusive-to-terraform"
+  host = "https://preview.console.banyanops.com/"
 }
 ```
 
@@ -64,13 +66,14 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.4.5"
+      version = "0.4.6"
     }
   }
 }
 
 provider "banyan" {
   api_token = "banyan-api-token-here-exclusive-to-terraform"
+  host = "https://preview.console.banyanops.com/"
 }
 
 resource "banyan_service" "admin-console" {
@@ -85,6 +88,8 @@ resource "banyan_service" "admin-console" {
     target {
       name = "admin-console.internal"
       port = 8443
+      tls  = false
+      tls_insecure = false
     }
   }
   cert_settings {

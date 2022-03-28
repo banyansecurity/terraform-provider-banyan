@@ -30,11 +30,11 @@ resource "banyan_role" "some-role" {
 - **name** (String) Name of the role
 - **description** (String) Description of the role
 
-### **ONE** of the following is also required
+### **ONE** of the following user claims is also required
 - **user_group** (Set of String) list of user groups to be included in the role
 - **email** (Set of String) list of emails to be included in the role
 
-### Optional
+### or one of the following device claims is required
 
 - **container_fqdn** (Set of String) FQDN for the containers
 - **device_ownership** (Set of String) Device ownership specification for the role, must be "Corporate Dedicated", "Corporate Shared", "Employee Owned", or "Other"
@@ -44,6 +44,8 @@ resource "banyan_role" "some-role" {
 - **platform** (Set of String) Platform type which is required by the role, must be "Windows", "macOS", "Linux", "iOS", "Android", or "Unregistered"
 - **repo_tag** (Set of String) Repo Tag
 - **service_accounts** (Set of String) Service accounts which are members of the role
+
+You can also mix and match for example you can have one user claim and multiple device claims, depending on your use case.
 
 ### Read-Only
 
