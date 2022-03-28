@@ -340,7 +340,7 @@ func resourceService() *schema.Resource {
 										Type:        schema.TypeBool,
 										Description: "TLS indicates whether the connection to the backend server uses TLS.",
 										Optional:    true,
-										Default:     true,
+										Default:     false,
 									},
 									"tls_insecure": {
 										Type:        schema.TypeBool,

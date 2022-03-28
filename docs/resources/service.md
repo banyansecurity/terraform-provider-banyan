@@ -33,8 +33,6 @@ resource "banyan_service" "web-service" {
 		target {
 			name = "web-service.internal"
 			port = 8443
-			tls  = false
-      		tls_insecure = false
 		}
 	}
 	cert_settings {
@@ -98,8 +96,6 @@ resource "banyan_service" "ssh-service" {
 		target {
 			name               = "ssh-service.internal"
 			port               = 22
-			tls  = false
-      		tls_insecure = false
 		}
 	}
 	cert_settings {
@@ -174,8 +170,6 @@ resource "banyan_service" "rdp-service" {
 		target {
 			name = "rdp-service.internal"
 			port = 3389
-			tls  = false
-      		tls_insecure = false
 		}
 	}
 	cert_settings {
@@ -245,8 +239,6 @@ resource "banyan_service" "database-service" {
 		target {
 			name = "database-service.internal"
 			port = 8845
-			tls  = false
-            tls_insecure = false
 		}
 	}
 	cert_settings {
@@ -316,8 +308,6 @@ resource "banyan_service" "k8s-service" {
 		target {
 			name = "k8s-service.internal"
 			port = 3389
-			tls  = false
-            tls_insecure = false
 		}
 	}
 	cert_settings {
@@ -391,8 +381,6 @@ resource "banyan_service" "tcp-service" {
 		target {
 			name = "tcp-service.internal"
 			port = 443
-			tls  = false
-            tls_insecure = false
 		}
 	}
 	cert_settings {
