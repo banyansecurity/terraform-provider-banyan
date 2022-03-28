@@ -146,8 +146,7 @@ metadatatags {
 
 
 #### Optional
-- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
-					It will only forward on TLS connections where the SNI matches for Policy validation"
+- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections. It will only forward on TLS connections where the SNI matches for Policy validation.
 
 #### Read-Only
 - **id** (String) ID of the service
@@ -216,8 +215,7 @@ metadatatags {
 
 
 #### Optional
-- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
-  It will only forward on TLS connections where the SNI matches for Policy validation"
+- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections. It will only forward on TLS connections where the SNI matches for Policy validation.
 
 #### Read-Only
 - **id** (String) ID of the service
@@ -234,7 +232,6 @@ resource "banyan_service" "database-service" {
 	description = "some database service description"
 	cluster     = "us-west"
 	site_name   = "us-west1"
-	tls_sni     = ["database-service.corp.com"]
 	frontend {
 		port = 845
 	}
@@ -287,8 +284,7 @@ metadatatags {
 
 
 #### Optional
-- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
-  It will only forward on TLS connections where the SNI matches for Policy validation"
+- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections. It will only forward on TLS connections where the SNI matches for Policy validation.
 
 #### Read-Only
 - **id** (String) ID of the service
@@ -305,7 +301,6 @@ resource "banyan_service" "k8s-service" {
 	description = "some k8s service description"
 	cluster     = "us-west"
 	site_name   = "us-west1"
-	tls_sni     = ["k8s-service.corp.com"]
 	frontend {
 		port = 8443
 	}
@@ -362,8 +357,7 @@ metadatatags {
 
 
 #### Optional
-- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
-  It will only forward on TLS connections where the SNI matches for Policy validation"
+- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections. It will only forward on TLS connections where the SNI matches for Policy validation.
 
 #### Read-Only
 - **id** (String) ID of the service
@@ -380,7 +374,6 @@ resource "banyan_service" "tcp-service" {
 	description = "some tcp service description"
 	cluster     = "us-west"
 	site_name = "us-west1"
-	tls_sni     = ["tcp-service.corp.com"]
 	frontend {
 		port = 8443
 	}
@@ -405,8 +398,8 @@ resource "banyan_service" "tcp-service" {
 	}
 }
 ```
-## TCP Service Schema
-### Required
+### TCP Service Schema
+#### Required
 - **name** (String) Name of the service
 - **description** (String) Description of the service
 - **cluster** (String) Name of the NetAgent cluster which the service is accessible from
@@ -432,11 +425,10 @@ metadatatags {
 [metadatatags field descriptions](#nestedblock--metadatatags)
 
 
-### Optional
-- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections.
-  It will only forward on TLS connections where the SNI matches for Policy validation"
+#### Optional
+- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections. It will only forward on TLS connections where the SNI matches for Policy validation.
 
-### Read-Only
+#### Read-Only
 - **id** (String) ID of the service
 
 
