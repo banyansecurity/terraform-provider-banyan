@@ -36,8 +36,8 @@ resource "banyan_k8s_service" "acctest-k8s" {
   user_facing = true
   kube_cluster_name = "k8s-cluster"
   kube_ca_key = "k8scAk3yH3re"
-  domain      = "%s.mattorg.bnntest.com"
-  tls_sni     = ["%s.corp.com"]
+  domain      = "%s.corp.com"
+  tls_sni     = ["%s-alternate-name.corp.com"]
   frontend {
     port = 8443
   }
@@ -48,7 +48,7 @@ resource "banyan_k8s_service" "acctest-k8s" {
     }
   }
   cert_settings {
-    dns_names = ["%s.corp.com"]
+    dns_names = ["%s-alternate-name.corp.com"]
   }
 }
 `, name, name, name, name, name)
