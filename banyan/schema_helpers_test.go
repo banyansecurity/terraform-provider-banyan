@@ -2,6 +2,7 @@ package banyan
 
 import (
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 )
 
@@ -86,5 +87,25 @@ func Test_contains(t *testing.T) {
 	v := "a"
 	if !contains(valid, v) {
 		t.Errorf("expected error, got none")
+	}
+}
+
+func Test_removeDuplicateStr(t *testing.T) {
+	t.Parallel()
+	list := []string{"a", "a", "b"}
+	got := removeDuplicateStr(list)
+	want := []string{"a", "b"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %s want %s", got, want)
+	}
+}
+
+func Test_removeFromSlice(t *testing.T) {
+	t.Parallel()
+	list := []string{"a", "a", "b"}
+	got := removeFromSlice(list, "a")
+	want := []string{"b"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %s want %s", got, want)
 	}
 }

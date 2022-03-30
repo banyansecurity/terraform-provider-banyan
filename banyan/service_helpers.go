@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"strconv"
+	"strings"
 )
 
 func expandMetatdataTags(m []interface{}) (metadatatags service.Tags) {
@@ -62,6 +63,57 @@ func expandMetatdataTags(m []interface{}) (metadatatags service.Tags) {
 	return
 }
 
+func expandAbstractedMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
+	template := d.Get("template").(string)
+	userFacingMetadataTag := d.Get("user_facing").(bool)
+	userFacing := strconv.FormatBool(userFacingMetadataTag)
+	protocol := d.Get("protocol").(string)
+	domain := d.Get("domain").(string)
+	portInt := d.Get("port").(int)
+	port := strconv.Itoa(portInt)
+	icon := d.Get("icon").(string)
+	serviceAppType := d.Get("service_app_type").(string)
+	enforcementMode := d.Get("enforcement_mode").(string)
+	sshServiceType := d.Get("ssh_service_type").(string)
+	writeSSHConfig := d.Get("write_ssh_config").(bool)
+	alp := d.Get("app_listen_port").(int)
+	appListenPort := strconv.Itoa(alp)
+	banyanProxyMode := d.Get("banyan_proxy_mode").(string)
+	allowUserOverride := d.Get("allow_user_override").(bool)
+	sshChainMode := d.Get("ssh_chain_mode").(bool)
+	sshHostDirective := d.Get("ssh_host_directive").(string)
+	kubeClusterName := d.Get("kube_cluster_name").(string)
+	kubeCaKey := d.Get("kube_ca_key").(string)
+	descriptionLink := d.Get("description_link").(string)
+	incd := d.Get("include_domains").([]interface{})
+	includeDomains := make([]string, 0)
+	for _, includeDomainItem := range incd {
+		includeDomains = append(includeDomains, includeDomainItem.(string))
+	}
+	metadatatags = service.Tags{
+		Template:          &template,
+		UserFacing:        &userFacing,
+		Protocol:          &protocol,
+		Domain:            &domain,
+		Port:              &port,
+		Icon:              &icon,
+		ServiceAppType:    &serviceAppType,
+		EnforcementMode:   &enforcementMode,
+		SSHServiceType:    &sshServiceType,
+		WriteSSHConfig:    &writeSSHConfig,
+		BanyanProxyMode:   &banyanProxyMode,
+		AppListenPort:     &appListenPort,
+		AllowUserOverride: &allowUserOverride,
+		SSHChainMode:      &sshChainMode,
+		SSHHostDirective:  &sshHostDirective,
+		KubeClusterName:   &kubeClusterName,
+		KubeCaKey:         &kubeCaKey,
+		DescriptionLink:   &descriptionLink,
+		IncludeDomains:    &includeDomains,
+	}
+	return
+}
+
 func expandServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	spec = service.Spec{
 		Attributes:   expandAttributes(d),
@@ -74,12 +126,54 @@ func expandServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	return
 }
 
+func expandAbstractServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	spec = service.Spec{
+		Attributes:   expandAbstractAttributes(d),
+		Backend:      expandBackend(d),
+		CertSettings: expandAbstractCertSettings(d),
+		HTTPSettings: expandHTTPSettings(d.Get("http_settings").([]interface{})),
+		ClientCIDRs:  expandClientCIDRs(d.Get("client_cidrs").([]interface{})),
+		TagSlice:     expandTagSlice(d.Get("tag_slice").([]interface{})),
+	}
+	return
+}
+
 func expandAttributes(d *schema.ResourceData) (attributes service.Attributes) {
+	// build HostTagSelector from access_tiers
 	var hostTagSelector []map[string]string
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("site_name").(string)}
+	accessTiers := d.Get("access_tiers").(*schema.Set)
+	accessTiersSlice := convertSchemaSetToStringSlice(accessTiers)
+	siteNamesString := strings.Join(accessTiersSlice, "|")
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": siteNamesString}
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
+
 	attributes = service.Attributes{
 		TLSSNI:            convertSchemaSetToStringSlice(d.Get("tls_sni").(*schema.Set)),
+		FrontendAddresses: expandFrontendAddresses(d),
+		HostTagSelector:   hostTagSelector,
+	}
+	return
+}
+
+func expandAbstractAttributes(d *schema.ResourceData) (attributes service.Attributes) {
+	var tlsSNI []string
+	additionalTlsSni := convertSchemaSetToStringSlice(d.Get("tls_sni").(*schema.Set))
+	for _, s := range additionalTlsSni {
+		tlsSNI = append(tlsSNI, s)
+	}
+	tlsSNI = append(tlsSNI, d.Get("domain").(string))
+	tlsSNI = removeDuplicateStr(tlsSNI)
+
+	// build HostTagSelector from access_tiers
+	var hostTagSelector []map[string]string
+	accessTiers := d.Get("access_tiers").(*schema.Set)
+	accessTiersSlice := convertSchemaSetToStringSlice(accessTiers)
+	siteNamesString := strings.Join(accessTiersSlice, "|")
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": siteNamesString}
+	hostTagSelector = append(hostTagSelector, siteNameSelector)
+
+	attributes = service.Attributes{
+		TLSSNI:            tlsSNI,
 		FrontendAddresses: expandFrontendAddresses(d),
 		HostTagSelector:   hostTagSelector,
 	}
@@ -173,6 +267,32 @@ func expandCertSettings(d *schema.ResourceData) (certSettings service.CertSettin
 		DNSNames:      convertSchemaSetToStringSlice(itemMap["dns_names"].(*schema.Set)),
 		CustomTLSCert: expandCustomTLSCert(itemMap["custom_tls_cert"].([]interface{})),
 		Letsencrypt:   itemMap["letsencrypt"].(bool),
+	}
+	return
+}
+
+func expandAbstractCertSettings(d *schema.ResourceData) (certSettings service.CertSettings) {
+	dnsNames := []string{d.Get("domain").(string)}
+	customTLSCert := service.CustomTLSCert{
+		Enabled:  false,
+		CertFile: "",
+		KeyFile:  "",
+	}
+	letsEncrypt := false
+	m := d.Get("cert_settings").([]interface{})
+	if len(m) >= 1 {
+		itemMap := m[0].(map[string]interface{})
+		for _, d := range convertSchemaSetToStringSlice(itemMap["dns_names"].(*schema.Set)) {
+			dnsNames = append(dnsNames, d)
+		}
+		dnsNames = removeDuplicateStr(dnsNames)
+		customTLSCert = expandCustomTLSCert(itemMap["custom_tls_cert"].([]interface{}))
+	}
+
+	certSettings = service.CertSettings{
+		DNSNames:      dnsNames,
+		CustomTLSCert: customTLSCert,
+		Letsencrypt:   letsEncrypt,
 	}
 	return
 }
@@ -403,6 +523,15 @@ func flattenServiceCertSettings(toFlatten service.CertSettings) (flattened []int
 	v := make(map[string]interface{})
 	v["custom_tls_cert"] = flattenServiceCustomTLSCert(toFlatten.CustomTLSCert)
 	v["dns_names"] = toFlatten.DNSNames
+	v["letsencrypt"] = toFlatten.Letsencrypt
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenAbstractServiceCertSettings(toFlatten service.CertSettings, domain string) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["custom_tls_cert"] = flattenServiceCustomTLSCert(toFlatten.CustomTLSCert)
+	v["dns_names"] = removeFromSlice(toFlatten.DNSNames, domain)
 	v["letsencrypt"] = toFlatten.Letsencrypt
 	flattened = append(flattened, v)
 	return

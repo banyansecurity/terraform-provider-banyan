@@ -179,3 +179,24 @@ func validateHttpMethods() func(val interface{}, key string) (warns []string, er
 	validMethods := []string{"GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"}
 	return validation.StringInSlice(validMethods, false)
 }
+
+func removeDuplicateStr(strSlice []string) []string {
+	allKeys := make(map[string]bool)
+	list := []string{}
+	for _, item := range strSlice {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func removeFromSlice(slice []string, s string) (result []string) {
+	for _, element := range slice {
+		if element != s {
+			result = append(result, element)
+		}
+	}
+	return
+}
