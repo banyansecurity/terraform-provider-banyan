@@ -64,6 +64,12 @@ func resourceWebService() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"protocol": {
+				Type:         schema.TypeString,
+				Description:  "The protocol of the service, must be tcp, http or https",
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"http", "https", "tcp"}, false),
+			},
 			"icon": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -716,7 +722,7 @@ func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	template := "TCP_USER"
 	userFacingMetadataTag := d.Get("user_facing").(bool)
 	userFacing := strconv.FormatBool(userFacingMetadataTag)
-	protocol := "tcp"
+	protocol := d.Get("protocol").(string)
 	domain := d.Get("domain").(string)
 	port := d.Get("frontend.0.port").(string)
 	icon := d.Get("icon").(string)
@@ -791,6 +797,7 @@ func resourceWebServiceRead(ctx context.Context, d *schema.ResourceData, m inter
 	}
 	d.Set("user_facing", metadataTagUserFacing)
 	d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
+	d.Set("protocol", service.CreateServiceSpec.Metadata.Tags.Protocol)
 	d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
 	d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
 	err = d.Set("client_cidrs", flattenServiceClientCIDRs(service.CreateServiceSpec.Spec.ClientCIDRs))

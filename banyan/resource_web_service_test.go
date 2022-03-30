@@ -35,6 +35,7 @@ resource "banyan_web_service" "acctest-web" {
   description = "some web service description"
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
+  protocol = "https"
   domain = "%s.corp.com"
   frontend {
     port = 443
