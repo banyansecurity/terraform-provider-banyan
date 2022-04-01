@@ -34,7 +34,7 @@ provider "banyan" {
 }
 ```
 
-### Note About Preview Organizations
+### Note About **Preview** Organizations
 Ensure that the `host` parameter is set to the correct host: 
 ```hcl
 provider "banyan" {
@@ -49,14 +49,13 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.5.0"
+      version = "0.5.1"
     }
   }
 }
 
 provider "banyan" {
   api_token = "banyan-api-token-here-exclusive-to-terraform"
-  host = "https://preview.console.banyanops.com/"
 }
 ```
 
@@ -66,21 +65,22 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.5.0"
+      version = "0.5.1"
     }
   }
 }
 
 provider "banyan" {
   api_token = "banyan-api-token-here-exclusive-to-terraform"
-  host = "https://preview.console.banyanops.com/"
 }
 
 resource "banyan_service" "admin-console" {
-  name        = "admin-console"
-  description = "Super sensitive administrator console"
-  cluster     = "us-west"
-  site_name   = "us-west1"
+  name         = "admin-console"
+  description  = "Super sensitive admin console"
+  cluster      = "us-west"
+  access_tiers = ["us-west1"]
+  domain       = "admin-console.corp.com"
+  protocol     = "https"
   frontend {
     port = 443
   }
@@ -88,20 +88,7 @@ resource "banyan_service" "admin-console" {
     target {
       name = "admin-console.internal"
       port = 8443
-      tls  = false
-      tls_insecure = false
     }
-  }
-  cert_settings {
-    dns_names = ["admin-console.corp.com"]
-  }
-  metadatatags {
-    template            = "WEB_USER"
-    user_facing         = true
-    protocol            = "https"
-    domain              = "admin-console.corp.com"
-    port                = 443
-    service_app_type    = "WEB"
   }
 }
 

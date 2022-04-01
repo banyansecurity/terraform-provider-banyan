@@ -1,14 +1,14 @@
-page_title: "banyan_service_infra_web Resource - terraform-provider-banyan"
+page_title: "banyan_service_web Resource - terraform-provider-banyan"
 
 ---
 
-# banyan_service_infra_web
+# banyan_service_web
 
-Resource used for lifecycle management of infrastructure web services.
+Resource used for lifecycle management of web services.
 
 ### Example
 ```hcl
-resource "banyan_service_infra_web" "example" {
+resource "banyan_service_web" "example" {
   name         = "web-service"
   description  = "some web service description"
   cluster      = "us-west"
