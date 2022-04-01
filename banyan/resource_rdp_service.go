@@ -16,13 +16,13 @@ import (
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
-func resourceRDPService() *schema.Resource {
+func resourceServiceInfraRdp() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This is an org wide setting. There can only be one of these per organization.",
-		CreateContext: resourceRDPServiceCreate,
-		ReadContext:   resourceRDPServiceRead,
-		UpdateContext: resourceRDPServiceUpdate,
-		DeleteContext: resourceRDPServiceDelete,
+		CreateContext: resourceServiceInfraRdpCreate,
+		ReadContext:   resourceServiceInfraRdpRead,
+		UpdateContext: resourceServiceInfraRdpUpdate,
+		DeleteContext: resourceServiceInfraRdpDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -690,7 +690,7 @@ func resourceRDPService() *schema.Resource {
 	}
 }
 
-func resourceRDPServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
@@ -713,7 +713,7 @@ func resourceRDPServiceCreate(ctx context.Context, d *schema.ResourceData, m int
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return resourceRDPServiceRead(ctx, d, m)
+	return resourceServiceInfraRdpRead(ctx, d, m)
 }
 
 func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
@@ -747,14 +747,14 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	return
 }
 
-func resourceRDPServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
-	resourceRDPServiceCreate(ctx, d, m)
+	resourceServiceInfraRdpCreate(ctx, d, m)
 	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
-func resourceRDPServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
@@ -839,7 +839,7 @@ func resourceRDPServiceRead(ctx context.Context, d *schema.ResourceData, m inter
 	return
 }
 
-func resourceRDPServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraRdpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())

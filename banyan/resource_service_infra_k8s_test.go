@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestAccService_tcp(t *testing.T) {
+func TestAccService_k8s(t *testing.T) {
 	var bnnService service.GetServiceSpec
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resource.Test(t, resource.TestCase{
@@ -16,9 +16,9 @@ func TestAccService_tcp(t *testing.T) {
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccService_tcp_create(rName),
+				Config: testAccService_k8s_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_tcp_service.acctest-tcp", &bnnService),
+					testAccCheckExistingService("banyan_service_infra_k8s.acctest-k8s", &bnnService),
 				),
 			},
 		},
@@ -26,23 +26,30 @@ func TestAccService_tcp(t *testing.T) {
 }
 
 // Returns terraform configuration for a typical k8s service
-func testAccService_tcp_create(name string) string {
+func testAccService_k8s_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_tcp_service" "acctest-tcp" {
+resource "banyan_service_infra_k8s" "acctest-k8s" {
   name        = "%s"
-  description = "some tcp service description"
+  description = "some k8s service description"
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
-  domain =  "%s.corp.com"
+  user_facing = true
+  kube_cluster_name = "k8s-cluster"
+  kube_ca_key = "k8scAk3yH3re"
+  domain      = "%s.corp.com"
+  tls_sni     = ["%s-alternate-name.corp.com"]
   frontend {
-    port = 1234
+    port = 8443
   }
   backend {
     target {
       name = "%s.internal"
-      port = 4321
+      port = 3389
     }
   }
+  cert_settings {
+    dns_names = ["%s-alternate-name.corp.com"]
+  }
 }
-`, name, name, name)
+`, name, name, name, name, name)
 }

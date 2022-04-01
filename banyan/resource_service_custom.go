@@ -16,13 +16,13 @@ import (
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
-func resourceDatabaseService() *schema.Resource {
+func resourceServiceCustom() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This is an org wide setting. There can only be one of these per organization.",
-		CreateContext: resourceDatabaseServiceCreate,
-		ReadContext:   resourceDatabaseServiceRead,
-		UpdateContext: resourceDatabaseServiceUpdate,
-		DeleteContext: resourceDatabaseServiceDelete,
+		CreateContext: resourceServiceCustomCreate,
+		ReadContext:   resourceServiceCustomRead,
+		UpdateContext: resourceServiceCustomUpdate,
+		DeleteContext: resourceServiceCustomDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -54,23 +54,108 @@ func resourceDatabaseService() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"user_facing": {
-				Type:        schema.TypeBool,
-				Description: "Whether the service is user-facing or not",
-				Optional:    true,
-				Default:     true,
-			},
-			"domain": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"icon": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"description_link": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"metadatatags": {
+				Type:        schema.TypeList,
+				MinItems:    1,
+				MaxItems:    1,
+				Required:    true,
+				Description: "Metadata about the service presented to the UI and the Banyan App",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"template": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Must be set to WEB_USER, TCP_USER, or CUSTOM",
+							ValidateFunc: validation.StringInSlice([]string{"WEB_USER", "TCP_USER"}, false),
+						},
+						"user_facing": {
+							Type:        schema.TypeBool,
+							Description: "Whether the service is user-facing or not",
+							Required:    true,
+						},
+						"protocol": {
+							Type:         schema.TypeString,
+							Description:  "The protocol of the service, must be tcp, http or https",
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"http", "https", "tcp"}, false),
+						},
+						"domain": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"port": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validatePort(),
+						},
+						"icon": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"service_app_type": {
+							Type:         schema.TypeString,
+							Description:  "Must be WEB, GENERIC, RDP, SSH, DATABASE, K8S, or CUSTOM",
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"WEB", "GENERIC", "RDP", "SSH", "DATABASE", "K8S", "CUSTOM"}, false),
+						},
+						"enforcement_mode": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssh_service_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"TRUSTCERT", "BOTH"}, false),
+						},
+						"write_ssh_config": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"banyan_proxy_mode": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"app_listen_port": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validatePort(),
+						},
+						"allow_user_override": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"ssh_chain_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"ssh_host_directive": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"kube_cluster_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"kube_ca_key": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+						},
+						"description_link": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"include_domains": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
 			},
 			"client_cidrs": {
 				Type:     schema.TypeList,
@@ -686,7 +771,7 @@ func resourceDatabaseService() *schema.Resource {
 	}
 }
 
-func resourceDatabaseServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceCustomCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
@@ -695,7 +780,7 @@ func resourceDatabaseServiceCreate(ctx context.Context, d *schema.ResourceData, 
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
-			Tags:        expandDatabaseMetatdataTags(d),
+			Tags:        expandMetatdataTags(d.Get("metadatatags").([]interface{})),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
@@ -709,46 +794,17 @@ func resourceDatabaseServiceCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return resourceDatabaseServiceRead(ctx, d, m)
+	return resourceServiceCustomRead(ctx, d, m)
 }
 
-func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
-	template := "TCP_USER"
-	userFacingMetadataTag := d.Get("user_facing").(bool)
-	userFacing := strconv.FormatBool(userFacingMetadataTag)
-	protocol := "tcp"
-	domain := d.Get("domain").(string)
-	port := d.Get("frontend.0.port").(string)
-	icon := d.Get("icon").(string)
-	serviceAppType := "DATABASE"
-	alp := d.Get("backend.0.target.0.port").(int)
-	appListenPort := strconv.Itoa(alp)
-	banyanProxyMode := "TCP"
-	descriptionLink := d.Get("description_link").(string)
-
-	metadatatags = service.Tags{
-		Template:        &template,
-		UserFacing:      &userFacing,
-		Protocol:        &protocol,
-		Domain:          &domain,
-		Port:            &port,
-		Icon:            &icon,
-		ServiceAppType:  &serviceAppType,
-		AppListenPort:   &appListenPort,
-		BanyanProxyMode: &banyanProxyMode,
-		DescriptionLink: &descriptionLink,
-	}
-	return
-}
-
-func resourceDatabaseServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceCustomUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
-	resourceDatabaseServiceCreate(ctx, d, m)
+	resourceServiceCustomCreate(ctx, d, m)
 	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
-func resourceDatabaseServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceCustomRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
@@ -782,6 +838,16 @@ func resourceDatabaseServiceRead(ctx context.Context, d *schema.ResourceData, m 
 		diagnostics = diag.FromErr(err)
 		return
 	}
+	port, err := typeSwitchPortPtr(service.CreateServiceSpec.Metadata.Tags.Port)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	appListenPort, err := typeSwitchPortPtr(service.CreateServiceSpec.Metadata.Tags.AppListenPort)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
 	var metadataTagUserFacing bool
 	metadataTagUserFacingPtr := service.CreateServiceSpec.Metadata.Tags.UserFacing
 	if metadataTagUserFacingPtr != nil {
@@ -791,10 +857,32 @@ func resourceDatabaseServiceRead(ctx context.Context, d *schema.ResourceData, m 
 			return
 		}
 	}
-	d.Set("user_facing", metadataTagUserFacing)
-	d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
-	d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
-	d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
+
+	metadatatags := map[string]interface{}{
+		"template":            service.CreateServiceSpec.Metadata.Tags.Template,
+		"user_facing":         metadataTagUserFacing,
+		"protocol":            service.CreateServiceSpec.Metadata.Tags.Protocol,
+		"domain":              service.CreateServiceSpec.Metadata.Tags.Domain,
+		"port":                port,
+		"icon":                service.CreateServiceSpec.Metadata.Tags.Icon,
+		"service_app_type":    service.CreateServiceSpec.Metadata.Tags.ServiceAppType,
+		"enforcement_mode":    service.CreateServiceSpec.Metadata.Tags.EnforcementMode,
+		"ssh_service_type":    service.CreateServiceSpec.Metadata.Tags.SSHServiceType,
+		"write_ssh_config":    service.CreateServiceSpec.Metadata.Tags.WriteSSHConfig,
+		"banyan_proxy_mode":   service.CreateServiceSpec.Metadata.Tags.BanyanProxyMode,
+		"app_listen_port":     appListenPort,
+		"allow_user_override": service.CreateServiceSpec.Metadata.Tags.AllowUserOverride,
+		"ssh_chain_mode":      service.CreateServiceSpec.Metadata.Tags.SSHChainMode,
+		"ssh_host_directive":  service.CreateServiceSpec.Metadata.Tags.SSHHostDirective,
+		"kube_cluster_name":   service.CreateServiceSpec.Metadata.Tags.KubeClusterName,
+		"kube_ca_key":         service.CreateServiceSpec.Metadata.Tags.KubeCaKey,
+		"description_link":    service.CreateServiceSpec.Metadata.Tags.DescriptionLink,
+		"include_domains":     service.CreateServiceSpec.Metadata.Tags.IncludeDomains,
+	}
+	err = d.Set("metadatatags", []interface{}{metadatatags})
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	err = d.Set("client_cidrs", flattenServiceClientCIDRs(service.CreateServiceSpec.Spec.ClientCIDRs))
 	if err != nil {
 		return diag.FromErr(err)
@@ -803,8 +891,7 @@ func resourceDatabaseServiceRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	tlsSNI := removeFromSlice(service.CreateServiceSpec.Spec.Attributes.TLSSNI, *service.CreateServiceSpec.Metadata.Tags.Domain)
-	err = d.Set("tls_sni", tlsSNI)
+	err = d.Set("tls_sni", service.CreateServiceSpec.Spec.Attributes.TLSSNI)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -820,7 +907,7 @@ func resourceDatabaseServiceRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("cert_settings", flattenAbstractServiceCertSettings(service.CreateServiceSpec.Spec.CertSettings, *service.CreateServiceSpec.Metadata.Tags.Domain))
+	err = d.Set("cert_settings", flattenServiceCertSettings(service.CreateServiceSpec.Spec.CertSettings))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -832,7 +919,7 @@ func resourceDatabaseServiceRead(ctx context.Context, d *schema.ResourceData, m 
 	return
 }
 
-func resourceDatabaseServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceCustomDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())

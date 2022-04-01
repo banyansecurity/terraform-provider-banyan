@@ -16,13 +16,13 @@ import (
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
-func resourceWebService() *schema.Resource {
+func resourceServiceInfraTcp() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This is an org wide setting. There can only be one of these per organization.",
-		CreateContext: resourceWebServiceCreate,
-		ReadContext:   resourceWebServiceRead,
-		UpdateContext: resourceWebServiceUpdate,
-		DeleteContext: resourceWebServiceDelete,
+		CreateContext: resourceServiceInfraTcpCreate,
+		ReadContext:   resourceServiceInfraTcpRead,
+		UpdateContext: resourceServiceInfraTcpUpdate,
+		DeleteContext: resourceServiceInfraTcpDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -63,12 +63,6 @@ func resourceWebService() *schema.Resource {
 			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"protocol": {
-				Type:         schema.TypeString,
-				Description:  "The protocol of the service, must be tcp, http or https",
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"http", "https", "tcp"}, false),
 			},
 			"icon": {
 				Type:     schema.TypeString,
@@ -692,7 +686,7 @@ func resourceWebService() *schema.Resource {
 	}
 }
 
-func resourceWebServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraTcpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
@@ -701,7 +695,7 @@ func resourceWebServiceCreate(ctx context.Context, d *schema.ResourceData, m int
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
-			Tags:        expandWebMetatdataTags(d),
+			Tags:        expandTCPMetatdataTags(d),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
@@ -715,20 +709,21 @@ func resourceWebServiceCreate(ctx context.Context, d *schema.ResourceData, m int
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return resourceWebServiceRead(ctx, d, m)
+	return resourceServiceInfraTcpRead(ctx, d, m)
 }
 
-func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
+func expandTCPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
 	userFacingMetadataTag := d.Get("user_facing").(bool)
 	userFacing := strconv.FormatBool(userFacingMetadataTag)
-	protocol := d.Get("protocol").(string)
+	protocol := "tcp"
 	domain := d.Get("domain").(string)
 	port := d.Get("frontend.0.port").(string)
 	icon := d.Get("icon").(string)
-	serviceAppType := "WEB"
+	serviceAppType := "GENERIC"
 	alp := d.Get("backend.0.target.0.port").(int)
 	appListenPort := strconv.Itoa(alp)
+	banyanProxyMode := "TCP"
 	descriptionLink := d.Get("description_link").(string)
 
 	metadatatags = service.Tags{
@@ -740,19 +735,20 @@ func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 		Icon:            &icon,
 		ServiceAppType:  &serviceAppType,
 		AppListenPort:   &appListenPort,
+		BanyanProxyMode: &banyanProxyMode,
 		DescriptionLink: &descriptionLink,
 	}
 	return
 }
 
-func resourceWebServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraTcpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
-	resourceWebServiceCreate(ctx, d, m)
+	resourceServiceInfraTcpCreate(ctx, d, m)
 	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
-func resourceWebServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
@@ -797,7 +793,6 @@ func resourceWebServiceRead(ctx context.Context, d *schema.ResourceData, m inter
 	}
 	d.Set("user_facing", metadataTagUserFacing)
 	d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
-	d.Set("protocol", service.CreateServiceSpec.Metadata.Tags.Protocol)
 	d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
 	d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
 	err = d.Set("client_cidrs", flattenServiceClientCIDRs(service.CreateServiceSpec.Spec.ClientCIDRs))
@@ -837,7 +832,7 @@ func resourceWebServiceRead(ctx context.Context, d *schema.ResourceData, m inter
 	return
 }
 
-func resourceWebServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraTcpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())

@@ -16,13 +16,13 @@ import (
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
-func resourceSSHService() *schema.Resource {
+func resourceServiceInfraK8s() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This is an org wide setting. There can only be one of these per organization.",
-		CreateContext: resourceSSHServiceCreate,
-		ReadContext:   resourceSSHServiceRead,
-		UpdateContext: resourceSSHServiceUpdate,
-		DeleteContext: resourceSSHServiceDelete,
+		Description:   "Resource for managing Kubernetes services",
+		CreateContext: resourceServiceInfraK8sCreate,
+		ReadContext:   resourceServiceInfraK8sRead,
+		UpdateContext: resourceServiceInfraK8sUpdate,
+		DeleteContext: resourceServiceInfraK8sDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -64,24 +64,15 @@ func resourceSSHService() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"icon": {
+			"kube_cluster_name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
-			"ssh_service_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"TRUSTCERT", "BOTH"}, false),
+			"kube_ca_key": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"write_ssh_config": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"ssh_chain_mode": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"ssh_host_directive": {
+			"icon": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -703,7 +694,7 @@ func resourceSSHService() *schema.Resource {
 	}
 }
 
-func resourceSSHServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
@@ -712,7 +703,7 @@ func resourceSSHServiceCreate(ctx context.Context, d *schema.ResourceData, m int
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
-			Tags:        expandSSHMetatdataTags(d),
+			Tags:        expandK8sMetatdataTags(d),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
@@ -726,10 +717,10 @@ func resourceSSHServiceCreate(ctx context.Context, d *schema.ResourceData, m int
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return resourceSSHServiceRead(ctx, d, m)
+	return resourceServiceInfraK8sRead(ctx, d, m)
 }
 
-func expandSSHMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
+func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
 	userFacingMetadataTag := d.Get("user_facing").(bool)
 	userFacing := strconv.FormatBool(userFacingMetadataTag)
@@ -737,38 +728,39 @@ func expandSSHMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	domain := d.Get("domain").(string)
 	port := d.Get("frontend.0.port").(string)
 	icon := d.Get("icon").(string)
-	serviceAppType := "SSH"
-	sshServiceType := d.Get("ssh_service_type").(string)
-	writeSSHConfig := d.Get("write_ssh_config").(bool)
-	sshChainMode := d.Get("ssh_chain_mode").(bool)
-	sshHostDirective := d.Get("ssh_host_directive").(string)
+	serviceAppType := "K8S"
+	alp := d.Get("backend.0.target.0.port").(int)
+	appListenPort := strconv.Itoa(alp)
+	banyanProxyMode := "CHAIN"
 	descriptionLink := d.Get("description_link").(string)
+	kubeClusterName := d.Get("kube_cluster_name").(string)
+	kubeCaKey := d.Get("kube_ca_key").(string)
 
 	metadatatags = service.Tags{
-		Template:         &template,
-		UserFacing:       &userFacing,
-		Protocol:         &protocol,
-		Domain:           &domain,
-		Port:             &port,
-		Icon:             &icon,
-		ServiceAppType:   &serviceAppType,
-		SSHServiceType:   &sshServiceType,
-		WriteSSHConfig:   &writeSSHConfig,
-		SSHChainMode:     &sshChainMode,
-		SSHHostDirective: &sshHostDirective,
-		DescriptionLink:  &descriptionLink,
+		Template:        &template,
+		UserFacing:      &userFacing,
+		Protocol:        &protocol,
+		Domain:          &domain,
+		Port:            &port,
+		Icon:            &icon,
+		ServiceAppType:  &serviceAppType,
+		AppListenPort:   &appListenPort,
+		BanyanProxyMode: &banyanProxyMode,
+		DescriptionLink: &descriptionLink,
+		KubeClusterName: &kubeClusterName,
+		KubeCaKey:       &kubeCaKey,
 	}
 	return
 }
 
-func resourceSSHServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
-	resourceSSHServiceCreate(ctx, d, m)
+	resourceServiceInfraK8sCreate(ctx, d, m)
 	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
-func resourceSSHServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
@@ -814,11 +806,9 @@ func resourceSSHServiceRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("user_facing", metadataTagUserFacing)
 	d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
 	d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
-	d.Set("ssh_service_type", service.CreateServiceSpec.Metadata.Tags.SSHServiceType)
-	d.Set("write_ssh_config", service.CreateServiceSpec.Metadata.Tags.WriteSSHConfig)
-	d.Set("ssh_chain_mode", service.CreateServiceSpec.Metadata.Tags.SSHChainMode)
-	d.Set("ssh_host_directive", service.CreateServiceSpec.Metadata.Tags.SSHHostDirective)
 	d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
+	d.Set("kube_cluster_name", service.CreateServiceSpec.Metadata.Tags.KubeClusterName)
+	d.Set("kube_ca_key", service.CreateServiceSpec.Metadata.Tags.KubeCaKey)
 	err = d.Set("client_cidrs", flattenServiceClientCIDRs(service.CreateServiceSpec.Spec.ClientCIDRs))
 	if err != nil {
 		return diag.FromErr(err)
@@ -856,7 +846,7 @@ func resourceSSHServiceRead(ctx context.Context, d *schema.ResourceData, m inter
 	return
 }
 
-func resourceSSHServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraK8sDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())

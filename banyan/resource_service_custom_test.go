@@ -22,18 +22,18 @@ func TestAccService_custom(t *testing.T) {
 			{
 				Config: testAccService_custom_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_custom_service.acctest-custom", &bnnService),
-					resource.TestCheckResourceAttr("banyan_custom_service.acctest-custom", "name", rName),
-					resource.TestCheckResourceAttrPtr("banyan_custom_service.acctest-custom", "id", &bnnService.ServiceID),
+					testAccCheckExistingService("banyan_service_custom.acctest-custom", &bnnService),
+					resource.TestCheckResourceAttr("banyan_service_custom.acctest-custom", "name", rName),
+					resource.TestCheckResourceAttrPtr("banyan_service_custom.acctest-custom", "id", &bnnService.ServiceID),
 				),
 			},
 			// Update the resource with terraform and ensure it was correctly updated
 			{
 				Config: testAccService_custom_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_custom_service.acctest-custom", &bnnService),
+					testAccCheckExistingService("banyan_service_custom.acctest-custom", &bnnService),
 					testAccCheckServiceConnectorNameUpdated(&bnnService, "some-new-connector-name"),
-					resource.TestCheckResourceAttrPtr("banyan_custom_service.acctest-custom", "id", &bnnService.ServiceID),
+					resource.TestCheckResourceAttrPtr("banyan_service_custom.acctest-custom", "id", &bnnService.ServiceID),
 				),
 			},
 		},
@@ -82,7 +82,7 @@ func testAccCheckService_destroy(t *testing.T, id *string) resource.TestCheckFun
 // service with every option possible
 func testAccService_custom_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_custom_service" "acctest-custom" {
+resource "banyan_service_custom" "acctest-custom" {
   cluster     = "dev05-banyan"
   access_tiers   = ["us-west1"]
   name        = %q
@@ -201,7 +201,7 @@ resource "banyan_custom_service" "acctest-custom" {
 // Returns updated terraform configuration for the service
 func testAccService_custom_update(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_custom_service" "acctest-custom" {
+resource "banyan_service_custom" "acctest-custom" {
   cluster     = "dev05-banyan"
   access_tiers   = ["us-west1"]
   name        = %q

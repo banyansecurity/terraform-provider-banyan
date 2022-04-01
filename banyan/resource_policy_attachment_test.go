@@ -78,7 +78,7 @@ func testAccCheckPolicyAttachmentDestroy(t *testing.T, policyAttachment *policya
 
 func testAccPolicyAttachment_lifecycle_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_tcp_service" "acctest-policy-attachment-lifecycle" {
+resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   name        = "%s"
   description = "some tcp service description"
   cluster     = "us-west"
@@ -113,7 +113,7 @@ resource "banyan_role" "everyone" {
 resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
-  attached_to_id   = banyan_tcp_service.acctest-policy-attachment-lifecycle.id
+  attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle.id
   is_enforcing     = true
 }
 `, name, name, name, name, name)
@@ -121,7 +121,7 @@ resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle" {
 
 func testAccPolicyAttachment_lifecycle_attach_multiple(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_tcp_service" "acctest-policy-attachment-lifecycle" {
+resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   name        = "%s"
   description = "some tcp service description"
   cluster     = "us-west"
@@ -138,7 +138,7 @@ resource "banyan_tcp_service" "acctest-policy-attachment-lifecycle" {
   }
 }
 
-resource "banyan_tcp_service" "acctest-policy-attachment-lifecycle-two" {
+resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle-two" {
   name        = "%s-two"
   description = "some tcp service description"
   cluster     = "us-west"
@@ -173,14 +173,14 @@ resource "banyan_role" "everyone" {
 resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
-  attached_to_id   = banyan_tcp_service.acctest-policy-attachment-lifecycle.id
+  attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle.id
   is_enforcing     = true
 }
 
 resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle-two" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
-  attached_to_id   = banyan_tcp_service.acctest-policy-attachment-lifecycle-two.id
+  attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle-two.id
   is_enforcing     = true
 }
 `, name, name, name, name, name, name, name, name)
@@ -188,7 +188,7 @@ resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle-two" {
 
 func testAccPolicyAttachment_lifecycle_detach(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_tcp_service" "acctest-policy-attachment-lifecycle" {
+resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   name        = "%s"
   description = "some tcp service description"
   cluster     = "us-west"

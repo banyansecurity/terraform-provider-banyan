@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestAccService_database(t *testing.T) {
+func TestAccService_ssh(t *testing.T) {
 	var bnnService service.GetServiceSpec
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resource.Test(t, resource.TestCase{
@@ -16,38 +16,38 @@ func TestAccService_database(t *testing.T) {
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccService_database_create(rName),
+				Config: testAccService_ssh_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_database_service.acctest-database", &bnnService),
+					testAccCheckExistingService("banyan_service_infra_ssh.acctest-ssh", &bnnService),
 				),
 			},
 		},
 	})
 }
 
-// Returns terraform configuration for a typical database service
-func testAccService_database_create(name string) string {
+// Returns terraform configuration for a typical ssh service
+func testAccService_ssh_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_database_service" "acctest-database" {
+resource "banyan_service_infra_ssh" "acctest-ssh" {
   name        = "%s"
-  description = "some database service description"
+  description = "some ssh service"
   cluster     = "us-west"
-  access_tiers   = ["us-west1"]
-  user_facing = true
+  access_tiers   = ["us-west1", "us-east1"]
   domain      = "%s.corp.com"
-  tls_sni     = ["%s2.corp.com"]
+  user_facing = true
+  ssh_service_type   = "TRUSTCERT"
+  write_ssh_config   = true
+  ssh_chain_mode     = false
+  ssh_host_directive = "%s.corp.com"
   frontend {
-    port = 845
+    port = 1234
   }
   backend {
     target {
-      name = "%s.internal"
-      port = 8845
+      name               = "%s.internal"
+      port               = 22
     }
   }
-  cert_settings {
-    dns_names = ["%s2.corp.com"]
-  }
 }
-`, name, name, name, name, name)
+`, name, name, name, name)
 }

@@ -16,13 +16,13 @@ import (
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
-func resourceK8sService() *schema.Resource {
+func resourceServiceInfraDb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource for managing Kubernetes services",
-		CreateContext: resourceK8sServiceCreate,
-		ReadContext:   resourceK8sServiceRead,
-		UpdateContext: resourceK8sServiceUpdate,
-		DeleteContext: resourceK8sServiceDelete,
+		Description:   "This is an org wide setting. There can only be one of these per organization.",
+		CreateContext: resourceServiceInfraDbCreate,
+		ReadContext:   resourceServiceInfraDbRead,
+		UpdateContext: resourceServiceInfraDbUpdate,
+		DeleteContext: resourceServiceInfraDbDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -61,14 +61,6 @@ func resourceK8sService() *schema.Resource {
 				Default:     true,
 			},
 			"domain": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"kube_cluster_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"kube_ca_key": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -694,7 +686,7 @@ func resourceK8sService() *schema.Resource {
 	}
 }
 
-func resourceK8sServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraDbCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
@@ -703,12 +695,12 @@ func resourceK8sServiceCreate(ctx context.Context, d *schema.ResourceData, m int
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
-			Tags:        expandK8sMetatdataTags(d),
+			Tags:        expandDatabaseMetatdataTags(d),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
 		Type:       "origin",
-		Spec:       expandAbstractServiceSpec(d),
+		Spec:       expandServiceSpec(d),
 	}
 
 	newService, err := client.Service.Create(svc)
@@ -717,10 +709,10 @@ func resourceK8sServiceCreate(ctx context.Context, d *schema.ResourceData, m int
 	}
 	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return resourceK8sServiceRead(ctx, d, m)
+	return resourceServiceInfraDbRead(ctx, d, m)
 }
 
-func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
+func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
 	userFacingMetadataTag := d.Get("user_facing").(bool)
 	userFacing := strconv.FormatBool(userFacingMetadataTag)
@@ -728,13 +720,11 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	domain := d.Get("domain").(string)
 	port := d.Get("frontend.0.port").(string)
 	icon := d.Get("icon").(string)
-	serviceAppType := "K8S"
+	serviceAppType := "DATABASE"
 	alp := d.Get("backend.0.target.0.port").(int)
 	appListenPort := strconv.Itoa(alp)
-	banyanProxyMode := "CHAIN"
+	banyanProxyMode := "TCP"
 	descriptionLink := d.Get("description_link").(string)
-	kubeClusterName := d.Get("kube_cluster_name").(string)
-	kubeCaKey := d.Get("kube_ca_key").(string)
 
 	metadatatags = service.Tags{
 		Template:        &template,
@@ -747,20 +737,18 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 		AppListenPort:   &appListenPort,
 		BanyanProxyMode: &banyanProxyMode,
 		DescriptionLink: &descriptionLink,
-		KubeClusterName: &kubeClusterName,
-		KubeCaKey:       &kubeCaKey,
 	}
 	return
 }
 
-func resourceK8sServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraDbUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
-	resourceK8sServiceCreate(ctx, d, m)
+	resourceServiceInfraDbCreate(ctx, d, m)
 	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
-func resourceK8sServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
@@ -807,8 +795,6 @@ func resourceK8sServiceRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
 	d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
 	d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
-	d.Set("kube_cluster_name", service.CreateServiceSpec.Metadata.Tags.KubeClusterName)
-	d.Set("kube_ca_key", service.CreateServiceSpec.Metadata.Tags.KubeCaKey)
 	err = d.Set("client_cidrs", flattenServiceClientCIDRs(service.CreateServiceSpec.Spec.ClientCIDRs))
 	if err != nil {
 		return diag.FromErr(err)
@@ -846,7 +832,7 @@ func resourceK8sServiceRead(ctx context.Context, d *schema.ResourceData, m inter
 	return
 }
 
-func resourceK8sServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraDbDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
