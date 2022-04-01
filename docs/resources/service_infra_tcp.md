@@ -1,5 +1,11 @@
-<a id="tcp-service"></a>
-## TCP Service
+page_title: "banyan_service_infra_tcp Resource - terraform-provider-banyan"
+
+---
+
+# banyan_service_infra_tcp
+
+Resource used for lifecycle management of infrastructure TCP services.
+
 ### Example
 ```hcl
 resource "banyan_service_infra_tcp" "acctest-tcp" {
@@ -34,6 +40,7 @@ resource "banyan_service_infra_tcp" "acctest-tcp" {
 - **cert_settings** (Block List, Max: 1) Specifies the X.509 server certificate to use for this Service (see [below for nested schema](#nestedblock--cert_settings))
 - **user_facing** (Boolean) Whether the service is user-facing or not
 - **icon** (String) Name of the icon to be displayed to the end user. Icon names are available in the Banyan UI
+- **description_link** (String) Link shown to end users
 
 #### Read-Only
 - **id** (String) ID of the service

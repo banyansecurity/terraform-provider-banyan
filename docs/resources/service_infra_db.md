@@ -1,10 +1,8 @@
-page_title: "banyan_service_custom Resource - terraform-provider-banyan"
-subcategory: ""
-description: |-
-Banyan policy for controlling access to a service
+page_title: "banyan_service_infra_db Resource - terraform-provider-banyan"
+
 ---
 
-# banyan_service_infra_db (Resource)
+# banyan_service_infra_db
 
 Resource used for lifecycle management of infrastructure database services.
 
@@ -43,6 +41,7 @@ resource "banyan_service_infra_db" "example" {
 - **cert_settings** (Block List, Max: 1) Specifies the X.509 server certificate to use for this Service (see [below for nested schema](#nestedblock--cert_settings))
 - **user_facing** (Boolean) Whether the service is user-facing or not
 - **icon** (String) Name of the icon to be displayed to the end user. Icon names are available in the Banyan UI
+- **description_link** (String) Link shown to end users
 
 #### Read-Only
 - **id** (String) ID of the service

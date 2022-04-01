@@ -1,8 +1,14 @@
-<a id="k8s-service"></a>
-## Kubernetes Service
+page_title: "banyan_service_infra_k8s Resource - terraform-provider-banyan"
+
+---
+
+# banyan_service_infra_k8s
+
+Resource used for lifecycle management of infrastructure kubernetes services.
+
 ### Example
 ```hcl
-resource "banyan_service_infra_k8s" "acctest-k8s" {
+resource "banyan_service_infra_k8s" "example" {
   name              = "k8s-service"
   description       = "some k8s service description"
   cluster           = "us-west"
@@ -39,6 +45,7 @@ resource "banyan_service_infra_k8s" "acctest-k8s" {
 - **cert_settings** (Block List, Max: 1) Specifies the X.509 server certificate to use for this Service (see [below for nested schema](#nestedblock--cert_settings))
 - **user_facing** (Boolean) Whether the service is user-facing or not
 - **icon** (String) Name of the icon to be displayed to the end user. Icon names are available in the Banyan UI
+- **description_link** (String) Link shown to end users
 
 #### Read-Only
 - **id** (String) ID of the service

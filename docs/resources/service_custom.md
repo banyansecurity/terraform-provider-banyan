@@ -1,10 +1,8 @@
 page_title: "banyan_service_custom Resource - terraform-provider-banyan"
-subcategory: ""
-description: |-
-Banyan policy for controlling access to a service
+
 ---
 
-# banyan_service_custom (Resource)
+# banyan_service_custom
 ### (**Experimental**)
 
 
