@@ -1,10 +1,6 @@
-page_title: "banyan_service_web Resource - terraform-provider-banyan"
-
----
-
 # banyan_service_web
 
-Resource used for lifecycle management of web services.
+Resource used for lifecycle management of web services. For more information see the documentation [here:](https://docs.banyansecurity.io/docs/feature-guides/hosted-websites/)
 
 ### Example
 ```hcl

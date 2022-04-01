@@ -1,10 +1,6 @@
-page_title: "banyan_service_infra_rdp Resource - terraform-provider-banyan"
-
----
-
 # banyan_service_infra_rdp
 
-Resource used for lifecycle management of infrastructure RDP services.
+Resource used for lifecycle management of infrastructure RDP services. For more information see the documentation [here:](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/rdp-servers/)
 
 ### Example
 ```hcl

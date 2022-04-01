@@ -1,10 +1,6 @@
-page_title: "banyan_service_infra_ssh Resource - terraform-provider-banyan"
-
----
-
 # banyan_service_infra_ssh
 
-Resource used for lifecycle management of infrastructure SSH services.
+Resource used for lifecycle management of SSH services. For more information see the documentation [here:](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/ssh-servers/)
 
 ### Example
 ```hcl

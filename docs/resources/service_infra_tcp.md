@@ -1,10 +1,6 @@
-page_title: "banyan_service_infra_tcp Resource - terraform-provider-banyan"
-
----
-
 # banyan_service_infra_tcp
 
-Resource used for lifecycle management of infrastructure TCP services.
+Resource used for lifecycle management of generic TCP services. For more information see the documentation [here:](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/tcp-services/)
 
 ### Example
 ```hcl

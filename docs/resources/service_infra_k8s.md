@@ -1,10 +1,6 @@
-page_title: "banyan_service_infra_k8s Resource - terraform-provider-banyan"
-
----
-
 # banyan_service_infra_k8s
 
-Resource used for lifecycle management of infrastructure kubernetes services.
+Resource used for lifecycle management of kubernetes services. For more information see the documentation [here:](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/k8s-api/)
 
 ### Example
 ```hcl
@@ -40,7 +36,7 @@ resource "banyan_service_infra_k8s" "example" {
 - **backend** (Block List, Min: 1) Backend specifies how Netagent, when acting as a reverse proxy, forwards incoming “frontend connections” to a backend workload instance that implements a registered service (see [below for nested schema](#nestedblock--backend))
 
 #### Optional
-- **kube_ca_key** (String, Sensitive) Kube-OIDC-Proxy CA Public Key
+- **kube_ca_key** (String) Kube-OIDC-Proxy CA Public Key
 - **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections. It will only forward on TLS connections where the SNI matches for Policy validation.
 - **cert_settings** (Block List, Max: 1) Specifies the X.509 server certificate to use for this Service (see [below for nested schema](#nestedblock--cert_settings))
 - **user_facing** (Boolean) Whether the service is user-facing or not

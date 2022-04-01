@@ -1,10 +1,6 @@
-page_title: "banyan_service_infra_db Resource - terraform-provider-banyan"
-
----
-
 # banyan_service_infra_db
 
-Resource used for lifecycle management of infrastructure database services.
+Resource used for lifecycle management of database services. For more information see the documentation [here:](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/databases/)
 
 ### Example
 ```hcl
