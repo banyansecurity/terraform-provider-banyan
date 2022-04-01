@@ -1,6 +1,6 @@
 # banyan_service_infra_db
 
-Resource used for lifecycle management of database services. For more information see the documentation [here:](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/databases/)
+Resource used for lifecycle management of database services. For more information see the documentation [here.](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/databases/)
 
 ### Example
 ```hcl
@@ -9,7 +9,6 @@ resource "banyan_service_infra_db" "example" {
   description  = "some database service description"
   cluster      = "us-west"
   access_tiers = ["us-west1"]
-  user_facing  = true
   domain       = "database-service.corp.com"
   frontend {
     port = 845

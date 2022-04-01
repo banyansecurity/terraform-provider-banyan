@@ -1,16 +1,14 @@
 # banyan_role
 
-The banyan_role resource is used to manage roles in Banyan. A role represents a group of users in the organization. For more information see the documentation [here:](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/roles/manage-roles/)
+The banyan_role resource is used to manage roles in Banyan. A role represents a group of users in the organization. For more information see the documentation [here.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/roles/manage-roles/)
 
 ## Example
 ```hcl
-resource "banyan_role" "some-role" {
+resource "banyan_role" "example" {
   name              = "some-role"
   description       = "some role description"
   user_group        = ["group1"]
   device_ownership  = ["Corporate Dedicated", "Corporate Shared", "Employee Owned", "Other"]
-  known_device_only = true
-  mdm_present       = true
   platform          = ["Windows", "macOS", "Linux", "iOS", "Android", "Unregistered"]
 }
 ```

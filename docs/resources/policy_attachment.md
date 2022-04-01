@@ -27,5 +27,3 @@ resource "banyan_policy_attachment" "example" {
 ### Read-Only
 
 - **id** (String) The ID of this resource.
-
-

@@ -1,6 +1,6 @@
 # banyan_service_infra_rdp
 
-Resource used for lifecycle management of infrastructure RDP services. For more information see the documentation [here:](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/rdp-servers/)
+Resource used for lifecycle management of infrastructure RDP services. For more information see the documentation [here.](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/rdp-servers/)
 
 ### Example
 ```hcl
@@ -9,7 +9,6 @@ resource "banyan_rdp_service" "examples" {
   description  = "some rdp service description"
   cluster      = "us-west"
   access_tiers = ["us-west1"]
-  user_facing  = true
   domain       = "rdp-service.corp.com"
   frontend {
     port = 1234

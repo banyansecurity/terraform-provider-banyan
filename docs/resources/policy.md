@@ -4,7 +4,7 @@ Banyan policies control access to a service. For more information on Banyan poli
 
 ### Example
 ```hcl
-resource "banyan_policy" "web-policy" {
+resource "banyan_policy" "example" {
 	name        = "web-policy"
 	description = "some web policy description"
 	access {
