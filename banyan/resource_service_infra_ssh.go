@@ -72,14 +72,17 @@ func resourceServiceInfraSsh() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"TRUSTCERT", "BOTH"}, false),
+				Default:      "TRUSTCERT",
 			},
 			"write_ssh_config": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
 			},
 			"ssh_chain_mode": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"ssh_host_directive": {
 				Type:     schema.TypeString,
