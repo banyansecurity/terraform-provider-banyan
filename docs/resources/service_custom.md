@@ -1,8 +1,18 @@
-# Custom Service
+page_title: "banyan_service_custom Resource - terraform-provider-banyan"
+subcategory: ""
+description: |-
+Banyan policy for controlling access to a service
+---
+
+# banyan_service_custom (Resource)
+### (**Experimental**)
+
+
+banyan_service_custom exposes all variables available to configure a service. Most of these variables are abstracted away from the other `baynan_service` resources.
 
 ### Example
 ```hcl
-resource "banyan_custom_service" "acctest-custom" {
+resource "banyan_service_custom" "acctest-custom" {
   cluster      = "dev05-banyan"
   access_tiers = ["us-west1"]
   name         = "custom-service"

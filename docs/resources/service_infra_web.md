@@ -1,32 +1,33 @@
-<a id="database-service"></a>
-## Database Service
+<a id="web-service"></a>
+## Web Service
 ### Example
 ```hcl
-resource "banyan_database_service" "example" {
-  name         = "database-service"
-  description  = "some database service description"
+resource "banyan_service_infra_web" "acctest-web" {
+  name         = "web-service"
+  description  = "some web service description"
   cluster      = "us-west"
   access_tiers = ["us-west1"]
-  user_facing  = true
-  domain       = "database-service.corp.com"
+  domain       = "web-service.corp.com"
+  protocol     = "https"
   frontend {
-    port = 845
+    port = 443
   }
   backend {
     target {
-      name = "database-service.internal"
-      port = 8845
+      name = "web-service.internal"
+      port = 8443
     }
   }
 }
 ```
-### Database Service Schema
+### Web Service Schema
 #### Required
 - **name** (String) Name of the service
 - **description** (String) Description of the service
 - **cluster** (String) Name of the NetAgent cluster which the service is accessible from
 - **access_tiers** (Set of String) Access tiers the service is accessible from
 - **domain** (String) The publicly resolvable service domain name
+- **protocol** (String) The protocol of the service, must be http or https
 - **frontend** (Block List, Min: 1) Specifies the IP addresses and ports the frontend of the service listens on (see [below for nested schema](#nestedblock--frontend))
 - **backend** (Block List, Min: 1) Backend specifies how Netagent, when acting as a reverse proxy, forwards incoming “frontend connections” to a backend workload instance that implements a registered service (see [below for nested schema](#nestedblock--backend))
 
