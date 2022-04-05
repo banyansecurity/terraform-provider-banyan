@@ -207,7 +207,7 @@ func resourceServiceInfraTcp() *schema.Resource {
 }
 
 func resourceServiceInfraTcpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] creating tcp service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
 	svc := service.CreateService{
@@ -225,9 +225,9 @@ func resourceServiceInfraTcpCreate(ctx context.Context, d *schema.ResourceData, 
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(errors.WithMessagef(err, "could not create tcp service %s : %s", d.Get("name"), d.Id()))
 	}
-	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] Created tcp service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
 	return resourceServiceInfraTcpRead(ctx, d, m)
 }
@@ -262,19 +262,19 @@ func expandTCPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func resourceServiceInfraTcpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updating tcp service %s : %s", d.Get("name"), d.Id())
 	resourceServiceInfraTcpCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updated tcp service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] Reading tcp service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get tcp service with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
@@ -341,12 +341,12 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceServiceInfraTcpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleting tcp service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}
-	log.Printf("[SERVICE|RES|DELETE] deleted service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleted tcp service with id: %q \n", d.Id())
 	return
 }

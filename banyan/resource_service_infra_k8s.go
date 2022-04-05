@@ -214,7 +214,7 @@ func resourceServiceInfraK8s() *schema.Resource {
 	}
 }
 func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] creating kubernetes service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
 	svc := service.CreateService{
@@ -232,9 +232,9 @@ func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, 
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(errors.WithMessagef(err, "could not create kubernetes service %s : %s", d.Get("name"), d.Id()))
 	}
-	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] Created kubernetes service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
 	return resourceServiceInfraK8sRead(ctx, d, m)
 }
@@ -273,19 +273,19 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updating kubernetes service %s : %s", d.Get("name"), d.Id())
 	resourceServiceInfraK8sCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updated kubernetes service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] Reading kubernetes service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get kubernetes service with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
@@ -354,12 +354,12 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceServiceInfraK8sDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleting kubernetes service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}
-	log.Printf("[SERVICE|RES|DELETE] deleted service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleted kubernetes service with id: %q \n", d.Id())
 	return
 }

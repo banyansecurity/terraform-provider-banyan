@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// This file contains the common expand / flatten functions which map directly to the service structs
+
 func expandMetatdataTags(m []interface{}) (metadatatags service.Tags) {
 	if len(m) == 0 {
 		return

@@ -207,7 +207,7 @@ func resourceServiceInfraDb() *schema.Resource {
 }
 
 func resourceServiceInfraDbCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] creating database service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
 	svc := service.CreateService{
@@ -225,9 +225,9 @@ func resourceServiceInfraDbCreate(ctx context.Context, d *schema.ResourceData, m
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(errors.WithMessagef(err, "could not create database service %s : %s", d.Get("name"), d.Id()))
 	}
-	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] Created database service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
 	return resourceServiceInfraDbRead(ctx, d, m)
 }
@@ -262,19 +262,19 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 }
 
 func resourceServiceInfraDbUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updating database service %s : %s", d.Get("name"), d.Id())
 	resourceServiceInfraDbCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updated database service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] Reading database service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get database service with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
@@ -341,12 +341,12 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func resourceServiceInfraDbDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleting database service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}
-	log.Printf("[SERVICE|RES|DELETE] deleted service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleted database service with id: %q \n", d.Id())
 	return
 }

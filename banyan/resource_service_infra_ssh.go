@@ -227,7 +227,7 @@ func resourceServiceInfraSsh() *schema.Resource {
 }
 
 func resourceServiceInfraSshCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] creating ssh service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
 	svc := service.CreateService{
@@ -245,9 +245,9 @@ func resourceServiceInfraSshCreate(ctx context.Context, d *schema.ResourceData, 
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(errors.WithMessagef(err, "could not create ssh service %s : %s", d.Get("name"), d.Id()))
 	}
-	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] Created ssh service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
 	return resourceServiceInfraSshRead(ctx, d, m)
 }
@@ -285,19 +285,19 @@ func expandSSHMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func resourceServiceInfraSshUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updating ssh service %s : %s", d.Get("name"), d.Id())
 	resourceServiceInfraSshCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updated ssh service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] Reading ssh service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get ssh service with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
@@ -368,12 +368,12 @@ func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceServiceInfraSshDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleting ssh service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}
-	log.Printf("[SERVICE|RES|DELETE] deleted service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleted ssh service with id: %q \n", d.Id())
 	return
 }

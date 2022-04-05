@@ -5,6 +5,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// This file contains expand / flatten functions which are common to web services and
+// are used to abstract away complexity from the end user by populating the service struct using
+// the minimum required variables
+
 func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	spec = service.Spec{
 		Attributes:   expandAttributes(d),

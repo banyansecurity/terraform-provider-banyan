@@ -15,10 +15,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraRdp() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This is an org wide setting. There can only be one of these per organization.",
+		Description:   "Resource used for lifecycle management of infrastructure RDP services.",
 		CreateContext: resourceServiceInfraRdpCreate,
 		ReadContext:   resourceServiceInfraRdpRead,
 		UpdateContext: resourceServiceInfraRdpUpdate,
@@ -211,7 +210,7 @@ func resourceServiceInfraRdp() *schema.Resource {
 }
 
 func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] creating RDP service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
 	svc := service.CreateService{
@@ -229,9 +228,9 @@ func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, 
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(errors.WithMessagef(err, "could not create RDP service %s : %s", d.Get("name"), d.Id()))
 	}
-	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] Created RDP service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
 	return resourceServiceInfraRdpRead(ctx, d, m)
 }
@@ -268,19 +267,19 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updating RDP service %s : %s", d.Get("name"), d.Id())
 	resourceServiceInfraRdpCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updated RDP service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] Reading RDP service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get RDP service with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
@@ -348,12 +347,12 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceServiceInfraRdpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleting RDP service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}
-	log.Printf("[SERVICE|RES|DELETE] deleted service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleted RDP service with id: %q \n", d.Id())
 	return
 }

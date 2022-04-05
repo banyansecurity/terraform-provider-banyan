@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+// This file contains expand / flatten functions which are common to infrastructure services and
+// are used to abstract away complexity from the end user by populating the service struct using
+// the minimum required variables
+
 func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	spec = service.Spec{
 		Attributes:   expandInfraAttributes(d),
