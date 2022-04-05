@@ -47,7 +47,7 @@ func resourceServiceInfraRdp() *schema.Resource {
 			},
 			"access_tiers": {
 				Type:        schema.TypeSet,
-				Required:    true,
+				Optional:    true,
 				Description: "Access tier names the service is accessible from",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
