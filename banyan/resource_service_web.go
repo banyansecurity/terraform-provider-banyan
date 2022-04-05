@@ -706,7 +706,7 @@ func resourceServiceInfraWebCreate(ctx context.Context, d *schema.ResourceData, 
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
 		Type:       "origin",
-		Spec:       expandAbstractServiceSpec(d),
+		Spec:       expandWebServiceSpec(d),
 	}
 
 	newService, err := client.Service.Create(svc)
@@ -825,7 +825,7 @@ func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("cert_settings", flattenAbstractServiceCertSettings(service.CreateServiceSpec.Spec.CertSettings, *service.CreateServiceSpec.Metadata.Tags.Domain))
+	err = d.Set("cert_settings", flattenWebServiceCertSettings(service.CreateServiceSpec.Spec.CertSettings, *service.CreateServiceSpec.Metadata.Tags.Domain))
 	if err != nil {
 		return diag.FromErr(err)
 	}
