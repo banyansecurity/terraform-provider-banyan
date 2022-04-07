@@ -298,6 +298,15 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
+	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("backend_http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	resourceServiceInfraCommonReadBackendPort(service, d, m)
 	diagnostics = resourceServiceInfraCommonRead(service, d, m)
 	log.Printf("[SVC|RES|READ] read database service %s : %s", d.Get("name"), d.Id())
 	return

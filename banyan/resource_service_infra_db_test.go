@@ -19,7 +19,7 @@ func TestAccService_database(t *testing.T) {
 				Config: testAccService_database_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_infra_db.acctest-database", &bnnService),
-					testAccCheckAgainstJson(t, testAccService_database_create_json(rName), &bnnService),
+					testAccCheckAgainstJson(t, testAccService_database_create_json(rName), &bnnService.ServiceID),
 				),
 			},
 		},
