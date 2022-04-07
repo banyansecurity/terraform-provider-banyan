@@ -84,14 +84,9 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
   domain =  "%s.corp.com"
-  frontend {
-    port = 1234
-  }
   backend {
-    target {
-      name = "%s.internal"
+      domain = "%s.internal"
       port = 4321
-    }
   }
 }
 
@@ -127,14 +122,9 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
   domain =  "%s.corp.com"
-  frontend {
-    port = 1234
-  }
   backend {
-    target {
-      name = "%s.internal"
+      domain = "%s.internal"
       port = 4321
-    }
   }
 }
 
@@ -144,14 +134,9 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle-two" {
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
   domain =  "%s-two.corp.com"
-  frontend {
-    port = 1234
-  }
   backend {
-    target {
-      name = "%s-two.internal"
+      domain = "%s-two.internal"
       port = 4321
-    }
   }
 }
 
@@ -194,14 +179,9 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
   domain =  "%s.corp.com"
-  frontend {
-    port = 1234
-  }
   backend {
-    target {
-      name = "%s.internal"
+      domain = "%s.internal"
       port = 4321
-    }
   }
 }
 
