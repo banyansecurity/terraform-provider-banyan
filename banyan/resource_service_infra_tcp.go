@@ -101,6 +101,19 @@ func resourceServiceInfraTcp() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 			},
+			"allow_user_override": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"include_domains": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"dns_overrides": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -264,18 +277,22 @@ func expandTCPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	appListenPort := strconv.Itoa(alp)
 	banyanProxyMode := "TCP"
 	descriptionLink := d.Get("description_link").(string)
+	allowUserOverride := d.Get("allow_user_override").(bool)
+	includeDomains := convertSchemaSetToStringSlice(d.Get("include_domains").(*schema.Set))
 
 	metadatatags = service.Tags{
-		Template:        &template,
-		UserFacing:      &userFacing,
-		Protocol:        &protocol,
-		Domain:          &domain,
-		Port:            &port,
-		Icon:            &icon,
-		ServiceAppType:  &serviceAppType,
-		AppListenPort:   &appListenPort,
-		BanyanProxyMode: &banyanProxyMode,
-		DescriptionLink: &descriptionLink,
+		Template:          &template,
+		UserFacing:        &userFacing,
+		Protocol:          &protocol,
+		Domain:            &domain,
+		Port:              &port,
+		Icon:              &icon,
+		ServiceAppType:    &serviceAppType,
+		AppListenPort:     &appListenPort,
+		BanyanProxyMode:   &banyanProxyMode,
+		DescriptionLink:   &descriptionLink,
+		AllowUserOverride: &allowUserOverride,
+		IncludeDomains:    &includeDomains,
 	}
 	return
 }
@@ -298,6 +315,19 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
+	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("backend_http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("include_domains", service.CreateServiceSpec.Metadata.Tags.IncludeDomains)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	resourceServiceInfraCommonReadBackendPort(service, d, m)
 	diagnostics = resourceServiceInfraCommonRead(service, d, m)
 	log.Printf("[SVC|RES|READ] read TCP service %s : %s", d.Get("name"), d.Id())
 	return
