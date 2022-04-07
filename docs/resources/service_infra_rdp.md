@@ -5,19 +5,14 @@ Resource used for lifecycle management of infrastructure RDP services. For more 
 ### Example
 ```hcl
 resource "banyan_rdp_service" "examples" {
-  name         = "rdp-service"
-  description  = "some rdp service description"
+  name        = "example-rdp"
+  description = "some RDP service description"
   cluster      = "us-west"
-  access_tiers = ["us-west1"]
-  domain       = "rdp-service.corp.com"
-  frontend {
-    port = 1234
-  }
+  access_tiers   = ["us-west1"]
+  user_facing = true
+  domain      = "example-rdp.corp.com"
   backend {
-    target {
-      name = "rdp-service.internal"
-      port = 3389
-    }
+    domain = "example-rdp.internal"
   }
 }
 ```

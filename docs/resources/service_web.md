@@ -2,23 +2,36 @@
 
 Resource used for lifecycle management of web services. For more information see the documentation [here.](https://docs.banyansecurity.io/docs/feature-guides/hosted-websites/)
 
-### Example
+### Example Using Access Tier
 ```hcl
 resource "banyan_service_web" "example" {
-  name         = "web-service"
-  description  = "some web service description"
-  cluster      = "us-west"
-  access_tiers = ["us-west1"]
-  domain       = "web-service.corp.com"
-  protocol     = "https"
-  frontend {
-    port = 443
-  }
+  name        = "example-web"
+  description = "some web service description"
+  cluster     = "us-west"
+  access_tiers   = ["us-west1"]
+  protocol = "https"
+  domain = "example-web.corp.com"
+  port = 443
   backend {
-    target {
-      name = "web-service.internal"
-      port = 8443
-    }
+    domain = "example-web.internal"
+    port = 8443
+  }
+}
+```
+
+### Example Using Connector
+```hcl
+resource "banyan_service_web" "example" {
+  name        = "example-web"
+  description = "some web service description"
+  cluster     = "us-west"
+  connector   = "connector-us-west1"
+  protocol    = "https"
+  domain      = "example-web.corp.com"
+  port        = 443
+  backend {
+    domain = "example-web.internal"
+    port = 8443
   }
 }
 ```

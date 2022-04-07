@@ -4,21 +4,14 @@ Resource used for lifecycle management of SSH services. For more information see
 
 ### Example
 ```hcl
-resource "banyan_service_infra_ssh" "acctest-ssh" {
-  name               = "ssh-service"
-  description        = "some ssh service"
-  cluster            = "us-west"
-  access_tiers       = ["us-west1", "us-east1"]
-  domain             = "ssh-service.corp.com"
-  ssh_host_directive = "ssh-service.corp.com"
-  frontend {
-    port = 1234
-  }
+resource "banyan_service_infra_ssh" "example" {  
+  name        = "example-ssh"
+  description = "some SSH service description"
+  cluster      = "us-west"
+  access_tiers   = ["us-west1"]
+  domain      = "example-ssh.corp.com"
   backend {
-    target {
-      name = "ssh-service.internal"
-      port = 22
-    }
+    domain = "example-ssh.internal"
   }
 }
 ```

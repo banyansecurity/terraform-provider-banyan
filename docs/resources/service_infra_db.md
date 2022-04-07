@@ -5,19 +5,14 @@ Resource used for lifecycle management of database services. For more informatio
 ### Example
 ```hcl
 resource "banyan_service_infra_db" "example" {
-  name         = "database-service"
-  description  = "some database service description"
+  name        = "example-database"
+  description = "some database service description"
   cluster      = "us-west"
-  access_tiers = ["us-west1"]
-  domain       = "database-service.corp.com"
-  frontend {
-    port = 845
-  }
+  access_tiers   = ["us-west1"]
+  domain      = "example-database.corp.com"
   backend {
-    target {
-      name = "database-service.internal"
-      port = 8845
-    }
+    domain = "example-database.internal"
+    port = 7823
   }
 }
 ```
@@ -26,12 +21,13 @@ resource "banyan_service_infra_db" "example" {
 - **name** (String) Name of the service
 - **description** (String) Description of the service
 - **cluster** (String) Name of the NetAgent cluster which the service is accessible from
-- **access_tiers** (Set of String) Access tiers the service is accessible from
 - **domain** (String) The publicly resolvable service domain name
-- **frontend** (Block List, Min: 1) Specifies the IP addresses and ports the frontend of the service listens on (see [below for nested schema](#nestedblock--frontend))
+- **port** (String) The port that the service listens on
 - **backend** (Block List, Min: 1) Backend specifies how Netagent, when acting as a reverse proxy, forwards incoming “frontend connections” to a backend workload instance that implements a registered service (see [below for nested schema](#nestedblock--backend))
 
 #### Optional
+- **access_tiers** (Set of String) Access tiers the service is accessible from
+- **connector** (String) Name of the connector which will proxy requests to your service backend; set to "" if using Private Edge deployment
 - **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections. It will only forward on TLS connections where the SNI matches for Policy validation.
 - **cert_settings** (Block List, Max: 1) Specifies the X.509 server certificate to use for this Service (see [below for nested schema](#nestedblock--cert_settings))
 - **user_facing** (Boolean) Whether the service is user-facing or not
@@ -46,11 +42,12 @@ resource "banyan_service_infra_db" "example" {
 
 Required:
 
-- **target** (Block List, Min: 1, Max: 1) Specifies the backend workload instance's address or name ports, and TLS properties. (see [below for nested schema](#nestedblock--backend--target))
+- **domain** (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using backend_http_connect
+- **port** (Number) The internal port where this service is hosted; set to 0 if using backend_http_connect
 
 Optional:
 
-- **connector_name** (String) If Banyan Connector is used to access this service, this must be set to the name of the connector with network access to the service
+- **http_connect** (Boolean) Indicates to use HTTP Connect request to derive the backend target address
 - **dns_overrides** (Map of String) Specifies name-to-address or name-to-name mappings.
   Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
   Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
@@ -69,8 +66,6 @@ Required:
 ### Nested Schema for `frontend`
 
 Required:
-
-- **port** (String) The port that the service listens on
 
 
 <a id="nestedblock--cert_settings"></a>
