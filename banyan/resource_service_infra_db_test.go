@@ -31,23 +31,15 @@ func testAccService_database_create(name string) string {
 resource "banyan_service_infra_db" "acctest-database" {
   name        = "%s"
   description = "some database service description"
-  cluster     = "us-west"
+  cluster      = "us-west"
   access_tiers   = ["us-west1"]
   user_facing = true
   domain      = "%s.corp.com"
-  tls_sni     = ["%s2.corp.com"]
-  frontend {
-    port = 845
-  }
   backend {
-    target {
-      name = "%s.internal"
-      port = 8845
-    }
-  }
-  cert_settings {
-    dns_names = ["%s2.corp.com"]
+	  domain = ""
+	  port = 0
+      http_connect = true
   }
 }
-`, name, name, name, name, name)
+`, name, name)
 }

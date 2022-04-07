@@ -1,15 +1,100 @@
 package banyan
 
 import (
+	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"strconv"
 	"strings"
 )
 
 // This file contains expand / flatten functions which are common to infrastructure services and
 // are used to abstract away complexity from the end user by populating the service struct using
 // the minimum required variables
+
+func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	err := d.Set("name", service.ServiceName)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	err = d.Set("description", service.Description)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	err = d.Set("cluster", service.ClusterName)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
+	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
+	accessTiers := strings.Split(siteName, "|")
+	err = d.Set("access_tiers", accessTiers)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	var metadataTagUserFacing bool
+	metadataTagUserFacingPtr := service.CreateServiceSpec.Metadata.Tags.UserFacing
+	if metadataTagUserFacingPtr != nil {
+		metadataTagUserFacing, err = strconv.ParseBool(*service.CreateServiceSpec.Metadata.Tags.UserFacing)
+		if err != nil {
+			diagnostics = diag.FromErr(err)
+			return
+		}
+	}
+	err = d.Set("connector", service.CreateServiceSpec.Spec.Backend.ConnectorName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("user_facing", metadataTagUserFacing)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	tlsSNI := removeFromSlice(service.CreateServiceSpec.Spec.Attributes.TLSSNI, *service.CreateServiceSpec.Metadata.Tags.Domain)
+	err = d.Set("tls_sni", tlsSNI)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	backend, diagnostics := flattenInfraServiceBackend(service.CreateServiceSpec.Spec.Backend)
+	if diagnostics.HasError() {
+		return
+	}
+	err = d.Set("backend", backend)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("cert_settings", flattenInfraServiceCertSettings(service.CreateServiceSpec.Spec.CertSettings, *service.CreateServiceSpec.Metadata.Tags.Domain))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(d.Id())
+	return
+}
+
+func resourceServiceInfraCommonDelete(d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	client := m.(*client.ClientHolder)
+	err := client.Service.Delete(d.Id())
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+	}
+	return
+}
 
 func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	spec = service.Spec{
@@ -42,7 +127,7 @@ func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attribute
 
 	attributes = service.Attributes{
 		TLSSNI:            tlsSNI,
-		FrontendAddresses: expandFrontendAddresses(d),
+		FrontendAddresses: expandInfraFrontendAddresses(d),
 		HostTagSelector:   hostTagSelector,
 	}
 	return
@@ -50,13 +135,35 @@ func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attribute
 
 func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
 	backend = service.Backend{
-		AllowPatterns: []service.BackendAllowPattern{},
+		AllowPatterns: expandAllowPatterns(d.Get("backend.0.allow_patterns").([]interface{})),
 		DNSOverrides:  convertEmptyInterfaceToStringMap(d.Get("backend.0.dns_overrides").(map[string]interface{})),
-		ConnectorName: d.Get("backend.0.connector_name").(string),
-		HTTPConnect:   false,
-		Target:        expandTarget(d.Get("backend.0.target").([]interface{})),
+		ConnectorName: d.Get("connector").(string),
+		HTTPConnect:   d.Get("backend.0.http_connect").(bool),
+		Target:        expandInfraTarget(d),
 		Whitelist:     []string{},
 	}
+	return
+}
+
+func expandInfraTarget(d *schema.ResourceData) (target service.Target) {
+	return service.Target{
+		Name:              d.Get("backend.0.domain").(string),
+		Port:              strconv.Itoa(d.Get("backend.0.port").(int)),
+		TLS:               false,
+		TLSInsecure:       false,
+		ClientCertificate: false,
+	}
+}
+
+func expandInfraFrontendAddresses(d *schema.ResourceData) (frontendAddresses []service.FrontendAddress) {
+	portInt := d.Get("port").(int)
+	frontendAddresses = append(
+		frontendAddresses,
+		service.FrontendAddress{
+			CIDR: "",
+			Port: strconv.Itoa(portInt),
+		},
+	)
 	return
 }
 
@@ -67,7 +174,6 @@ func expandInfraCertSettings(d *schema.ResourceData) (certSettings service.CertS
 		CertFile: "",
 		KeyFile:  "",
 	}
-	letsEncrypt := false
 	m := d.Get("cert_settings").([]interface{})
 	if len(m) >= 1 {
 		itemMap := m[0].(map[string]interface{})
@@ -81,15 +187,21 @@ func expandInfraCertSettings(d *schema.ResourceData) (certSettings service.CertS
 	certSettings = service.CertSettings{
 		DNSNames:      dnsNames,
 		CustomTLSCert: customTLSCert,
-		Letsencrypt:   letsEncrypt,
+		Letsencrypt:   false,
 	}
 	return
 }
 
 func flattenInfraServiceBackend(toFlatten service.Backend) (flattened []interface{}, diagnostics diag.Diagnostics) {
+	port, err := strconv.Atoi(toFlatten.Target.Port)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port to int %v", toFlatten.Target.Port)
+		return
+	}
 	v := make(map[string]interface{})
-	v["target"], diagnostics = flattenServiceTarget(toFlatten.Target)
-	v["connector_name"] = toFlatten.ConnectorName
+	v["domain"] = toFlatten.Target.Name
+	v["port"] = port
+	v["http_connect"] = toFlatten.HTTPConnect
 	flattened = append(flattened, v)
 	return
 }

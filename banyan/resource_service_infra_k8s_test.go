@@ -33,23 +33,17 @@ resource "banyan_service_infra_k8s" "acctest-k8s" {
   description = "some k8s service description"
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
-  user_facing = true
+  domain      = "%s.corp.com"
+  user_facing   = true
   kube_cluster_name = "k8s-cluster"
   kube_ca_key = "k8scAk3yH3re"
-  domain      = "%s.corp.com"
-  tls_sni     = ["%s-alternate-name.corp.com"]
-  frontend {
-    port = 8443
-  }
   backend {
-    target {
-      name = "%s.internal"
+      domain = "%s.internal"
       port = 3389
-    }
   }
   cert_settings {
     dns_names = ["%s-alternate-name.corp.com"]
   }
 }
-`, name, name, name, name, name)
+`, name, name, name, name)
 }

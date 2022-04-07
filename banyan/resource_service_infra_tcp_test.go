@@ -30,18 +30,14 @@ func testAccService_tcp_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service_infra_tcp" "acctest-tcp" {
   name        = "%s"
-  description = "some tcp service description"
-  cluster     = "us-west"
-  access_tiers   = ["us-west1"]
-  domain =  "%s.corp.com"
-  frontend {
-    port = 1234
-  }
+  description = "some database service description"
+  cluster      = "us-west"
+  access_tiers   = ["us-west1", "us-west2"]
+  user_facing = true
+  domain      = "%s.corp.com"
   backend {
-    target {
-      name = "%s.internal"
-      port = 4321
-    }
+	  domain = "%s.internal"
+	  port = 8722
   }
 }
 `, name, name, name)

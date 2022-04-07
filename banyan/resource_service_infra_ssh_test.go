@@ -30,23 +30,14 @@ func testAccService_ssh_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service_infra_ssh" "acctest-ssh" {
   name        = "%s"
-  description = "some ssh service"
-  cluster     = "us-west"
-  access_tiers   = ["us-west1", "us-east1"]
-  domain      = "%s.corp.com"
+  description = "some SSH service description"
+  cluster      = "us-west"
+  access_tiers   = ["us-west1"]
   user_facing = true
-  ssh_service_type   = "TRUSTCERT"
-  write_ssh_config   = true
-  ssh_chain_mode     = false
   ssh_host_directive = "%s.corp.com"
-  frontend {
-    port = 1234
-  }
+  domain      = "%s.corp.com"
   backend {
-    target {
-      name               = "%s.internal"
-      port               = 22
-    }
+	  domain = "%s.internal"
   }
 }
 `, name, name, name, name)
