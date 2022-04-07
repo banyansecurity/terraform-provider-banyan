@@ -84,49 +84,39 @@ func resourceServiceInfraTcp() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"backend": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				MinItems: 1,
+			"backend_domain": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
+			},
+			"backend_port": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
+				ValidateFunc: validatePort(),
+			},
+			"backend_http_connect": {
+				Type:        schema.TypeBool,
+				Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+				Optional:    true,
+				Default:     false,
+			},
+			"dns_overrides": {
+				Type:     schema.TypeMap,
+				Optional: true,
 				Description: `
-					Backend specifies how Netagent, when acting as a reverse proxy, forwards incoming
-					“frontend connections” to a backend workload instance that implements a registered service`,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"domain": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
-						},
-						"port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
-							ValidateFunc: validatePort(),
-						},
-						"http_connect": {
-							Type:        schema.TypeBool,
-							Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-							Optional:    true,
-							Default:     false,
-						},
-						"dns_overrides": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Description: `
 								Specifies name-to-address or name-to-name mappings.
 								Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
 								Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
 								Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
 								ame-to-name    ->    "exposed.service.com" : "internal.myservice.com"
 										`,
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						"allow_patterns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Description: `
+				Elem: &schema.Schema{Type: schema.TypeString},
+			},
+			"allow_patterns": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Description: `
 								Defines the patterns for the backend workload instance. If the BackendAllowPatterns is set,
 								then the backend must match at least one entry in this list to establish connection with the backend service. 
    								Note that this field is effective only when BackendWhitelist is not populated.
@@ -134,61 +124,58 @@ func resourceServiceInfraTcp() *schema.Resource {
    								address/name/port are allowed. This field could be used with httpConnect set to TRUE or FALSE. With HttpConnect set to FALSE, 
    								only backend hostnames are supported, all other fields are ignored. With HttpConnect set to TRUE, 
    								all fields of BackendAllowPatterns are supported and effective.`,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hostnames": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
+						},
+						"cidrs": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsCIDRNetwork(0, 32),
+							},
+							Description: "Host may be a CIDR such as 10.1.1.0/24",
+						},
+						"ports": {
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							Optional:    true,
+							Description: `List of allowed ports and port ranges`,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"hostnames": {
+									"port_list": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Schema{
-											Type: schema.TypeString,
+											Type:         schema.TypeInt,
+											ValidateFunc: validatePort(),
 										},
-										Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
+										Description: "List of allowed ports",
 									},
-									"cidrs": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.IsCIDRNetwork(0, 32),
-										},
-										Description: "Host may be a CIDR such as 10.1.1.0/24",
-									},
-									"ports": {
+									"port_range": {
 										Type:        schema.TypeList,
-										MaxItems:    1,
 										Optional:    true,
-										Description: `List of allowed ports and port ranges`,
+										Description: `List of allowed port ranges`,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"port_list": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeInt,
-														ValidateFunc: validatePort(),
-													},
-													Description: "List of allowed ports",
+												"min": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Description:  "Minimum value of port range",
+													ValidateFunc: validatePort(),
 												},
-												"port_range": {
-													Type:        schema.TypeList,
-													Optional:    true,
-													Description: `List of allowed port ranges`,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"min": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Description:  "Minimum value of port range",
-																ValidateFunc: validatePort(),
-															},
-															"max": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Description:  "Maximum value of port range",
-																ValidateFunc: validatePort(),
-															},
-														},
-													},
+												"max": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Description:  "Maximum value of port range",
+													ValidateFunc: validatePort(),
 												},
 											},
 										},
@@ -273,7 +260,7 @@ func expandTCPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	port := strconv.Itoa(portInt)
 	icon := d.Get("icon").(string)
 	serviceAppType := "GENERIC"
-	alp := d.Get("backend.0.port").(int)
+	alp := d.Get("backend_port").(int)
 	appListenPort := strconv.Itoa(alp)
 	banyanProxyMode := "TCP"
 	descriptionLink := d.Get("description_link").(string)
