@@ -668,7 +668,7 @@ func resourceServiceInfraWeb() *schema.Resource {
 }
 
 func resourceServiceInfraWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating web service%s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] creating web service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
 	svc := service.CreateService{
@@ -686,9 +686,9 @@ func resourceServiceInfraWebCreate(ctx context.Context, d *schema.ResourceData, 
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create web service%s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(errors.WithMessagef(err, "could not create web service %s : %s", d.Get("name"), d.Id()))
 	}
-	log.Printf("[SVC|RES|CREATE] Created web service%s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] Created web service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
 	return resourceServiceInfraWebRead(ctx, d, m)
 }
@@ -722,14 +722,14 @@ func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func resourceServiceInfraWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating web service%s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updating web service %s : %s", d.Get("name"), d.Id())
 	resourceServiceInfraWebCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated web service%s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] updated web service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading web service%s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|UPDATE] Reading web service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
