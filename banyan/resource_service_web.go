@@ -54,15 +54,29 @@ func resourceServiceInfraWeb() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"connector": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
+				Default:     "",
+			},
+			"domain": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The external-facing network address for this service; ex. website.example.com",
+			},
+			"port": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Description:  "The external-facing port for this service",
+				Default:      8443,
+				ValidateFunc: validatePort(),
+			},
 			"user_facing": {
 				Type:        schema.TypeBool,
 				Description: "Whether the service is user-facing or not",
 				Optional:    true,
 				Default:     true,
-			},
-			"domain": {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 			"protocol": {
 				Type:         schema.TypeString,
@@ -135,6 +149,54 @@ func resourceServiceInfraWeb() *schema.Resource {
 					“frontend connections” to a backend workload instance that implements a registered service`,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"domain": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
+						},
+						"port": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
+							ValidateFunc: validatePort(),
+						},
+						"http_connect": {
+							Type:        schema.TypeBool,
+							Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+							Optional:    true,
+							Default:     false,
+						},
+						"dns_overrides": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+							Description: `
+								Specifies name-to-address or name-to-name mappings.
+								Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
+								Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
+								Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
+								ame-to-name    ->    "exposed.service.com" : "internal.myservice.com"
+										`,
+							Elem: &schema.Schema{Type: schema.TypeString},
+						},
+						"tls": {
+							Type:        schema.TypeBool,
+							Description: "TLS indicates whether the connection to the backend server uses TLS.",
+							Optional:    true,
+							Default:     false,
+						},
+						"tls_insecure": {
+							Type:        schema.TypeBool,
+							Description: "TLSInsecure indicates whether the backend TLS connection does not validate the server's TLS certificate",
+							Optional:    true,
+							Default:     false,
+						},
+						"client_certificate": {
+							Type:        schema.TypeBool,
+							Description: "Indicates whether to provide Netagent's client TLS certificate to the server if the server asks for it in the TLS handshake.",
+							Optional:    true,
+							Default:     false,
+						},
 						"allow_patterns": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -208,74 +270,6 @@ func resourceServiceInfraWeb() *schema.Resource {
 								},
 							},
 						},
-						"dns_overrides": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Computed: true,
-							Description: `
-								Specifies name-to-address or name-to-name mappings.
-								Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
-								Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
-								Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
-								ame-to-name    ->    "exposed.service.com" : "internal.myservice.com"
-										`,
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						"connector_name": {
-							Type:        schema.TypeString,
-							Description: "If Banyan Connector is used to access this service, this must be set to the name of the connector with network access to the service",
-							Optional:    true,
-						},
-						"http_connect": {
-							Type:        schema.TypeBool,
-							Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-							Optional:    true,
-						},
-						"target": {
-							Type:        schema.TypeList,
-							MinItems:    1,
-							MaxItems:    1,
-							Required:    true,
-							Description: "Specifies the backend workload instance's address or name ports, and TLS properties.",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"client_certificate": {
-										Type:        schema.TypeBool,
-										Description: "Indicates whether to provide Netagent's client TLS certificate to the server if the server asks for it in the TLS handshake.",
-										Optional:    true,
-										Default:     false,
-									},
-									"name": {
-										Type: schema.TypeString,
-										Description: `
-											Name specifies the DNS name of the backend workload instance. 
-											If it is the empty string, then Netagent will use the destination
-											IP address of the incoming frontend connection as the workload 
-											instance's address`,
-										Optional: true,
-										Default:  "",
-									},
-									"port": {
-										Type:         schema.TypeInt,
-										Description:  "Port specifies the backend server's TCP port number",
-										Required:     true,
-										ValidateFunc: validatePort(),
-									},
-									"tls": {
-										Type:        schema.TypeBool,
-										Description: "TLS indicates whether the connection to the backend server uses TLS.",
-										Optional:    true,
-										Default:     false,
-									},
-									"tls_insecure": {
-										Type:        schema.TypeBool,
-										Description: "TLSInsecure indicates whether the backend TLS connection does not validate the server's TLS certificate",
-										Optional:    true,
-										Default:     false,
-									},
-								},
-							},
-						},
 						"whitelist": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -290,28 +284,6 @@ func resourceServiceInfraWeb() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-						},
-					},
-				},
-			},
-			"frontend": {
-				Type:        schema.TypeList,
-				Required:    true,
-				Description: "Specifies the IP addresses and ports the frontend of the service listens on",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr": {
-							Type:     schema.TypeString,
-							Optional: true,
-							// TODO: verify this
-							Description:  "A list of IP addresses in string format specified in CIDR notation that the Service should match",
-							ValidateFunc: validation.IsCIDRNetwork(0, 32),
-						},
-						"port": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "The port that the service listens on",
-							ValidateFunc: validatePort(),
 						},
 					},
 				},
@@ -394,6 +366,7 @@ func resourceServiceInfraWeb() *schema.Resource {
 							Type:        schema.TypeList,
 							MaxItems:    1,
 							Optional:    true,
+							Computed:    true,
 							Description: "Tells Netagent that specific HTTP paths should be exempted from access control policies",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -566,6 +539,7 @@ func resourceServiceInfraWeb() *schema.Resource {
 						"headers": {
 							Type:     schema.TypeMap,
 							Optional: true,
+							Computed: true,
 							Description: `
 								Headers is a list of HTTP headers to add to every request sent to the Backend;
 								the key of the map is the header name, and the value is the header value you want.
@@ -577,6 +551,7 @@ func resourceServiceInfraWeb() *schema.Resource {
 						"token_loc": {
 							Type:        schema.TypeList,
 							Optional:    true,
+							Computed:    true,
 							MaxItems:    1,
 							Description: "Token location",
 							Elem: &schema.Resource{
@@ -724,10 +699,11 @@ func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	userFacing := strconv.FormatBool(userFacingMetadataTag)
 	protocol := d.Get("protocol").(string)
 	domain := d.Get("domain").(string)
-	port := d.Get("frontend.0.port").(string)
+	portInt := d.Get("port").(int)
+	port := strconv.Itoa(portInt)
 	icon := d.Get("icon").(string)
 	serviceAppType := "WEB"
-	alp := d.Get("backend.0.target.0.port").(int)
+	alp := d.Get("backend.0.port").(int)
 	appListenPort := strconv.Itoa(alp)
 	descriptionLink := d.Get("description_link").(string)
 
@@ -773,15 +749,15 @@ func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m 
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
-	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
-	accessTiers := strings.Split(siteName, "|")
-	err = d.Set("access_tiers", accessTiers)
+	err = d.Set("cluster", service.ClusterName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = d.Set("cluster", service.ClusterName)
+	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
+	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
+	accessTiers := strings.Split(siteName, "|")
+	err = d.Set("access_tiers", accessTiers)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
@@ -795,16 +771,27 @@ func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m 
 			return
 		}
 	}
-	d.Set("user_facing", metadataTagUserFacing)
-	d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
-	d.Set("protocol", service.CreateServiceSpec.Metadata.Tags.Protocol)
-	d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
-	d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
-	err = d.Set("client_cidrs", flattenServiceClientCIDRs(service.CreateServiceSpec.Spec.ClientCIDRs))
+	err = d.Set("connector", service.CreateServiceSpec.Spec.Backend.ConnectorName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("frontend", flattenServiceFrontendAddresses(service.CreateServiceSpec.Spec.Attributes.FrontendAddresses))
+	err = d.Set("user_facing", metadataTagUserFacing)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_cidrs", flattenServiceClientCIDRs(service.CreateServiceSpec.Spec.ClientCIDRs))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -813,7 +800,7 @@ func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	backend, diagnostics := flattenServiceBackend(service.CreateServiceSpec.Spec.Backend)
+	backend, diagnostics := flattenWebServiceBackend(service.CreateServiceSpec.Spec.Backend)
 	if diagnostics.HasError() {
 		return
 	}
@@ -845,5 +832,106 @@ func resourceServiceInfraWebDelete(ctx context.Context, d *schema.ResourceData, 
 		diagnostics = diag.FromErr(err)
 	}
 	log.Printf("[SERVICE|RES|DELETE] deleted web service with id: %q \n", d.Id())
+	return
+}
+
+func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	spec = service.Spec{
+		Attributes:   expandWebAttributes(d),
+		Backend:      expandWebBackend(d),
+		CertSettings: expandCertSettings(d),
+		HTTPSettings: expandHTTPSettings(d.Get("http_settings").([]interface{})),
+		ClientCIDRs:  expandClientCIDRs(d.Get("client_cidrs").([]interface{})),
+		TagSlice:     expandTagSlice(d.Get("tag_slice").([]interface{})),
+	}
+	return
+}
+
+func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes) {
+	var tlsSNI []string
+	additionalTlsSni := convertSchemaSetToStringSlice(d.Get("tls_sni").(*schema.Set))
+	for _, s := range additionalTlsSni {
+		tlsSNI = append(tlsSNI, s)
+	}
+	tlsSNI = append(tlsSNI, d.Get("domain").(string))
+	tlsSNI = removeDuplicateStr(tlsSNI)
+
+	// build HostTagSelector from access_tiers
+	var hostTagSelector []map[string]string
+	accessTiers := d.Get("access_tiers").(*schema.Set)
+	accessTiersSlice := convertSchemaSetToStringSlice(accessTiers)
+	siteNamesString := strings.Join(accessTiersSlice, "|")
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": siteNamesString}
+	hostTagSelector = append(hostTagSelector, siteNameSelector)
+
+	attributes = service.Attributes{
+		TLSSNI:            tlsSNI,
+		FrontendAddresses: expandWebFrontendAddresses(d),
+		HostTagSelector:   hostTagSelector,
+	}
+	return
+}
+
+func expandWebBackend(d *schema.ResourceData) (backend service.Backend) {
+	backend = service.Backend{
+		AllowPatterns: expandAllowPatterns(d.Get("backend.0.allow_patterns").([]interface{})),
+		DNSOverrides:  convertEmptyInterfaceToStringMap(d.Get("backend.0.dns_overrides").(map[string]interface{})),
+		ConnectorName: d.Get("connector").(string),
+		HTTPConnect:   d.Get("backend.0.http_connect").(bool),
+		Target:        expandWebTarget(d),
+		Whitelist:     convertSchemaSetToStringSlice(d.Get("backend.0.whitelist").(*schema.Set)),
+	}
+	return
+}
+
+func expandWebTarget(d *schema.ResourceData) (target service.Target) {
+	return service.Target{
+		Name:              d.Get("backend.0.domain").(string),
+		Port:              strconv.Itoa(d.Get("backend.0.port").(int)),
+		TLS:               d.Get("backend.0.tls").(bool),
+		TLSInsecure:       d.Get("backend.0.tls_insecure").(bool),
+		ClientCertificate: d.Get("backend.0.client_certificate").(bool),
+	}
+}
+
+func expandWebFrontendAddresses(d *schema.ResourceData) (frontendAddresses []service.FrontendAddress) {
+	portInt := d.Get("port").(int)
+	frontendAddresses = append(
+		frontendAddresses,
+		service.FrontendAddress{
+			CIDR: "",
+			Port: strconv.Itoa(portInt),
+		},
+	)
+	return
+}
+
+func flattenWebServiceBackend(toFlatten service.Backend) (flattened []interface{}, diagnostics diag.Diagnostics) {
+	port, err := strconv.Atoi(toFlatten.Target.Port)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port to int %v", toFlatten.Target.Port)
+		return
+	}
+	v := make(map[string]interface{})
+	v["domain"] = toFlatten.Target.Name
+	v["port"] = port
+	v["client_certificate"] = toFlatten.Target.ClientCertificate
+	v["tls"] = toFlatten.Target.TLS
+	v["tls_insecure"] = toFlatten.Target.TLSInsecure
+	v["http_connect"] = toFlatten.HTTPConnect
+	v["allow_patterns"] = flattenBackendAllowPatterns(toFlatten.AllowPatterns)
+	v["dns_overrides"] = toFlatten.DNSOverrides
+	v["http_connect"] = toFlatten.HTTPConnect
+	v["whitelist"] = toFlatten.Whitelist
+	flattened = append(flattened, v)
+	return
+}
+
+func flattenWebServiceCertSettings(toFlatten service.CertSettings, domain string) (flattened []interface{}) {
+	v := make(map[string]interface{})
+	v["custom_tls_cert"] = flattenServiceCustomTLSCert(toFlatten.CustomTLSCert)
+	v["dns_names"] = removeFromSlice(toFlatten.DNSNames, domain)
+	v["letsencrypt"] = toFlatten.Letsencrypt
+	flattened = append(flattened, v)
 	return
 }
