@@ -54,15 +54,6 @@ provider "banyan" {
 
 In this example we import the Banyan Terraform provider, and configure it with an API token. Then we create a service for a sensitive admin console, and attach an admin role with a strict admin policy to restrict access to only authorized administrators on trusted devices.
 ```hcl
-terraform {
-  required_providers {
-    banyan = {
-      source = "banyansecurity/banyan"
-      version = "0.6.0"
-    }
-  }
-}
-
 provider "banyan" {
   api_token = var.banyan_refresh_token
   host      = var.banyan_host
@@ -72,7 +63,7 @@ resource "banyan_service_web" "admin-console" {
   name           = "admin-console"
   description    = "Super sensitive admin console"
   cluster        = "us-west"
-  access_tiers   = ["us-west1"]
+  access_tier    = "us-west1"
   domain         = "admin-console.corp.com"
   protocol       = "https"
   port           = 443

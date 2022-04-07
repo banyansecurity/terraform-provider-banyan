@@ -82,7 +82,7 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   name        = "%s"
   description = "some tcp service description"
   cluster     = "us-west"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   domain =  "%s.corp.com"
   backend_domain = "%s.internal"
   backend_port = 4321
@@ -118,7 +118,7 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   name        = "%s"
   description = "some tcp service description"
   cluster     = "us-west"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   domain =  "%s.corp.com"
   backend_domain = "%s.internal"
   backend_port = 4321
@@ -128,7 +128,7 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle-two" {
   name        = "%s-two"
   description = "some tcp service description"
   cluster     = "us-west"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   domain =  "%s-two.corp.com"
   backend_domain = "%s-two.internal"
   backend_port = 4321
@@ -171,7 +171,7 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   name        = "%s"
   description = "some tcp service description"
   cluster     = "us-west"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   domain =  "%s.corp.com"
   backend_domain = "%s.internal"
   backend_port = 4321

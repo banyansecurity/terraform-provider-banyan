@@ -53,7 +53,7 @@ resource "banyan_service_web" "acctest-web" {
   name        = "%s-web"
   description = "some web service description"
   cluster     = "us-west"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   protocol = "https"
   domain = "%s-web.corp.com"
   port = 443
@@ -169,7 +169,7 @@ resource "banyan_service_web" "acctest-web" {
   name             = "%s"
   description      = "some web service description"
   cluster          = "us-west"
-  access_tiers     = ["us-west1"]
+  access_tier     = "us-west1"
   protocol         = "https"
   domain           = "%s.corp.com"
   port             = 443

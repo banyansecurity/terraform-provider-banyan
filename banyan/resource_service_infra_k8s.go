@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"log"
 	"strconv"
-	"strings"
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
@@ -45,13 +44,10 @@ func resourceServiceInfraK8s() *schema.Resource {
 				Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
-			"access_tiers": {
-				Type:        schema.TypeSet,
+			"access_tier": {
+				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Names of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
 			},
 			"connector": {
 				Type:        schema.TypeString,
@@ -343,14 +339,9 @@ func expandk8sAttributes(d *schema.ResourceData) (attributes service.Attributes)
 	tlsSNI = append(tlsSNI, d.Get("domain").(string))
 	tlsSNI = removeDuplicateStr(tlsSNI)
 
-	// build HostTagSelector from access_tiers
 	var hostTagSelector []map[string]string
-	accessTiers := d.Get("access_tiers").(*schema.Set)
-	accessTiersSlice := convertSchemaSetToStringSlice(accessTiers)
-	siteNamesString := strings.Join(accessTiersSlice, "|")
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": siteNamesString}
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("access_tier").(string)}
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
-
 	attributes = service.Attributes{
 		TLSSNI:            tlsSNI,
 		FrontendAddresses: expandk8sFrontendAddresses(d),

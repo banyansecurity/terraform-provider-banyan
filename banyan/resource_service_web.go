@@ -46,13 +46,10 @@ func resourceServiceInfraWeb() *schema.Resource {
 				Description: "Name of the NetAgent cluster which the service is accessible from",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
-			"access_tiers": {
-				Type:        schema.TypeSet,
+			"access_tier": {
+				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Access tier names the service is accessible from",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
 			},
 			"connector": {
 				Type:        schema.TypeString,
@@ -742,7 +739,7 @@ func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m 
 	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
 	accessTiers := strings.Split(siteName, "|")
-	err = d.Set("access_tiers", accessTiers)
+	err = d.Set("access_tier", accessTiers[0])
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
@@ -908,12 +905,9 @@ func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes)
 	tlsSNI = append(tlsSNI, d.Get("domain").(string))
 	tlsSNI = removeDuplicateStr(tlsSNI)
 
-	// build HostTagSelector from access_tiers
+	// build HostTagSelector from access_tier
 	var hostTagSelector []map[string]string
-	accessTiers := d.Get("access_tiers").(*schema.Set)
-	accessTiersSlice := convertSchemaSetToStringSlice(accessTiers)
-	siteNamesString := strings.Join(accessTiersSlice, "|")
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": siteNamesString}
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("access_tier").(string)}
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
 
 	attributes = service.Attributes{

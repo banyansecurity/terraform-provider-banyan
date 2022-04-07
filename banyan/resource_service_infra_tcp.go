@@ -44,13 +44,10 @@ func resourceServiceInfraTcp() *schema.Resource {
 				Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
-			"access_tiers": {
-				Type:        schema.TypeSet,
+			"access_tier": {
+				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Names of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
 			},
 			"connector": {
 				Type:        schema.TypeString,

@@ -1,11 +1,12 @@
 package banyan
 
 import (
+	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strconv"
-	"strings"
 )
 
 // This file contains the common expand / flatten functions which map directly to the service structs
@@ -78,12 +79,9 @@ func expandServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 }
 
 func expandAttributes(d *schema.ResourceData) (attributes service.Attributes) {
-	// build HostTagSelector from access_tiers
+	// build HostTagSelector from access_tier
 	var hostTagSelector []map[string]string
-	accessTiers := d.Get("access_tiers").(*schema.Set)
-	accessTiersSlice := convertSchemaSetToStringSlice(accessTiers)
-	siteNamesString := strings.Join(accessTiersSlice, "|")
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": siteNamesString}
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("access_tier").(string)}
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
 
 	attributes = service.Attributes{
@@ -537,5 +535,14 @@ func flattenTokenLoc(toFlatten *service.TokenLocation) (flattened []interface{})
 	v["authorization_header"] = toFlatten.AuthorizationHeader
 	v["custom_header"] = toFlatten.CustomHeader
 	flattened = append(flattened, v)
+	return
+}
+
+func GetInState(s *terraform.State, resourceName string) (err error, svc service.GetServiceSpec) {
+	rs, ok := s.RootModule().Resources[resourceName]
+	if !ok {
+		err = fmt.Errorf("resource not found %q", rs)
+		return
+	}
 	return
 }

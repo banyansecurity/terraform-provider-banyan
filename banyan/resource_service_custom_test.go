@@ -84,7 +84,7 @@ func testAccService_custom_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service_custom" "acctest-custom" {
   cluster     = "dev05-banyan"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   name        = %q
   description = "acceptance test service"
   metadatatags {
@@ -203,7 +203,7 @@ func testAccService_custom_update(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service_custom" "acctest-custom" {
   cluster     = "dev05-banyan"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   name        = %q
   description = "acceptance test service"
   metadatatags {

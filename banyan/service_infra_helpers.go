@@ -32,7 +32,7 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
 	accessTiers := strings.Split(siteName, "|")
-	err = d.Set("access_tiers", accessTiers)
+	err = d.Set("access_tier", accessTiers[0])
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
@@ -123,14 +123,10 @@ func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attribute
 	tlsSNI = append(tlsSNI, d.Get("domain").(string))
 	tlsSNI = removeDuplicateStr(tlsSNI)
 
-	// build HostTagSelector from access_tiers
+	// build HostTagSelector from access_tier
 	var hostTagSelector []map[string]string
-	accessTiers := d.Get("access_tiers").(*schema.Set)
-	accessTiersSlice := convertSchemaSetToStringSlice(accessTiers)
-	siteNamesString := strings.Join(accessTiersSlice, "|")
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": siteNamesString}
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("access_tier").(string)}
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
-
 	attributes = service.Attributes{
 		TLSSNI:            tlsSNI,
 		FrontendAddresses: expandInfraFrontendAddresses(d),

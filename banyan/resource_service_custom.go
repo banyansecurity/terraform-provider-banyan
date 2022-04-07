@@ -45,13 +45,10 @@ func resourceServiceCustom() *schema.Resource {
 				Description: "Name of the NetAgent cluster which the service is accessible from",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
-			"access_tiers": {
-				Type:        schema.TypeSet,
+			"access_tier": {
+				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Access tier names the service is accessible from",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
 			},
 			"metadatatags": {
 				Type:        schema.TypeList,
@@ -827,7 +824,7 @@ func resourceServiceCustomRead(ctx context.Context, d *schema.ResourceData, m in
 	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
 	accessTiers := strings.Split(siteName, "|")
-	err = d.Set("access_tiers", accessTiers)
+	err = d.Set("access_tier", accessTiers[0])
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return

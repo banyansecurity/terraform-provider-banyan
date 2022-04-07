@@ -33,7 +33,7 @@ resource "banyan_service_infra_tcp" "acctest-tcp" {
   name        = "%s-tcp"
   description = "some tcp service description"
   cluster      = "us-west"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   user_facing = true
   domain      = "%s-tcp.corp.com"
   backend_domain = "%s-tcp.internal"
