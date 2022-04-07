@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"log"
 	"strconv"
+	"strings"
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
@@ -84,57 +85,42 @@ func resourceServiceInfraK8s() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"kube_cluster_name": {
-				Type:     schema.TypeString,
-				Required: true,
+			"client_kube_cluster_name": {
+				Type:        schema.TypeString,
+				Description: "Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters",
+				Required:    true,
 			},
-			"kube_ca_key": {
-				Type:     schema.TypeString,
-				Required: true,
+			"client_kube_ca_key": {
+				Type:        schema.TypeString,
+				Description: "CA Public Key generated during Kube-OIDC-Proxy deployment",
+				Required:    true,
 			},
-			"backend": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				MinItems: 1,
+			"backend_dns_override_for_domain": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Override DNS for service domain name with this value",
+			},
+			"allow_user_override": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"dns_overrides": {
+				Type:     schema.TypeMap,
+				Optional: true,
 				Description: `
-					Backend specifies how Netagent, when acting as a reverse proxy, forwards incoming
-					“frontend connections” to a backend workload instance that implements a registered service`,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"domain": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
-						},
-						"port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
-							ValidateFunc: validatePort(),
-						},
-						"http_connect": {
-							Type:        schema.TypeBool,
-							Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-							Optional:    true,
-							Default:     false,
-						},
-						"dns_overrides": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Description: `
 								Specifies name-to-address or name-to-name mappings.
 								Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
 								Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
 								Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
 								ame-to-name    ->    "exposed.service.com" : "internal.myservice.com"
 										`,
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						"allow_patterns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Description: `
+				Elem: &schema.Schema{Type: schema.TypeString},
+			},
+			"allow_patterns": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Description: `
 								Defines the patterns for the backend workload instance. If the BackendAllowPatterns is set,
 								then the backend must match at least one entry in this list to establish connection with the backend service. 
    								Note that this field is effective only when BackendWhitelist is not populated.
@@ -142,61 +128,58 @@ func resourceServiceInfraK8s() *schema.Resource {
    								address/name/port are allowed. This field could be used with httpConnect set to TRUE or FALSE. With HttpConnect set to FALSE, 
    								only backend hostnames are supported, all other fields are ignored. With HttpConnect set to TRUE, 
    								all fields of BackendAllowPatterns are supported and effective.`,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hostnames": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
+						},
+						"cidrs": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsCIDRNetwork(0, 32),
+							},
+							Description: "Host may be a CIDR such as 10.1.1.0/24",
+						},
+						"ports": {
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							Optional:    true,
+							Description: `List of allowed ports and port ranges`,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"hostnames": {
+									"port_list": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Schema{
-											Type: schema.TypeString,
+											Type:         schema.TypeInt,
+											ValidateFunc: validatePort(),
 										},
-										Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
+										Description: "List of allowed ports",
 									},
-									"cidrs": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.IsCIDRNetwork(0, 32),
-										},
-										Description: "Host may be a CIDR such as 10.1.1.0/24",
-									},
-									"ports": {
+									"port_range": {
 										Type:        schema.TypeList,
-										MaxItems:    1,
 										Optional:    true,
-										Description: `List of allowed ports and port ranges`,
+										Description: `List of allowed port ranges`,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"port_list": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeInt,
-														ValidateFunc: validatePort(),
-													},
-													Description: "List of allowed ports",
+												"min": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Description:  "Minimum value of port range",
+													ValidateFunc: validatePort(),
 												},
-												"port_range": {
-													Type:        schema.TypeList,
-													Optional:    true,
-													Description: `List of allowed port ranges`,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"min": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Description:  "Minimum value of port range",
-																ValidateFunc: validatePort(),
-															},
-															"max": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Description:  "Maximum value of port range",
-																ValidateFunc: validatePort(),
-															},
-														},
-													},
+												"max": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Description:  "Maximum value of port range",
+													ValidateFunc: validatePort(),
 												},
 											},
 										},
@@ -259,7 +242,7 @@ func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, 
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
 		Type:       "origin",
-		Spec:       expandInfraServiceSpec(d),
+		Spec:       expandk8sServiceSpec(d),
 	}
 
 	newService, err := client.Service.Create(svc)
@@ -281,26 +264,28 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	port := strconv.Itoa(portInt)
 	icon := d.Get("icon").(string)
 	serviceAppType := "K8S"
-	alp := d.Get("backend.0.port").(int)
+	alp := 8443
 	appListenPort := strconv.Itoa(alp)
 	banyanProxyMode := "CHAIN"
 	descriptionLink := d.Get("description_link").(string)
-	kubeClusterName := d.Get("kube_cluster_name").(string)
-	kubeCaKey := d.Get("kube_ca_key").(string)
+	kubeClusterName := d.Get("client_kube_cluster_name").(string)
+	kubeCaKey := d.Get("client_kube_ca_key").(string)
+	allowUserOverride := d.Get("allow_user_override").(bool)
 
 	metadatatags = service.Tags{
-		Template:        &template,
-		UserFacing:      &userFacing,
-		Protocol:        &protocol,
-		Domain:          &domain,
-		Port:            &port,
-		Icon:            &icon,
-		ServiceAppType:  &serviceAppType,
-		AppListenPort:   &appListenPort,
-		BanyanProxyMode: &banyanProxyMode,
-		DescriptionLink: &descriptionLink,
-		KubeClusterName: &kubeClusterName,
-		KubeCaKey:       &kubeCaKey,
+		Template:          &template,
+		UserFacing:        &userFacing,
+		Protocol:          &protocol,
+		Domain:            &domain,
+		Port:              &port,
+		Icon:              &icon,
+		ServiceAppType:    &serviceAppType,
+		AppListenPort:     &appListenPort,
+		BanyanProxyMode:   &banyanProxyMode,
+		DescriptionLink:   &descriptionLink,
+		KubeClusterName:   &kubeClusterName,
+		KubeCaKey:         &kubeCaKey,
+		AllowUserOverride: &allowUserOverride,
 	}
 	return
 }
@@ -316,8 +301,8 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
-	d.Set("kube_cluster_name", service.CreateServiceSpec.Metadata.Tags.KubeClusterName)
-	d.Set("kube_ca_key", service.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	d.Set("client_kube_cluster_name", service.CreateServiceSpec.Metadata.Tags.KubeClusterName)
+	d.Set("client_kube_ca_key", service.CreateServiceSpec.Metadata.Tags.KubeCaKey)
 	diagnostics = resourceServiceInfraCommonRead(service, d, m)
 	log.Printf("[SVC|RES|READ] read kubernetes service %s : %s", d.Get("name"), d.Id())
 	return
@@ -334,5 +319,110 @@ func resourceServiceInfraK8sDelete(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[SERVICE|RES|DELETE] deleting kubernetes service %s : %s", d.Get("name"), d.Id())
 	diagnostics = resourceServiceInfraCommonDelete(d, m)
 	log.Printf("[SERVICE|RES|DELETE] deleted kubernetes service %s : %s", d.Get("name"), d.Id())
+	return
+}
+
+func expandk8sServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	spec = service.Spec{
+		Attributes:   expandk8sAttributes(d),
+		Backend:      expandk8sBackend(d),
+		CertSettings: expandk8sCertSettings(d),
+		HTTPSettings: service.HTTPSettings{},
+		ClientCIDRs:  []service.ClientCIDRs{},
+		TagSlice:     service.TagSlice{},
+	}
+	return
+}
+
+func expandk8sAttributes(d *schema.ResourceData) (attributes service.Attributes) {
+	var tlsSNI []string
+	additionalTlsSni := convertSchemaSetToStringSlice(d.Get("tls_sni").(*schema.Set))
+	for _, s := range additionalTlsSni {
+		tlsSNI = append(tlsSNI, s)
+	}
+	tlsSNI = append(tlsSNI, d.Get("domain").(string))
+	tlsSNI = removeDuplicateStr(tlsSNI)
+
+	// build HostTagSelector from access_tiers
+	var hostTagSelector []map[string]string
+	accessTiers := d.Get("access_tiers").(*schema.Set)
+	accessTiersSlice := convertSchemaSetToStringSlice(accessTiers)
+	siteNamesString := strings.Join(accessTiersSlice, "|")
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": siteNamesString}
+	hostTagSelector = append(hostTagSelector, siteNameSelector)
+
+	attributes = service.Attributes{
+		TLSSNI:            tlsSNI,
+		FrontendAddresses: expandk8sFrontendAddresses(d),
+		HostTagSelector:   hostTagSelector,
+	}
+	return
+}
+
+func expandk8sBackend(d *schema.ResourceData) (backend service.Backend) {
+	var allowPatterns []service.BackendAllowPattern
+	hostnames := []string{d.Get("domain").(string)}
+	allowPatterns = append(allowPatterns, service.BackendAllowPattern{
+		Hostnames: hostnames,
+		CIDRs:     nil,
+		Ports:     service.BackendAllowPorts{},
+	})
+	dnsOverride := make(map[string]string)
+	dnsOverride[d.Get("domain").(string)] = d.Get("backend_dns_override_for_domain").(string)
+	backend = service.Backend{
+		AllowPatterns: allowPatterns,
+		DNSOverrides:  dnsOverride,
+		ConnectorName: d.Get("connector").(string),
+		HTTPConnect:   true,
+		Target:        expandk8sTarget(d),
+		Whitelist:     []string{},
+	}
+	return
+}
+
+func expandk8sTarget(d *schema.ResourceData) (target service.Target) {
+	return service.Target{
+		Name:              "",
+		Port:              "",
+		TLS:               false,
+		TLSInsecure:       false,
+		ClientCertificate: false,
+	}
+}
+
+func expandk8sFrontendAddresses(d *schema.ResourceData) (frontendAddresses []service.FrontendAddress) {
+	portInt := d.Get("port").(int)
+	frontendAddresses = append(
+		frontendAddresses,
+		service.FrontendAddress{
+			CIDR: "",
+			Port: strconv.Itoa(portInt),
+		},
+	)
+	return
+}
+
+func expandk8sCertSettings(d *schema.ResourceData) (certSettings service.CertSettings) {
+	dnsNames := []string{d.Get("domain").(string)}
+	customTLSCert := service.CustomTLSCert{
+		Enabled:  false,
+		CertFile: "",
+		KeyFile:  "",
+	}
+	m := d.Get("cert_settings").([]interface{})
+	if len(m) >= 1 {
+		itemMap := m[0].(map[string]interface{})
+		for _, d := range convertSchemaSetToStringSlice(itemMap["dns_names"].(*schema.Set)) {
+			dnsNames = append(dnsNames, d)
+		}
+		dnsNames = removeDuplicateStr(dnsNames)
+		customTLSCert = service.CustomTLSCert{}
+	}
+
+	certSettings = service.CertSettings{
+		DNSNames:      dnsNames,
+		CustomTLSCert: customTLSCert,
+		Letsencrypt:   false,
+	}
 	return
 }
