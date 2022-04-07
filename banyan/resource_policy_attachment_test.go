@@ -84,10 +84,8 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
   domain =  "%s.corp.com"
-  backend {
-      domain = "%s.internal"
-      port = 4321
-  }
+  backend_domain = "%s.internal"
+  backend_port = 4321
 }
 
 resource "banyan_policy" "high-trust-any" {
@@ -122,10 +120,8 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
   domain =  "%s.corp.com"
-  backend {
-      domain = "%s.internal"
-      port = 4321
-  }
+  backend_domain = "%s.internal"
+  backend_port = 4321
 }
 
 resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle-two" {
@@ -134,10 +130,8 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle-two" {
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
   domain =  "%s-two.corp.com"
-  backend {
-      domain = "%s-two.internal"
-      port = 4321
-  }
+  backend_domain = "%s-two.internal"
+  backend_port = 4321
 }
 
 resource "banyan_policy" "high-trust-any" {
@@ -179,10 +173,8 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   cluster     = "us-west"
   access_tiers   = ["us-west1"]
   domain =  "%s.corp.com"
-  backend {
-      domain = "%s.internal"
-      port = 4321
-  }
+  backend_domain = "%s.internal"
+  backend_port = 4321
 }
 
 resource "banyan_policy" "high-trust-any" {

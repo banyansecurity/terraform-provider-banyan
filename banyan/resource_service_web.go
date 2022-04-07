@@ -170,13 +170,13 @@ func resourceServiceInfraWeb() *schema.Resource {
 										`,
 				Elem: &schema.Schema{Type: schema.TypeString},
 			},
-			"tls": {
+			"backend_tls": {
 				Type:        schema.TypeBool,
 				Description: "TLS indicates whether the connection to the backend server uses TLS.",
 				Optional:    true,
 				Default:     false,
 			},
-			"tls_insecure": {
+			"backend_tls_insecure": {
 				Type:        schema.TypeBool,
 				Description: "TLSInsecure indicates whether the backend TLS connection does not validate the server's TLS certificate",
 				Optional:    true,
@@ -944,8 +944,8 @@ func expandWebTarget(d *schema.ResourceData) (target service.Target) {
 	return service.Target{
 		Name:              d.Get("backend_domain").(string),
 		Port:              strconv.Itoa(d.Get("backend_port").(int)),
-		TLS:               d.Get("tls").(bool),
-		TLSInsecure:       d.Get("tls_insecure").(bool),
+		TLS:               d.Get("backend_tls").(bool),
+		TLSInsecure:       d.Get("backend_tls_insecure").(bool),
 		ClientCertificate: d.Get("client_certificate").(bool),
 	}
 }

@@ -174,18 +174,13 @@ resource "banyan_service_web" "acctest-web" {
   domain           = "%s.corp.com"
   port             = 443
   description_link = "%s.corp.com"
-  backend {
-    domain             = "%s.internal"
-    port               = 8443
-    tls                = true
-    tls_insecure       = true
-    client_certificate = true
-  }
+  backend_domain = "%s.internal"
+  backend_port = 4321
   http_settings {
     enabled = true
     oidc_settings {
       enabled = true
-      service_domain_name = %q
+      service_domain_name = "https://%s.corp.com"
       post_auth_redirect_path = "/some/path"
       api_path = "/api"
       suppress_device_trust_verification = false
