@@ -71,11 +71,21 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	backend, diagnostics := flattenInfraServiceBackend(service.CreateServiceSpec.Spec.Backend)
-	if diagnostics.HasError() {
+	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	backendPortStr := service.CreateServiceSpec.Spec.Backend.Target.Port
+	backendPort, err := strconv.Atoi(backendPortStr)
+	if err != nil {
+		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port to int %v", backendPortStr)
 		return
 	}
-	err = d.Set("backend", backend)
+	err = d.Set("backend_port", backendPort)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("backend_http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -135,10 +145,10 @@ func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attribute
 
 func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
 	backend = service.Backend{
-		AllowPatterns: expandAllowPatterns(d.Get("backend.0.allow_patterns").([]interface{})),
-		DNSOverrides:  convertEmptyInterfaceToStringMap(d.Get("backend.0.dns_overrides").(map[string]interface{})),
+		AllowPatterns: expandAllowPatterns(d.Get("allow_patterns").([]interface{})),
+		DNSOverrides:  convertEmptyInterfaceToStringMap(d.Get("dns_overrides").(map[string]interface{})),
 		ConnectorName: d.Get("connector").(string),
-		HTTPConnect:   d.Get("backend.0.http_connect").(bool),
+		HTTPConnect:   d.Get("backend_http_connect").(bool),
 		Target:        expandInfraTarget(d),
 		Whitelist:     []string{},
 	}
@@ -147,8 +157,8 @@ func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
 
 func expandInfraTarget(d *schema.ResourceData) (target service.Target) {
 	return service.Target{
-		Name:              d.Get("backend.0.domain").(string),
-		Port:              strconv.Itoa(d.Get("backend.0.port").(int)),
+		Name:              d.Get("backend_domain").(string),
+		Port:              strconv.Itoa(d.Get("backend_port").(int)),
 		TLS:               false,
 		TLSInsecure:       false,
 		ClientCertificate: false,
@@ -189,20 +199,6 @@ func expandInfraCertSettings(d *schema.ResourceData) (certSettings service.CertS
 		CustomTLSCert: customTLSCert,
 		Letsencrypt:   false,
 	}
-	return
-}
-
-func flattenInfraServiceBackend(toFlatten service.Backend) (flattened []interface{}, diagnostics diag.Diagnostics) {
-	port, err := strconv.Atoi(toFlatten.Target.Port)
-	if err != nil {
-		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port to int %v", toFlatten.Target.Port)
-		return
-	}
-	v := make(map[string]interface{})
-	v["domain"] = toFlatten.Target.Name
-	v["port"] = port
-	v["http_connect"] = toFlatten.HTTPConnect
-	flattened = append(flattened, v)
 	return
 }
 
