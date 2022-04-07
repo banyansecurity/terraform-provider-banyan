@@ -141,66 +141,57 @@ func resourceServiceInfraWeb() *schema.Resource {
 					},
 				},
 			},
-			"backend": {
-				Type:     schema.TypeList,
-				Required: true,
+			"backend_domain": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
+			},
+			"backend_port": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
+				ValidateFunc: validatePort(),
+			},
+			"backend_http_connect": {
+				Type:        schema.TypeBool,
+				Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+				Optional:    true,
+				Default:     false,
+			},
+			"dns_overrides": {
+				Type:     schema.TypeMap,
+				Optional: true,
 				Description: `
-					Backend specifies how Netagent, when acting as a reverse proxy, forwards incoming 
-					“frontend connections” to a backend workload instance that implements a registered service`,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"domain": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
-						},
-						"port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
-							ValidateFunc: validatePort(),
-						},
-						"http_connect": {
-							Type:        schema.TypeBool,
-							Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-							Optional:    true,
-							Default:     false,
-						},
-						"dns_overrides": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Computed: true,
-							Description: `
 								Specifies name-to-address or name-to-name mappings.
 								Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
 								Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
 								Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
 								ame-to-name    ->    "exposed.service.com" : "internal.myservice.com"
 										`,
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						"tls": {
-							Type:        schema.TypeBool,
-							Description: "TLS indicates whether the connection to the backend server uses TLS.",
-							Optional:    true,
-							Default:     false,
-						},
-						"tls_insecure": {
-							Type:        schema.TypeBool,
-							Description: "TLSInsecure indicates whether the backend TLS connection does not validate the server's TLS certificate",
-							Optional:    true,
-							Default:     false,
-						},
-						"client_certificate": {
-							Type:        schema.TypeBool,
-							Description: "Indicates whether to provide Netagent's client TLS certificate to the server if the server asks for it in the TLS handshake.",
-							Optional:    true,
-							Default:     false,
-						},
-						"allow_patterns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Description: `
+				Elem: &schema.Schema{Type: schema.TypeString},
+			},
+			"tls": {
+				Type:        schema.TypeBool,
+				Description: "TLS indicates whether the connection to the backend server uses TLS.",
+				Optional:    true,
+				Default:     false,
+			},
+			"tls_insecure": {
+				Type:        schema.TypeBool,
+				Description: "TLSInsecure indicates whether the backend TLS connection does not validate the server's TLS certificate",
+				Optional:    true,
+				Default:     false,
+			},
+			"client_certificate": {
+				Type:        schema.TypeBool,
+				Description: "Indicates whether to provide Netagent's client TLS certificate to the server if the server asks for it in the TLS handshake.",
+				Optional:    true,
+				Default:     false,
+			},
+			"allow_patterns": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Description: `
 								Defines the patterns for the backend workload instance. If the BackendAllowPatterns is set,
 								then the backend must match at least one entry in this list to establish connection with the backend service. 
    								Note that this field is effective only when BackendWhitelist is not populated.
@@ -208,61 +199,58 @@ func resourceServiceInfraWeb() *schema.Resource {
    								address/name/port are allowed. This field could be used with httpConnect set to TRUE or FALSE. With HttpConnect set to FALSE, 
    								only backend hostnames are supported, all other fields are ignored. With HttpConnect set to TRUE, 
    								all fields of BackendAllowPatterns are supported and effective.`,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hostnames": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
+						},
+						"cidrs": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsCIDRNetwork(0, 32),
+							},
+							Description: "Host may be a CIDR such as 10.1.1.0/24",
+						},
+						"ports": {
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							Optional:    true,
+							Description: `List of allowed ports and port ranges`,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"hostnames": {
+									"port_list": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Schema{
-											Type: schema.TypeString,
+											Type:         schema.TypeInt,
+											ValidateFunc: validatePort(),
 										},
-										Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
+										Description: "List of allowed ports",
 									},
-									"cidrs": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.IsCIDRNetwork(0, 32),
-										},
-										Description: "Host may be a CIDR such as 10.1.1.0/24",
-									},
-									"ports": {
+									"port_range": {
 										Type:        schema.TypeList,
-										MaxItems:    1,
 										Optional:    true,
-										Description: `List of allowed ports and port ranges`,
+										Description: `List of allowed port ranges`,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"port_list": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeInt,
-														ValidateFunc: validatePort(),
-													},
-													Description: "List of allowed ports",
+												"min": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Description:  "Minimum value of port range",
+													ValidateFunc: validatePort(),
 												},
-												"port_range": {
-													Type:        schema.TypeList,
-													Optional:    true,
-													Description: `List of allowed port ranges`,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"min": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Description:  "Minimum value of port range",
-																ValidateFunc: validatePort(),
-															},
-															"max": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Description:  "Maximum value of port range",
-																ValidateFunc: validatePort(),
-															},
-														},
-													},
+												"max": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Description:  "Maximum value of port range",
+													ValidateFunc: validatePort(),
 												},
 											},
 										},
@@ -270,22 +258,22 @@ func resourceServiceInfraWeb() *schema.Resource {
 								},
 							},
 						},
-						"whitelist": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Description: `
+					},
+				},
+			},
+			"whitelist": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Description: `
 								Indicates the allowed names for the backend workload instance. 
 								If this field is populated, then the backend name must match at least one entry
 								in this field list to establish connection with the backend service.
 								The names in this list are allowed to start with the wildcard character "*" to match more
 								than one backend name. This field is used generally with HttpConnect=FALSE. For all HttpConnect=TRUE cases, or where 
 								more advanced backend defining patterns are required, use BackendAllowPatterns.`,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"tls_sni": {
@@ -694,7 +682,7 @@ func resourceServiceInfraWebCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
-	template := "TCP_USER"
+	template := "WEB_USER"
 	userFacingMetadataTag := d.Get("user_facing").(bool)
 	userFacing := strconv.FormatBool(userFacingMetadataTag)
 	protocol := d.Get("protocol").(string)
@@ -703,8 +691,6 @@ func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	port := strconv.Itoa(portInt)
 	icon := d.Get("icon").(string)
 	serviceAppType := "WEB"
-	alp := d.Get("backend.0.port").(int)
-	appListenPort := strconv.Itoa(alp)
 	descriptionLink := d.Get("description_link").(string)
 
 	metadatatags = service.Tags{
@@ -715,7 +701,6 @@ func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 		Port:            &port,
 		Icon:            &icon,
 		ServiceAppType:  &serviceAppType,
-		AppListenPort:   &appListenPort,
 		DescriptionLink: &descriptionLink,
 	}
 	return
@@ -800,14 +785,6 @@ func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	backend, diagnostics := flattenWebServiceBackend(service.CreateServiceSpec.Spec.Backend)
-	if diagnostics.HasError() {
-		return
-	}
-	err = d.Set("backend", backend)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	err = d.Set("http_settings", flattenServiceHTTPSettings(service.CreateServiceSpec.Spec.HTTPSettings))
 	if err != nil {
 		return diag.FromErr(err)
@@ -836,13 +813,88 @@ func resourceServiceInfraWebDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	clientCidrs := expandClientCIDRs(d.Get("client_cidrs").([]interface{}))
+	if len(clientCidrs) == 0 {
+		clientCidrs = []service.ClientCIDRs{}
+	}
 	spec = service.Spec{
 		Attributes:   expandWebAttributes(d),
 		Backend:      expandWebBackend(d),
-		CertSettings: expandCertSettings(d),
-		HTTPSettings: expandHTTPSettings(d.Get("http_settings").([]interface{})),
-		ClientCIDRs:  expandClientCIDRs(d.Get("client_cidrs").([]interface{})),
+		CertSettings: expandInfraCertSettings(d),
+		HTTPSettings: expandWebHTTPSettings(d),
+		ClientCIDRs:  clientCidrs,
 		TagSlice:     expandTagSlice(d.Get("tag_slice").([]interface{})),
+	}
+	return
+}
+
+func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSettings) {
+	httpSettingsItem := d.Get("http_settings").([]interface{})
+	if len(httpSettingsItem) == 0 {
+		httpSettings = service.HTTPSettings{
+			Enabled: true,
+			OIDCSettings: service.OIDCSettings{
+				Enabled:                         true,
+				ServiceDomainName:               fmt.Sprintf("https://%s", d.Get("domain").(string)),
+				PostAuthRedirectPath:            "",
+				APIPath:                         "",
+				TrustCallBacks:                  nil,
+				SuppressDeviceTrustVerification: false,
+			},
+			HTTPHealthCheck: service.HTTPHealthCheck{
+				Enabled:     false,
+				Addresses:   nil,
+				Method:      "",
+				Path:        "",
+				UserAgent:   "",
+				FromAddress: []string{},
+				HTTPS:       false,
+			},
+			HTTPRedirect: service.HTTPRedirect{
+				Enabled:     false,
+				Addresses:   nil,
+				FromAddress: nil,
+				URL:         "",
+				StatusCode:  0,
+			},
+			ExemptedPaths: service.ExemptedPaths{
+				Enabled:  false,
+				Paths:    nil,
+				Patterns: nil,
+			},
+			Headers:  map[string]string{},
+			TokenLoc: nil,
+		}
+		return
+	}
+
+	itemMap := httpSettingsItem[0].(map[string]interface{})
+	tokenLoc := expandTokenLoc(itemMap["token_loc"].([]interface{}))
+	httpSettings = service.HTTPSettings{
+		Enabled:         itemMap["enabled"].(bool),
+		OIDCSettings:    expandWebOIDCSettings(d, itemMap["oidc_settings"].([]interface{})),
+		HTTPHealthCheck: expandHTTPHealthCheck(itemMap["http_health_check"].([]interface{})),
+		// will be deprecated from api
+		HTTPRedirect:  service.HTTPRedirect{},
+		ExemptedPaths: expandExemptedPaths(itemMap["exempted_paths"].([]interface{})),
+		Headers:       convertInterfaceMapToStringMap(itemMap["headers"].(map[string]interface{})),
+		TokenLoc:      &tokenLoc,
+	}
+	return
+}
+
+func expandWebOIDCSettings(d *schema.ResourceData, m []interface{}) (oidcSettings service.OIDCSettings) {
+	if len(m) == 0 {
+		return
+	}
+	itemMap := m[0].(map[string]interface{})
+	oidcSettings = service.OIDCSettings{
+		Enabled:                         true,
+		ServiceDomainName:               fmt.Sprintf("https://%s", d.Get("domain").(string)),
+		PostAuthRedirectPath:            itemMap["post_auth_redirect_path"].(string),
+		APIPath:                         itemMap["api_path"].(string),
+		TrustCallBacks:                  convertInterfaceMapToStringMap(itemMap["trust_callbacks"].(map[string]interface{})),
+		SuppressDeviceTrustVerification: itemMap["suppress_device_trust_verification"].(bool),
 	}
 	return
 }
@@ -873,24 +925,28 @@ func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes)
 }
 
 func expandWebBackend(d *schema.ResourceData) (backend service.Backend) {
+	whitelist := convertSchemaSetToStringSlice(d.Get("whitelist").(*schema.Set))
+	if len(whitelist) == 0 {
+		whitelist = []string{}
+	}
 	backend = service.Backend{
-		AllowPatterns: expandAllowPatterns(d.Get("backend.0.allow_patterns").([]interface{})),
-		DNSOverrides:  convertEmptyInterfaceToStringMap(d.Get("backend.0.dns_overrides").(map[string]interface{})),
+		AllowPatterns: expandAllowPatterns(d.Get("allow_patterns").([]interface{})),
+		DNSOverrides:  convertEmptyInterfaceToStringMap(d.Get("dns_overrides").(map[string]interface{})),
 		ConnectorName: d.Get("connector").(string),
-		HTTPConnect:   d.Get("backend.0.http_connect").(bool),
+		HTTPConnect:   d.Get("backend_http_connect").(bool),
 		Target:        expandWebTarget(d),
-		Whitelist:     convertSchemaSetToStringSlice(d.Get("backend.0.whitelist").(*schema.Set)),
+		Whitelist:     whitelist,
 	}
 	return
 }
 
 func expandWebTarget(d *schema.ResourceData) (target service.Target) {
 	return service.Target{
-		Name:              d.Get("backend.0.domain").(string),
-		Port:              strconv.Itoa(d.Get("backend.0.port").(int)),
-		TLS:               d.Get("backend.0.tls").(bool),
-		TLSInsecure:       d.Get("backend.0.tls_insecure").(bool),
-		ClientCertificate: d.Get("backend.0.client_certificate").(bool),
+		Name:              d.Get("backend_domain").(string),
+		Port:              strconv.Itoa(d.Get("backend_port").(int)),
+		TLS:               d.Get("tls").(bool),
+		TLSInsecure:       d.Get("tls_insecure").(bool),
+		ClientCertificate: d.Get("client_certificate").(bool),
 	}
 }
 
@@ -903,27 +959,6 @@ func expandWebFrontendAddresses(d *schema.ResourceData) (frontendAddresses []ser
 			Port: strconv.Itoa(portInt),
 		},
 	)
-	return
-}
-
-func flattenWebServiceBackend(toFlatten service.Backend) (flattened []interface{}, diagnostics diag.Diagnostics) {
-	port, err := strconv.Atoi(toFlatten.Target.Port)
-	if err != nil {
-		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port to int %v", toFlatten.Target.Port)
-		return
-	}
-	v := make(map[string]interface{})
-	v["domain"] = toFlatten.Target.Name
-	v["port"] = port
-	v["client_certificate"] = toFlatten.Target.ClientCertificate
-	v["tls"] = toFlatten.Target.TLS
-	v["tls_insecure"] = toFlatten.Target.TLSInsecure
-	v["http_connect"] = toFlatten.HTTPConnect
-	v["allow_patterns"] = flattenBackendAllowPatterns(toFlatten.AllowPatterns)
-	v["dns_overrides"] = toFlatten.DNSOverrides
-	v["http_connect"] = toFlatten.HTTPConnect
-	v["whitelist"] = toFlatten.Whitelist
-	flattened = append(flattened, v)
 	return
 }
 
