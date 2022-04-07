@@ -26,15 +26,6 @@ func ReadJSONServiceSpec(jsonSpec string) (err error, svc service.GetServiceSpec
 	return
 }
 
-func TestReadJSONServiceSpec(t *testing.T) {
-	want := service.GetServiceSpec{}
-	err, got := ReadJSONServiceSpec("serviceSpecs/a-rdp.json")
-	if err != nil {
-		t.Error(err)
-	}
-	AssertServiceSpecEqual(t, got, want)
-}
-
 func AssertServiceSpecEqual(t *testing.T, got service.GetServiceSpec, want service.GetServiceSpec) {
 	if diff := cmp.Diff(want.CreateServiceSpec, got.CreateServiceSpec); diff != "" {
 		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
