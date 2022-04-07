@@ -30,12 +30,12 @@ func TestAccService_database(t *testing.T) {
 func testAccService_database_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service_infra_db" "acctest-database" {
-  name        = "%s"
+  name        = "%s-db"
   description = "some database service description"
   cluster      = "us-west"
   access_tiers   = ["us-west1"]
   user_facing = true
-  domain      = "%s.corp.com"
+  domain      = "%s-db.corp.com"
   backend_domain = ""
   backend_port = 0
   backend_http_connect = true
@@ -50,28 +50,27 @@ func testAccService_database_create_json(name string) string {
     "apiVersion": "rbac.banyanops.com/v1",
     "type": "origin",
     "metadata": {
-        "name": "%s",
+        "name": "%s-db",
         "description": "some database service description",
         "cluster": "us-west",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
             "protocol": "tcp",
-            "domain": "%s.corp.com",
+            "domain": "%s-db.corp.com",
             "port": "8443",
             "icon": "",
             "service_app_type": "DATABASE",
-            "banyanproxy_mode": "TCP",
-            "app_listen_port": "3389",
-            "allow_user_override": true,
-            "description_link": "",
-            "include_domains": []
+            "banyanproxy_mode": "CHAIN",
+            "app_listen_port": "0",
+            "allow_user_override": false,
+            "description_link": ""
         }
     },
     "spec": {
         "attributes": {
             "tls_sni": [
-                "%s.corp.com"
+                "%s-db.corp.com"
             ],
             "frontend_addresses": [
                 {
@@ -83,7 +82,8 @@ func testAccService_database_create_json(name string) string {
                 {
                     "com.banyanops.hosttag.site_name": "us-west1"
                 }
-            ]
+            ],
+            "disable_private_dns": false
         },
         "backend": {
             "target": {
@@ -95,12 +95,12 @@ func testAccService_database_create_json(name string) string {
             },
             "dns_overrides": {},
             "whitelist": [],
-			"http_connect": true,
+            "http_connect": true,
             "connector_name": ""
         },
         "cert_settings": {
             "dns_names": [
-                "%s.corp.com"
+                "%s-db.corp.com"
             ],
             "custom_tls_cert": {
                 "enabled": false,
@@ -112,5 +112,6 @@ func testAccService_database_create_json(name string) string {
         "client_cidrs": []
     }
 }
+
 `, name, name, name, name)
 }

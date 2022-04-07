@@ -84,6 +84,11 @@ func resourceServiceInfraDb() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"allow_user_override": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"backend_domain": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -116,6 +121,7 @@ func resourceServiceInfraDb() *schema.Resource {
 			"allow_patterns": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Description: `
 								Defines the patterns for the backend workload instance. If the BackendAllowPatterns is set,
 								then the backend must match at least one entry in this list to establish connection with the backend service. 
@@ -262,20 +268,22 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 	serviceAppType := "DATABASE"
 	alp := d.Get("backend_port").(int)
 	appListenPort := strconv.Itoa(alp)
-	banyanProxyMode := "TCP"
+	banyanProxyMode := "CHAIN"
 	descriptionLink := d.Get("description_link").(string)
+	allowUserOverride := d.Get("allow_user_override").(bool)
 
 	metadatatags = service.Tags{
-		Template:        &template,
-		UserFacing:      &userFacing,
-		Protocol:        &protocol,
-		Domain:          &domain,
-		Port:            &port,
-		Icon:            &icon,
-		ServiceAppType:  &serviceAppType,
-		AppListenPort:   &appListenPort,
-		BanyanProxyMode: &banyanProxyMode,
-		DescriptionLink: &descriptionLink,
+		Template:          &template,
+		UserFacing:        &userFacing,
+		Protocol:          &protocol,
+		Domain:            &domain,
+		Port:              &port,
+		Icon:              &icon,
+		ServiceAppType:    &serviceAppType,
+		AppListenPort:     &appListenPort,
+		BanyanProxyMode:   &banyanProxyMode,
+		DescriptionLink:   &descriptionLink,
+		AllowUserOverride: &allowUserOverride,
 	}
 	return
 }
@@ -291,24 +299,28 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 	log.Printf("[SVC|RES|READ] reading database service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
-	service, ok, err := client.Service.Get(id)
+	svc, ok, err := client.Service.Get(id)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get database service with id: %s", id))
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get database svc with id: %s", id))
 	}
 	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
+		return handleNotFoundError(d, fmt.Sprintf("svc %q", d.Id()))
 	}
-	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
+	err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.Target.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	err = d.Set("backend_http_connect", svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	resourceServiceInfraCommonReadBackendPort(service, d, m)
-	diagnostics = resourceServiceInfraCommonRead(service, d, m)
-	log.Printf("[SVC|RES|READ] read database service %s : %s", d.Get("name"), d.Id())
+	err = d.Set("allow_patterns", svc.CreateServiceSpec.Spec.Backend.AllowPatterns)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	resourceServiceInfraCommonReadBackendPort(svc, d, m)
+	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
+	log.Printf("[SVC|RES|READ] read database svc %s : %s", d.Get("name"), d.Id())
 	return
 }
 
