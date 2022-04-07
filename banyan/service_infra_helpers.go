@@ -71,10 +71,15 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
+	err = d.Set("cert_settings", flattenInfraServiceCertSettings(service.CreateServiceSpec.Spec.CertSettings, *service.CreateServiceSpec.Metadata.Tags.Domain))
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	d.SetId(d.Id())
+	return
+}
+
+func resourceServiceInfraCommonReadBackendPort(service service.GetServiceSpec, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	backendPortStr := service.CreateServiceSpec.Spec.Backend.Target.Port
 	backendPort, err := strconv.Atoi(backendPortStr)
 	if err != nil {
@@ -85,15 +90,6 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("cert_settings", flattenInfraServiceCertSettings(service.CreateServiceSpec.Spec.CertSettings, *service.CreateServiceSpec.Metadata.Tags.Domain))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(d.Id())
 	return
 }
 
