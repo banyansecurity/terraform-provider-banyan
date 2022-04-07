@@ -8,7 +8,7 @@ resource "banyan_service_infra_db" "example" {
   name                 = "example-db"
   description          = "some database service description"
   cluster              = "us-west"
-  access_tiers         = ["us-west1"]
+  access_tier          = "us-west1"
   user_facing          = true
   domain               = "example-db.corp.com"
   backend_domain       = ""

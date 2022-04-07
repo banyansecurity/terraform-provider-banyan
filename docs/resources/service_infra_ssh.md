@@ -8,7 +8,7 @@ resource "banyan_service_infra_ssh" "example" {
   name               = "example-ssh"
   description        = "some SSH service description"
   cluster            = "us-west"
-  access_tiers       = ["us-west1"]
+  access_tiers       = "us-west1"
   user_facing        = true
   ssh_host_directive = "example-ssh.corp.com"
   domain             = "example-ssh.corp.com"

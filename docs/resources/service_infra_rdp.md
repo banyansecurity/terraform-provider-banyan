@@ -8,7 +8,7 @@ resource "banyan_service_infra_rdp" "example" {
   name           = "example-rdp"
   description    = "some RDP service description"
   cluster        = "us-west"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   user_facing    = true
   domain         = "example-rdp.corp.com"
   backend_domain = "example-rdp.internal"

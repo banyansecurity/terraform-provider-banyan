@@ -8,7 +8,7 @@ resource "banyan_service_infra_k8s" "acctest-k8s" {
   name                            = "example-k8s"
   description                     = "some k8s service description"
   cluster                         = "us-west"
-  access_tiers                    = ["us-west1"]
+  access_tier                     = "us-west1"
   domain                          = "example-k8s.corp.com"
   user_facing                     = true
   client_kube_cluster_name        = "k8s-cluster"

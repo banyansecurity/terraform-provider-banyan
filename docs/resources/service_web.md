@@ -8,7 +8,7 @@ resource "banyan_service_web" "example" {
   name           = "example-web"
   description    = "some web service description"
   cluster        = "us-west"
-  access_tiers   = ["us-west1"]
+  access_tier   = "us-west1"
   protocol       = "https"
   domain         = "example-web.corp.com"
   port           = 443
