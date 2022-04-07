@@ -5,15 +5,15 @@ Resource used for lifecycle management of database services. For more informatio
 ### Example
 ```hcl
 resource "banyan_service_infra_db" "example" {
-  name        = "example-database"
-  description = "some database service description"
-  cluster      = "us-west"
-  access_tiers   = ["us-west1"]
-  domain      = "example-database.corp.com"
-  backend {
-    domain = "example-database.internal"
-    port = 7823
-  }
+  name                 = "example-db"
+  description          = "some database service description"
+  cluster              = "us-west"
+  access_tiers         = ["us-west1"]
+  user_facing          = true
+  domain               = "example-db.corp.com"
+  backend_domain       = ""
+  backend_port         = 0
+  backend_http_connect = true
 }
 ```
 ### Database Service Schema

@@ -5,34 +5,30 @@ Resource used for lifecycle management of web services. For more information see
 ### Example Using Access Tier
 ```hcl
 resource "banyan_service_web" "example" {
-  name        = "example-web"
-  description = "some web service description"
-  cluster     = "us-west"
+  name           = "example-web"
+  description    = "some web service description"
+  cluster        = "us-west"
   access_tiers   = ["us-west1"]
-  protocol = "https"
-  domain = "example-web.corp.com"
-  port = 443
-  backend {
-    domain = "example-web.internal"
-    port = 8443
-  }
+  protocol       = "https"
+  domain         = "example-web.corp.com"
+  port           = 443
+  backend_domain = "example-web.internal"
+  backend_port   = 8443
 }
 ```
 
 ### Example Using Connector
 ```hcl
 resource "banyan_service_web" "example" {
-  name        = "example-web"
-  description = "some web service description"
-  cluster     = "us-west"
-  connector   = "connector-us-west1"
-  protocol    = "https"
-  domain      = "example-web.corp.com"
-  port        = 443
-  backend {
-    domain = "example-web.internal"
-    port = 8443
-  }
+  name           = "example-web"
+  description    = "some web service description"
+  cluster        = "us-west"
+  connector      =  "us-west1-connector"
+  protocol       = "https"
+  domain         = "example-web.corp.com"
+  port           = 443
+  backend_domain = "example-web.internal"
+  backend_port   = 8443
 }
 ```
 ### Web Service Schema

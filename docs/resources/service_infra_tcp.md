@@ -4,17 +4,15 @@ Resource used for lifecycle management of generic TCP services. For more informa
 
 ### Example
 ```hcl
-resource "banyan_service_infra_tcp" "acctest-tcp" {
-  name        = "example-tcp"
-  description = "some database service description"
-  cluster      = "us-west"
-  access_tiers   = ["us-west1", "us-west2"]
-  user_facing = true
-  domain      = "example-tcp.corp.com"
-  backend {
-    domain = "example-tcp.internal"
-    port = 8722
-  }
+resource "banyan_service_infra_tcp" "example" {
+  name           = "example-tcp"
+  description    = "some tcp service description"
+  cluster        = "us-west"
+  access_tiers   = ["us-west1"]
+  user_facing    = true
+  domain         = "example-tcp.corp.com"
+  backend_domain = "example-tcp.internal"
+  backend_port   = 5673
 }
 ```
 ### TCP Service Schema

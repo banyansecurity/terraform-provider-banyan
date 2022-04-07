@@ -4,18 +4,16 @@ Resource used for lifecycle management of kubernetes services. For more informat
 
 ### Example
 ```hcl
-resource "banyan_service_infra_k8s" "example" {
-  name        = "example-kubernetes"
-  description = "some k8s service description"
-  cluster     = "us-west"
-  access_tiers   = ["us-west1"]
-  domain      = "example-kubernetes.corp.com"
-  kube_cluster_name = "k8s-cluster"
-  kube_ca_key = "k8scAk3yH3re"
-  backend {
-    domain = "example-kubernetes.internal"
-    port = 3389
-  }
+resource "banyan_service_infra_k8s" "acctest-k8s" {
+  name                            = "example-k8s"
+  description                     = "some k8s service description"
+  cluster                         = "us-west"
+  access_tiers                    = ["us-west1"]
+  domain                          = "example-k8s.corp.com"
+  user_facing                     = true
+  client_kube_cluster_name        = "k8s-cluster"
+  client_kube_ca_key              = "k8scAk3yH3re"
+  backend_dns_override_for_domain = "example-k8s.service"
 }
 ```
 ### Kubernetes Service Schema
