@@ -27,7 +27,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"banyan_service_custom":    resourceServiceCustom(),
 			"banyan_service_infra_ssh": resourceServiceInfraSsh(),
-			"banyan_rdp_service":       resourceServiceInfraRdp(),
+			"banyan_service_infra_rdp": resourceServiceInfraRdp(),
 			"banyan_service_infra_tcp": resourceServiceInfraTcp(),
 			"banyan_service_infra_k8s": resourceServiceInfraK8s(),
 			"banyan_service_infra_db":  resourceServiceInfraDb(),
