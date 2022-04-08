@@ -37,20 +37,7 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	var metadataTagUserFacing bool
-	metadataTagUserFacingPtr := service.CreateServiceSpec.Metadata.Tags.UserFacing
-	if metadataTagUserFacingPtr != nil {
-		metadataTagUserFacing, err = strconv.ParseBool(*service.CreateServiceSpec.Metadata.Tags.UserFacing)
-		if err != nil {
-			diagnostics = diag.FromErr(err)
-			return
-		}
-	}
 	err = d.Set("connector", service.CreateServiceSpec.Spec.Backend.ConnectorName)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("user_facing", metadataTagUserFacing)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -66,30 +53,7 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	tlsSNI := removeFromSlice(service.CreateServiceSpec.Spec.Attributes.TLSSNI, *service.CreateServiceSpec.Metadata.Tags.Domain)
-	err = d.Set("tls_sni", tlsSNI)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("cert_settings", flattenInfraServiceCertSettings(service.CreateServiceSpec.Spec.CertSettings, *service.CreateServiceSpec.Metadata.Tags.Domain))
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	d.SetId(d.Id())
-	return
-}
-
-func resourceServiceInfraCommonReadBackendPort(service service.GetServiceSpec, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	backendPortStr := service.CreateServiceSpec.Spec.Backend.Target.Port
-	backendPort, err := strconv.Atoi(backendPortStr)
-	if err != nil {
-		diagnostics = diag.Errorf("Could not convert BackendTarget.spec.backend.target.port to int %v", backendPortStr)
-		return
-	}
-	err = d.Set("backend_port", backendPort)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	return
 }
 
@@ -107,22 +71,16 @@ func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 		Attributes:   expandInfraAttributes(d),
 		Backend:      expandInfraBackend(d),
 		CertSettings: expandInfraCertSettings(d),
-		HTTPSettings: service.HTTPSettings{},
+		HTTPSettings: expandInfraHTTPSettings(d),
 		ClientCIDRs:  []service.ClientCIDRs{},
-		TagSlice:     service.TagSlice{},
+		TagSlice:     nil,
 	}
 	return
 }
 
 func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attributes) {
 	var tlsSNI []string
-	additionalTlsSni := convertSchemaSetToStringSlice(d.Get("tls_sni").(*schema.Set))
-	for _, s := range additionalTlsSni {
-		tlsSNI = append(tlsSNI, s)
-	}
 	tlsSNI = append(tlsSNI, d.Get("domain").(string))
-	tlsSNI = removeDuplicateStr(tlsSNI)
-
 	// build HostTagSelector from access_tier
 	var hostTagSelector []map[string]string
 	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("access_tier").(string)}
@@ -137,8 +95,8 @@ func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attribute
 
 func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
 	backend = service.Backend{
-		AllowPatterns: expandAllowPatterns(d.Get("allow_patterns").([]interface{})),
-		DNSOverrides:  convertEmptyInterfaceToStringMap(d.Get("dns_overrides").(map[string]interface{})),
+		AllowPatterns: nil,
+		DNSOverrides:  map[string]string{},
 		ConnectorName: d.Get("connector").(string),
 		HTTPConnect:   d.Get("backend_http_connect").(bool),
 		Target:        expandInfraTarget(d),
@@ -170,33 +128,49 @@ func expandInfraFrontendAddresses(d *schema.ResourceData) (frontendAddresses []s
 }
 
 func expandInfraCertSettings(d *schema.ResourceData) (certSettings service.CertSettings) {
-	dnsNames := []string{d.Get("domain").(string)}
-	customTLSCert := service.CustomTLSCert{
-		Enabled:  false,
-		CertFile: "",
-		KeyFile:  "",
-	}
-	m := d.Get("cert_settings").([]interface{})
-	if len(m) >= 1 {
-		itemMap := m[0].(map[string]interface{})
-		for _, d := range convertSchemaSetToStringSlice(itemMap["dns_names"].(*schema.Set)) {
-			dnsNames = append(dnsNames, d)
-		}
-		dnsNames = removeDuplicateStr(dnsNames)
-		customTLSCert = service.CustomTLSCert{}
-	}
-
 	certSettings = service.CertSettings{
-		DNSNames:      dnsNames,
-		CustomTLSCert: customTLSCert,
-		Letsencrypt:   false,
+		DNSNames:    []string{d.Get("domain").(string)},
+		Letsencrypt: false,
 	}
 	return
 }
 
-func flattenInfraServiceCertSettings(toFlatten service.CertSettings, domain string) (flattened []interface{}) {
-	v := make(map[string]interface{})
-	v["dns_names"] = removeFromSlice(toFlatten.DNSNames, domain)
-	flattened = append(flattened, v)
+func expandInfraHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSettings) {
+	httpSettings = service.HTTPSettings{
+		Enabled:         false,
+		OIDCSettings:    expandInfraOIDCSettings(d),
+		ExemptedPaths:   expandInfraExemptedPaths(d),
+		Headers:         map[string]string{},
+		HTTPHealthCheck: expandInfraHTTPHealthCheck(),
+	}
+	return
+}
+
+func expandInfraOIDCSettings(d *schema.ResourceData) (oidcSettings service.OIDCSettings) {
+	oidcSettings = service.OIDCSettings{
+		Enabled:           false,
+		ServiceDomainName: "",
+	}
+	return
+}
+
+func expandInfraExemptedPaths(d *schema.ResourceData) (exemptedPaths service.ExemptedPaths) {
+	exemptedPaths = service.ExemptedPaths{
+		Enabled:  false,
+		Patterns: nil,
+	}
+	return
+}
+
+func expandInfraHTTPHealthCheck() (httpHealthCheck service.HTTPHealthCheck) {
+	httpHealthCheck = service.HTTPHealthCheck{
+		Enabled:     false,
+		Addresses:   nil,
+		Method:      "",
+		Path:        "",
+		UserAgent:   "",
+		FromAddress: []string{},
+		HTTPS:       false,
+	}
 	return
 }
