@@ -16,7 +16,7 @@ import (
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraDb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of database services",
+		Description:   "resourceServiceInfraDb",
 		CreateContext: resourceServiceInfraDbCreate,
 		ReadContext:   resourceServiceInfraDbRead,
 		UpdateContext: resourceServiceInfraDbUpdate,
@@ -92,8 +92,10 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 	}
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alpInt)
-	// TODO: connect this to client_banyanproxy_allowed_domains
-	includeDomains := []string{}
+	includeDomains := convertSchemaSetToStringSlice(d.Get("client_banyanproxy_allowed_domains").(*schema.Set))
+	if includeDomains == nil {
+		includeDomains = []string{}
+	}
 
 	metadatatags = service.Tags{
 		Template:          &template,
