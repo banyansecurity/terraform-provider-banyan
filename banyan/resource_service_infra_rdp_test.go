@@ -81,7 +81,6 @@ resource "banyan_service_infra_rdp" "acctest-rdp" {
   description = "some RDP service description"
   cluster      = "us-west"
   access_tier   = "us-west1"
-  user_facing = true
   domain      = "%s-rdp.corp.com"
   backend_domain = "%s-rdp.internal"
   backend_port = 3389
