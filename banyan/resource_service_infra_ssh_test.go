@@ -78,7 +78,6 @@ resource "banyan_service_infra_ssh" "acctest-ssh" {
   description = "some SSH service description"
   cluster      = "us-west"
   access_tier   = "us-west1"
-  user_facing = true
   ssh_host_directive = "%s-ssh.corp.com"
   domain      = "%s-ssh.corp.com"
   backend_domain = "%s-ssh.internal"
