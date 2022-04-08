@@ -14,6 +14,78 @@ import (
 // are used to abstract away complexity from the end user by populating the service struct using
 // the minimum required variables
 
+var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
+	"id": {
+		Type:        schema.TypeString,
+		Description: "Id of the service",
+		Computed:    true,
+	},
+	"name": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
+		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+	},
+	"description": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Description of the service",
+		Default:     "resourceServiceInfraSsh",
+	},
+	"cluster": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
+		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+	},
+	"access_tier": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
+	},
+	"connector": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
+		Default:     "",
+	},
+	"domain": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The external-facing network address for this service; ex. website.example.com",
+	},
+	"port": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Description:  "The external-facing port for this service",
+		Default:      8443,
+		ValidateFunc: validatePort(),
+	},
+	"backend_http_connect": {
+		Type:        schema.TypeBool,
+		Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+		Optional:    true,
+		Default:     false,
+	},
+	"backend_domain": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
+	},
+	"backend_port": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
+		ValidateFunc: validatePort(),
+	},
+	"client_banyanproxy_listen_port": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Description:  "Local listen port to be used by client proxy; if not specified, a random local port will be used",
+		ValidateFunc: validatePort(),
+	},
+}
+
 func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	err := d.Set("name", service.ServiceName)
 	if err != nil {

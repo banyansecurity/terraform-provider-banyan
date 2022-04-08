@@ -1,12 +1,39 @@
 package banyan
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"testing"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func TestSchemaServiceInfraK8s_k8s_conn(t *testing.T) {
+	svc_k8s_conn := map[string]interface{}{
+		"name":                            "k8s-conn",
+		"description":                     "pybanyan k8s-conn",
+		"cluster":                         "managed-cl-edge1",
+		"connector":                       "test-connector",
+		"domain":                          "test-k8s-conn.tdupnsan.getbnn.com",
+		"backend_dns_override_for_domain": "myoidcproxy.amazonaws.com",
+		"client_banyanproxy_listen_port":  9199,
+		"client_kube_cluster_name":        "eks-hero",
+		"client_kube_ca_key":              "AAAA1234",
+	}
+	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraK8sSchema(), svc_k8s_conn)
+	svc_obj := expandK8sCreateService(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/k8s-conn.json")
+	var ref_obj service.CreateService
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+
+}
 
 func TestAccService_k8s(t *testing.T) {
 	var bnnService service.GetServiceSpec
