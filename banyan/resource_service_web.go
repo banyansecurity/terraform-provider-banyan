@@ -17,7 +17,7 @@ import (
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceWeb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This is an org wide setting. There can only be one of these per organization.",
+		Description:   "resourceServiceWeb",
 		CreateContext: resourceServiceWebCreate,
 		ReadContext:   resourceServiceWebRead,
 		UpdateContext: resourceServiceWebUpdate,
