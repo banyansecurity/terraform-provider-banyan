@@ -89,20 +89,7 @@
                 "status_code": 0
             },
             "exempted_paths": {
-                "enabled": false,
-                "patterns": [
-                    {
-                        "hosts": [
-                            {
-                                "origin_header": [],
-                                "target": []
-                            }
-                        ],
-                        "methods": [],
-                        "paths": [],
-                        "mandatory_headers": []
-                    }
-                ]
+                "enabled": false
             },
             "headers": {}
         },

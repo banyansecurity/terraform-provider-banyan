@@ -7,11 +7,109 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 	"log"
 	"strconv"
 )
+
+var resourceServiceInfraTcpSchema = map[string]*schema.Schema{
+	"id": {
+		Type:        schema.TypeString,
+		Description: "Id of the service",
+		Computed:    true,
+	},
+	"name": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
+		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+	},
+	"description": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Description of the service",
+	},
+	"cluster": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
+		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+	},
+	"access_tier": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
+	},
+	"connector": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
+		Default:     "",
+	},
+	"domain": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The external-facing network address for this service; ex. website.example.com",
+	},
+	"port": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Description:  "The external-facing port for this service",
+		Default:      8443,
+		ValidateFunc: validatePort(),
+	},
+	"icon": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"description_link": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"backend_domain": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
+	},
+	"backend_port": {
+		Type:         schema.TypeInt,
+		Required:     true,
+		Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
+		ValidateFunc: validatePort(),
+	},
+	"backend_http_connect": {
+		Type:        schema.TypeBool,
+		Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+		Optional:    true,
+		Default:     false,
+	},
+	"client_banyanproxy_listen_port": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Description:  "The external-facing port for this service",
+		Default:      8443,
+		ValidateFunc: validatePort(),
+	},
+	"allow_user_override": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+	},
+	"include_domains": {
+		Type:     schema.TypeSet,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+	},
+	"dns_override": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: `Backend DNS Override for Service Domain Name`,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+	},
+}
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraTcp() *schema.Resource {
@@ -21,216 +119,7 @@ func resourceServiceInfraTcp() *schema.Resource {
 		ReadContext:   resourceServiceInfraTcpRead,
 		UpdateContext: resourceServiceInfraTcpUpdate,
 		DeleteContext: resourceServiceInfraTcpDelete,
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
-				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
-			},
-			"id": {
-				Type:        schema.TypeString,
-				Description: "Id of the service",
-				Computed:    true,
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Description of the service",
-			},
-			"cluster": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
-				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
-			},
-			"access_tier": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
-			},
-			"connector": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
-				Default:     "",
-			},
-			"domain": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The external-facing network address for this service; ex. website.example.com",
-			},
-			"port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Description:  "The external-facing port for this service",
-				Default:      8443,
-				ValidateFunc: validatePort(),
-			},
-			"user_facing": {
-				Type:        schema.TypeBool,
-				Description: "Whether the service is user-facing or not",
-				Optional:    true,
-				Default:     true,
-			},
-			"icon": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"description_link": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"backend_domain": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
-			},
-			"backend_port": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
-				ValidateFunc: validatePort(),
-			},
-			"backend_http_connect": {
-				Type:        schema.TypeBool,
-				Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-				Optional:    true,
-				Default:     false,
-			},
-			"allow_user_override": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"include_domains": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"dns_overrides": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Description: `
-								Specifies name-to-address or name-to-name mappings.
-								Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
-								Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
-								Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
-								ame-to-name    ->    "exposed.service.com" : "internal.myservice.com"
-										`,
-				Elem: &schema.Schema{Type: schema.TypeString},
-			},
-			"allow_patterns": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Description: `
-								Defines the patterns for the backend workload instance. If the BackendAllowPatterns is set,
-								then the backend must match at least one entry in this list to establish connection with the backend service. 
-   								Note that this field is effective only when BackendWhitelist is not populated.
-   								If BackendWhitelist and BackendAllowPatterns are both not populated, then all backend
-   								address/name/port are allowed. This field could be used with httpConnect set to TRUE or FALSE. With HttpConnect set to FALSE, 
-   								only backend hostnames are supported, all other fields are ignored. With HttpConnect set to TRUE, 
-   								all fields of BackendAllowPatterns are supported and effective.`,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hostnames": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-							Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
-						},
-						"cidrs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsCIDRNetwork(0, 32),
-							},
-							Description: "Host may be a CIDR such as 10.1.1.0/24",
-						},
-						"ports": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Description: `List of allowed ports and port ranges`,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"port_list": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeInt,
-											ValidateFunc: validatePort(),
-										},
-										Description: "List of allowed ports",
-									},
-									"port_range": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Description: `List of allowed port ranges`,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"min": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													Description:  "Minimum value of port range",
-													ValidateFunc: validatePort(),
-												},
-												"max": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													Description:  "Maximum value of port range",
-													ValidateFunc: validatePort(),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"tls_sni": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Description: `
-					If TLSSNI is set, Netagent will reject all non-TLS connections.
-					It will only forward on TLS connections where the SNI matches for Policy validation"`,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"cert_settings": {
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				MinItems:    1,
-				Optional:    true,
-				Computed:    true,
-				Description: "Specifies the X.509 server certificate to use for this Service",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dns_names": {
-							Type: schema.TypeSet,
-							Description: `
-								DNSNames specifies how to populate the CommonName field in the X.509
-								server certificate for this Service. If DNSNames is not specified the 
-								CommonName field will be set to the ServiceName`,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-		},
+		Schema:        resourceServiceInfraTcpSchema,
 	}
 }
 
@@ -262,20 +151,22 @@ func resourceServiceInfraTcpCreate(ctx context.Context, d *schema.ResourceData, 
 
 func expandTCPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
-	userFacingMetadataTag := d.Get("user_facing").(bool)
-	userFacing := strconv.FormatBool(userFacingMetadataTag)
+	userFacing := "true"
 	protocol := "tcp"
 	domain := d.Get("domain").(string)
 	portInt := d.Get("port").(int)
 	port := strconv.Itoa(portInt)
 	icon := d.Get("icon").(string)
 	serviceAppType := "GENERIC"
-	alp := d.Get("backend_port").(int)
+	alp := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alp)
 	banyanProxyMode := "TCP"
 	descriptionLink := d.Get("description_link").(string)
 	allowUserOverride := d.Get("allow_user_override").(bool)
 	includeDomains := convertSchemaSetToStringSlice(d.Get("include_domains").(*schema.Set))
+	if includeDomains == nil {
+		includeDomains = []string{}
+	}
 
 	metadatatags = service.Tags{
 		Template:          &template,
@@ -320,11 +211,10 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("include_domains", service.CreateServiceSpec.Metadata.Tags.IncludeDomains)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	resourceServiceInfraCommonReadBackendPort(service, d, m)
+	bpInt, _ := strconv.Atoi(service.CreateServiceSpec.Spec.Backend.Target.Port)
+	err = d.Set("backend_port", bpInt)
+	alpInt, _ := strconv.Atoi(service.CreateServiceSpec.Spec.Backend.Target.Port)
+	err = d.Set("client_banyanproxy_listen_port", alpInt)
 	diagnostics = resourceServiceInfraCommonRead(service, d, m)
 	log.Printf("[SVC|RES|READ] read TCP service %s : %s", d.Get("name"), d.Id())
 	return
