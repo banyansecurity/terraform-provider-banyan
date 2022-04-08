@@ -137,15 +137,21 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func expandK8sServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	d.Set("backend_http_connect", true)
 	spec = expandInfraServiceSpec(d)
 
 	domain := d.Get("domain").(string)
 	backend_override := d.Get("backend_dns_override_for_domain").(string)
-
 	spec.Backend.DNSOverrides = map[string]string{
 		domain: backend_override,
 	}
-	spec.Backend.AllowPatterns[0].Hostnames = []string{domain}
+
+	allow_patterns := []service.BackendAllowPattern{
+		{
+			Hostnames: []string{domain},
+		},
+	}
+	spec.Backend.AllowPatterns = allow_patterns
 	return
 }
 

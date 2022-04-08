@@ -151,7 +151,7 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
+	hostTagSelector := service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
 	accessTiers := strings.Split(siteName, "|")
 	err = d.Set("access_tier", accessTiers[0])

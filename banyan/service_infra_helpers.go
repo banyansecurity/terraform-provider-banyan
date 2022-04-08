@@ -102,7 +102,7 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
+	hostTagSelector := service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
 	accessTiers := strings.Split(siteName, "|")
 	err = d.Set("access_tier", accessTiers[0])
@@ -137,10 +137,15 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("client_banyanproxy_listen_port", service.CreateServiceSpec.Metadata.Tags.AppListenPort)
-	if err != nil {
-		return diag.FromErr(err)
+	if service.CreateServiceSpec.Metadata.Tags.AppListenPort != nil {
+		clientPortVal := *service.CreateServiceSpec.Metadata.Tags.AppListenPort
+		clientPortInt, _ := strconv.Atoi(clientPortVal)
+		err = d.Set("client_banyanproxy_listen_port", clientPortInt)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
+
 	d.SetId(d.Id())
 	return
 }
