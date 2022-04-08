@@ -2,11 +2,12 @@ package banyan
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 // Returns service from JSON string
@@ -32,6 +33,11 @@ func AssertServiceSpecEqual(t *testing.T, got service.GetServiceSpec, want servi
 	}
 }
 
+func AssertCreateServiceEqual(t *testing.T, got service.CreateService, want service.CreateService) {
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
+	}
+}
 func testAccCheckAgainstJson(t *testing.T, path string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		got, _, err := testAccClient.Service.Get(*id)

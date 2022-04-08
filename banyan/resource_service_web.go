@@ -22,83 +22,86 @@ func resourceServiceWeb() *schema.Resource {
 		ReadContext:   resourceServiceWebRead,
 		UpdateContext: resourceServiceWebUpdate,
 		DeleteContext: resourceServiceWebDelete,
-		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:        schema.TypeString,
-				Description: "Id of the service",
-				Computed:    true,
-			},
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
-				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Description of the service",
-			},
-			"cluster": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
-				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
-			},
-			"access_tier": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
-			},
-			"connector": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
-				Default:     "",
-			},
-			"domain": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The external-facing network address for this service; ex. website.example.com",
-			},
-			"port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Description:  "The external-facing port for this service",
-				Default:      443,
-				ValidateFunc: validatePort(),
-			},
-			"letsencrypt": {
-				Type:        schema.TypeBool,
-				Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
-				Optional:    true,
-				Default:     false,
-			},
-			"backend_domain": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
-			},
-			"backend_port": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				Description:  "The internal port where this service is hosted",
-				ValidateFunc: validatePort(),
-			},
-			"backend_tls": {
-				Type:        schema.TypeBool,
-				Description: "Indicates whether the connection to the backend server uses TLS.",
-				Optional:    true,
-				Default:     false,
-			},
-			"backend_tls_insecure": {
-				Type:        schema.TypeBool,
-				Description: "Indicates the connection to the backend should not validate the backend server TLS certficate",
-				Optional:    true,
-				Default:     false,
-			},
-		},
+		Schema:        resourceServiceWebSchema,
 	}
+}
+
+var resourceServiceWebSchema = map[string]*schema.Schema{
+	"id": {
+		Type:        schema.TypeString,
+		Description: "Id of the service",
+		Computed:    true,
+	},
+	"name": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
+		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+	},
+	"description": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Description of the service",
+		Default:     "resourceServiceWeb",
+	},
+	"cluster": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
+		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+	},
+	"access_tier": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
+	},
+	"connector": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
+		Default:     "",
+	},
+	"domain": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The external-facing network address for this service; ex. website.example.com",
+	},
+	"port": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Description:  "The external-facing port for this service",
+		Default:      443,
+		ValidateFunc: validatePort(),
+	},
+	"letsencrypt": {
+		Type:        schema.TypeBool,
+		Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
+		Optional:    true,
+		Default:     false,
+	},
+	"backend_domain": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
+	},
+	"backend_port": {
+		Type:         schema.TypeInt,
+		Required:     true,
+		Description:  "The internal port where this service is hosted",
+		ValidateFunc: validatePort(),
+	},
+	"backend_tls": {
+		Type:        schema.TypeBool,
+		Description: "Indicates whether the connection to the backend server uses TLS.",
+		Optional:    true,
+		Default:     false,
+	},
+	"backend_tls_insecure": {
+		Type:        schema.TypeBool,
+		Description: "Indicates the connection to the backend should not validate the backend server TLS certficate",
+		Optional:    true,
+		Default:     false,
+	},
 }
 
 func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -255,9 +258,16 @@ func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 }
 
 func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes) {
+	// if connector is set, ensure access_tier is *
+	accessTier := d.Get("access_tier").(string)
+	connector := d.Get("connector").(string)
+	if connector != "" {
+		accessTier = "*"
+	}
+
 	// build HostTagSelector from access_tier
 	var hostTagSelector []map[string]string
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("access_tier").(string)}
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": accessTier}
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
 
 	attributes = service.Attributes{
@@ -270,7 +280,7 @@ func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes)
 
 func expandWebFrontendAddresses(d *schema.ResourceData) (frontendAddresses []service.FrontendAddress) {
 	frontendAddresses = []service.FrontendAddress{
-		service.FrontendAddress{
+		{
 			CIDR: "",
 			Port: strconv.Itoa(d.Get("port").(int)),
 		},
