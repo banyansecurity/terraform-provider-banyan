@@ -79,11 +79,17 @@ func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 }
 
 func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attributes) {
+	// if connector is set, ensure access_tier is *
+	accessTier := d.Get("access_tier").(string)
+	connector := d.Get("connector").(string)
+	if connector != "" {
+		accessTier = "*"
+	}
 	var tlsSNI []string
 	tlsSNI = append(tlsSNI, d.Get("domain").(string))
 	// build HostTagSelector from access_tier
 	var hostTagSelector []map[string]string
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("access_tier").(string)}
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": accessTier}
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
 	attributes = service.Attributes{
 		TLSSNI:            tlsSNI,
