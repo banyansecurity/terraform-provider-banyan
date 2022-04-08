@@ -45,6 +45,7 @@ func buildResourceServiceInfraSshSchema() (schemaSsh map[string]*schema.Schema) 
 			Type:        schema.TypeInt,
 			Description: "For SSH, banyanproxy uses stdin instead of a local port",
 			Computed:    true,
+			Default:     nil,
 		},
 	}
 	for key, val := range resourceServiceInfraCommonSchema {
@@ -139,10 +140,14 @@ func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m 
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
-	d.Set("ssh_service_type", service.CreateServiceSpec.Metadata.Tags.SSHServiceType)
-	d.Set("write_ssh_config", service.CreateServiceSpec.Metadata.Tags.WriteSSHConfig)
-	d.Set("ssh_chain_mode", service.CreateServiceSpec.Metadata.Tags.SSHChainMode)
-	d.Set("ssh_host_directive", service.CreateServiceSpec.Metadata.Tags.SSHHostDirective)
+	err = d.Set("client_ssh_auth", service.CreateServiceSpec.Metadata.Tags.SSHServiceType)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_ssh_host_directive", service.CreateServiceSpec.Metadata.Tags.SSHHostDirective)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	diagnostics = resourceServiceInfraCommonRead(service, d, m)
 	log.Printf("[SVC|RES|READ] read SSH service %s : %s", d.Get("name"), d.Id())
 	return

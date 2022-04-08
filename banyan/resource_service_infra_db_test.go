@@ -1,12 +1,38 @@
 package banyan
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"testing"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func TestSchemaServiceInfraDb_database_at(t *testing.T) {
+	svc_rdp_conn := map[string]interface{}{
+		"name":                           "database-conn",
+		"description":                    "pybanyan database-conn",
+		"cluster":                        "managed-cl-edge1",
+		"connector":                      "test-connector",
+		"domain":                         "test-database-conn.tdupnsan.getbnn.com",
+		"backend_domain":                 "10.10.1.123",
+		"backend_port":                   3306,
+		"client_banyanproxy_listen_port": 9299,
+	}
+
+	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraDbSchema(), svc_rdp_conn)
+	svc_obj := expandDatabaseCreateService(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/database-conn.json")
+	var ref_obj service.CreateService
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+}
 
 func TestAccService_database(t *testing.T) {
 	var bnnService service.GetServiceSpec

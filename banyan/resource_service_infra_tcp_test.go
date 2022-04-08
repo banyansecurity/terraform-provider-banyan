@@ -3,16 +3,17 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"io/ioutil"
-	"testing"
 )
 
-func TestSchemaServiceInfraTcp_web_at(t *testing.T) {
-	svcInfraTcpAT := map[string]interface{}{
+func TestSchemaServiceInfraTcp_tcp_at(t *testing.T) {
+	svc_tcp_at := map[string]interface{}{
 		"name":                           "tcp-at",
 		"description":                    "pybanyan tcp-at",
 		"cluster":                        "cluster1",
@@ -23,9 +24,9 @@ func TestSchemaServiceInfraTcp_web_at(t *testing.T) {
 		"backend_port":                   6006,
 		"client_banyanproxy_listen_port": 9119,
 	}
-	d := schema.TestResourceDataRaw(t, resourceServiceInfraTcpSchema, svcInfraTcpAT)
+	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraTcpSchema(), svc_tcp_at)
 
-	svcObj := service.CreateService{
+	svc_obj := service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
@@ -38,15 +39,15 @@ func TestSchemaServiceInfraTcp_web_at(t *testing.T) {
 		Spec:       expandInfraServiceSpec(d),
 	}
 
-	jsonSpec, _ := ioutil.ReadFile("./specs/tcp-at.json")
-	var refObj service.CreateService
-	_ = json.Unmarshal(jsonSpec, &refObj)
+	json_spec, _ := ioutil.ReadFile("./specs/tcp-at.json")
+	var ref_obj service.CreateService
+	_ = json.Unmarshal(json_spec, &ref_obj)
 
-	AssertCreateServiceEqual(t, svcObj, refObj)
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
 }
 
-func TestSchemaServiceInfraTcp_web_conn(t *testing.T) {
-	svcInfraTcpConn := map[string]interface{}{
+func TestSchemaServiceInfraTcp_tcp_conn(t *testing.T) {
+	svc_tcp_conn := map[string]interface{}{
 		"name":                           "tcp-conn",
 		"description":                    "pybanyan tcp-conn",
 		"cluster":                        "managed-cl-edge1",
@@ -57,9 +58,9 @@ func TestSchemaServiceInfraTcp_web_conn(t *testing.T) {
 		"client_banyanproxy_listen_port": 9118,
 		"allow_user_override":            true,
 	}
-	d := schema.TestResourceDataRaw(t, resourceServiceInfraTcpSchema, svcInfraTcpConn)
+	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraTcpSchema(), svc_tcp_conn)
 
-	svcObj := service.CreateService{
+	svc_obj := service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
@@ -72,11 +73,11 @@ func TestSchemaServiceInfraTcp_web_conn(t *testing.T) {
 		Spec:       expandInfraServiceSpec(d),
 	}
 
-	jsonSpec, _ := ioutil.ReadFile("./specs/tcp-conn.json")
-	var refObj service.CreateService
-	_ = json.Unmarshal(jsonSpec, &refObj)
+	json_spec, _ := ioutil.ReadFile("./specs/tcp-conn.json")
+	var ref_obj service.CreateService
+	_ = json.Unmarshal(json_spec, &ref_obj)
 
-	AssertCreateServiceEqual(t, svcObj, refObj)
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
 }
 
 func TestAccService_tcp(t *testing.T) {

@@ -118,11 +118,26 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
+	portVal := *service.CreateServiceSpec.Metadata.Tags.Port
+	portInt, _ := strconv.Atoi(portVal)
+	err = d.Set("port", portInt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
+	err = d.Set("backend_http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	bpInt, _ := strconv.Atoi(service.CreateServiceSpec.Spec.Backend.Target.Port)
+	err = d.Set("backend_port", bpInt)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_banyanproxy_listen_port", service.CreateServiceSpec.Metadata.Tags.AppListenPort)
 	if err != nil {
 		return diag.FromErr(err)
 	}
