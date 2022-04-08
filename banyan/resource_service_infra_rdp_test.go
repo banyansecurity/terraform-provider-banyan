@@ -107,8 +107,8 @@ func testAccService_rdp_create_json(name string) string {
             "icon": "",
             "service_app_type": "RDP",
             "banyanproxy_mode": "TCP",
-            "app_listen_port": "3389",
-            "allow_user_override": false,
+            "app_listen_port": "0",
+            "allow_user_override": true,
             "description_link": ""
         }
     },
@@ -153,6 +153,50 @@ func testAccService_rdp_create_json(name string) string {
             },
             "letsencrypt": false
         },
+        "http_settings": {
+            "enabled": false,
+            "oidc_settings": {
+                "enabled": false,
+                "service_domain_name": "",
+                "post_auth_redirect_path": "",
+                "api_path": "",
+                "trust_callbacks": null,
+                "suppress_device_trust_verification": false
+            },
+            "http_health_check": {
+                "enabled": false,
+                "addresses": null,
+                "method": "",
+                "path": "",
+                "user_agent": "",
+                "from_address": [],
+                "https": false
+            },
+            "http_redirect": {
+                "enabled": false,
+                "addresses": null,
+                "from_address": null,
+                "url": "",
+                "status_code": 0
+            },
+            "exempted_paths": {
+                "enabled": false,
+                "patterns": [
+                    {
+                        "hosts": [
+                            {
+                                "origin_header": [],
+                                "target": []
+                            }
+                        ],
+                        "methods": [],
+                        "paths": [],
+                        "mandatory_headers": []
+                    }
+                ]
+            },
+            "headers": {}
+        },        
         "client_cidrs": []
     }
 }
