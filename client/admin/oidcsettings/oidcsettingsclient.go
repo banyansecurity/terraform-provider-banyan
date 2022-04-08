@@ -41,6 +41,9 @@ func (this *OidcSettings) Get() (oidcSettings Spec, err error) {
 
 	// initiate request for response
 	response, err := this.restClient.Do(request)
+	if err != nil {
+		return
+	}
 
 	// // code here to error handle
 	if err != nil {
