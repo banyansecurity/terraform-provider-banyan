@@ -32,7 +32,6 @@ func TestSchemaServiceInfraK8s_k8s_conn(t *testing.T) {
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
 	AssertCreateServiceEqual(t, svc_obj, ref_obj)
-
 }
 
 func TestAccService_k8s(t *testing.T) {

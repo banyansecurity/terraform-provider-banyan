@@ -111,9 +111,9 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	descriptionLink := ""
 	allowUserOverride := true
 
+	banyanProxyMode := "CHAIN"
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alpInt)
-	banyanProxyMode := "CHAIN"
 	kubeClusterName := d.Get("client_kube_cluster_name").(string)
 	kubeCaKey := d.Get("client_kube_ca_key").(string)
 
