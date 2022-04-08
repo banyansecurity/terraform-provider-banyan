@@ -160,8 +160,20 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
-	d.Set("client_kube_cluster_name", service.CreateServiceSpec.Metadata.Tags.KubeClusterName)
-	d.Set("client_kube_ca_key", service.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	domain := *service.CreateServiceSpec.Metadata.Tags.Domain
+	override := service.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	err = d.Set("backend_dns_override_for_domain", override)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_cluster_name", service.CreateServiceSpec.Metadata.Tags.KubeClusterName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_ca_key", service.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	diagnostics = resourceServiceInfraCommonRead(service, d, m)
 	log.Printf("[SVC|RES|READ] read kubernetes service %s : %s", d.Get("name"), d.Id())
 	return

@@ -107,7 +107,6 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
-	d.Set("allow_user_override", service.CreateServiceSpec.Metadata.Tags.AllowUserOverride)
 	diagnostics = resourceServiceInfraCommonRead(service, d, m)
 	log.Printf("[SVC|RES|READ] read RDP service %s : %s", d.Get("name"), d.Id())
 	d.SetId(id)

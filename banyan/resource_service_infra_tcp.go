@@ -132,18 +132,10 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
 	}
-	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
+	err = d.Set("client_banyanproxy_allowed_domains", service.CreateServiceSpec.Metadata.Tags.IncludeDomains)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	bpInt, _ := strconv.Atoi(service.CreateServiceSpec.Spec.Backend.Target.Port)
-	err = d.Set("backend_port", bpInt)
-	alpInt, _ := strconv.Atoi(service.CreateServiceSpec.Spec.Backend.Target.Port)
-	err = d.Set("client_banyanproxy_listen_port", alpInt)
 	diagnostics = resourceServiceInfraCommonRead(service, d, m)
 	log.Printf("[SVC|RES|READ] read TCP service %s : %s", d.Get("name"), d.Id())
 	return

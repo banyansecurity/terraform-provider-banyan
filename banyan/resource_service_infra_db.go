@@ -132,15 +132,7 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("svc %q", d.Id()))
 	}
-	err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.Target.Name)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("backend_http_connect", svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("allow_patterns", svc.CreateServiceSpec.Spec.Backend.AllowPatterns)
+	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -78,10 +78,10 @@ resource "banyan_service_infra_ssh" "acctest-ssh" {
   description = "some SSH service description"
   cluster      = "us-west"
   access_tier   = "us-west1"
-  ssh_host_directive = "%s-ssh.corp.com"
   domain      = "%s-ssh.corp.com"
   backend_domain = "%s-ssh.internal"
   backend_port = 22
+  client_ssh_host_directive = "%s-ssh.corp.com"
 }
 `, name, name, name, name)
 }
@@ -152,6 +152,50 @@ func testAccService_ssh_create_json(name string) string {
             },
             "letsencrypt": false
         },
+        "http_settings": {
+            "enabled": false,
+            "oidc_settings": {
+                "enabled": false,
+                "service_domain_name": "",
+                "post_auth_redirect_path": "",
+                "api_path": "",
+                "trust_callbacks": null,
+                "suppress_device_trust_verification": false
+            },
+            "http_health_check": {
+                "enabled": false,
+                "addresses": null,
+                "method": "",
+                "path": "",
+                "user_agent": "",
+                "from_address": [],
+                "https": false
+            },
+            "http_redirect": {
+                "enabled": false,
+                "addresses": null,
+                "from_address": null,
+                "url": "",
+                "status_code": 0
+            },
+            "exempted_paths": {
+                "enabled": false,
+                "patterns": [
+                    {
+                        "hosts": [
+                            {
+                                "origin_header": [],
+                                "target": []
+                            }
+                        ],
+                        "methods": [],
+                        "paths": [],
+                        "mandatory_headers": []
+                    }
+                ]
+            },
+            "headers": {}
+        },        
         "client_cidrs": []
     }
 }
