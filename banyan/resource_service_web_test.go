@@ -2,10 +2,11 @@ package banyan
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"testing"
 )
 
 // Use the terraform plugin sdk testing framework for acceptance testing banyan service lifecycle
@@ -54,7 +55,6 @@ resource "banyan_service_web" "acctest-web" {
   description = "some web service description"
   cluster     = "us-west"
   access_tier   = "us-west1"
-  protocol = "https"
   domain = "%s-web.corp.com"
   port = 443
   backend_domain = "%s-web.internal"
@@ -169,26 +169,13 @@ resource "banyan_service_web" "acctest-web" {
   name             = "%s"
   description      = "some web service description"
   cluster          = "us-west"
-  access_tier     = "us-west1"
-  protocol         = "https"
+  connector        = "foobar"
   domain           = "%s.corp.com"
   port             = 443
-  description_link = "%s.corp.com"
-  backend_domain = "%s.internal"
-  backend_port = 4321
-  http_settings {
-    enabled = true
-    oidc_settings {
-      enabled = true
-      service_domain_name = "https://%s.corp.com"
-      post_auth_redirect_path = "/some/path"
-      api_path = "/api"
-      suppress_device_trust_verification = false
-      trust_callbacks = {
-        "somecallback" : "ohhey"
-      }
-    }
-  }
+  backend_domain   = "%s.internal"
+  backend_port     = 4321
+  backend_tls      = true
+  backend_tls_insecure = true
 }
-`, name, name, name, name, name)
+`, name, name, name)
 }

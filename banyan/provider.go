@@ -31,7 +31,7 @@ func Provider() *schema.Provider {
 			"banyan_service_infra_tcp": resourceServiceInfraTcp(),
 			"banyan_service_infra_k8s": resourceServiceInfraK8s(),
 			"banyan_service_infra_db":  resourceServiceInfraDb(),
-			"banyan_service_web":       resourceServiceInfraWeb(),
+			"banyan_service_web":       resourceServiceWeb(),
 			"banyan_policy":            resourcePolicy(),
 			"banyan_role":              resourceRole(),
 			"banyan_policy_attachment": resourcePolicyAttachment(),

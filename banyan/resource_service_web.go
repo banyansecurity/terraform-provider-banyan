@@ -3,7 +3,6 @@ package banyan
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 	"strconv"
 	"strings"
@@ -16,24 +15,24 @@ import (
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
-func resourceServiceInfraWeb() *schema.Resource {
+func resourceServiceWeb() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This is an org wide setting. There can only be one of these per organization.",
-		CreateContext: resourceServiceInfraWebCreate,
-		ReadContext:   resourceServiceInfraWebRead,
-		UpdateContext: resourceServiceInfraWebUpdate,
-		DeleteContext: resourceServiceInfraWebDelete,
+		CreateContext: resourceServiceWebCreate,
+		ReadContext:   resourceServiceWebRead,
+		UpdateContext: resourceServiceWebUpdate,
+		DeleteContext: resourceServiceWebDelete,
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the service",
-				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
-			},
 			"id": {
 				Type:        schema.TypeString,
 				Description: "Id of the service",
 				Computed:    true,
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
+				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -43,7 +42,7 @@ func resourceServiceInfraWeb() *schema.Resource {
 			"cluster": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the NetAgent cluster which the service is accessible from",
+				Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
 			"access_tier": {
@@ -66,77 +65,14 @@ func resourceServiceInfraWeb() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Description:  "The external-facing port for this service",
-				Default:      8443,
+				Default:      443,
 				ValidateFunc: validatePort(),
 			},
-			"user_facing": {
+			"letsencrypt": {
 				Type:        schema.TypeBool,
-				Description: "Whether the service is user-facing or not",
+				Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
 				Optional:    true,
-				Default:     true,
-			},
-			"protocol": {
-				Type:         schema.TypeString,
-				Description:  "The protocol of the service, must be tcp, http or https",
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"http", "https", "tcp"}, false),
-			},
-			"icon": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"description_link": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"client_cidrs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Description: `
-					ClientCIDRs is used in environments with Network Address Translation (NAT) to list
-					the IP addresses that are used to access the Service; Netagent will then automatically
-					intercept traffic to these IP addresses.`,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr_address": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "CIDRAddress uses the Classless Inter-Domain Routing (CIDR) format for flexible allocation of IP addresses",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cidr": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Description:  "Must be in CIDR format i.e. 192.168.0.0/16",
-										ValidateFunc: validation.IsCIDRNetwork(0, 32),
-									},
-									"ports": {
-										Type:        schema.TypeString,
-										Description: "",
-										Optional:    true,
-									},
-								},
-							},
-						},
-						"clusters": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Description: "Tells Netagent to set Client CIDRs on only a specific subset of clusters",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"host_tag_selector": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "Tells Netagent to set Client CIDRs on only a specific subset of hosts and ports",
-							Elem: &schema.Schema{
-								Type: schema.TypeMap,
-								Elem: &schema.Schema{Type: schema.TypeString},
-							},
-						},
-					},
-				},
+				Default:     false,
 			},
 			"backend_domain": {
 				Type:        schema.TypeString,
@@ -146,513 +82,26 @@ func resourceServiceInfraWeb() *schema.Resource {
 			"backend_port": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
+				Description:  "The internal port where this service is hosted",
 				ValidateFunc: validatePort(),
-			},
-			"backend_http_connect": {
-				Type:        schema.TypeBool,
-				Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-				Optional:    true,
-				Default:     false,
-			},
-			"dns_overrides": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Description: `
-								Specifies name-to-address or name-to-name mappings.
-								Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
-								Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
-								Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
-								ame-to-name    ->    "exposed.service.com" : "internal.myservice.com"
-										`,
-				Elem: &schema.Schema{Type: schema.TypeString},
 			},
 			"backend_tls": {
 				Type:        schema.TypeBool,
-				Description: "TLS indicates whether the connection to the backend server uses TLS.",
+				Description: "Indicates whether the connection to the backend server uses TLS.",
 				Optional:    true,
 				Default:     false,
 			},
 			"backend_tls_insecure": {
 				Type:        schema.TypeBool,
-				Description: "TLSInsecure indicates whether the backend TLS connection does not validate the server's TLS certificate",
+				Description: "Indicates the connection to the backend should not validate the backend server TLS certficate",
 				Optional:    true,
 				Default:     false,
-			},
-			"client_certificate": {
-				Type:        schema.TypeBool,
-				Description: "Indicates whether to provide Netagent's client TLS certificate to the server if the server asks for it in the TLS handshake.",
-				Optional:    true,
-				Default:     false,
-			},
-			"allow_patterns": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Description: `
-								Defines the patterns for the backend workload instance. If the BackendAllowPatterns is set,
-								then the backend must match at least one entry in this list to establish connection with the backend service. 
-   								Note that this field is effective only when BackendWhitelist is not populated.
-   								If BackendWhitelist and BackendAllowPatterns are both not populated, then all backend
-   								address/name/port are allowed. This field could be used with httpConnect set to TRUE or FALSE. With HttpConnect set to FALSE, 
-   								only backend hostnames are supported, all other fields are ignored. With HttpConnect set to TRUE, 
-   								all fields of BackendAllowPatterns are supported and effective.`,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hostnames": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-							Description: "Allowed hostnames my include a leading and/or trailing wildcard character * to match multiple hostnames",
-						},
-						"cidrs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsCIDRNetwork(0, 32),
-							},
-							Description: "Host may be a CIDR such as 10.1.1.0/24",
-						},
-						"ports": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Description: `List of allowed ports and port ranges`,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"port_list": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeInt,
-											ValidateFunc: validatePort(),
-										},
-										Description: "List of allowed ports",
-									},
-									"port_range": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Description: `List of allowed port ranges`,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"min": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													Description:  "Minimum value of port range",
-													ValidateFunc: validatePort(),
-												},
-												"max": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													Description:  "Maximum value of port range",
-													ValidateFunc: validatePort(),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"whitelist": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Description: `
-								Indicates the allowed names for the backend workload instance. 
-								If this field is populated, then the backend name must match at least one entry
-								in this field list to establish connection with the backend service.
-								The names in this list are allowed to start with the wildcard character "*" to match more
-								than one backend name. This field is used generally with HttpConnect=FALSE. For all HttpConnect=TRUE cases, or where 
-								more advanced backend defining patterns are required, use BackendAllowPatterns.`,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"tls_sni": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Description: `
-					If TLSSNI is set, Netagent will reject all non-TLS connections.
-					It will only forward on TLS connections where the SNI matches for Policy validation"`,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"http_settings": {
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				Optional:    true,
-				Computed:    true,
-				Description: "Used by HTTP services for use-case specific functionality",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:        schema.TypeBool,
-							Description: "Enables http service specific settings",
-							Required:    true,
-						},
-						"oidc_settings": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Computed: true,
-							Description: `
-								OIDCSettings provides Netagent specific parameters needed to use 
-								OpenID Connect to authenticate an Entity for access to a Service
-								`,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:        schema.TypeBool,
-										Description: "Turns on the OIDC capability",
-										Required:    true,
-									},
-									"service_domain_name": {
-										Type:        schema.TypeString,
-										Description: "The URL used to access the service",
-										Required:    true,
-									},
-									"post_auth_redirect_path": {
-										Type:        schema.TypeString,
-										Default:     "/",
-										Description: "The path to return the user to after OpenID Connect flow",
-										Optional:    true,
-									},
-									"api_path": {
-										Type: schema.TypeString,
-										Description: `
-											default: /api) is the path serving AJAX requests. 
-											If a request is not authenticated, paths starting with the APIPath 
-											will receive a 403 Unauthorized response
-											instead of a 302 Redirect to the authentication provider`,
-										Optional: true,
-									},
-									"suppress_device_trust_verification": {
-										Type:        schema.TypeBool,
-										Optional:    true,
-										Description: "SuppressDeviceTrustVerification disables Device Trust Verification for a service if set to true",
-									},
-									"trust_callbacks": {
-										Type:        schema.TypeMap,
-										Optional:    true,
-										Description: "",
-										Elem:        &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"http_health_check": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Computed:    true,
-							Description: "Tells Netagent that specific HTTP paths should be exempted from access control policies",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:        schema.TypeBool,
-										Description: "Turns on the HTTP health check capability",
-										Required:    true,
-									},
-									"addresses": {
-										Type:        schema.TypeSet,
-										Required:    true,
-										Description: "Addresses of the http health check",
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"method": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "GET",
-										Description:  "Specifies the health check HTTP method",
-										ValidateFunc: validateHttpMethods(),
-									},
-									"path": {
-										Type:        schema.TypeString,
-										Description: "Specifies the HTTP health check path",
-										Required:    true,
-									},
-									"user_agent": {
-										Type:        schema.TypeString,
-										Description: "A string to check for in the HTTP user-agent header (no check if omitted)",
-										Optional:    true,
-									},
-									"from_address": {
-										Type:        schema.TypeSet,
-										Required:    true,
-										Description: "Allowed source addresses of the health checker (all allowed if omitted)",
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"https": {
-										Type:        schema.TypeBool,
-										Required:    true,
-										Description: "Specifies that the health check uses https instead of https",
-									},
-								},
-							},
-						},
-						"exempted_paths": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Computed:    true,
-							Description: "Tells Netagent that specific HTTP paths should be whitelisted/exempted from OIDC authentication",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:        schema.TypeBool,
-										Description: "Turns on the HTTP exempted paths capability",
-										Required:    true,
-									},
-									"patterns": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Description: `
-											Pattern tells Netagent to exempt HTTP requests based on matching HTTP request attributes 
-											such as source IP, host, headers, methods, paths, etc. 
-											For example, use this section when exempting CORS requests by source IP address.
-											`,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"template": {
-													Type:        schema.TypeString,
-													Description: "",
-													Optional:    true,
-												},
-												"source_cidrs": {
-													Type: schema.TypeSet,
-													Description: `
-														Specifies the source IP address of the HTTP request. 
-														The matching request should match or should be in the range of the CIDR specified.
-														SourceCIDRs is an array and multiple CIDRs with/without prefix 
-														could be specified like, 127.0.0.1, 192.168.1.0/29, 10.0.0.0/8 etc.
-														If source-ip matching is not required, please skip this field`,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
-												"hosts": {
-													Type:        schema.TypeList,
-													Optional:    true,
-													Description: "The host/origin header values in the HTTP request",
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"origin_header": {
-																Type: schema.TypeSet,
-																Description: `
-																	OriginHeader (mandatory)-is list of web host address. 
-																	The web-host address matches to contents of Origin header in the HTTP request.
-																	The value should have "scheme:host:port", ex: "https://www.banyansecurity.io:443".
-																	This field supports single domain wildcards also, like 
-																	https://*.banyansecurity.com or https://api.*.banyansecurity.com:443
-																	`,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"target": {
-																Type: schema.TypeSet,
-																Description: `
-																	Target (mandatory) list of web host address. In this web-host address,
-																	the hostname matches to host header in the HTTP request.
-																	The value should have "scheme:host:port",
-																	ex: https://www.banyansecurity.io:443. This field supports single domain wildcards also,
-																	like https://*.banyansecurity.com or https://api.*.banyansecurity.com:443.
-																	This should be filled only while hosting multi-domain services. In single domain
-																	service deployments, this field to be filled as [*] to have "DONT CARE" effect.
-																	`,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-														},
-													},
-												},
-												"methods": {
-													Type: schema.TypeSet,
-													Description: `
-														Matches the HTTP request methods. The matching request 
-														will have any one of the listed methods.
-														To list all the methods supported "like GET/POST/OPTIONS etc.
-														["*"] value will have "DONT CARE" effect and will skip matching methods.
-														`,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
-												"paths": {
-													Type:        schema.TypeSet,
-													Description: "Matches the HTTP request URI. The matching request will have any one of the paths/strings listed.",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
-												"mandatory_headers": {
-													Type: schema.TypeSet,
-													Description: `
-														MandatoryHeaders (mandatory) matches the HTTP request headers.
-														The matching request will have all of the headers listed.
-														To list all the headers that a matching HTTP request should have for instance
-														"Content-Type"/"Access-Control-Allow-Origin" etc.
-														["*"] will have "DONT CARE" effect and will skip matching headers.`,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"headers": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Computed: true,
-							Description: `
-								Headers is a list of HTTP headers to add to every request sent to the Backend;
-								the key of the map is the header name, and the value is the header value you want.
-								The header value may be constructed using Go template syntax, such as
-								referencing values in Banyan's JWT TrustToken.
-								`,
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						"token_loc": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Computed:    true,
-							MaxItems:    1,
-							Description: "Token location",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"query_param": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"authorization_header": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									"custom_header": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"cert_settings": {
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				MinItems:    1,
-				Optional:    true,
-				Computed:    true,
-				Description: "Specifies the X.509 server certificate to use for this Service",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"letsencrypt": {
-							Type:        schema.TypeBool,
-							Description: "Letsencrypt flag will be used whether to request a letsencrypt certificate for given domains",
-							Optional:    true,
-						},
-						"dns_names": {
-							Type: schema.TypeSet,
-							Description: `
-								DNSNames specifies how to populate the CommonName field in the X.509
-								server certificate for this Service. If DNSNames is not specified the 
-								CommonName field will be set to the ServiceName`,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"custom_tls_cert": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Computed: true,
-							Description: `
-								CustomTLSCert enables Netagent to override the default behavior
-								of obtaining a X.509 server certificate for this Service from Shield,
-								and instead use a TLS certificate on the local file system`,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:        schema.TypeBool,
-										Description: "Turns on the custom TLS certificate capability",
-										Required:    true,
-									},
-									"cert_file": {
-										Type:        schema.TypeString,
-										Sensitive:   true,
-										Description: "Specifies the local path of the public certificate (ex: /etc/letsencrypt/live/intks.net-0001/fullchain.pem) on the netagent / connector filesystem",
-										Required:    true,
-									},
-									"key_file": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "Specifies the local path of the private key (ex: /etc/letsencrypt/live/intks.net-0001/fullchain.pem) on the netagent / connector filesystem",
-										Sensitive:   true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"tag_slice": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				MinItems:    1,
-				Description: "TagSlice to hold all the tags for Registered Service",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"org_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"service_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
 			},
 		},
 	}
 }
 
-func resourceServiceInfraWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating web service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
@@ -675,42 +124,17 @@ func resourceServiceInfraWebCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 	log.Printf("[SVC|RES|CREATE] Created web service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return resourceServiceInfraWebRead(ctx, d, m)
+	return resourceServiceWebRead(ctx, d, m)
 }
 
-func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
-	template := "WEB_USER"
-	userFacingMetadataTag := d.Get("user_facing").(bool)
-	userFacing := strconv.FormatBool(userFacingMetadataTag)
-	protocol := d.Get("protocol").(string)
-	domain := d.Get("domain").(string)
-	portInt := d.Get("port").(int)
-	port := strconv.Itoa(portInt)
-	icon := d.Get("icon").(string)
-	serviceAppType := "WEB"
-	descriptionLink := d.Get("description_link").(string)
-
-	metadatatags = service.Tags{
-		Template:        &template,
-		UserFacing:      &userFacing,
-		Protocol:        &protocol,
-		Domain:          &domain,
-		Port:            &port,
-		Icon:            &icon,
-		ServiceAppType:  &serviceAppType,
-		DescriptionLink: &descriptionLink,
-	}
-	return
-}
-
-func resourceServiceInfraWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] updating web service %s : %s", d.Get("name"), d.Id())
-	resourceServiceInfraWebCreate(ctx, d, m)
+	resourceServiceWebCreate(ctx, d, m)
 	log.Printf("[SVC|RES|UPDATE] updated web service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
-func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] Reading web service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
@@ -744,20 +168,7 @@ func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m 
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	var metadataTagUserFacing bool
-	metadataTagUserFacingPtr := service.CreateServiceSpec.Metadata.Tags.UserFacing
-	if metadataTagUserFacingPtr != nil {
-		metadataTagUserFacing, err = strconv.ParseBool(*service.CreateServiceSpec.Metadata.Tags.UserFacing)
-		if err != nil {
-			diagnostics = diag.FromErr(err)
-			return
-		}
-	}
 	err = d.Set("connector", service.CreateServiceSpec.Spec.Backend.ConnectorName)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("user_facing", metadataTagUserFacing)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -765,40 +176,39 @@ func resourceServiceInfraWebRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("icon", service.CreateServiceSpec.Metadata.Tags.Icon)
+	portVal := *service.CreateServiceSpec.Metadata.Tags.Port
+	portInt, _ := strconv.Atoi(portVal)
+	err = d.Set("port", portInt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("description_link", service.CreateServiceSpec.Metadata.Tags.DescriptionLink)
+	err = d.Set("letsencrypt", service.CreateServiceSpec.Spec.CertSettings.Letsencrypt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("client_cidrs", flattenServiceClientCIDRs(service.CreateServiceSpec.Spec.ClientCIDRs))
+	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	tlsSNI := removeFromSlice(service.CreateServiceSpec.Spec.Attributes.TLSSNI, *service.CreateServiceSpec.Metadata.Tags.Domain)
-	err = d.Set("tls_sni", tlsSNI)
+	bpInt, _ := strconv.Atoi(service.CreateServiceSpec.Spec.Backend.Target.Port)
+	err = d.Set("backend_port", bpInt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("http_settings", flattenServiceHTTPSettings(service.CreateServiceSpec.Spec.HTTPSettings))
+	err = d.Set("backend_tls", service.CreateServiceSpec.Spec.Backend.Target.TLS)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("cert_settings", flattenWebServiceCertSettings(service.CreateServiceSpec.Spec.CertSettings, *service.CreateServiceSpec.Metadata.Tags.Domain))
+	err = d.Set("backend_tls_insecure", service.CreateServiceSpec.Spec.Backend.Target.TLSInsecure)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("tag_slice", flattenServiceTagSlice(service.CreateServiceSpec.Spec.TagSlice))
-	if err != nil {
-		return diag.FromErr(err)
-	}
+
 	d.SetId(id)
 	return
 }
 
-func resourceServiceInfraWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting web service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
@@ -809,158 +219,127 @@ func resourceServiceInfraWebDelete(ctx context.Context, d *schema.ResourceData, 
 	return
 }
 
-func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
-	clientCidrs := expandClientCIDRs(d.Get("client_cidrs").([]interface{}))
-	if len(clientCidrs) == 0 {
-		clientCidrs = []service.ClientCIDRs{}
+func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
+	template := "WEB_USER"
+	userFacing := "true"
+	protocol := "https"
+	domain := d.Get("domain").(string)
+	portInt := d.Get("port").(int)
+	port := strconv.Itoa(portInt)
+	icon := ""
+	serviceAppType := "WEB"
+	descriptionLink := ""
+
+	metadatatags = service.Tags{
+		Template:        &template,
+		UserFacing:      &userFacing,
+		Protocol:        &protocol,
+		Domain:          &domain,
+		Port:            &port,
+		Icon:            &icon,
+		ServiceAppType:  &serviceAppType,
+		DescriptionLink: &descriptionLink,
 	}
+	return
+}
+
+func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	spec = service.Spec{
 		Attributes:   expandWebAttributes(d),
 		Backend:      expandWebBackend(d),
-		CertSettings: expandInfraCertSettings(d),
+		CertSettings: expandWebCertSettings(d),
 		HTTPSettings: expandWebHTTPSettings(d),
-		ClientCIDRs:  clientCidrs,
-		TagSlice:     expandTagSlice(d.Get("tag_slice").([]interface{})),
-	}
-	return
-}
-
-func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSettings) {
-	httpSettingsItem := d.Get("http_settings").([]interface{})
-	if len(httpSettingsItem) == 0 {
-		httpSettings = service.HTTPSettings{
-			Enabled: true,
-			OIDCSettings: service.OIDCSettings{
-				Enabled:                         true,
-				ServiceDomainName:               fmt.Sprintf("https://%s", d.Get("domain").(string)),
-				PostAuthRedirectPath:            "",
-				APIPath:                         "",
-				TrustCallBacks:                  nil,
-				SuppressDeviceTrustVerification: false,
-			},
-			HTTPHealthCheck: service.HTTPHealthCheck{
-				Enabled:     false,
-				Addresses:   nil,
-				Method:      "",
-				Path:        "",
-				UserAgent:   "",
-				FromAddress: []string{},
-				HTTPS:       false,
-			},
-			HTTPRedirect: service.HTTPRedirect{
-				Enabled:     false,
-				Addresses:   nil,
-				FromAddress: nil,
-				URL:         "",
-				StatusCode:  0,
-			},
-			ExemptedPaths: service.ExemptedPaths{
-				Enabled:  false,
-				Paths:    nil,
-				Patterns: nil,
-			},
-			Headers:  map[string]string{},
-			TokenLoc: nil,
-		}
-		return
-	}
-
-	itemMap := httpSettingsItem[0].(map[string]interface{})
-	tokenLoc := expandTokenLoc(itemMap["token_loc"].([]interface{}))
-	httpSettings = service.HTTPSettings{
-		Enabled:         itemMap["enabled"].(bool),
-		OIDCSettings:    expandWebOIDCSettings(d, itemMap["oidc_settings"].([]interface{})),
-		HTTPHealthCheck: expandHTTPHealthCheck(itemMap["http_health_check"].([]interface{})),
-		// will be deprecated from api
-		HTTPRedirect:  service.HTTPRedirect{},
-		ExemptedPaths: expandExemptedPaths(itemMap["exempted_paths"].([]interface{})),
-		Headers:       convertInterfaceMapToStringMap(itemMap["headers"].(map[string]interface{})),
-		TokenLoc:      &tokenLoc,
-	}
-	return
-}
-
-func expandWebOIDCSettings(d *schema.ResourceData, m []interface{}) (oidcSettings service.OIDCSettings) {
-	if len(m) == 0 {
-		return
-	}
-	itemMap := m[0].(map[string]interface{})
-	oidcSettings = service.OIDCSettings{
-		Enabled:                         true,
-		ServiceDomainName:               fmt.Sprintf("https://%s", d.Get("domain").(string)),
-		PostAuthRedirectPath:            itemMap["post_auth_redirect_path"].(string),
-		APIPath:                         itemMap["api_path"].(string),
-		TrustCallBacks:                  convertInterfaceMapToStringMap(itemMap["trust_callbacks"].(map[string]interface{})),
-		SuppressDeviceTrustVerification: itemMap["suppress_device_trust_verification"].(bool),
+		ClientCIDRs:  []service.ClientCIDRs{},
 	}
 	return
 }
 
 func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes) {
-	var tlsSNI []string
-	additionalTlsSni := convertSchemaSetToStringSlice(d.Get("tls_sni").(*schema.Set))
-	for _, s := range additionalTlsSni {
-		tlsSNI = append(tlsSNI, s)
-	}
-	tlsSNI = append(tlsSNI, d.Get("domain").(string))
-	tlsSNI = removeDuplicateStr(tlsSNI)
-
 	// build HostTagSelector from access_tier
 	var hostTagSelector []map[string]string
 	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("access_tier").(string)}
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
 
 	attributes = service.Attributes{
-		TLSSNI:            tlsSNI,
+		TLSSNI:            []string{d.Get("domain").(string)},
 		FrontendAddresses: expandWebFrontendAddresses(d),
 		HostTagSelector:   hostTagSelector,
 	}
 	return
 }
 
-func expandWebBackend(d *schema.ResourceData) (backend service.Backend) {
-	whitelist := convertSchemaSetToStringSlice(d.Get("whitelist").(*schema.Set))
-	if len(whitelist) == 0 {
-		whitelist = []string{}
+func expandWebFrontendAddresses(d *schema.ResourceData) (frontendAddresses []service.FrontendAddress) {
+	frontendAddresses = []service.FrontendAddress{
+		service.FrontendAddress{
+			CIDR: "",
+			Port: strconv.Itoa(d.Get("port").(int)),
+		},
 	}
+	return
+}
+
+func expandWebBackend(d *schema.ResourceData) (backend service.Backend) {
 	backend = service.Backend{
-		AllowPatterns: expandAllowPatterns(d.Get("allow_patterns").([]interface{})),
-		DNSOverrides:  convertEmptyInterfaceToStringMap(d.Get("dns_overrides").(map[string]interface{})),
-		ConnectorName: d.Get("connector").(string),
-		HTTPConnect:   d.Get("backend_http_connect").(bool),
 		Target:        expandWebTarget(d),
-		Whitelist:     whitelist,
+		ConnectorName: d.Get("connector").(string),
+		DNSOverrides:  map[string]string{},
+		Whitelist:     []string{},
 	}
 	return
 }
 
 func expandWebTarget(d *schema.ResourceData) (target service.Target) {
 	return service.Target{
-		Name:              d.Get("backend_domain").(string),
-		Port:              strconv.Itoa(d.Get("backend_port").(int)),
-		TLS:               d.Get("backend_tls").(bool),
-		TLSInsecure:       d.Get("backend_tls_insecure").(bool),
-		ClientCertificate: d.Get("client_certificate").(bool),
+		Name:        d.Get("backend_domain").(string),
+		Port:        strconv.Itoa(d.Get("backend_port").(int)),
+		TLS:         d.Get("backend_tls").(bool),
+		TLSInsecure: d.Get("backend_tls_insecure").(bool),
 	}
 }
 
-func expandWebFrontendAddresses(d *schema.ResourceData) (frontendAddresses []service.FrontendAddress) {
-	portInt := d.Get("port").(int)
-	frontendAddresses = append(
-		frontendAddresses,
-		service.FrontendAddress{
-			CIDR: "",
-			Port: strconv.Itoa(portInt),
-		},
-	)
+func expandWebCertSettings(d *schema.ResourceData) (certSettings service.CertSettings) {
+	certSettings = service.CertSettings{
+		DNSNames:    []string{d.Get("domain").(string)},
+		Letsencrypt: d.Get("letsencrypt").(bool),
+	}
 	return
 }
 
-func flattenWebServiceCertSettings(toFlatten service.CertSettings, domain string) (flattened []interface{}) {
-	v := make(map[string]interface{})
-	v["custom_tls_cert"] = flattenServiceCustomTLSCert(toFlatten.CustomTLSCert)
-	v["dns_names"] = removeFromSlice(toFlatten.DNSNames, domain)
-	v["letsencrypt"] = toFlatten.Letsencrypt
-	flattened = append(flattened, v)
+func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSettings) {
+	httpSettings = service.HTTPSettings{
+		Enabled:         true,
+		OIDCSettings:    expandWebOIDCSettings(d),
+		ExemptedPaths:   expandWebExemptedPaths(d),
+		Headers:         map[string]string{},
+		HTTPHealthCheck: expandWebHTTPHealthCheck(),
+	}
+	return
+}
+
+func expandWebOIDCSettings(d *schema.ResourceData) (oidcSettings service.OIDCSettings) {
+	oidcSettings = service.OIDCSettings{
+		Enabled:           true,
+		ServiceDomainName: fmt.Sprintf("https://%s", d.Get("domain").(string)),
+	}
+	return
+}
+
+func expandWebExemptedPaths(d *schema.ResourceData) (exemptedPaths service.ExemptedPaths) {
+	exemptedPaths = service.ExemptedPaths{
+		Enabled: false,
+	}
+	return
+}
+
+func expandWebHTTPHealthCheck() (httpHealthCheck service.HTTPHealthCheck) {
+	httpHealthCheck = service.HTTPHealthCheck{
+		Enabled:     false,
+		Addresses:   nil,
+		Method:      "",
+		Path:        "",
+		UserAgent:   "",
+		FromAddress: []string{},
+		HTTPS:       false,
+	}
 	return
 }
