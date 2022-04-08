@@ -73,7 +73,7 @@ func expandServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 		Backend:      expandBackend(d),
 		CertSettings: expandCertSettings(d),
 		HTTPSettings: expandHTTPSettings(d.Get("http_settings").([]interface{})),
-		ClientCIDRs:  []service.ClientCIDRs{},
+		ClientCIDRs:  expandClientCIDRs(d.Get("client_cidrs").([]interface{})),
 	}
 	return
 }

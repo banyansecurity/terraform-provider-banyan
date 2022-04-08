@@ -107,7 +107,7 @@ func TestAccService_complex_web(t *testing.T) {
 			{
 				Config: testAccService_complex_web_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_web.acctest-web", &bnnService),
+					testAccCheckExistingService("banyan_service_web.acctest-web-complex", &bnnService),
 				),
 			},
 		},
@@ -232,7 +232,7 @@ func testAccService_basic_web_create_json(name string) string {
 // Returns terraform configuration for a typical basic service
 func testAccService_complex_web_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_web" "acctest-web" {
+resource "banyan_service_web" "acctest-web-complex" {
   name             = "%s"
   description      = "some web service description"
   cluster          = "us-west"

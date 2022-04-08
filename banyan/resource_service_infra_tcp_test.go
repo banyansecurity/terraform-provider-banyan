@@ -25,19 +25,7 @@ func TestSchemaServiceInfraTcp_tcp_at(t *testing.T) {
 		"client_banyanproxy_listen_port": 9119,
 	}
 	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraTcpSchema(), svc_tcp_at)
-
-	svc_obj := service.CreateService{
-		Metadata: service.Metadata{
-			Name:        d.Get("name").(string),
-			Description: d.Get("description").(string),
-			ClusterName: d.Get("cluster").(string),
-			Tags:        expandTCPMetatdataTags(d),
-		},
-		Kind:       "BanyanService",
-		APIVersion: "rbac.banyanops.com/v1",
-		Type:       "origin",
-		Spec:       expandInfraServiceSpec(d),
-	}
+	svc_obj := expandTcpCreateService(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/tcp-at.json")
 	var ref_obj service.CreateService
@@ -59,19 +47,7 @@ func TestSchemaServiceInfraTcp_tcp_conn(t *testing.T) {
 		"allow_user_override":            true,
 	}
 	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraTcpSchema(), svc_tcp_conn)
-
-	svc_obj := service.CreateService{
-		Metadata: service.Metadata{
-			Name:        d.Get("name").(string),
-			Description: d.Get("description").(string),
-			ClusterName: d.Get("cluster").(string),
-			Tags:        expandTCPMetatdataTags(d),
-		},
-		Kind:       "BanyanService",
-		APIVersion: "rbac.banyanops.com/v1",
-		Type:       "origin",
-		Spec:       expandInfraServiceSpec(d),
-	}
+	svc_obj := expandTcpCreateService(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/tcp-conn.json")
 	var ref_obj service.CreateService
@@ -134,7 +110,7 @@ func testAccService_tcp_create_json(name string) string {
             "service_app_type": "GENERIC",
             "banyanproxy_mode": "TCP",
             "app_listen_port": "5673",
-            "allow_user_override": false,
+            "allow_user_override": true,
             "description_link": "",
    			"include_domains": []
         }
@@ -207,7 +183,20 @@ func testAccService_tcp_create_json(name string) string {
                 "status_code": 0
             },
             "exempted_paths": {
-                "enabled": false
+                "enabled": false,
+                "patterns": [
+                    {
+                        "hosts": [
+                            {
+                                "origin_header": [],
+                                "target": []
+                            }
+                        ],
+                        "methods": [],
+                        "paths": [],
+                        "mandatory_headers": []
+                    }
+                ]                
             },
             "headers": {}
         },

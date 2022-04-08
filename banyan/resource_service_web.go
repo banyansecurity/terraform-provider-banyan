@@ -54,6 +54,7 @@ var resourceServiceWebSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
+		Default:     "",
 	},
 	"connector": {
 		Type:        schema.TypeString,
@@ -154,7 +155,7 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	hostTagSelector := service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
 	accessTiers := strings.Split(siteName, "|")
-	err = d.Set("access_tier", accessTiers[0])
+	err = d.Set("access_tier", accessTiers)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return

@@ -64,7 +64,7 @@ func expandTcpCreateService(d *schema.ResourceData) (svc service.CreateService) 
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
-			Tags:        expandDatabaseMetatdataTags(d),
+			Tags:        expandTCPMetatdataTags(d),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
