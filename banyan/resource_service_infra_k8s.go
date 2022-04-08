@@ -31,19 +31,19 @@ func buildResourceServiceInfraK8sSchema() (schemaK8s map[string]*schema.Schema) 
 			Type:        schema.TypeBool,
 			Description: "For K8S, we use Client Specified connectivity",
 			Computed:    true,
-			Default:     true,
+			Default:     nil,
 		},
 		"backend_domain": {
 			Type:        schema.TypeString,
 			Description: "For K8S, we use Client Specified connectivity",
 			Computed:    true,
-			Default:     "",
+			Default:     nil,
 		},
 		"backend_port": {
 			Type:        schema.TypeInt,
 			Description: "For K8S, we use Client Specified connectivity",
 			Computed:    true,
-			Default:     "",
+			Default:     nil,
 		},
 		"backend_dns_override_for_domain": {
 			Type:        schema.TypeString,
