@@ -1,12 +1,13 @@
 package banyan
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"strconv"
-	"strings"
 )
 
 // This file contains expand / flatten functions which are common to infrastructure services and
@@ -73,58 +74,75 @@ func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 		CertSettings: expandInfraCertSettings(d),
 		HTTPSettings: expandInfraHTTPSettings(d),
 		ClientCIDRs:  []service.ClientCIDRs{},
-		TagSlice:     nil,
 	}
 	return
 }
 
 func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attributes) {
-	var tlsSNI []string
-	tlsSNI = append(tlsSNI, d.Get("domain").(string))
+	// if connector is set, ensure access_tier is *
+	accessTier := d.Get("access_tier").(string)
+	connector := d.Get("connector").(string)
+	if connector != "" {
+		accessTier = "*"
+	}
+
 	// build HostTagSelector from access_tier
 	var hostTagSelector []map[string]string
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": d.Get("access_tier").(string)}
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": accessTier}
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
+
 	attributes = service.Attributes{
-		TLSSNI:            tlsSNI,
+		TLSSNI:            []string{d.Get("domain").(string)},
 		FrontendAddresses: expandInfraFrontendAddresses(d),
 		HostTagSelector:   hostTagSelector,
 	}
 	return
 }
 
+func expandInfraFrontendAddresses(d *schema.ResourceData) (frontendAddresses []service.FrontendAddress) {
+	frontendAddresses = []service.FrontendAddress{
+		{
+			CIDR: "",
+			Port: strconv.Itoa(d.Get("port").(int)),
+		},
+	}
+	return
+}
+
 func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
+	http_connect := d.Get("backend_http_connect").(bool)
+	var allow_patterns []service.BackendAllowPattern
+	if http_connect {
+		allow_patterns = []service.BackendAllowPattern{{}}
+	}
+
 	backend = service.Backend{
-		AllowPatterns: nil,
-		DNSOverrides:  map[string]string{},
-		ConnectorName: d.Get("connector").(string),
-		HTTPConnect:   d.Get("backend_http_connect").(bool),
 		Target:        expandInfraTarget(d),
-		Whitelist:     []string{},
+		HTTPConnect:   d.Get("backend_http_connect").(bool),
+		ConnectorName: d.Get("connector").(string),
+		DNSOverrides:  map[string]string{},
+		AllowPatterns: allow_patterns,
+		Whitelist:     []string{}, // deprecated
 	}
 	return
 }
 
 func expandInfraTarget(d *schema.ResourceData) (target service.Target) {
+	// if http_connect, need to set Name and Port to ""
+	name := d.Get("backend_domain").(string)
+	port := strconv.Itoa(d.Get("backend_port").(int))
+	http_connect := d.Get("backend_http_connect").(bool)
+	if http_connect {
+		name = ""
+		port = ""
+	}
 	return service.Target{
-		Name:              d.Get("backend_domain").(string),
-		Port:              strconv.Itoa(d.Get("backend_port").(int)),
+		Name:              name,
+		Port:              port,
 		TLS:               false,
 		TLSInsecure:       false,
 		ClientCertificate: false,
 	}
-}
-
-func expandInfraFrontendAddresses(d *schema.ResourceData) (frontendAddresses []service.FrontendAddress) {
-	portInt := d.Get("port").(int)
-	frontendAddresses = append(
-		frontendAddresses,
-		service.FrontendAddress{
-			CIDR: "",
-			Port: strconv.Itoa(portInt),
-		},
-	)
-	return
 }
 
 func expandInfraCertSettings(d *schema.ResourceData) (certSettings service.CertSettings) {
@@ -157,7 +175,29 @@ func expandInfraOIDCSettings(d *schema.ResourceData) (oidcSettings service.OIDCS
 func expandInfraExemptedPaths(d *schema.ResourceData) (exemptedPaths service.ExemptedPaths) {
 	exemptedPaths = service.ExemptedPaths{
 		Enabled:  false,
-		Patterns: nil,
+		Patterns: expandInfraPatterns(d),
+	}
+	return
+}
+
+func expandInfraPatterns(d *schema.ResourceData) (patterns []service.Pattern) {
+	patterns = []service.Pattern{
+		{
+			Hosts:            expandInfraHosts(d),
+			Methods:          []string{},
+			Paths:            []string{},
+			MandatoryHeaders: []string{},
+		},
+	}
+	return
+}
+
+func expandInfraHosts(d *schema.ResourceData) (hosts []service.Host) {
+	hosts = []service.Host{
+		{
+			OriginHeader: []string{},
+			Target:       []string{},
+		},
 	}
 	return
 }

@@ -2,11 +2,12 @@ package banyan
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strconv"
 )
 
 // This file contains the common expand / flatten functions which map directly to the service structs
@@ -72,8 +73,7 @@ func expandServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 		Backend:      expandBackend(d),
 		CertSettings: expandCertSettings(d),
 		HTTPSettings: expandHTTPSettings(d.Get("http_settings").([]interface{})),
-		ClientCIDRs:  expandClientCIDRs(d.Get("client_cidrs").([]interface{})),
-		TagSlice:     expandTagSlice(d.Get("tag_slice").([]interface{})),
+		ClientCIDRs:  []service.ClientCIDRs{},
 	}
 	return
 }
@@ -234,20 +234,6 @@ func expandCustomTLSCert(m []interface{}) (customTLSCert service.CustomTLSCert) 
 		Enabled:  itemMap["enabled"].(bool),
 		CertFile: itemMap["cert_file"].(string),
 		KeyFile:  itemMap["key_file"].(string),
-	}
-	return
-}
-
-func expandTagSlice(m []interface{}) (tagSlice []service.ResourceTag) {
-	for _, raw := range m {
-		data := raw.(map[string]interface{})
-		tagSlice = append(tagSlice, service.ResourceTag{
-			ID:        data["id"].(string),
-			OrgID:     data["org_id"].(string),
-			ServiceID: data["service_id"].(string),
-			Name:      data["name"].(string),
-			Value:     data["value"].(string),
-		})
 	}
 	return
 }

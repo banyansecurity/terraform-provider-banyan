@@ -3,14 +3,15 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"log"
+	"strconv"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
-	"log"
-	"strconv"
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
@@ -324,7 +325,6 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	resourceServiceInfraCommonReadBackendPort(service, d, m)
 	diagnostics = resourceServiceInfraCommonRead(service, d, m)
 	log.Printf("[SVC|RES|READ] read TCP service %s : %s", d.Get("name"), d.Id())
 	return
