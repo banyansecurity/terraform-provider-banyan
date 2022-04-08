@@ -107,19 +107,7 @@ var resourceServiceWebSchema = map[string]*schema.Schema{
 func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating web service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
-
-	svc := service.CreateService{
-		Metadata: service.Metadata{
-			Name:        d.Get("name").(string),
-			Description: d.Get("description").(string),
-			ClusterName: d.Get("cluster").(string),
-			Tags:        expandWebMetatdataTags(d),
-		},
-		Kind:       "BanyanService",
-		APIVersion: "rbac.banyanops.com/v1",
-		Type:       "origin",
-		Spec:       expandWebServiceSpec(d),
-	}
+	svc := expandWebCreateService(d)
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
@@ -219,6 +207,22 @@ func resourceServiceWebDelete(ctx context.Context, d *schema.ResourceData, m int
 		diagnostics = diag.FromErr(err)
 	}
 	log.Printf("[SERVICE|RES|DELETE] deleted web service with id: %q \n", d.Id())
+	return
+}
+
+func expandWebCreateService(d *schema.ResourceData) (svc service.CreateService) {
+	svc = service.CreateService{
+		Metadata: service.Metadata{
+			Name:        d.Get("name").(string),
+			Description: d.Get("description").(string),
+			ClusterName: d.Get("cluster").(string),
+			Tags:        expandWebMetatdataTags(d),
+		},
+		Kind:       "BanyanService",
+		APIVersion: "rbac.banyanops.com/v1",
+		Type:       "origin",
+		Spec:       expandWebServiceSpec(d),
+	}
 	return
 }
 
