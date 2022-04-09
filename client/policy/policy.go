@@ -107,6 +107,9 @@ func (this *policy) Create(policy CreatePolicy) (createdPolicy GetPolicy, err er
 		log.Printf("[POLICY|POST] Creating a new request, found an error %#v\n", err)
 	}
 	response, err := this.restClient.Do(request)
+	if err != nil {
+		return
+	}
 	if response.StatusCode != 200 {
 		log.Printf("[POLICY|POST] status code %#v, found an error %#v\n", response.StatusCode, err)
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))

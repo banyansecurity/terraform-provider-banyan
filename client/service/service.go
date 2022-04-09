@@ -137,7 +137,6 @@ func (this *Service) Create(svc CreateService) (service GetServiceSpec, err erro
 	log.Printf("[SVC|CLIENT|CREATE] %#v", request.URL)
 	response, err := this.restClient.Do(request)
 	if err != nil {
-		log.Printf("[SVC|CLIENT|CREATE] when sending request status code %#v, found an error %#v\n", response.StatusCode, err)
 		return
 	}
 	defer response.Body.Close()

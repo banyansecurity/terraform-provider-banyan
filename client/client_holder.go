@@ -8,6 +8,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	service "github.com/banyansecurity/terraform-banyan-provider/client/service"
+	"log"
 )
 
 type ClientHolder struct {
@@ -20,10 +21,10 @@ type ClientHolder struct {
 }
 
 // NewClientHolder returns a new client which is used to perform CRUD operations on all Banyan resources.
-func NewClientHolder(hostUrl string, refreshToken string) (client *ClientHolder, err error) {
-	restClient, err := restclient.New(hostUrl, refreshToken)
+func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (client *ClientHolder, err error) {
+	restClient, err := restclient.New(hostUrl, refreshToken, apiToken)
 	if err != nil {
-		return
+		log.Fatalf("could not create client %s", err)
 	}
 	client2 := ClientHolder{}
 	client = &client2

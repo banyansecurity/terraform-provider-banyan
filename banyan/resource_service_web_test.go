@@ -23,19 +23,7 @@ func TestSchemaServiceWeb_web_at(t *testing.T) {
 		"backend_port":   8000,
 	}
 	d := schema.TestResourceDataRaw(t, resourceServiceWebSchema, svc_web_at)
-
-	svc_obj := service.CreateService{
-		Metadata: service.Metadata{
-			Name:        d.Get("name").(string),
-			Description: d.Get("description").(string),
-			ClusterName: d.Get("cluster").(string),
-			Tags:        expandWebMetatdataTags(d),
-		},
-		Kind:       "BanyanService",
-		APIVersion: "rbac.banyanops.com/v1",
-		Type:       "origin",
-		Spec:       expandWebServiceSpec(d),
-	}
+	svc_obj := expandWebCreateService(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/web-at.json")
 	var ref_obj service.CreateService
@@ -55,19 +43,7 @@ func TestSchemaServiceWeb_web_conn(t *testing.T) {
 		"backend_port":   8080,
 	}
 	d := schema.TestResourceDataRaw(t, resourceServiceWebSchema, svc_web_conn)
-
-	svc_obj := service.CreateService{
-		Metadata: service.Metadata{
-			Name:        d.Get("name").(string),
-			Description: d.Get("description").(string),
-			ClusterName: d.Get("cluster").(string),
-			Tags:        expandWebMetatdataTags(d),
-		},
-		Kind:       "BanyanService",
-		APIVersion: "rbac.banyanops.com/v1",
-		Type:       "origin",
-		Spec:       expandWebServiceSpec(d),
-	}
+	svc_obj := expandWebCreateService(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/web-conn.json")
 	var ref_obj service.CreateService
@@ -91,19 +67,7 @@ func TestSchemaServiceWeb_web_certs(t *testing.T) {
 	}
 
 	d := schema.TestResourceDataRaw(t, resourceServiceWebSchema, svc_web_certs)
-
-	svc_obj := service.CreateService{
-		Metadata: service.Metadata{
-			Name:        d.Get("name").(string),
-			Description: d.Get("description").(string),
-			ClusterName: d.Get("cluster").(string),
-			Tags:        expandWebMetatdataTags(d),
-		},
-		Kind:       "BanyanService",
-		APIVersion: "rbac.banyanops.com/v1",
-		Type:       "origin",
-		Spec:       expandWebServiceSpec(d),
-	}
+	svc_obj := expandWebCreateService(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/web-certs.json")
 	var ref_obj service.CreateService
@@ -143,7 +107,7 @@ func TestAccService_complex_web(t *testing.T) {
 			{
 				Config: testAccService_complex_web_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_web.acctest-web", &bnnService),
+					testAccCheckExistingService("banyan_service_web.acctest-web-complex", &bnnService),
 				),
 			},
 		},
@@ -268,7 +232,7 @@ func testAccService_basic_web_create_json(name string) string {
 // Returns terraform configuration for a typical basic service
 func testAccService_complex_web_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_web" "acctest-web" {
+resource "banyan_service_web" "acctest-web-complex" {
   name             = "%s"
   description      = "some web service description"
   cluster          = "us-west"
