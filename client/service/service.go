@@ -62,7 +62,7 @@ func (this *Service) Get(id string) (service GetServiceSpec, ok bool, err error)
 		return
 	}
 	createdServiceJson[0].CreateServiceSpec = createdSpec
-	service = mapToGetServiceSpec(createdServiceJson[0])
+	service = MapToGetServiceSpec(createdServiceJson[0])
 	ok = true
 	log.Printf("[SVC|CLIENT|GET] got service with id: %q", id)
 	return
@@ -137,7 +137,6 @@ func (this *Service) Create(svc CreateService) (service GetServiceSpec, err erro
 	log.Printf("[SVC|CLIENT|CREATE] %#v", request.URL)
 	response, err := this.restClient.Do(request)
 	if err != nil {
-		log.Printf("[SVC|CLIENT|CREATE] when sending request status code %#v, found an error %#v\n", response.StatusCode, err)
 		return
 	}
 	defer response.Body.Close()
@@ -163,7 +162,7 @@ func (this *Service) Create(svc CreateService) (service GetServiceSpec, err erro
 		return
 	}
 	getServicesJson.Spec = createdService.Spec
-	service = mapToGetServiceSpec(getServicesJson)
+	service = MapToGetServiceSpec(getServicesJson)
 	createdSpec, err := json.MarshalIndent(service, "", "   ")
 	log.Printf("[SVC|CLIENT|CREATE] created spec\n %s", string(createdSpec))
 	return
@@ -176,7 +175,7 @@ func (this *Service) Update(id string, svc CreateService) (service GetServiceSpe
 	return
 }
 
-func mapToGetServiceSpec(original GetServicesJson) (new GetServiceSpec) {
+func MapToGetServiceSpec(original GetServicesJson) (new GetServiceSpec) {
 	new = GetServiceSpec{
 		ClusterName:       original.ClusterName,
 		ServiceID:         original.ServiceID,

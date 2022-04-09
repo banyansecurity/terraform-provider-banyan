@@ -78,30 +78,14 @@ func testAccCheckPolicyAttachmentDestroy(t *testing.T, policyAttachment *policya
 
 func testAccPolicyAttachment_lifecycle_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service" "example" {
-  name = %q
-  cluster = "us-west1"
-  description = "some description"
-  frontend {
-    port = 443
-  }
-  site_name = "us-west1"
-  backend {
-    target {
-      port = 443
-    }
-  }
-  metadatatags {
-    template            = "TCP_USER"
-    user_facing         = true
-    protocol            = "tcp"
-    domain              = "%s.corp.com"
-    port                = 8443
-    service_app_type    = "GENERIC"
-    banyan_proxy_mode   = "TCP"
-    app_listen_port     = 8443
-    allow_user_override = true
-  }
+resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
+  name        = "%s"
+  description = "some tcp service description"
+  cluster     = "us-west"
+  access_tier   = "us-west1"
+  domain =  "%s.corp.com"
+  backend_domain = "%s.internal"
+  backend_port = 4321
 }
 
 resource "banyan_policy" "high-trust-any" {
@@ -119,67 +103,35 @@ resource "banyan_role" "everyone" {
   user_group = ["Everyone"]
 }
 
-resource "banyan_policy_attachment" "example" {
+resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
-  attached_to_id   = banyan_service.example.id
+  attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle.id
   is_enforcing     = true
 }
-`, name, name, name, name)
+`, name, name, name, name, name)
 }
 
 func testAccPolicyAttachment_lifecycle_attach_multiple(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service" "example" {
-  name = %q
-  description = "some description"
-  cluster = "us-west1"
-  frontend {
-    port = 443
-  }
-  site_name = "us-west1"
-  backend {
-    target {
-      port = 443
-    }
-  }
-  metadatatags {
-    template            = "TCP_USER"
-    user_facing         = true
-    protocol            = "tcp"
-    domain              = "%s.corp.com"
-    port                = 8443
-    service_app_type    = "GENERIC"
-    banyan_proxy_mode   = "TCP"
-    app_listen_port     = 8443
-    allow_user_override = true
-  }
+resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
+  name        = "%s"
+  description = "some tcp service description"
+  cluster     = "us-west"
+  access_tier   = "us-west1"
+  domain =  "%s.corp.com"
+  backend_domain = "%s.internal"
+  backend_port = 4321
 }
 
-resource "banyan_service" "example-two" {
-  name = "%s-two"
-  description = "some description"
-  cluster = "us-west1"
-  frontend {
-    port = 80
-  }
-  site_name = "us-west1"
-  backend {
-    target {
-      port = 80
-    }
-  }
-  metadatatags {
-    template            = "TCP_USER"
-    user_facing         = true
-    protocol            = "tcp"
-    domain              = "%s.corp.com"
-    port                = 8443
-    service_app_type    = "GENERIC"
-    banyan_proxy_mode   = "TCP"
-    app_listen_port     = 8443
-    allow_user_override = true
-  }
+resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle-two" {
+  name        = "%s-two"
+  description = "some tcp service description"
+  cluster     = "us-west"
+  access_tier   = "us-west1"
+  domain =  "%s-two.corp.com"
+  backend_domain = "%s-two.internal"
+  backend_port = 4321
 }
 
 resource "banyan_policy" "high-trust-any" {
@@ -197,48 +149,32 @@ resource "banyan_role" "everyone" {
   user_group = ["Everyone"]
 }
 
-resource "banyan_policy_attachment" "example" {
+resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
-  attached_to_id   = banyan_service.example.id
+  attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle.id
   is_enforcing     = true
 }
 
-resource "banyan_policy_attachment" "example-two" {
+resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle-two" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
-  attached_to_id   = banyan_service.example-two.id
+  attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle-two.id
   is_enforcing     = true
 }
-`, name, name, name, name, name, name)
+`, name, name, name, name, name, name, name, name)
 }
 
 func testAccPolicyAttachment_lifecycle_detach(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service" "example" {
-  name = %q
-  description = "some description"
-  cluster = "us-west1"
-  frontend {
-    port = 443
-  }
-  site_name = "us-west1"
-  backend {
-    target {
-      port = 443
-    }
-  }
-  metadatatags {
-    template            = "TCP_USER"
-    user_facing         = true
-    protocol            = "tcp"
-    domain              = "%s.corp.com"
-    port                = 8443
-    service_app_type    = "GENERIC"
-    banyan_proxy_mode   = "TCP"
-    app_listen_port     = 8443
-    allow_user_override = true
-  }
+resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
+  name        = "%s"
+  description = "some tcp service description"
+  cluster     = "us-west"
+  access_tier   = "us-west1"
+  domain =  "%s.corp.com"
+  backend_domain = "%s.internal"
+  backend_port = 4321
 }
 
 resource "banyan_policy" "high-trust-any" {
@@ -256,5 +192,5 @@ resource "banyan_role" "everyone" {
   user_group = ["Everyone"]
 }
 
-`, name, name, name, name)
+`, name, name, name, name, name)
 }

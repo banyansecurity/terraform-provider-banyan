@@ -1,0 +1,94 @@
+{
+    "kind": "BanyanService",
+    "apiVersion": "rbac.banyanops.com/v1",
+    "type": "origin",
+    "metadata": {
+        "name": "web-conn",
+        "description": "pybanyan web-conn",
+        "cluster": "managed-cl-edge1",
+        "tags": {
+            "template": "WEB_USER",
+            "user_facing": "true",
+            "protocol": "https",
+            "domain": "test-web-conn.tdupnsan.getbnn.com",
+            "port": "443",
+            "icon": "",
+            "service_app_type": "WEB",
+            "description_link": ""
+        }
+    },
+    "spec": {
+        "attributes": {
+            "tls_sni": [
+                "test-web-conn.tdupnsan.getbnn.com"
+            ],
+            "frontend_addresses": [
+                {
+                    "cidr": "",
+                    "port": "443"
+                }
+            ],
+            "host_tag_selector": [
+                {
+                    "com.banyanops.hosttag.site_name": "*"
+                }
+            ],
+            "disable_private_dns": false
+        },
+        "backend": {
+            "target": {
+                "name": "10.10.1.1",
+                "port": "8080",
+                "tls": false,
+                "tls_insecure": false,
+                "client_certificate": false
+            },
+            "dns_overrides": {},
+            "whitelist": [],
+            "connector_name": "test-connector"
+        },
+        "cert_settings": {
+            "dns_names": [
+                "test-web-conn.tdupnsan.getbnn.com"
+            ],
+            "custom_tls_cert": {
+                "enabled": false,
+                "cert_file": "",
+                "key_file": ""
+            },
+            "letsencrypt": false
+        },
+        "http_settings": {
+            "enabled": true,
+            "oidc_settings": {
+                "enabled": true,
+                "service_domain_name": "https://test-web-conn.tdupnsan.getbnn.com",
+                "post_auth_redirect_path": "",
+                "api_path": "",
+                "trust_callbacks": null,
+                "suppress_device_trust_verification": false
+            },
+            "http_health_check": {
+                "enabled": false,
+                "addresses": null,
+                "method": "",
+                "path": "",
+                "user_agent": "",
+                "from_address": [],
+                "https": false
+            },
+            "http_redirect": {
+                "enabled": false,
+                "addresses": null,
+                "from_address": null,
+                "url": "",
+                "status_code": 0
+            },
+            "exempted_paths": {
+                "enabled": false
+            },
+            "headers": {}
+        },
+        "client_cidrs": []
+    }
+}

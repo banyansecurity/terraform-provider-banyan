@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -14,14 +15,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Schema for the service resource. For more information on Banyan services, see the documentation
-func resourceService() *schema.Resource {
+func resourceServiceCustom() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This is an org wide setting. There can only be one of these per organization.",
-		CreateContext: resourceServiceCreate,
-		ReadContext:   resourceServiceRead,
-		UpdateContext: resourceServiceUpdate,
-		DeleteContext: resourceServiceDelete,
+		CreateContext: resourceServiceCustomCreate,
+		ReadContext:   resourceServiceCustomRead,
+		UpdateContext: resourceServiceCustomUpdate,
+		DeleteContext: resourceServiceCustomDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -45,10 +45,10 @@ func resourceService() *schema.Resource {
 				Description: "Name of the NetAgent cluster which the service is accessible from",
 				ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 			},
-			"site_name": {
+			"access_tier": {
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Site name which the service is accessible from",
+				Optional:    true,
+				Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
 			},
 			"metadatatags": {
 				Type:        schema.TypeList,
@@ -767,8 +767,8 @@ func resourceService() *schema.Resource {
 	}
 }
 
-func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating service %s : %s", d.Get("name"), d.Id())
+func resourceServiceCustomCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Printf("[SVC|RES|CREATE] creating custom service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 
 	svc := service.CreateService{
@@ -786,27 +786,27 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(errors.WithMessagef(err, "could not create custom service %s : %s", d.Get("name"), d.Id()))
 	}
-	log.Printf("[SVC|RES|CREATE] Created service %s : %s", d.Get("name"), d.Id())
+	log.Printf("[SVC|RES|CREATE] Created custom service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
-	return resourceServiceRead(ctx, d, m)
+	return resourceServiceCustomRead(ctx, d, m)
 }
 
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating service %s : %s", d.Get("name"), d.Id())
-	resourceServiceCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated service %s : %s", d.Get("name"), d.Id())
+func resourceServiceCustomUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Printf("[SVC|RES|UPDATE] updating custom service %s : %s", d.Get("name"), d.Id())
+	resourceServiceCustomCreate(ctx, d, m)
+	log.Printf("[SVC|RES|UPDATE] updated custom service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading service %s : %s", d.Get("name"), d.Id())
+func resourceServiceCustomRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Printf("[SVC|RES|UPDATE] Reading custom service %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.ClientHolder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get service with id: %s", id))
+		return diag.FromErr(errors.WithMessagef(err, "couldn't get custom service with id: %s", id))
 	}
 	if !ok {
 		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
@@ -823,7 +823,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	hostTagSelector := service.CreateServiceSpec.Spec.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
-	err = d.Set("site_name", siteName)
+	accessTiers := strings.Split(siteName, "|")
+	err = d.Set("access_tier", accessTiers[0])
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
@@ -914,13 +915,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, m interfac
 	return
 }
 
-func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting service with id: %q \n", d.Id())
+func resourceServiceCustomDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Printf("[SERVICE|RES|DELETE] deleting custom service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}
-	log.Printf("[SERVICE|RES|DELETE] deleted service with id: %q \n", d.Id())
+	log.Printf("[SERVICE|RES|DELETE] deleted custom service with id: %q \n", d.Id())
 	return
 }

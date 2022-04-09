@@ -22,26 +22,29 @@ const defaultHostUrl = "http://net.banyanops.com"
 
 // New creates a new client that will let the user interact with the REST API server.
 // As part of this it exchanges the given refreshtoken for an acesstoken.
-func New(hostUrl string, refreshToken string) (client *RestClient, err error) {
-	if refreshToken == "" {
-		err = errors.New("need a refresh token")
-		return
-	}
+func New(hostUrl string, refreshToken string, apiToken string) (client *RestClient, err error) {
 	clientHostUrl := defaultHostUrl
 	if hostUrl != "" {
 		clientHostUrl = hostUrl
 	}
 
-	client = &RestClient{
-		accessToken: "",
-		hostUrl:     clientHostUrl,
-		httpClient:  &http.Client{Timeout: 10 * time.Second},
+	var accessToken string
+	if refreshToken != "" {
+		client = &RestClient{
+			accessToken: "",
+			hostUrl:     clientHostUrl,
+			httpClient:  &http.Client{Timeout: 10 * time.Second},
+		}
+
+		accessToken, err = client.exhangeRefreshTokenForAccessToken(clientHostUrl, refreshToken)
+		if err != nil {
+			errors.Wrapf(err, "Issue exchanging refreshToken for accessToken")
+			return
+		}
 	}
 
-	accessToken, err := client.exhangeRefreshTokenForAccessToken(clientHostUrl, refreshToken)
-	if err != nil {
-		errors.Wrapf(err, "Issue exchanging refreshToken for accessToken")
-		return
+	if apiToken != "" {
+		accessToken = apiToken
 	}
 
 	client = &RestClient{
