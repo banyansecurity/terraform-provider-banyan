@@ -20,8 +20,13 @@ func Provider() *schema.Provider {
 			},
 			"api_token": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("BANYAN_API_TOKEN", nil),
+			},
+			"refresh_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("BANYAN_REFRESH_TOKEN", nil),
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -31,7 +36,7 @@ func Provider() *schema.Provider {
 			"banyan_service_infra_tcp": resourceServiceInfraTcp(),
 			"banyan_service_infra_k8s": resourceServiceInfraK8s(),
 			"banyan_service_infra_db":  resourceServiceInfraDb(),
-			"banyan_service_web":       resourceServiceInfraWeb(),
+			"banyan_service_web":       resourceServiceWeb(),
 			"banyan_policy":            resourcePolicy(),
 			"banyan_role":              resourceRole(),
 			"banyan_policy_attachment": resourcePolicyAttachment(),
@@ -45,7 +50,7 @@ func Provider() *schema.Provider {
 
 // Configures the Banyan provider with the given refresh / API token and host url
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (client interface{}, diagnostic diag.Diagnostics) {
-	refreshToken := d.Get("api_token").(string)
+	refreshToken := d.Get("refresh_token").(string)
 	var domain string
 	unAssertedDomain := d.Get("host")
 	if unAssertedDomain == nil {
@@ -61,8 +66,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (client inte
 		}
 		domain = domainTypeAsserted
 	}
-
-	client, err := bnnClient.NewClientHolder(domain, refreshToken)
+	client, err := bnnClient.NewClientHolder(domain, refreshToken, d.Get("api_token").(string))
 	if err != nil {
 		diagnostic = append(diagnostic, diag.Diagnostic{
 			Severity: diag.Error,

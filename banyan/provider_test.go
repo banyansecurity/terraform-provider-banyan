@@ -23,7 +23,7 @@ func init() {
 }
 
 func NewAccClient() (c *client.ClientHolder) {
-	c, err := client.NewClientHolder(os.Getenv("BANYAN_HOST"), os.Getenv("BANYAN_API_TOKEN"))
+	c, err := client.NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_TOKEN"))
 	if err != nil {
 		log.Fatal("Could not create the test client")
 	}
@@ -32,7 +32,7 @@ func NewAccClient() (c *client.ClientHolder) {
 
 func TestProvider(t *testing.T) {
 	if err := Provider().InternalValidate(); err != nil {
-		t.Fatalf("err: %s", err)
+		t.Fatal(err)
 	}
 }
 

@@ -147,6 +147,9 @@ func (this *Role) Create(role CreateRole) (createdRole GetRole, err error) {
 		return
 	}
 	response, err := this.restClient.Do(request)
+	if err != nil {
+		return
+	}
 	if response.StatusCode != 200 {
 		log.Printf("[ROLE|POST] status code %#v, found an error %#v\n", response.StatusCode, err)
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
