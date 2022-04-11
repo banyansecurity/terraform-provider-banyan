@@ -11,6 +11,6 @@ import (
 func Test_GetNonexistentService(t *testing.T) {
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	_, err := client.NewClientHolder(testhost, testRefreshToken)
+	_, err := client.NewClientHolder(testhost, testRefreshToken, "")
 	assert.NoError(t, err, "Expected to not get an error here")
 }

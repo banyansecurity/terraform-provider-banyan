@@ -12,7 +12,7 @@ import (
 func Test_GetNonexistentService(t *testing.T) {
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken)
+	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
 	assert.NoError(t, err, "Expected to not get an error here")
 	svc, ok, err := client.Service.Get("hah")
 	assert.NoError(t, err, "expected no error here")
@@ -23,7 +23,7 @@ func Test_GetNonexistentService(t *testing.T) {
 func Test_GetExistingService(t *testing.T) {
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken)
+	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
 	assert.NoError(t, err, "Expected to not get an error here")
 	svc, ok, err := client.Service.Get("testservice.us-west.bnn")
 	assert.NoError(t, err, "expected no error here")
@@ -35,7 +35,7 @@ func Test_CreateService(t *testing.T) {
 	somestring := "test"
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken)
+	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
 	assert.NoError(t, err, "Expected to not get an error here")
 	svc, err := client.Service.Create(service.CreateService{
 		APIVersion: "rbac.banyanops.com/v1",
@@ -112,7 +112,7 @@ func Test_CreateService2(t *testing.T) {
 	somestring := "test"
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken)
+	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
 	assert.NoError(t, err, "Expected to not get an error here")
 	svc, err := client.Service.Create(service.CreateService{
 		APIVersion: "rbac.banyanops.com/v1",
@@ -188,7 +188,7 @@ func Test_CreateService2(t *testing.T) {
 func Test_delete(t *testing.T) {
 	testhost := os.Getenv("BANYAN_HOST")
 	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken)
+	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
 	assert.NoError(t, err, "Expected to not get an error here")
 	err = client.Service.Delete("terraformtest.dev05-banyan.bnn")
 	assert.NoError(t, err)
