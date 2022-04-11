@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"github.com/pkg/errors"
 	"html"
 	"io/ioutil"
@@ -116,6 +117,21 @@ func (this *Service) Delete(id string) (err error) {
 		return
 	}
 	log.Printf("[SVC|CLIENT|DELETE] deleted service id: %q", id)
+	return
+}
+
+func (this *Service) DetachPolicy(serviceID string) (err error) {
+	paClient := policyattachment.NewClient(this.restClient)
+	policyAtt, ok, err := paClient.Get(serviceID, "service")
+	if !ok {
+		return
+	}
+	log.Printf("[SVC|CLIENT|DETACH] detaching policy id %s from service id: %q", policyAtt.PolicyID, serviceID)
+	err = paClient.DeleteServiceAttachment(policyAtt.PolicyID, serviceID)
+	if err != nil {
+		return
+	}
+	log.Printf("[SVC|CLIENT|DETACH] detached policy id %s from service id: %q", policyAtt.PolicyID, serviceID)
 	return
 }
 

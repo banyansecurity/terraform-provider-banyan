@@ -46,7 +46,8 @@ var resourceServiceWebSchema = map[string]*schema.Schema{
 	},
 	"cluster": {
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
+		Default:     "global-edge",
 		Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
 		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 	},
@@ -203,6 +204,10 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 func resourceServiceWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting web service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
+	diagnostics = resourceServiceDetachPolicy(d, m)
+	if diagnostics.HasError() {
+		return
+	}
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
