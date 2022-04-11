@@ -34,7 +34,8 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 	},
 	"cluster": {
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
+		Default:     "global-edge",
 		Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
 		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 	},
