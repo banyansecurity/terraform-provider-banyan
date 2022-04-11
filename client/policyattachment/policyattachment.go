@@ -33,6 +33,7 @@ type Clienter interface {
 	Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error)
 	Update(policyID string, PolicyAttachment CreateBody) (updatedAttachment GetBody, err error)
 	Delete(policyID string, detachBody DetachBody) (err error)
+	DeleteServiceAttachment(policyID string, serviceID string) (err error)
 }
 
 func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (attachment GetBody, ok bool, err error) {
@@ -177,7 +178,7 @@ func (this *PolicyAttachment) Update(policyID string, attachment CreateBody) (up
 	return
 }
 
-func (this *PolicyAttachment) deleteServiceAttachment(policyID, serviceID string) (err error) {
+func (this *PolicyAttachment) DeleteServiceAttachment(policyID, serviceID string) (err error) {
 	path := "/api/v1/delete_security_attach_policy"
 
 	myUrl, err := url.Parse(path)
@@ -204,7 +205,7 @@ func (this *PolicyAttachment) deleteServiceAttachment(policyID, serviceID string
 
 func (this *PolicyAttachment) Delete(policyID string, detachBody DetachBody) (err error) {
 	if detachBody.AttachedToType == "service" {
-		return this.deleteServiceAttachment(policyID, detachBody.AttachedToID)
+		return this.DeleteServiceAttachment(policyID, detachBody.AttachedToID)
 	}
 	log.Printf("[POLICYATTACHMENT|DELETE] deleting policyattachment")
 	path := fmt.Sprintf("/api/v1/policy/%s/detach", policyID)

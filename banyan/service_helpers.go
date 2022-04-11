@@ -2,6 +2,8 @@ package banyan
 
 import (
 	"fmt"
+	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"log"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -64,6 +66,18 @@ func expandMetatdataTags(m []interface{}) (metadatatags service.Tags) {
 		DescriptionLink:   &descriptionLink,
 		IncludeDomains:    &includeDomains,
 	}
+	return
+}
+
+func resourceServiceDetachPolicy(d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Printf("[SERVICE|RES|DETACH] detaching polices from service with id: %q \n", d.Id())
+	client := m.(*client.ClientHolder)
+	err := client.Service.DetachPolicy(d.Id())
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	log.Printf("[SERVICE|RES|DETACH] detached polices from service with id: %q \n", d.Id())
 	return
 }
 

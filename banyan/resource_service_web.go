@@ -203,6 +203,10 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 func resourceServiceWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting web service with id: %q \n", d.Id())
 	client := m.(*client.ClientHolder)
+	diagnostics = resourceServiceDetachPolicy(d, m)
+	if diagnostics.HasError() {
+		return
+	}
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)

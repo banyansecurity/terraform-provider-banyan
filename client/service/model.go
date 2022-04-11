@@ -20,6 +20,7 @@ type ServiceClienter interface {
 	Create(svc CreateService) (Service GetServiceSpec, err error)
 	Update(id string, svc CreateService) (Service GetServiceSpec, err error)
 	Delete(id string) (err error)
+	DetachPolicy(id string) (err error)
 	disable(id string) (err error)
 }
 
