@@ -7,7 +7,6 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/apikey"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 	"log"
 )
 
@@ -62,7 +61,7 @@ func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		Scope:       d.Get("scope").(string),
 	})
 	if err != nil {
-		return diag.FromErr(errors.WithMessage(err, "couldn't create new apikey"))
+		return diag.FromErr(err)
 	}
 	log.Printf("[APIKEY|RES|CREATE] created apikey %s : %s", d.Get("name"), d.Id())
 	d.SetId(k.ID)

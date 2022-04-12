@@ -44,6 +44,7 @@ func (k *ApiKey) Get(name string) (apikey Data, err error) {
 		return
 	}
 	response, err := k.restClient.DoGet(myUrl.String())
+	defer response.Body.Close()
 	if err != nil {
 		return
 	}
@@ -55,7 +56,6 @@ func (k *ApiKey) Get(name string) (apikey Data, err error) {
 		return
 	}
 
-	defer response.Body.Close()
 	responseData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return
@@ -94,12 +94,21 @@ func (k *ApiKey) Create(post Post) (apikey Data, err error) {
 		return
 	}
 	response, err := k.restClient.Do(request)
-	if response.StatusCode != 200 {
-		log.Printf("[APIKEY|POST] status code %#v, found an error %#v\n", response.StatusCode, err)
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+	if err != nil {
 		return
 	}
 	defer response.Body.Close()
+	if response.StatusCode == 404 || response.StatusCode == 400 {
+		return
+	}
+	if response.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		return
+	}
+	_, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		return
+	}
 	apikey, err = k.Get(post.Name)
 	if err != nil {
 		return
