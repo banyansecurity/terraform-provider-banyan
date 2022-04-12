@@ -152,7 +152,7 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 }
 
 func resourceServiceInfraCommonDelete(d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	diagnostics = resourceServiceDetachPolicy(d, m)
 	if diagnostics.HasError() {
 		return

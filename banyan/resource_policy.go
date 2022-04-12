@@ -110,7 +110,7 @@ func resourcePolicy() *schema.Resource {
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[POLICY|RES|CREATE] creating policy %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 
 	policyToCreate := policy.CreatePolicy{
 		APIVersion: "rbac.banyanops.com/v1",
@@ -149,7 +149,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[POLICY|RES|READ] reading policy %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	id := d.Id()
 	policy, ok, err := client.Policy.Get(id)
 	if err != nil {
@@ -186,7 +186,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Println("[POLICY|RES|DELETE] deleting policy")
 
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	err := client.Policy.Detach(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)

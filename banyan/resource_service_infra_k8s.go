@@ -71,7 +71,7 @@ func buildResourceServiceInfraK8sSchema() (schemaK8s map[string]*schema.Schema) 
 
 func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating kubernetes service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	svc := expandK8sCreateService(d)
 
 	newService, err := client.Service.Create(svc)
@@ -157,7 +157,7 @@ func expandK8sServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 
 func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|READ] reading kubernetes service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {

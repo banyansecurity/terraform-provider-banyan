@@ -77,7 +77,7 @@ func getInfoFromPolicyAttachmentID(terraformPolicyAttachmentID string) (policyID
 
 func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Println("[POLICYATTACHMENT|RES|CREATE] creating policyAttachment")
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	policyID, ok := d.Get("policy_id").(string)
 	if !ok {
 		diagnostics = diag.Errorf("Couldn't type assert policy_id")
@@ -132,7 +132,7 @@ func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Println("[POLICYATTACHMENT|RES|READ] reading policyAttachment")
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	id := d.Id()
 	_, attachedToType, attachedToID := getInfoFromPolicyAttachmentID(id)
 	attachment, ok, err := client.PolicyAttachment.Get(attachedToID, attachedToType)
@@ -154,7 +154,7 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Println("[POLICYATTACHMENT|RES|DELETE] deleting policyAttachment")
 
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	policyID, attachedToType, attachedToID := getInfoFromPolicyAttachmentID(d.Id())
 
 	err := client.PolicyAttachment.Delete(policyID, policyattachment.DetachBody{

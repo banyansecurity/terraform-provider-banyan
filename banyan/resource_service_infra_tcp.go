@@ -46,7 +46,7 @@ func buildResourceServiceInfraTcpSchema() (schemaDb map[string]*schema.Schema) {
 
 func resourceServiceInfraTcpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating TCP service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	svc := expandTcpCreateService(d)
 
 	newService, err := client.Service.Create(svc)
@@ -123,7 +123,7 @@ func resourceServiceInfraTcpUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|READ] reading TCP service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {

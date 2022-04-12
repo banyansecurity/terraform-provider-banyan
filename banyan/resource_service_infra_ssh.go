@@ -58,7 +58,7 @@ func buildResourceServiceInfraSshSchema() (schemaSsh map[string]*schema.Schema) 
 
 func resourceServiceInfraSshCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating SSH service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	svc := expandSSHCreateService(d)
 
 	newService, err := client.Service.Create(svc)
@@ -131,7 +131,7 @@ func resourceServiceInfraSshUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] reading SSH service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {

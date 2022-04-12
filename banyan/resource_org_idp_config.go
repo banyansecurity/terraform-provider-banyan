@@ -71,7 +71,7 @@ func resourceOrgIdpConfig() *schema.Resource {
 
 func resourceOrgIdpConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("Creating org IdP settings\n")
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	idpName, ok := d.Get("idp_name").(string)
 	if !ok {
 		err := errors.New("Couldn't type assert idp_name")
@@ -154,7 +154,7 @@ func resourceOrgIdpConfigUpdate(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func resourceOrgIdpConfigRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	orgIdpConfig, err := client.Admin.OrgIdpConfig.Get()
 	if err != nil {
 		diagnostics = diag.FromErr(err)

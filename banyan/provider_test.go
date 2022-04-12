@@ -11,7 +11,7 @@ import (
 
 var testAccProviders map[string]*schema.Provider
 var testAccProvider *schema.Provider
-var testAccClient *client.ClientHolder
+var testAccClient *client.Holder
 
 func init() {
 	testAccPreCheck()
@@ -22,7 +22,7 @@ func init() {
 	}
 }
 
-func NewAccClient() (c *client.ClientHolder) {
+func NewAccClient() (c *client.Holder) {
 	c, err := client.NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_TOKEN"))
 	if err != nil {
 		log.Fatal("Could not create the test client")

@@ -46,7 +46,7 @@ func buildResourceServiceInfraDbSchema() (schemaDb map[string]*schema.Schema) {
 
 func resourceServiceInfraDbCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating database service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	svc := expandDatabaseCreateService(d)
 
 	newService, err := client.Service.Create(svc)
@@ -123,7 +123,7 @@ func resourceServiceInfraDbUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|READ] reading database service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	id := d.Id()
 	svc, ok, err := client.Service.Get(id)
 	if err != nil {

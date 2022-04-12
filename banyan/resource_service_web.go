@@ -108,7 +108,7 @@ var resourceServiceWebSchema = map[string]*schema.Schema{
 
 func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating web service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	svc := expandWebCreateService(d)
 
 	newService, err := client.Service.Create(svc)
@@ -129,7 +129,7 @@ func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] Reading web service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
@@ -203,7 +203,7 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceServiceWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting web service with id: %q \n", d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	diagnostics = resourceServiceDetachPolicy(d, m)
 	if diagnostics.HasError() {
 		return

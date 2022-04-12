@@ -125,7 +125,7 @@ func resourceRole() *schema.Resource {
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[ROLE|RES|CREATE] creating role %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	roleToCreate := role.CreateRole{
 		Metadata: role.Metadata{
 			ID:          d.Get("id").(string),
@@ -173,7 +173,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[ROLE|RES|READ] reading role %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	id := d.Id()
 	role, ok, err := client.Role.Get(id)
 	if err != nil {
@@ -201,7 +201,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[ROLE|RES|DELETE] deleting role %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	err := client.Role.Delete(d.Id())
 	if err != nil {
 		return diag.FromErr(err)

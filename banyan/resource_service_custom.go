@@ -769,7 +769,7 @@ func resourceServiceCustom() *schema.Resource {
 
 func resourceServiceCustomCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|CREATE] creating custom service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 
 	svc := service.CreateService{
 		Metadata: service.Metadata{
@@ -802,7 +802,7 @@ func resourceServiceCustomUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceServiceCustomRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SVC|RES|UPDATE] Reading custom service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	id := d.Id()
 	service, ok, err := client.Service.Get(id)
 	if err != nil {
@@ -917,7 +917,7 @@ func resourceServiceCustomRead(ctx context.Context, d *schema.ResourceData, m in
 
 func resourceServiceCustomDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DELETE] deleting custom service with id: %q \n", d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	err := client.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)

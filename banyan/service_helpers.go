@@ -71,7 +71,7 @@ func expandMetatdataTags(m []interface{}) (metadatatags service.Tags) {
 
 func resourceServiceDetachPolicy(d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[SERVICE|RES|DETACH] detaching polices from service with id: %q \n", d.Id())
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	err := client.Service.DetachPolicy(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
