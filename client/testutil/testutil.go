@@ -7,7 +7,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 )
 
-func GetClientHolderForTest() (newClient *client.ClientHolder, err error) {
+func GetClientHolderForTest() (newClient *client.Holder, err error) {
 	newClient, err = client.NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_TOKEN"))
 	if err != nil {
 		log.Fatal("Could not create the test client")
