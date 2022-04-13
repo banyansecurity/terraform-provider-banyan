@@ -9,7 +9,6 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	service "github.com/banyansecurity/terraform-banyan-provider/client/service"
-	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"log"
 )
 
@@ -20,7 +19,6 @@ type Holder struct {
 	PolicyAttachment policyattachment.Clienter
 	Admin            *admin.Admin
 	Satellite        satellite.Clienter
-	ServiceTunnel    servicetunnel.Clienter
 	ApiKey           apikey.Clienter
 }
 
@@ -38,7 +36,6 @@ func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (clie
 	client.Role = role.NewClient(restClient)
 	client.PolicyAttachment = policyattachment.NewClient(restClient)
 	client.Satellite = satellite.NewClient(restClient)
-	client.ServiceTunnel = servicetunnel.NewClient(restClient)
 	client.ApiKey = apikey.NewClient(restClient)
 	admin := admin.NewClient(restClient)
 	client.Admin = admin
