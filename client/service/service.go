@@ -35,7 +35,7 @@ func (this *Service) Get(id string) (service GetServiceSpec, ok bool, err error)
 		return
 	}
 	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
 		return
 	}
 	// Unmarshal the response into a service spec
