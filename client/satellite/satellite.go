@@ -48,10 +48,11 @@ func (s *Satellite) Get(id string) (satellite SatelliteTunnelConfig, err error) 
 		return
 	}
 	if response.StatusCode == 404 || response.StatusCode == 400 {
+		err = errors.New(fmt.Sprintf("satellite with id %s not found", id))
 		return
 	}
 	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
 		return
 	}
 
@@ -88,7 +89,7 @@ func (s *Satellite) Create(satellite Info) (createdSatellite SatelliteTunnelConf
 	response, err := s.restClient.Do(request)
 	if response.StatusCode != 200 {
 		log.Printf("[SATELLITE|POST] status code %#v, found an error %#v\n", response.StatusCode, err)
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
 		return
 	}
 
@@ -120,17 +121,21 @@ func (s *Satellite) Update(satellite Info) (updatedSatellite SatelliteTunnelConf
 // Delete will disable the satellite and then delete it
 func (s *Satellite) Delete(id string) (err error) {
 	log.Printf("[SATELLITE|DELETE] deleting satellite with id %s", id)
-	path := "api/experimental/v2/satellite/"
+	path := fmt.Sprintf("api/experimental/v2/satellite/%s", id)
 	myUrl, err := url.Parse(path)
 	if err != nil {
 		return
 	}
-	resp, err := s.restClient.DoDelete(myUrl.String())
+	response, err := s.restClient.DoDelete(myUrl.String())
 	if err != nil {
 		return
 	}
-	if resp.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %v", resp))
+	if response.StatusCode == 404 {
+		err = errors.New(fmt.Sprintf("satellite with id %s not found", id))
+		return
+	}
+	if response.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
 		return
 	}
 	log.Printf("[SATELLITE|DELETE] deleted satellite with id %s", id)

@@ -59,7 +59,7 @@ func (this *policy) Get(id string) (policy GetPolicy, ok bool, err error) {
 		return
 	}
 	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
 		return
 	}
 
@@ -112,7 +112,7 @@ func (this *policy) Create(policy CreatePolicy) (createdPolicy GetPolicy, err er
 	}
 	if response.StatusCode != 200 {
 		log.Printf("[POLICY|POST] status code %#v, found an error %#v\n", response.StatusCode, err)
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
 		return
 	}
 

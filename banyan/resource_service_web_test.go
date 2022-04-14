@@ -96,24 +96,6 @@ func TestAccService_basic_web(t *testing.T) {
 	})
 }
 
-func TestAccService_complex_web(t *testing.T) {
-	var bnnService service.GetServiceSpec
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
-		Steps: []resource.TestStep{
-			// Create the service using terraform config and check that it exists
-			{
-				Config: testAccService_complex_web_create(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_web.acctest-web-complex", &bnnService),
-				),
-			},
-		},
-	})
-}
-
 // Returns terraform configuration for a typical basic service
 func testAccService_basic_web_create(name string) string {
 	return fmt.Sprintf(`

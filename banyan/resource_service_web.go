@@ -3,15 +3,13 @@ package banyan
 import (
 	"context"
 	"fmt"
-	"log"
-	"strconv"
-	"strings"
-
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+	"log"
+	"strconv"
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
@@ -153,14 +151,7 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	hostTagSelector := service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
-	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
-	accessTiers := strings.Split(siteName, "|")
-	err = d.Set("access_tier", accessTiers[0])
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
-	}
+	err = SetAccessTier(d, service, diagnostics)
 	err = d.Set("connector", service.CreateServiceSpec.Spec.Backend.ConnectorName)
 	if err != nil {
 		return diag.FromErr(err)

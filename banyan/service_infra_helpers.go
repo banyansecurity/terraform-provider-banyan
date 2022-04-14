@@ -106,7 +106,11 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 	hostTagSelector := service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
 	accessTiers := strings.Split(siteName, "|")
-	err = d.Set("access_tier", accessTiers[0])
+	if accessTiers[0] == "*" {
+		err = d.Set("access_tier", "")
+	} else {
+		err = d.Set("access_tier", accessTiers[0])
+	}
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return

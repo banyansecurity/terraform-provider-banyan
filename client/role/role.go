@@ -92,7 +92,7 @@ func (this *Role) Get(id string) (role GetRole, ok bool, err error) {
 		return
 	}
 	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
 		return
 	}
 
@@ -152,7 +152,7 @@ func (this *Role) Create(role CreateRole) (createdRole GetRole, err error) {
 	}
 	if response.StatusCode != 200 {
 		log.Printf("[ROLE|POST] status code %#v, found an error %#v\n", response.StatusCode, err)
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
 		return
 	}
 

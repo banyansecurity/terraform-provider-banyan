@@ -26,7 +26,7 @@ provider "banyan" {
 ```
 
 ### Note About **Preview** Organizations
-Ensure that the `host` parameter is set to the correct host: 
+Ensure that the `host` parameter is set to the correct host:
 ```hcl
 provider "banyan" {
   api_token = "banyan-api-token-here-exclusive-to-terraform"
@@ -40,7 +40,7 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.6.0"
+      version = "0.6.2"
     }
   }
 }
@@ -52,7 +52,7 @@ provider "banyan" {
 
 ## Example configured provider with a service, role, policy, and policy attachment
 
-In this example we import the Banyan Terraform provider, and configure it with an API token. Then we create a service for a sensitive admin console, and attach an admin role with a strict admin policy to restrict access to only authorized administrators on trusted devices.
+In this example we import the Banyan Terraform provider, and configure it with an admin API key. Then we create a service for a sensitive admin console, and attach an admin role with a strict admin policy to restrict access to only authorized administrators on trusted devices.
 ```hcl
 provider "banyan" {
   api_token = var.banyan_refresh_token

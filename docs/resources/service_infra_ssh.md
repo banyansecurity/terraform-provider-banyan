@@ -1,6 +1,6 @@
-# banyan_service_infra_ssh
+# banyan_service_infra_ssh (Resource)
 
-Resource used for lifecycle management of SSH services. For more information see the documentation [here.](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/ssh-servers/)
+Resource used for lifecycle management of SSH services. For more information see the documentation [here](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/ssh-servers/).
 
 ### Example
 ```hcl
@@ -16,68 +16,28 @@ resource "banyan_service_infra_ssh" "example" {
   backend_port       = 22
 }
 ```
-### SSH Service Schema
-#### Required
-- **name** (String) Name of the service
+
+### Required
+
+- **domain** (String) The external-facing network address for this service; ex. website.example.com
+- **name** (String) Name of the service; use lowercase alphanumeric characters or "-"
+
+### Optional
+
+- **access_tier** (String) Name of the access_tier which will proxy requests to your service backend; set to "" if using Global Edge deployment'
+- **backend_domain** (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using backend_http_connect
+- **backend_http_connect** (Boolean) Indicates to use HTTP Connect request to derive the backend target address.
+- **backend_port** (Number) The internal port where this service is hosted; set to 0 if using backend_http_connect
+- **client_ssh_auth** (String) Specifies which certificates - TRUSTCERT | SSHCERT | BOTH - should be used when the user connects to this service; default: TRUSTCERT
+- **client_ssh_host_directive** (String) Creates an entry in the SSH config file using the Host keyword. Wildcards are supported such as "192.168.*.?"; default: <service name>
+- **cluster** (String) Name of the cluster used for your deployment; for Global Edge set to "global-edge", for Private Edge set to "cluster1"
+- **connector** (String) Name of the connector which will proxy requests to your service backend; set to "" if using Private Edge deployment
 - **description** (String) Description of the service
-- **cluster** (String) Name of the NetAgent cluster which the service is accessible from
-- **access_tiers** (Set of String) Access tiers the service is accessible from
-- **domain** (String) The publicly resolvable service domain name
-- **ssh_host_directive** (String) Creates and entry in the SSH config file using the Host keyword
-- **frontend** (Block List, Min: 1) Specifies the IP addresses and ports the frontend of the service listens on (see [below for nested schema](#nestedblock--frontend))
-- **backend** (Block List, Min: 1) Backend specifies how Netagent, when acting as a reverse proxy, forwards incoming “frontend connections” to a backend workload instance that implements a registered service (see [below for nested schema](#nestedblock--backend))
+- **port** (Number) The external-facing port for this service
 
-#### Optional
-- **tls_sni** (Set of String) If TLSSNI is set, Netagent will reject all non-TLS connections. It will only forward on TLS connections where the SNI matches for Policy validation.
-- **cert_settings** (Block List, Max: 1) Specifies the X.509 server certificate to use for this Service (see [below for nested schema](#nestedblock--cert_settings))
-- **user_facing** (Boolean) Whether the service is user-facing or not
-- **ssh_chain_mode** (Boolean) (Default: false) Whether SSH chain mode should be enabled
-- **ssh_service_type** (String) (Default: "TRUSTCERT") The SSH certificate authentication type. Must be "TRUSTCERT" or "BOTH". "BOTH" indicates that SSHCert and TRUSTCERT are used when authenticating a user
-- **write_ssh_config** (Boolean) (Default: true) Whether the client app should write to the users SSH config file
-- **icon** (String) Name of the icon to be displayed to the end user. Icon names are available in the Banyan UI
-- **description_link** (String) Link shown to end users
+### Read-Only
 
-#### Read-Only
-- **id** (String) ID of the service
+- **client_banyanproxy_listen_port** (Number) For SSH, banyanproxy uses stdin instead of a local port
+- **id** (String) Id of the service
 
 
-<a id="nestedblock--backend"></a>
-### Nested Schema for `backend`
-
-Required:
-
-- **target** (Block List, Min: 1, Max: 1) Specifies the backend workload instance's address or name ports, and TLS properties. (see [below for nested schema](#nestedblock--backend--target))
-
-Optional:
-
-- **connector_name** (String) If Banyan Connector is used to access this service, this must be set to the name of the connector with network access to the service
-- **dns_overrides** (Map of String) Specifies name-to-address or name-to-name mappings.
-  Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
-  Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
-  Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
-  ame-to-name    ->    "exposed.service.com" : "internal.myservice.com"
-
-<a id="nestedblock--backend--target"></a>
-### Nested Schema for `backend.target`
-
-Required:
-
-- **port** (Number) Port specifies the backend server's TCP port number
-
-
-<a id="nestedblock--frontend"></a>
-### Nested Schema for `frontend`
-
-Required:
-
-- **port** (String) The port that the service listens on
-
-
-<a id="nestedblock--cert_settings"></a>
-### Nested Schema for `cert_settings`
-
-Optional:
-
-- **dns_names** (Set of String) DNSNames specifies how to populate the CommonName field in the X.509
-  server certificate for this Service. If DNSNames is not specified the
-  CommonName field will be set to the ServiceName. Any DNS names specified will be added to the CommonName field of the certificate.

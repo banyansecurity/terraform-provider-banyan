@@ -18,6 +18,8 @@ Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.13+
 
+Docs Pages
+
 Developing the provider
 ---------------------------
 

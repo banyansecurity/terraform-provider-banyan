@@ -43,18 +43,16 @@ func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (a
 	if err != nil {
 		return
 	}
-	if response.StatusCode == 404 || response.StatusCode == 400 {
-		defer response.Body.Close()
-		responseBody, rerr := ioutil.ReadAll(response.Body)
-		if rerr != nil {
-			err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to get policy attachment, couldn't parse body got error %+v", response.Status, response, rerr))
-			return
-		}
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to get policy attachment, has message: %v", response.Status, response, string(responseBody)))
+	if response.StatusCode == 404 {
+		err = errors.New(fmt.Sprintf("policyattachment with id %s/%s not founds", attachedToType, attachedToID))
 		return
 	}
 	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
+		return
+	}
+	if response.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
 		return
 	}
 

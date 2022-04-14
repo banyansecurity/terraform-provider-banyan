@@ -117,7 +117,6 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interf
 
 func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Println("[CONNECTOR|RES|DELETE] deleting connector")
-
 	client := m.(*client.Holder)
 	err := client.Satellite.Delete(d.Id())
 	if err != nil {

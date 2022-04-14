@@ -5,6 +5,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -542,6 +543,22 @@ func GetInState(s *terraform.State, resourceName string) (err error, svc service
 	rs, ok := s.RootModule().Resources[resourceName]
 	if !ok {
 		err = fmt.Errorf("resource not found %q", rs)
+		return
+	}
+	return
+}
+
+func SetAccessTier(d *schema.ResourceData, service service.GetServiceSpec, diagnostics diag.Diagnostics) (err error) {
+	hostTagSelector := service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
+	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
+	accessTiers := strings.Split(siteName, "|")
+	if accessTiers[0] == "*" {
+		err = d.Set("access_tier", "")
+	} else {
+		err = d.Set("access_tier", accessTiers[0])
+	}
+	if err != nil {
+		diagnostics = diag.FromErr(err)
 		return
 	}
 	return
