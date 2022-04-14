@@ -97,13 +97,13 @@ func testAccApiKey_basic_update(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_api_key" "example" {
   name              = "%s-update"
-  description       = "realdescription"
+  description       = "some description"
   scope             = "satellite"
 }
 
 resource "banyan_api_key" "example2" {
   name              = "%s"
-  description       = "realdescription"
+  description       = "some description"
   scope             = "satellite"
 }
 `, name, name)
