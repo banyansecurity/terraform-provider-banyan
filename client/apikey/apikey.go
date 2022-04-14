@@ -26,61 +26,85 @@ func NewClient(restClient *restclient.RestClient) Clienter {
 
 // Clienter is used for performing CRUD operations on the apikey resource
 type Clienter interface {
-	Get(name string) (apikey Data, err error)
+	Get(id string) (apikey Data, err error)
 	Create(post Post) (createdApiKey Data, err error)
 	Update(post Post) (updatedApiKey Data, err error)
 	Delete(id string) (err error)
 }
 
-func (k *ApiKey) Get(name string) (apikey Data, err error) {
-	log.Printf("[APIKEY|GET] reading apikey")
-	if name == "" {
-		err = errors.New("need an name to get a apikey")
+func (k *ApiKey) Get(id string) (apikey Data, err error) {
+	if id == "" {
+		err = errors.New("need an id to get a apikey")
 		return
 	}
+	responseJSON, err := getAll(k)
+	if err != nil {
+		return
+	}
+	log.Printf("[APIKEY|GET] reading apikey")
+	apikey, ok := getOKid(id, responseJSON)
+	if !ok {
+		return apikey, errors.Errorf("[APIKEY|GET] could not find apikey with id %s", id)
+	}
+	log.Printf("[APIKEY|GET] read apikey")
+	return
+}
+
+func getAll(k *ApiKey) (responseJSON Response, err error) {
 	path := "api/experimental/v2/api_key"
 	myUrl, err := url.Parse(path)
 	if err != nil {
 		return
 	}
 	response, err := k.restClient.DoGet(myUrl.String())
-	defer response.Body.Close()
 	if err != nil {
 		return
 	}
-	if response.StatusCode == 404 || response.StatusCode == 400 {
-		return
-	}
+	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.Errorf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path)
 		return
 	}
-
 	responseData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return
 	}
-	var responseJSON Response
 	err = json.Unmarshal(responseData, &responseJSON)
 	if err != nil {
 		return
 	}
+	return
+}
+
+func getOKname(name string, responseJSON Response) (apikey Data, ok bool) {
 	for _, key := range responseJSON.Data {
 		if key.Name == name {
 			apikey = key
+			ok = true
 		}
 	}
-	log.Printf("[APIKEY|GET] read apikey")
+	return
+}
+
+func getOKid(id string, responseJSON Response) (apikey Data, ok bool) {
+	for _, key := range responseJSON.Data {
+		if key.ID == id {
+			apikey = key
+			ok = true
+		}
+	}
+	if apikey.ID == "" {
+		ok = false
+	}
 	return
 }
 
 func (k *ApiKey) Create(post Post) (apikey Data, err error) {
 	// check that api key does not already exist
-	existingApiKey, err := k.Get(apikey.Name)
-	emptyKey := Data{}
-	if existingApiKey != emptyKey {
-		err = errors.Errorf("API key with name %s already exists", apikey.Name)
-		return
+	responseJSON, err := getAll(k)
+	apikey, ok := getOKname(post.Name, responseJSON)
+	if ok {
+		err = errors.Errorf("[APIKEY|POST] An API key with this name already exists %s", err)
 	}
 	path := "api/experimental/v2/api_key"
 	body, err := json.Marshal(post)
@@ -98,20 +122,21 @@ func (k *ApiKey) Create(post Post) (apikey Data, err error) {
 		return
 	}
 	defer response.Body.Close()
-	if response.StatusCode == 404 || response.StatusCode == 400 {
-		return
-	}
 	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to", response.Status, response))
+		err = errors.Errorf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path)
 		return
 	}
 	_, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		return
 	}
-	apikey, err = k.Get(post.Name)
+	responseJSON, err = getAll(k)
 	if err != nil {
 		return
+	}
+	apikey, ok = getOKname(post.Name, responseJSON)
+	if !ok {
+		err = errors.Errorf("Could not get key after creation: %s", apikey.Name)
 	}
 	log.Printf("[APIKEY|POST] created a new apikey %#v", apikey)
 	return
@@ -128,8 +153,8 @@ func (k *ApiKey) Update(post Post) (updatedApiKey Data, err error) {
 }
 
 // Delete will disable the apikey and then delete it
-func (k *ApiKey) Delete(name string) (err error) {
-	apikey, err := k.Get(name)
+func (k *ApiKey) Delete(id string) (err error) {
+	apikey, err := k.Get(id)
 	emptyKey := Data{}
 	if apikey == emptyKey {
 		return
