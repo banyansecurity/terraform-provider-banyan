@@ -12,36 +12,54 @@ import (
 
 // Use the terraform plugin sdk testing framework for example testing apikey lifecycle
 func TestAccApiKey_basic(t *testing.T) {
-	var bnnApiKey apikey.Data
 
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckApiKeyDestroy(t, &bnnApiKey.Name),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// Creates the apikey with the given terraform configuration and asserts that the apikey is created
 			{
 				Config: testAccApiKey_basic_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingApiKey("banyan_apikey.example", rName, &bnnApiKey),
-					resource.TestCheckResourceAttr("banyan_apikey.example", "name", rName),
-					resource.TestCheckResourceAttrPtr("banyan_apikey.example", "id", &bnnApiKey.ID),
+					resource.TestCheckResourceAttr("banyan_api_key.example", "name", rName),
 				),
 			},
 		},
 	})
 }
 
+func TestAccApiKey_update(t *testing.T) {
+
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// Creates the apikey with the given terraform configuration and asserts that the apikey is created
+			{
+				Config: testAccApiKey_basic_create(rName),
+				Check:  resource.ComposeTestCheckFunc(),
+			},
+			{
+				Config: testAccApiKey_basic_update(fmt.Sprintf("%s-new", rName)),
+				Check:  resource.ComposeTestCheckFunc(),
+			},
+		},
+	})
+}
+
 // Checks that the resource with the name resourceName exists and returns the apikey object from the Banyan API
-func testAccCheckExistingApiKey(resourceName string, name string, bnnApiKey *apikey.Data) resource.TestCheckFunc {
+func testAccCheckExistingApiKey(resourceName string, bnnApiKey *apikey.Data) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource not found %q", rs)
 		}
-		resp, err := testAccClient.ApiKey.Get(name)
+		resp, err := testAccClient.ApiKey.Get(bnnApiKey.ID)
 		if err != nil {
 			return err
 		}
@@ -66,10 +84,27 @@ func testAccCheckApiKeyDestroy(t *testing.T, name *string) resource.TestCheckFun
 // Returns terraform configuration for the apikey. Takes in custom name.
 func testAccApiKey_basic_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_apikey" "example" {
+resource "banyan_api_key" "example" {
   name              = "%s"
   description       = "realdescription"
   scope             = "satellite"
 }
 `, name)
+}
+
+// Returns terraform configuration for the apikey. Takes in custom name.
+func testAccApiKey_basic_update(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_api_key" "example" {
+  name              = "%s-update"
+  description       = "realdescription"
+  scope             = "satellite"
+}
+
+resource "banyan_api_key" "example2" {
+  name              = "%s"
+  description       = "realdescription"
+  scope             = "satellite"
+}
+`, name, name)
 }

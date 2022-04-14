@@ -18,7 +18,7 @@ func TestAccConnector_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConnectorDestroy(t, bnnConnector.ID),
+		CheckDestroy: testAccCheckConnectorDestroy(t, "banyan_connector.example"),
 		Steps: []resource.TestStep{
 			// Creates the connector with the given terraform configuration and asserts that the connector is created
 			{
@@ -39,7 +39,7 @@ func testAccCheckExistingConnector(resourceName string, bnnConnector *satellite.
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("resource not found %q", rs)
+			return fmt.Errorf("resource not found in state %q", rs)
 		}
 		resp, err := testAccClient.Satellite.Get(rs.Primary.ID)
 		if err != nil {
@@ -54,19 +54,23 @@ func testAccCheckExistingConnector(resourceName string, bnnConnector *satellite.
 }
 
 // Uses the API to check that the connector was destroyed
-func testAccCheckConnectorDestroy(t *testing.T, id string) resource.TestCheckFunc {
+func testAccCheckConnectorDestroy(t *testing.T, resourceName string) resource.TestCheckFunc {
 	emptyConnector := satellite.SatelliteTunnelConfig{}
 	return func(s *terraform.State) error {
-		r, err := testAccClient.Satellite.Get(id)
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found in state %q", rs)
+		}
+		r, _ := testAccClient.Satellite.Get(rs.Primary.ID)
 		assert.Equal(t, r, emptyConnector)
-		return err
+		return nil
 	}
 }
 
 // Returns terraform configuration for the connector. Takes in custom name.
 func testAccConnector_basic_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_apikey" "example" {
+resource "banyan_api_key" "example" {
   name              = "%s"
   description       = "realdescription"
   scope             = "satellite"
@@ -74,8 +78,7 @@ resource "banyan_apikey" "example" {
 
 resource "banyan_connector" "example" {
   name              = "%s"
-  satellite_api_key_id = resource.banyan_apikey.example.id
-  depends_on = [resource.banyan_apikey.example]
+  satellite_api_key_id = resource.banyan_api_key.example.id
 }
 `, name, name)
 }

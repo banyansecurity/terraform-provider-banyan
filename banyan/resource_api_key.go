@@ -12,9 +12,8 @@ import (
 
 // Schema for the apikey resource. For more information on Banyan policies, see the documentation:
 func resourceApiKey() *schema.Resource {
-	log.Println("[APIKEY|RES] getting resource schema")
 	return &schema.Resource{
-		Description:   "Banyan policies control access to a service. For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
+		Description:   "Manages API keys",
 		CreateContext: resourceApiKeyCreate,
 		ReadContext:   resourceApiKeyRead,
 		UpdateContext: resourceApiKeyUpdate,
@@ -23,24 +22,26 @@ func resourceApiKey() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the apikey",
+				Description: "Name of the API key",
+				ForceNew:    true,
 			},
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "ID of the apikey in Banyan",
+				Description: "ID of the API key in Banyan",
+				ForceNew:    true,
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Description of the apikey",
+				Description: "Description of the API key",
 			},
 			"secret": {
 				Type:        schema.TypeString,
 				Description: "API Secret key",
 				Computed:    true,
 				Sensitive:   true,
-				Optional:    true,
+				ForceNew:    true,
 			},
 			"scope": {
 				Type:        schema.TypeString,
@@ -55,7 +56,7 @@ func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	log.Printf("[APIKEY|RES|CREATE] creating apikey %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.Holder)
 
-	k, err := client.ApiKey.Create(apikey.Post{
+	key, err := client.ApiKey.Create(apikey.Post{
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 		Scope:       d.Get("scope").(string),
@@ -64,7 +65,7 @@ func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(err)
 	}
 	log.Printf("[APIKEY|RES|CREATE] created apikey %s : %s", d.Get("name"), d.Id())
-	d.SetId(k.ID)
+	d.SetId(key.ID)
 	diagnostics = resourceApiKeyRead(ctx, d, m)
 	return
 }
@@ -79,9 +80,8 @@ func resourceApiKeyUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceApiKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	log.Printf("[APIKEY|RES|READ] reading apikey %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.Holder)
-	k, err := client.ApiKey.Get(d.Get("name").(string))
-	emptykey := apikey.Data{}
-	if k == emptykey {
+	k, err := client.ApiKey.Get(d.Id())
+	if err != nil {
 		return handleNotFoundError(d, fmt.Sprintf("apikey %q", d.Id()))
 	}
 	err = d.Set("name", k.Name)
@@ -109,7 +109,7 @@ func resourceApiKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	log.Println("[APIKEY|RES|DELETE] deleting apikey")
 
 	client := m.(*client.Holder)
-	err := client.ApiKey.Delete(d.Get("name").(string))
+	err := client.ApiKey.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
