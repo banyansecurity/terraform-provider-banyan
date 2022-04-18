@@ -44,7 +44,7 @@ func TestAccService_k8s(t *testing.T) {
 			{
 				Config: testAccService_k8s_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_k8s.acctest-k8s", &bnnService),
+					testAccCheckExistingService("banyan_service_infra_k8s.example", &bnnService),
 					testAccCheckAgainstJson(t, testAccService_k8s_create_json(rName), &bnnService.ServiceID),
 				),
 			},
@@ -55,17 +55,16 @@ func TestAccService_k8s(t *testing.T) {
 // Returns terraform configuration for a typical k8s service
 func testAccService_k8s_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_infra_k8s" "acctest-k8s" {
+resource "banyan_service_infra_k8s" "example" {
   name        = "%s-k8s"
   description = "some k8s service description"
   cluster     = "us-west"
-  access_tier   = "us-west1"
+  access_tier = "us-west1"
   domain      = "%s-k8s.corp.com"
   backend_dns_override_for_domain = "%s-k8s.service"
   client_kube_cluster_name = "k8s-cluster"
   client_kube_ca_key = "k8scAk3yH3re"
   client_banyanproxy_listen_port = "9119"
-
 }
 `, name, name, name)
 }

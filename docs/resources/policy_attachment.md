@@ -23,5 +23,3 @@ resource "banyan_policy_attachment" "example" {
 
 - **id** (String) The ID of this resource.
 - **is_enforcing** (Boolean) Sets whether the policy is enforcing or not
-
-

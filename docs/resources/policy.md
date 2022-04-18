@@ -1,8 +1,8 @@
-# banyan_policy (Resource)
+# banyan_policy
 
 Banyan policies control access to a service. For more information on Banyan policies, see the [documentation](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/).
 
-### Example
+### Example Web Policy
 ```hcl
 resource "banyan_policy" "example" {
 	name        = "web-policy"
@@ -58,5 +58,3 @@ Required:
 														Each resource can have wildcard prefix or suffix, or both.
 														A resource can be prefixed with "!", meaning DENY.
 														Any DENY rule overrides any other rule that would allow the access.
-
-

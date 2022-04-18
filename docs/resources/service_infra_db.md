@@ -1,18 +1,17 @@
-# banyan_service_infra_db (Resource)
+# banyan_service_infra_db
 
 Resource used for lifecycle management of database services. For more information see the documentation [here](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/databases/).
 
 ### Example
 ```hcl
 resource "banyan_service_infra_db" "example" {
-  name                 = "example-db"
-  description          = "some database service description"
-  cluster              = "us-west"
-  access_tier          = "us-west1"
-  user_facing          = true
-  domain               = "example-db.corp.com"
-  backend_domain       = ""
-  backend_port         = 0
+  name        = "example-db"
+  description = "some database service description"
+  cluster      = "us-west"
+  access_tier   = "us-west1"
+  domain      = "example-db.corp.com"
+  backend_domain = ""
+  backend_port = 0
   backend_http_connect = true
 }
 ```
@@ -38,5 +37,3 @@ resource "banyan_service_infra_db" "example" {
 ### Read-Only
 
 - **id** (String) Id of the service
-
-

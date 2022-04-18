@@ -17,7 +17,7 @@ import (
 
 func resourceServiceCustom() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This is an org wide setting. There can only be one of these per organization.",
+		Description:   "This is an experimental resource that maps 1 to 1 with custom service JSON",
 		CreateContext: resourceServiceCustomCreate,
 		ReadContext:   resourceServiceCustomRead,
 		UpdateContext: resourceServiceCustomUpdate,

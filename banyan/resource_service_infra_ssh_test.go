@@ -62,7 +62,7 @@ func TestAccService_ssh(t *testing.T) {
 			{
 				Config: testAccService_ssh_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_ssh.acctest-ssh", &bnnService),
+					testAccCheckExistingService("banyan_service_infra_ssh.example", &bnnService),
 					testAccCheckAgainstJson(t, testAccService_ssh_create_json(rName), &bnnService.ServiceID),
 				),
 			},
@@ -73,14 +73,14 @@ func TestAccService_ssh(t *testing.T) {
 // Returns terraform configuration for a typical ssh service
 func testAccService_ssh_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_infra_ssh" "acctest-ssh" {
-  name        = "%s-ssh"
-  description = "some SSH service description"
-  cluster      = "us-west"
-  access_tier   = "us-west1"
-  domain      = "%s-ssh.corp.com"
-  backend_domain = "%s-ssh.internal"
-  backend_port = 22
+resource "banyan_service_infra_ssh" "example" {
+  name                      = "%s-ssh"
+  description               = "some SSH service description"
+  cluster                   = "us-west"
+  access_tier               = "us-west1"
+  domain                    = "%s-ssh.corp.com"
+  backend_domain            = "%s-ssh.internal"
+  backend_port              = 22
   client_ssh_host_directive = "%s-ssh.corp.com"
 }
 `, name, name, name, name)

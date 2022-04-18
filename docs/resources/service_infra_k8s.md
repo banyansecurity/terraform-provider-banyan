@@ -1,19 +1,19 @@
-# banyan_service_infra_k8s (Resource)
+# banyan_service_infra_k8s
 
 Resource used for lifecycle management of kubernetes services. For more information see the documentation [here](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/k8s-api/).
 
 ### Example
 ```hcl
-resource "banyan_service_infra_k8s" "acctest-k8s" {
+resource "banyan_service_infra_k8s" "example" {
   name                            = "example-k8s"
   description                     = "some k8s service description"
   cluster                         = "us-west"
   access_tier                     = "us-west1"
   domain                          = "example-k8s.corp.com"
-  user_facing                     = true
+  backend_dns_override_for_domain = "example-k8s.service"
   client_kube_cluster_name        = "k8s-cluster"
   client_kube_ca_key              = "k8scAk3yH3re"
-  backend_dns_override_for_domain = "example-k8s.service"
+  client_banyanproxy_listen_port  = "9119"
 }
 ```
 
@@ -40,5 +40,3 @@ resource "banyan_service_infra_k8s" "acctest-k8s" {
 - **backend_http_connect** (Boolean) For K8S, we use Client Specified connectivity
 - **backend_port** (Number) For K8S, we use Client Specified connectivity
 - **id** (String) Id of the service
-
-
