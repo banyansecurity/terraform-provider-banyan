@@ -66,7 +66,7 @@ func TestAccService_tcp(t *testing.T) {
 			{
 				Config: testAccService_tcp_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_tcp.acctest-tcp", &bnnService),
+					testAccCheckExistingService("banyan_service_infra_tcp.example", &bnnService),
 					testAccCheckAgainstJson(t, testAccService_tcp_create_json(rName), &bnnService.ServiceID),
 				),
 			},
@@ -77,7 +77,7 @@ func TestAccService_tcp(t *testing.T) {
 // Returns terraform configuration for a typical k8s service
 func testAccService_tcp_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_infra_tcp" "acctest-tcp" {
+resource "banyan_service_infra_tcp" "example" {
   name        = "%s-tcp"
   description = "some tcp service description"
   cluster      = "us-west"

@@ -5,14 +5,14 @@ Resource used for lifecycle management of generic TCP services. For more informa
 ### Example
 ```hcl
 resource "banyan_service_infra_tcp" "example" {
-  name           = "example-tcp"
-  description    = "some tcp service description"
-  cluster        = "us-west"
-  access_tier   = "us-west1"
-  user_facing    = true
-  domain         = "example-tcp.corp.com"
-  backend_domain = "example-tcp.internal"
-  backend_port   = 5673
+  name                           = "example-tcp"
+  description                    = "some tcp service description"
+  cluster                        = "us-west"
+  access_tier                    = "us-west1"
+  domain                         = "example-tcp.corp.com"
+  backend_domain                 = "example-tcp.internal"
+  backend_port                   = 5673
+  client_banyanproxy_listen_port = 5673
 }
 ```
 
@@ -37,5 +37,3 @@ resource "banyan_service_infra_tcp" "example" {
 ### Read-Only
 
 - **id** (String) Id of the service
-
-

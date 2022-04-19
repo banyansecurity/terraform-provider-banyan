@@ -1,13 +1,13 @@
-# banyan_api_key (Resource)
+# banyan_api_key
 
-Manages API keys
+Resource used for lifecycle management of API keys. For more information see the documentation [here](https://docs.banyansecurity.io/docs/banyan-components/command-center/api-keys/)
 
 ### Example
 ```hcl
 resource "banyan_api_key" "example" {
-  name              = "%s"
-  description       = "some description"
-  scope             = "satellite"
+  name        = "example-connector-api-key"
+  description = "API key for example connector"
+  scope       = "satellite"
 }
 ```
 

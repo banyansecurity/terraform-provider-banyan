@@ -1,4 +1,4 @@
-# banyan_role (Resource)
+# banyan_role
 
 The banyan_role resource is used to manage roles in Banyan. A role represents a group of users in the organization. For more information see the documentation [here](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/roles/manage-roles/).
 
@@ -15,24 +15,18 @@ resource "banyan_role" "example" {
 
 ### Required
 
-- **description** (String) Description of the role
 - **name** (String) Name of the role
+- **description** (String) Description of the role
 
 ### Optional
-
-- **container_fqdn** (Set of String) FQDN for the container
-- **device_ownership** (Set of String) Device ownership specification for the role
-- **email** (Set of String) Email address for the user or group of users in the role
-- **image** (Set of String) Image
+- **user_group** (Set of String) list of user groups to be included in the role
+- **email** (Set of String) list of emails to be included in the role
+- **service_accounts** (Set of String) Service accounts which are members of the role
+- **device_ownership** (Set of String) Device ownership specification for the role, must be "Corporate Dedicated", "Corporate Shared", "Employee Owned", or "Other"
 - **known_device_only** (Boolean) Enforces whether the role requires known devices only for access
 - **mdm_present** (Boolean) Enforces whether the role requires an MDM to be present on the device
-- **platform** (Set of String) Platform type which is required by the role
-- **repo_tag** (Set of String) Repo Tag
-- **service_accounts** (Set of String) Service accounts to be included in the role
-- **user_group** (Set of String) Name of the group (from your IdP) which will be included in the role
+- **platform** (Set of String) Platform type which is required by the role, must be "Windows", "macOS", "Linux", "iOS", "Android", or "Unregistered"
 
 ### Read-Only
 
 - **id** (String) ID of the role in Banyan
-
-

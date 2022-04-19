@@ -1,4 +1,4 @@
-# banyan_policy_attachment (Resource)
+# banyan_policy_attachment
 
 A Banyan policy attachment attaches a policy to a service.
 
@@ -10,7 +10,6 @@ resource "banyan_policy_attachment" "example" {
   policy_id        = banyan_policy.some-policy.id
   attached_to_type = "service"
   attached_to_id   = banyan_service.some-service.id
-  is_enforcing     = true
 }
 ```
 
@@ -18,11 +17,9 @@ resource "banyan_policy_attachment" "example" {
 
 - **attached_to_id** (String) ID of the resource the policy will be attached to
 - **attached_to_type** (String) Type which the policy is attached to (i.e. service / saasapp)
-- **is_enforcing** (Boolean) Sets whether the policy is enforcing or not
 - **policy_id** (String) Name of the policy
 
 ### Optional
 
 - **id** (String) The ID of this resource.
-
-
+- **is_enforcing** (Boolean) Sets whether the policy is enforcing or not

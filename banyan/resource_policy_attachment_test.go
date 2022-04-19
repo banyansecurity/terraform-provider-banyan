@@ -107,7 +107,6 @@ resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle" {
   policy_id        = banyan_policy.high-trust-any.id
   attached_to_type = "service"
   attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle.id
-  is_enforcing     = true
 }
 `, name, name, name, name, name)
 }

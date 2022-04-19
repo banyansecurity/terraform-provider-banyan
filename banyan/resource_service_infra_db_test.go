@@ -44,7 +44,7 @@ func TestAccService_database(t *testing.T) {
 			{
 				Config: testAccService_database_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_db.acctest-database", &bnnService),
+					testAccCheckExistingService("banyan_service_infra_db.example", &bnnService),
 					testAccCheckAgainstJson(t, testAccService_database_create_json(rName), &bnnService.ServiceID),
 				),
 			},
@@ -55,7 +55,7 @@ func TestAccService_database(t *testing.T) {
 // Returns terraform configuration for a typical database service
 func testAccService_database_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_infra_db" "acctest-database" {
+resource "banyan_service_infra_db" "example" {
   name        = "%s-db"
   description = "some database service description"
   cluster      = "us-west"

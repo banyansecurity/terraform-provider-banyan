@@ -8,8 +8,7 @@ resource "banyan_service_infra_rdp" "example" {
   name           = "example-rdp"
   description    = "some RDP service description"
   cluster        = "us-west"
-  access_tier   = "us-west1"
-  user_facing    = true
+  access_tier    = "us-west1"
   domain         = "example-rdp.corp.com"
   backend_domain = "example-rdp.internal"
   backend_port   = 3389
@@ -36,5 +35,3 @@ resource "banyan_service_infra_rdp" "example" {
 ### Read-Only
 
 - **id** (String) Id of the service
-
-

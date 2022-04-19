@@ -65,7 +65,7 @@ func TestAccService_rdp(t *testing.T) {
 			{
 				Config: testAccService_rdp_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_rdp.acctest-rdp", &bnnService),
+					testAccCheckExistingService("banyan_service_infra_rdp.example", &bnnService),
 					testAccCheckAgainstJson(t, testAccService_rdp_create_json(rName), &bnnService.ServiceID),
 				),
 			},
@@ -76,14 +76,14 @@ func TestAccService_rdp(t *testing.T) {
 // Returns terraform configuration for a typical rdp service
 func testAccService_rdp_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_infra_rdp" "acctest-rdp" {
-  name        = "%s-rdp"
-  description = "some RDP service description"
-  cluster      = "us-west"
-  access_tier   = "us-west1"
-  domain      = "%s-rdp.corp.com"
+resource "banyan_service_infra_rdp" "example" {
+  name           = "%s-rdp"
+  description    = "some RDP service description"
+  cluster        = "us-west"
+  access_tier    = "us-west1"
+  domain         = "%s-rdp.corp.com"
   backend_domain = "%s-rdp.internal"
-  backend_port = 3389
+  backend_port   = 3389
 }
 `, name, name, name)
 }

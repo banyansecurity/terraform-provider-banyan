@@ -44,8 +44,9 @@ func resourcePolicyAttachment() *schema.Resource {
 			},
 			"is_enforcing": {
 				Type:        schema.TypeBool,
-				Required:    true,
+				Optional:    true,
 				Description: "Sets whether the policy is enforcing or not",
+				Default:     true,
 			},
 		},
 	}
