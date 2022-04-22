@@ -88,7 +88,7 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   backend_port = 4321
 }
 
-resource "banyan_policy" "high-trust-any" {
+resource "banyan_policy_infra" "high-trust-any" {
   name        = %q
   description = "Allows any user with a high trust score"
   access {
@@ -104,7 +104,7 @@ resource "banyan_role" "everyone" {
 }
 
 resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle" {
-  policy_id        = banyan_policy.high-trust-any.id
+  policy_id        = banyan_policy_infra.high-trust-any.id
   attached_to_type = "service"
   attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle.id
 }
@@ -133,7 +133,7 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle-two" {
   backend_port = 4321
 }
 
-resource "banyan_policy" "high-trust-any" {
+resource "banyan_policy_infra" "high-trust-any" {
   name        = %q
   description = "Allows any user with a high trust score"
   access {
@@ -149,14 +149,14 @@ resource "banyan_role" "everyone" {
 }
 
 resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle" {
-  policy_id        = banyan_policy.high-trust-any.id
+  policy_id        = banyan_policy_infra.high-trust-any.id
   attached_to_type = "service"
   attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle.id
   is_enforcing     = true
 }
 
 resource "banyan_policy_attachment" "acctest-policy-attachment-lifecycle-two" {
-  policy_id        = banyan_policy.high-trust-any.id
+  policy_id        = banyan_policy_infra.high-trust-any.id
   attached_to_type = "service"
   attached_to_id   = banyan_service_infra_tcp.acctest-policy-attachment-lifecycle-two.id
   is_enforcing     = true
@@ -176,7 +176,7 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   backend_port = 4321
 }
 
-resource "banyan_policy" "high-trust-any" {
+resource "banyan_policy_infra" "high-trust-any" {
   name        = %q
   description = "Allows any user with a high trust score"
   access {
