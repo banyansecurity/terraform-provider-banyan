@@ -111,4 +111,4 @@ resource "banyan_policy_attachment" "example-high-trust-any" {
 
 ### Optional
 
-- **host** (String) The host parameter is used to point the Banyan Terraform Provider to a non-default url  
+- **host** (String) The host parameter is used to point the Banyan Terraform Provider to a non-default url   
