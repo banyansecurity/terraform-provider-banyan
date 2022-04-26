@@ -31,7 +31,12 @@ jobs:
           go-version: 1.17
       -
         name: Test
-        run: export TF_ACC=true;TF_LOG=DEBUG; go test ./client/... -v; go test ./banyan/... -v
+        run: go test ./banyan/... -v
+        env:
+          TF_ACC: true
+          TF_LOG: DEBUG
+          BANYAN_API_TOKEN: ${{ secrets.BANYAN_API_TOKEN }}
+          BANYAN_HOST: https://preview.console.banyanops.com/
       -
         name: Import GPG key
         id: import_gpg
