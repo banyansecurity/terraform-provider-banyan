@@ -1,19 +1,18 @@
 # This GitHub action can publish assets for release when a tag is created.
 # Currently its setup to run on any tag that matches the pattern "v*" (ie. v0.1.0).
 #
-# This uses an action (paultyng/ghaction-import-gpg) that assumes you set your 
+# This uses an action (paultyng/ghaction-import-gpg) that assumes you set your
 # private key in the `GPG_PRIVATE_KEY` secret and passphrase in the `GPG_PASSPHRASE`
 # secret. If you would rather own your own GPG handling, please fork this action
 # or use an alternative one for key handling.
 #
-# You will need to pass the `--batch` flag to `gpg` in your signing step 
+# You will need to pass the `--batch` flag to `gpg` in your signing step
 # in `goreleaser` to indicate this is being used in a non-interactive mode.
 #
-name: release
+name: pull_request
 on:
-  push:
-    tags:
-      - 'v*'
+  pull_request:
+    types: [opened, reopened]
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -37,19 +36,3 @@ jobs:
           TF_LOG: DEBUG
           BANYAN_API_TOKEN: ${{ secrets.BANYAN_API_TOKEN }}
           BANYAN_HOST: "https://preview.console.banyanops.com/"
-      -
-        name: Import GPG key
-        id: import_gpg
-        uses: paultyng/ghaction-import-gpg@v2.1.0
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-      -
-        name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist
-        env:
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
