@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -26,6 +27,10 @@ func New(hostUrl string, refreshToken string, apiToken string) (client *RestClie
 	clientHostUrl := defaultHostUrl
 	if hostUrl != "" {
 		clientHostUrl = hostUrl
+	}
+
+	if !strings.HasSuffix(hostUrl, "/") {
+		clientHostUrl = hostUrl + "/"
 	}
 
 	var accessToken string
