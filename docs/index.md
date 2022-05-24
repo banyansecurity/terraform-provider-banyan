@@ -39,7 +39,7 @@ terraform {
   required_providers {
     banyan = {
       source = "banyansecurity/banyan"
-      version = "0.6.3"
+      version = "0.6.4"
     }
   }
 }
@@ -77,13 +77,7 @@ resource "banyan_policy" "admin-web-high" {
   access {
     roles       = [banyan_role.admin.name]
     trust_level = "High"
-    l7_access {
-      resources = ["*"]
-      actions   = ["*"]
-    }
   }
-  l7_protocol                       = "http"
-  disable_tls_client_authentication = true
 }
 
 resource "banyan_role" "admin" {

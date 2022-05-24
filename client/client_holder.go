@@ -9,6 +9,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	service "github.com/banyansecurity/terraform-banyan-provider/client/service"
+	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"log"
 )
 
@@ -20,6 +21,7 @@ type Holder struct {
 	Admin            *admin.Admin
 	Satellite        satellite.Clienter
 	ApiKey           apikey.Clienter
+	AccessTier       servicetunnel.Clienter
 }
 
 // NewClientHolder returns a new client which is used to perform CRUD operations on all Banyan resources.
@@ -28,8 +30,8 @@ func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (clie
 	if err != nil {
 		log.Fatalf("could not create client %s", err)
 	}
-	client2 := Holder{}
-	client = &client2
+	c := Holder{}
+	client = &c
 	service := service.NewClient(restClient)
 	client.Service = service
 	client.Policy = policy.NewClient(restClient)
@@ -37,6 +39,7 @@ func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (clie
 	client.PolicyAttachment = policyattachment.NewClient(restClient)
 	client.Satellite = satellite.NewClient(restClient)
 	client.ApiKey = apikey.NewClient(restClient)
+	client.AccessTier = servicetunnel.NewClient(restClient)
 	admin := admin.NewClient(restClient)
 	client.Admin = admin
 	return

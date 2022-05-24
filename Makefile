@@ -12,7 +12,7 @@ HOSTNAME=github.com
 NAMESPACE=banyansecurity
 NAME=banyan
 OS_ARCH=darwin_amd64
-VERSION=0.6.3
+VERSION=0.6.4
 
 # ifeq ($(origin .RECIPEPREFIX), undefined)
 #   $(error This Make does not support .RECIPEPREFIX. Please use GNU Make 4.0 or later)
@@ -23,7 +23,6 @@ default: install
 
 build:
 	go build -o $(ARTIFACT_NAME)
-	cp $(ARTIFACT_NAME) examples/
 .PHONY: build
 
 install: build

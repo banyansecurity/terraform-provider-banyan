@@ -43,6 +43,7 @@ func Provider() *schema.Provider {
 			"banyan_policy_attachment": resourcePolicyAttachment(),
 			"banyan_api_key":           resourceApiKey(),
 			"banyan_connector":         resourceConnector(),
+			"banyan_accesstier":        resourceAccessTier(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"banyan_oidc_settings": dataSourceOidcSettings(),
