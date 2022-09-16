@@ -63,7 +63,7 @@ resource "banyan_service_infra_db" "example" {
   domain      = "%s-db.corp.com"
   backend_domain = ""
   backend_port = 0
-  backend_http_connect = true
+  http_connect = true
 }
 `, name, name)
 }

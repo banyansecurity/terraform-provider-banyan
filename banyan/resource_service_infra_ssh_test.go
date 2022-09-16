@@ -19,7 +19,7 @@ func TestSchemaServiceInfraSsh_ssh_at(t *testing.T) {
 		"cluster":                   "cluster1",
 		"access_tier":               "gcp-wg",
 		"domain":                    "test-ssh-at.bar.com",
-		"backend_http_connect":      true,
+		"http_connect":              true,
 		"client_ssh_host_directive": "10.10.1.*",
 	}
 	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraSshSchema(), svc_ssh_at)

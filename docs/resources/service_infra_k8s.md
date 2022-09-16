@@ -37,6 +37,6 @@ resource "banyan_service_infra_k8s" "example" {
 ### Read-Only
 
 - **backend_domain** (String) For K8S, we use Client Specified connectivity
-- **backend_http_connect** (Boolean) For K8S, we use Client Specified connectivity
+- **http_connect** (Boolean) For K8S, we use Client Specified connectivity
 - **backend_port** (Number) For K8S, we use Client Specified connectivity
 - **id** (String) Id of the service

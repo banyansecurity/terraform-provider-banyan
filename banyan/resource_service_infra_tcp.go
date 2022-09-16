@@ -87,7 +87,7 @@ func expandTCPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	allowUserOverride := true
 
 	banyanProxyMode := "TCP"
-	if d.Get("backend_http_connect").(bool) {
+	if d.Get("http_connect").(bool) {
 		banyanProxyMode = "CHAIN"
 	}
 	alp := d.Get("client_banyanproxy_listen_port").(int)

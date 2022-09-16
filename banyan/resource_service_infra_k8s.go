@@ -137,7 +137,7 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func expandK8sServiceSpec(d *schema.ResourceData) (spec service.Spec) {
-	d.Set("backend_http_connect", true)
+	d.Set("http_connect", true)
 	spec = expandInfraServiceSpec(d)
 
 	domain := d.Get("domain").(string)

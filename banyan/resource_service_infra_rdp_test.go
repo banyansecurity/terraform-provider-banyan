@@ -41,7 +41,7 @@ func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
 		"cluster":                        "managed-cl-edge1",
 		"connector":                      "test-connector",
 		"domain":                         "test-rdp-collection.tdupnsan.getbnn.com",
-		"backend_http_connect":           true,
+		"http_connect":                   true,
 		"client_banyanproxy_listen_port": 9108,
 	}
 

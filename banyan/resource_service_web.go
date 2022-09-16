@@ -82,7 +82,7 @@ var resourceServiceWebSchema = map[string]*schema.Schema{
 	"backend_domain": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
+		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
 	},
 	"backend_port": {
 		Type:         schema.TypeInt,

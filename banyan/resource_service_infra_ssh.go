@@ -101,8 +101,8 @@ func expandSSHMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	sshServiceType := d.Get("client_ssh_auth").(string)
 	sshHostDirective := d.Get("client_ssh_host_directive").(string)
 	writeSSHConfig := true
-	// set sshChainMode for backend_http_connect
-	sshChainMode := d.Get("backend_http_connect").(bool)
+	// set sshChainMode for http_connect
+	sshChainMode := d.Get("http_connect").(bool)
 
 	metadatatags = service.Tags{
 		Template:        &template,

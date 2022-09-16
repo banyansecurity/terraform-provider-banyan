@@ -129,7 +129,7 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	err = d.Set("http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -232,7 +232,7 @@ func expandInfraTarget(d *schema.ResourceData) (target service.Target) {
 	// if http_connect, need to set Name and Port to ""
 	name := d.Get("backend_domain").(string)
 	port := strconv.Itoa(d.Get("backend_port").(int))
-	http_connect := d.Get("backend_http_connect").(bool)
+	http_connect := d.Get("http_connect").(bool)
 	if http_connect {
 		name = ""
 		port = ""
