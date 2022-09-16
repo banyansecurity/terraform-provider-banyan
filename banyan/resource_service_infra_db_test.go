@@ -13,7 +13,7 @@ import (
 )
 
 func TestSchemaServiceInfraDb_database_at(t *testing.T) {
-	svc_rdp_conn := map[string]interface{}{
+	svc_db_conn := map[string]interface{}{
 		"name":                           "database-conn",
 		"description":                    "pybanyan database-conn",
 		"cluster":                        "managed-cl-edge1",
@@ -24,7 +24,7 @@ func TestSchemaServiceInfraDb_database_at(t *testing.T) {
 		"client_banyanproxy_listen_port": 9299,
 	}
 
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraDbSchema(), svc_rdp_conn)
+	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraDbSchema(), svc_db_conn)
 	svc_obj := expandDatabaseCreateService(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/database-conn.json")

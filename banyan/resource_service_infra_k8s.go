@@ -27,24 +27,6 @@ func resourceServiceInfraK8s() *schema.Resource {
 
 func buildResourceServiceInfraK8sSchema() (schemaK8s map[string]*schema.Schema) {
 	schemaK8s = map[string]*schema.Schema{
-		"backend_http_connect": {
-			Type:        schema.TypeBool,
-			Description: "For K8S, we use Client Specified connectivity",
-			Computed:    true,
-			Default:     nil,
-		},
-		"backend_domain": {
-			Type:        schema.TypeString,
-			Description: "For K8S, we use Client Specified connectivity",
-			Computed:    true,
-			Default:     nil,
-		},
-		"backend_port": {
-			Type:        schema.TypeInt,
-			Description: "For K8S, we use Client Specified connectivity",
-			Computed:    true,
-			Default:     nil,
-		},
 		"backend_dns_override_for_domain": {
 			Type:        schema.TypeString,
 			Description: "Override DNS for service domain name with this value",
@@ -68,6 +50,9 @@ func buildResourceServiceInfraK8sSchema() (schemaK8s map[string]*schema.Schema) 
 		},
 	}
 	for key, val := range resourceServiceInfraCommonSchema {
+		if schemaK8s[key] == nil {
+			schemaK8s[key] = val
+		}
 		if schemaK8s[key] == nil {
 			schemaK8s[key] = val
 		}

@@ -39,7 +39,7 @@ func buildResourceServiceInfraDbSchema() (schemaDb map[string]*schema.Schema) {
 			Type:        schema.TypeBool,
 			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
 			Optional:    true,
-			Default:     true,
+			Default:     false,
 		},
 	}
 	for key, val := range resourceServiceInfraCommonSchema {

@@ -20,22 +20,8 @@ func resourceServiceInfraRdp() *schema.Resource {
 		ReadContext:   resourceServiceInfraRdpRead,
 		UpdateContext: resourceServiceInfraRdpUpdate,
 		DeleteContext: resourceServiceInfraRdpDelete,
-		Schema:        resourceServiceInfraCommonSchema,
+		Schema:        buildResourceServiceInfraRdpSchema(),
 	}
-}
-
-func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating RDP service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	svc := expandRDPCreateService(d)
-
-	newService, err := client.Service.Create(svc)
-	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create RDP service %s : %s", d.Get("name"), d.Id()))
-	}
-	log.Printf("[SVC|RES|CREATE] Created RDP service %s : %s", d.Get("name"), d.Id())
-	d.SetId(newService.ServiceID)
-	return resourceServiceInfraRdpRead(ctx, d, m)
 }
 
 func buildResourceServiceInfraRdpSchema() (schemaRdp map[string]*schema.Schema) {
@@ -51,11 +37,22 @@ func buildResourceServiceInfraRdpSchema() (schemaRdp map[string]*schema.Schema) 
 		if schemaRdp[key] == nil {
 			schemaRdp[key] = val
 		}
-		if schemaRdp[key] == nil {
-			schemaRdp[key] = val
-		}
 	}
 	return
+}
+
+func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Printf("[SVC|RES|CREATE] creating RDP service %s : %s", d.Get("name"), d.Id())
+	client := m.(*client.Holder)
+	svc := expandRDPCreateService(d)
+
+	newService, err := client.Service.Create(svc)
+	if err != nil {
+		return diag.FromErr(errors.WithMessagef(err, "could not create RDP service %s : %s", d.Get("name"), d.Id()))
+	}
+	log.Printf("[SVC|RES|CREATE] Created RDP service %s : %s", d.Get("name"), d.Id())
+	d.SetId(newService.ServiceID)
+	return resourceServiceInfraRdpRead(ctx, d, m)
 }
 
 func expandRDPCreateService(d *schema.ResourceData) (svc service.CreateService) {
@@ -87,8 +84,11 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	allowUserOverride := true
 
 	banyanProxyMode := "TCP"
-	if d.Get("http_connect").(bool) {
-		banyanProxyMode = "RDPGATEWAY"
+	_, ok := d.GetOk("http_connect")
+	if ok {
+		if d.Get("http_connect").(bool) {
+			banyanProxyMode = "RDPGATEWAY"
+		}
 	}
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alpInt)

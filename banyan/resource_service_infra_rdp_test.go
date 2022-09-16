@@ -45,7 +45,7 @@ func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
 		"client_banyanproxy_listen_port": 9108,
 	}
 
-	d := schema.TestResourceDataRaw(t, resourceServiceInfraCommonSchema, svc_rdp_collection)
+	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraRdpSchema(), svc_rdp_collection)
 	svc_obj := expandRDPCreateService(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/rdp-collection.json")

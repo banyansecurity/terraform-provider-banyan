@@ -92,13 +92,13 @@ var resourceServiceWebSchema = map[string]*schema.Schema{
 	},
 	"backend_tls": {
 		Type:        schema.TypeBool,
-		Description: "Indicates whether the connection to the backend server uses TLS.",
+		Description: "Indicates whether the connection to the backend server uses TLS",
 		Optional:    true,
 		Default:     false,
 	},
 	"backend_tls_insecure": {
 		Type:        schema.TypeBool,
-		Description: "Indicates the connection to the backend should not validate the backend server TLS certficate",
+		Description: "Indicates the connection to the backend should not validate the backend server TLS certificate",
 		Optional:    true,
 		Default:     false,
 	},
