@@ -60,6 +60,12 @@ func buildResourceServiceInfraK8sSchema() (schemaK8s map[string]*schema.Schema) 
 			Description: "CA Public Key generated during Kube-OIDC-Proxy deployment",
 			Required:    true,
 		},
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+			Optional:    true,
+			Default:     true,
+		},
 	}
 	for key, val := range resourceServiceInfraCommonSchema {
 		if schemaK8s[key] == nil {

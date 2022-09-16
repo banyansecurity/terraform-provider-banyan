@@ -47,6 +47,12 @@ func buildResourceServiceInfraSshSchema() (schemaSsh map[string]*schema.Schema) 
 			Computed:    true,
 			Default:     nil,
 		},
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+			Optional:    true,
+			Default:     false,
+		},
 	}
 	for key, val := range resourceServiceInfraCommonSchema {
 		if schemaSsh[key] == nil {

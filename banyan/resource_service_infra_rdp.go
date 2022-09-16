@@ -38,6 +38,26 @@ func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, 
 	return resourceServiceInfraRdpRead(ctx, d, m)
 }
 
+func buildResourceServiceInfraRdpSchema() (schemaRdp map[string]*schema.Schema) {
+	schemaRdp = map[string]*schema.Schema{
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+			Optional:    true,
+			Default:     false,
+		},
+	}
+	for key, val := range resourceServiceInfraCommonSchema {
+		if schemaRdp[key] == nil {
+			schemaRdp[key] = val
+		}
+		if schemaRdp[key] == nil {
+			schemaRdp[key] = val
+		}
+	}
+	return
+}
+
 func expandRDPCreateService(d *schema.ResourceData) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
