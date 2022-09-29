@@ -11,9 +11,8 @@ type Admin struct {
 	OrgIdpConfig orgidpconfig.OrgIdpConfigClienter
 }
 
-func NewClient(restClient *restclient.RestClient) (admin *Admin) {
+func NewClient(restClient *restclient.RestClient) (admin Admin) {
 	oidcSettingsClient := oidcsettings.Client(restClient)
-	admin = &Admin{}
 	admin.OidcSettings = oidcSettingsClient
 	admin.OrgIdpConfig = orgidpconfig.Client(restClient)
 	return

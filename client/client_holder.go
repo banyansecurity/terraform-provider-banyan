@@ -18,7 +18,7 @@ type Holder struct {
 	Policy           policy.PolicyClienter
 	Role             role.RoleClienter
 	PolicyAttachment policyattachment.Clienter
-	Admin            *admin.Admin
+	Admin            admin.Admin
 	Satellite        satellite.Clienter
 	ApiKey           apikey.Clienter
 	AccessTier       servicetunnel.Clienter
@@ -30,17 +30,15 @@ func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (clie
 	if err != nil {
 		log.Fatalf("could not create client %s", err)
 	}
-	c := Holder{}
-	client = &c
-	service := service.NewClient(restClient)
-	client.Service = service
-	client.Policy = policy.NewClient(restClient)
-	client.Role = role.NewClient(restClient)
-	client.PolicyAttachment = policyattachment.NewClient(restClient)
-	client.Satellite = satellite.NewClient(restClient)
-	client.ApiKey = apikey.NewClient(restClient)
-	client.AccessTier = servicetunnel.NewClient(restClient)
-	admin := admin.NewClient(restClient)
-	client.Admin = admin
-	return
+	c := Holder{
+		Service:          service.NewClient(restClient),
+		Policy:           policy.NewClient(restClient),
+		Role:             role.NewClient(restClient),
+		PolicyAttachment: policyattachment.NewClient(restClient),
+		Satellite:        satellite.NewClient(restClient),
+		ApiKey:           apikey.NewClient(restClient),
+		AccessTier:       servicetunnel.NewClient(restClient),
+		Admin:            admin.NewClient(restClient),
+	}
+	return &c, err
 }

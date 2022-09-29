@@ -34,7 +34,7 @@ type OidcSettings struct {
 	restClient *restclient.RestClient
 }
 
-func (this *OidcSettings) Get() (oidcSettings Spec, err error) {
+func (this OidcSettings) Get() (oidcSettings Spec, err error) {
 	path := "api/v1/oidc_settings"
 
 	request, err := this.restClient.Get(path)
