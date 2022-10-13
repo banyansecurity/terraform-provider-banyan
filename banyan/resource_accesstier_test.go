@@ -2,7 +2,7 @@ package banyan
 
 import (
 	"fmt"
-	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
+	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -10,60 +10,87 @@ import (
 	"testing"
 )
 
-// Use the terraform plugin sdk testing framework for example testing accesstier lifecycle
-func TestAccAccessTier_basic(t *testing.T) {
-	var bnnAccessTier servicetunnel.AccessTierInfo
+const apiKeyID = "f0da9734-10b7-4ace-85ae-05206119cc69"
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+// The required test is used to test the lifecycle of a resource with only the required parameters set
+func TestAccAccessTier_required(t *testing.T) {
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	r := accesstier.AccessTierInfo{}
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAccessTierDestroy(t, "banyan_accesstier.example"),
 		Steps: []resource.TestStep{
-			// Creates the accesstier with the given terraform configuration and asserts that the accesstier is created
 			{
-				Config: testAccAccessTier_create(rName),
+				Config: testAccAccessTier_create_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingAccessTier("banyan_accesstier.example", &bnnAccessTier),
-					resource.TestCheckResourceAttr("banyan_accesstier.example", "name", rName),
-					resource.TestCheckResourceAttrPtr("banyan_accesstier.example", "id", &bnnAccessTier.ID),
+					testAccCheckExists("banyan_accesstier.example", &r),
 				),
 			},
 			{
-				Config: testAccAccessTier_update(rName),
+				Config: testAccAccessTier_update_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingAccessTier("banyan_accesstier.example", &bnnAccessTier),
-					resource.TestCheckResourceAttr("banyan_accesstier.example", "name", rName),
-					resource.TestCheckResourceAttrPtr("banyan_accesstier.example", "id", &bnnAccessTier.ID),
+					testAccCheckExists("banyan_accesstier.example", &r),
 				),
 			},
 		},
 	})
 }
 
-// Checks that the resource with the name resourceName exists and returns the accesstier object from the Banyan API
-func testAccCheckExistingAccessTier(resourceName string, bnnAccessTier *servicetunnel.AccessTierInfo) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+// The optional test is used to test the lifecycle of a resource with the required parameters and optional parameters set
+func TestAccAccessTier_optional(t *testing.T) {
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found in state %q", rs)
-		}
-		resp, err := testAccClient.AccessTier.Get(rs.Primary.ID)
+	r := accesstier.AccessTierInfo{}
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAccessTierDestroy(t, "banyan_accesstier.example"),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessTier_create_optional(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists("banyan_accesstier.example", &r),
+				),
+			},
+			{
+				Config: testAccAccessTier_update_optional(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists("banyan_accesstier.example", &r),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckExists(resourceName string, r *accesstier.AccessTierInfo) resource.TestCheckFunc {
+	return func(s *terraform.State) (err error) {
+		err = testAccCheckExistingAccessTier(resourceName, r, s)
 		if err != nil {
 			return err
 		}
-		if resp.ID != rs.Primary.ID {
-			return fmt.Errorf("expected resource id %q got %q instead", resp.ID, rs.Primary.ID)
-		}
-		*bnnAccessTier = resp
-		return nil
+		return
 	}
+}
+
+// Checks that the resource with the name resourceName exists and returns the resource object from the Banyan API
+func testAccCheckExistingAccessTier(resourceName string, bnnAccessTier *accesstier.AccessTierInfo, s *terraform.State) (err error) {
+	rs, ok := s.RootModule().Resources[resourceName]
+	if !ok {
+		return fmt.Errorf("resource not found in state %s", resourceName)
+	}
+	resp, err := testAccClient.AccessTier.Get(rs.Primary.ID)
+	if err != nil {
+		return fmt.Errorf("could not get resource from API %s id: %s", resourceName, rs.Primary.ID)
+	}
+	*bnnAccessTier = resp
+	return
 }
 
 // Uses the API to check that the accesstier was destroyed
 func testAccCheckAccessTierDestroy(t *testing.T, resourceName string) resource.TestCheckFunc {
-	emptyAccessTier := servicetunnel.AccessTierInfo{}
+	emptyAccessTier := accesstier.AccessTierInfo{}
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -75,30 +102,67 @@ func testAccCheckAccessTierDestroy(t *testing.T, resourceName string) resource.T
 	}
 }
 
-// Returns terraform configuration for the accesstier. Takes in custom name.
-func testAccAccessTier_create(name string) string {
+// Returns terraform configuration with the required parameters set
+func testAccAccessTier_create_required(name string) string {
 	return fmt.Sprintf(`
 resource banyan_accesstier "example" {
   name = "%s"
-  cluster = "us-west"
   address = "*.example.com"
-  domains = ["*.example.com"]
+  cluster = "tortoise"
+  api_key_id = "%s"
 }
-`, name)
+`, name, apiKeyID)
 }
 
-func testAccAccessTier_update(name string) string {
+// Returns terraform configuration with the required parameters updated
+func testAccAccessTier_update_required(name string) string {
+	return fmt.Sprintf(`
+resource banyan_accesstier "example" {
+  name = "%s-updated"
+  address = "*.updated.com"
+  cluster = "updated"
+  api_key_id = "%s"
+}
+`, name, apiKeyID)
+}
+
+// Returns terraform configuration with the required and optional parameters set
+func testAccAccessTier_create_optional(name string) string {
 	return fmt.Sprintf(`
 resource banyan_accesstier "example" {
   name = "%s"
-  cluster = "us-west"
   address = "*.example.com"
-  domains = ["*.example.com"]
-  connector_tunnel_port = 3857
-  end_user_tunnel_port = 3858
-  end_user_tunnel_backend_cidrs = ["10.10.10.0/24"]
-  end_user_tunnel_private_domains = ["corp.internal"]
-  end_user_tunnel_enable_private_dns = true
+  cluster = "tortoise"
+  api_key_id = "%s"
+  tunnel_connector {
+    port = 39103
+  }
+  tunnel_enduser {
+    port = 39104
+    cidrs = ["10.0.2.0/16"]
+    domains = ["corp.internal"]
+  }
 }
-`, name)
+`, name, apiKeyID)
+}
+
+// Returns terraform configuration with the required and optional
+// parameters updated ('ForceNew' elements should be omitted)
+func testAccAccessTier_update_optional(name string) string {
+	return fmt.Sprintf(`
+resource banyan_accesstier "example" {
+  name = "%s"
+  address = "*.updated.com"
+  cluster = "tortoise"
+  api_key_id = "%s"
+  tunnel_connector {
+    port = 39104
+  }
+  tunnel_enduser {
+    port = 39105
+    cidrs = ["10.0.3.0/16"]
+    domains = ["corpupdated.internal"]
+  }
+}
+`, name, apiKeyID)
 }
