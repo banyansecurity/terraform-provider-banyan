@@ -2,15 +2,12 @@ package banyan
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 func resourceServiceInfraRdp() *schema.Resource {
@@ -41,21 +38,31 @@ func buildResourceServiceInfraRdpSchema() (schemaRdp map[string]*schema.Schema) 
 	return
 }
 
-func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating RDP service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	svc := expandRDPCreateService(d)
-
-	newService, err := client.Service.Create(svc)
-	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create RDP service %s : %s", d.Get("name"), d.Id()))
+func RdpSchema() (schemaRdp map[string]*schema.Schema) {
+	schemaRdp = map[string]*schema.Schema{
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+			Optional:    true,
+			Default:     false,
+		},
 	}
-	log.Printf("[SVC|RES|CREATE] Created RDP service %s : %s", d.Get("name"), d.Id())
+	return
+}
+
+func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	svc := RdpFromState(d)
+
+	newService, err := c.Service.Create(svc)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	d.SetId(newService.ServiceID)
 	return resourceServiceInfraRdpRead(ctx, d, m)
 }
 
-func expandRDPCreateService(d *schema.ResourceData) (svc service.CreateService) {
+func RdpFromState(d *schema.ResourceData) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
@@ -82,7 +89,6 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	serviceAppType := "RDP"
 	descriptionLink := ""
 	allowUserOverride := true
-
 	banyanProxyMode := "TCP"
 	_, ok := d.GetOk("http_connect")
 	if ok {
@@ -92,7 +98,6 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	}
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alpInt)
-
 	metadatatags = service.Tags{
 		Template:          &template,
 		UserFacing:        &userFacing,
@@ -110,32 +115,22 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating RDP service %s : %s", d.Get("name"), d.Id())
 	resourceServiceInfraRdpCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated RDP service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading RDP service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
+	c := m.(*client.Holder)
 	id := d.Id()
-	service, ok, err := client.Service.Get(id)
-	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get database service with id: %s", id))
-	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
-	}
-	diagnostics = resourceServiceInfraCommonRead(service, d, m)
-	log.Printf("[SVC|RES|READ] read RDP service %s : %s", d.Get("name"), d.Id())
+	svc, err := c.Service.Get(id)
+	handleNotFoundError(d, id, err)
+	diagnostics = resourceServiceInfraCommonRead(c, svc, d)
 	d.SetId(id)
 	return
 }
 
 func resourceServiceInfraRdpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting RDP service %s : %s", d.Get("name"), d.Id())
 	diagnostics = resourceServiceInfraCommonDelete(d, m)
-	log.Printf("[SERVICE|RES|DELETE] deleted RDP service %s : %s", d.Get("name"), d.Id())
+	d.SetId("")
 	return
 }

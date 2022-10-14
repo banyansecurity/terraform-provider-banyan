@@ -2,12 +2,13 @@ package banyan
 
 import (
 	"fmt"
+	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
 	"math"
 	"net"
+	"reflect"
 	"strconv"
 )
 
@@ -48,11 +49,12 @@ func convertSchemaSetToIntSlice(original *schema.Set) (stringSlice []int) {
 	return
 }
 
-func handleNotFoundError(d *schema.ResourceData, resource string) (diagnostics diag.Diagnostics) {
-	log.Printf("[WARN] Removing %s because it's gone", resource)
-	// The resource doesn't exist anymore, setting its id to "" deletes it from the state
-	d.SetId("")
-	return nil
+func handleNotFoundError(d *schema.ResourceData, id string, err error) (diagnostics diag.Diagnostics) {
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(id)
+	return
 }
 
 func validateL7Protocol() func(val interface{}, key string) (warns []string, errs []error) {
@@ -197,6 +199,37 @@ func removeFromSlice(slice []string, s string) (result []string) {
 		if element != s {
 			result = append(result, element)
 		}
+	}
+	return
+}
+
+func isNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
+		return reflect.ValueOf(i).IsNil()
+	}
+	return false
+}
+
+// TODO: revisit after cluster consolidation
+func setCluster(c *client.Holder, d *schema.ResourceData) (diagnostics diag.Diagnostics) {
+	globalEdge, ok := d.GetOk("global_edge")
+	if !ok {
+		cluster, err := c.Shield.GetAll()
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.Set("cluster", cluster[0])
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return
+	}
+	if globalEdge.(bool) {
+		d.Set("global_edge", true)
 	}
 	return
 }

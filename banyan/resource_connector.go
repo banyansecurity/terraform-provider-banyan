@@ -2,7 +2,6 @@ package banyan
 
 import (
 	"context"
-	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -122,9 +121,6 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interf
 	log.Printf("[CONNECTOR|RES|READ] reading connector %sat : %sat", d.Get("name"), d.Id())
 	client := m.(*client.Holder)
 	sat, err := client.Satellite.Get(d.Id())
-	if err != nil {
-		return handleNotFoundError(d, fmt.Sprintf("connector %q", d.Id()))
-	}
 	err = d.Set("name", sat.Name)
 	if err != nil {
 		return diag.FromErr(err)

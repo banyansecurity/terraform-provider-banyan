@@ -2,8 +2,6 @@ package banyan
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -60,21 +58,45 @@ func buildResourceServiceInfraK8sSchema() (schemaK8s map[string]*schema.Schema) 
 	return
 }
 
-func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating kubernetes service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	svc := expandK8sCreateService(d)
+func K8sSchema() (schemaK8s map[string]*schema.Schema) {
+	schemaK8s = map[string]*schema.Schema{
+		"backend_dns_override_for_domain": {
+			Type:        schema.TypeString,
+			Description: "Override DNS for service domain name with this value",
+			Required:    true,
+		},
+		"client_kube_cluster_name": {
+			Type:        schema.TypeString,
+			Description: "Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters",
+			Required:    true,
+		},
+		"client_kube_ca_key": {
+			Type:        schema.TypeString,
+			Description: "CA Public Key generated during Kube-OIDC-Proxy deployment",
+			Required:    true,
+		},
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+			Optional:    true,
+			Default:     true,
+		},
+	}
+	return
+}
 
-	newService, err := client.Service.Create(svc)
+func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	svc := K8sFromState(d)
+	created, err := c.Service.Create(svc)
 	if err != nil {
 		return diag.FromErr(errors.WithMessagef(err, "could not create kubernetes service %s : %s", d.Get("name"), d.Id()))
 	}
-	log.Printf("[SVC|RES|CREATE] created kubernetes service %s : %s", d.Get("name"), d.Id())
-	d.SetId(newService.ServiceID)
+	d.SetId(created.ServiceID)
 	return resourceServiceInfraK8sRead(ctx, d, m)
 }
 
-func expandK8sCreateService(d *schema.ResourceData) (svc service.CreateService) {
+func K8sFromState(d *schema.ResourceData) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
@@ -101,7 +123,6 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	serviceAppType := "K8S"
 	descriptionLink := ""
 	allowUserOverride := true
-
 	banyanProxyMode := "CHAIN"
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alpInt)
@@ -118,74 +139,63 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 		ServiceAppType:    &serviceAppType,
 		DescriptionLink:   &descriptionLink,
 		AllowUserOverride: &allowUserOverride,
-
-		AppListenPort:   &appListenPort,
-		BanyanProxyMode: &banyanProxyMode,
-		KubeClusterName: &kubeClusterName,
-		KubeCaKey:       &kubeCaKey,
+		AppListenPort:     &appListenPort,
+		BanyanProxyMode:   &banyanProxyMode,
+		KubeClusterName:   &kubeClusterName,
+		KubeCaKey:         &kubeCaKey,
 	}
+	return
+}
+
+func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	resp, err := c.Service.Get(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(resp.ServiceID)
+	domain := *resp.CreateServiceSpec.Metadata.Tags.Domain
+	override := resp.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	err = d.Set("backend_dns_override_for_domain", override)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_cluster_name", resp.CreateServiceSpec.Metadata.Tags.KubeClusterName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_ca_key", resp.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	diagnostics = resourceServiceInfraCommonRead(c, resp, d)
+	return
+}
+
+func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	resourceServiceInfraK8sCreate(ctx, d, m)
+	return
+}
+
+func resourceServiceInfraK8sDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	diagnostics = resourceServiceInfraCommonDelete(d, m)
+	d.SetId("")
 	return
 }
 
 func expandK8sServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	d.Set("http_connect", true)
 	spec = expandInfraServiceSpec(d)
-
 	domain := d.Get("domain").(string)
-	backend_override := d.Get("backend_dns_override_for_domain").(string)
+	backendOverride := d.Get("backend_dns_override_for_domain").(string)
 	spec.Backend.DNSOverrides = map[string]string{
-		domain: backend_override,
+		domain: backendOverride,
 	}
-
-	allow_patterns := []service.BackendAllowPattern{
+	allowPatterns := []service.BackendAllowPattern{
 		{
 			Hostnames: []string{domain},
 		},
 	}
-	spec.Backend.AllowPatterns = allow_patterns
-	return
-}
-
-func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|READ] reading kubernetes service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	id := d.Id()
-	service, ok, err := client.Service.Get(id)
-	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get kubernetes service with id: %s", id))
-	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
-	}
-	domain := *service.CreateServiceSpec.Metadata.Tags.Domain
-	override := service.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
-	err = d.Set("backend_dns_override_for_domain", override)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("client_kube_cluster_name", service.CreateServiceSpec.Metadata.Tags.KubeClusterName)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("client_kube_ca_key", service.CreateServiceSpec.Metadata.Tags.KubeCaKey)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	diagnostics = resourceServiceInfraCommonRead(service, d, m)
-	log.Printf("[SVC|RES|READ] read kubernetes service %s : %s", d.Get("name"), d.Id())
-	return
-}
-
-func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating kubernetes service %s : %s", d.Get("name"), d.Id())
-	resourceServiceInfraK8sCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated kubernetes service %s : %s", d.Get("name"), d.Id())
-	return
-}
-
-func resourceServiceInfraK8sDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting kubernetes service %s : %s", d.Get("name"), d.Id())
-	diagnostics = resourceServiceInfraCommonDelete(d, m)
-	log.Printf("[SERVICE|RES|DELETE] deleted kubernetes service %s : %s", d.Get("name"), d.Id())
+	spec.Backend.AllowPatterns = allowPatterns
 	return
 }

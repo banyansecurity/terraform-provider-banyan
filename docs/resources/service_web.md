@@ -18,7 +18,7 @@ resource "banyan_service_web" "example" {
 
 ### Required
 
-- **backend_domain** (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using backend_http_connect
+- **backend_domain** (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using http_connect
 - **backend_port** (Number) The internal port where this service is hosted
 - **domain** (String) The external-facing network address for this service; ex. website.example.com
 - **name** (String) Name of the service; use lowercase alphanumeric characters or "-"

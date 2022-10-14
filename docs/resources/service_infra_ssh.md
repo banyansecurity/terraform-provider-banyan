@@ -24,9 +24,9 @@ resource "banyan_service_infra_ssh" "example" {
 ### Optional
 
 - **access_tier** (String) Name of the access_tier which will proxy requests to your service backend; set to "" if using Global Edge deployment'
-- **backend_domain** (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using backend_http_connect
-- **backend_http_connect** (Boolean) Indicates to use HTTP Connect request to derive the backend target address.
-- **backend_port** (Number) The internal port where this service is hosted; set to 0 if using backend_http_connect
+- **backend_domain** (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using http_connect
+- **http_connect** (Boolean) Indicates to use HTTP Connect request to derive the backend target address.
+- **backend_port** (Number) The internal port where this service is hosted; set to 0 if using http_connect
 - **client_ssh_auth** (String) Specifies which certificates - TRUSTCERT | SSHCERT | BOTH - should be used when the user connects to this service; default: TRUSTCERT
 - **client_ssh_host_directive** (String) Creates an entry in the SSH config file using the Host keyword. Wildcards are supported such as "192.168.*.?"; default: <service name>
 - **cluster** (String) Name of the cluster used for your deployment; for Global Edge set to "global-edge", for Private Edge set to "cluster1"

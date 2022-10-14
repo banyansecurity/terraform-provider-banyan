@@ -16,14 +16,14 @@ import (
 )
 
 type Holder struct {
-	Service          service.ServiceClienter
+	Service          service.Client
 	Policy           policy.PolicyClienter
-	Role             role.RoleClienter
+	Role             role.Client
 	PolicyAttachment policyattachment.Clienter
 	Admin            admin.Admin
 	Satellite        satellite.Clienter
 	ApiKey           apikey.Clienter
-	AccessTier       accesstier.Clienter
+	AccessTier       accesstier.Client
 	Shield           shield.Clienter
 	RestClient       *restclient.RestClient
 }

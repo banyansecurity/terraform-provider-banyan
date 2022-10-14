@@ -2,7 +2,6 @@ package banyan
 
 import (
 	"context"
-	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -273,15 +272,15 @@ func resourceAccessTier() *schema.Resource {
 	}
 }
 
-func updateLocalConfig(d *schema.ResourceData, c *client.Holder, state accesstier.AccessTierInfo) (diagnostics diag.Diagnostics) {
-	createdLocalConfig, err := c.AccessTier.GetLocalConfig(state.Name)
+func updateLocalConfig(d *schema.ResourceData, c *client.Holder, spec accesstier.AccessTierInfo) (diagnostics diag.Diagnostics) {
+	currentLc, err := c.AccessTier.GetLocalConfig(spec.Name)
 	if err != nil {
-		return diag.FromErr(errors.WithMessage(err, "couldn't retrieve local config for access tier"))
+		return diag.FromErr(err)
 	}
 	lc := accesstier.AccessTierLocalConfig{
 		BaseParameters: &accesstier.BaseParameters{
-			ShieldAddress: createdLocalConfig.ShieldAddress,
-			SiteAddress:   createdLocalConfig.SiteAddress,
+			ShieldAddress: currentLc.ShieldAddress,
+			SiteAddress:   currentLc.SiteAddress,
 		},
 		LoggingParameters:               expandLogging(d),
 		EventParameters:                 expandEventParameters(d),
@@ -289,39 +288,41 @@ func updateLocalConfig(d *schema.ResourceData, c *client.Holder, state accesstie
 		InfrastructureServiceParameters: expandInfrastructureService(d),
 		DebuggingParameters:             expandDebugging(d),
 	}
-	_, err = c.AccessTier.UpdateLocalConfig(state.Name, lc)
+	// Combining local config with accesstier facing config
+	_, err = c.AccessTier.UpdateLocalConfig(spec.Name, lc)
 	if err != nil {
-		return diag.FromErr(errors.Errorf("failed to update local configuration for %s", state.Name))
+		return diag.FromErr(errors.Errorf("failed to update local configuration for %s", spec.Name))
 	}
 	return
 }
 
 func resourceAccessTierCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("creating access tier %s : %s", d.Get("name"), d.Id())
 	c := m.(*client.Holder)
-	post := atFromState(c, d)
-	state, err := c.AccessTier.Create(*post)
+	cluster, err := c.Shield.GetAll()
 	if err != nil {
-		return diag.FromErr(errors.WithMessage(err, "couldn't create new access tier"))
+		return diag.Errorf("no clusters found for org: %s", err)
 	}
-	updateLocalConfig(d, c, state)
-	log.Printf("created access tier %s : %s", state.Name, d.Id())
+	d.Set("cluster", cluster[0])
+	spec, err := c.AccessTier.Create(atFromState(d))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(spec.ID)
+	updateLocalConfig(d, c, spec)
 	diagnostics = resourceAccessTierRead(ctx, d, m)
-	d.SetId(state.ID)
 	return
 }
 
 func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("reading access tier %t : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	at, err := client.AccessTier.Get(d.Id())
-	if err != nil {
-		return handleNotFoundError(d, fmt.Sprintf("access tier %q", d.Id()))
-	}
-	d.SetId(at.ID)
-	cluster, err := client.Shield.GetAll()
+	c := m.(*client.Holder)
+	at, err := c.AccessTier.Get(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	d.SetId(at.ID)
+	cluster, err := c.Shield.GetAll()
+	if err != nil {
+		return diag.Errorf("no clusters found for org: %s", err)
 	}
 	d.Set("cluster", cluster[0])
 	if err != nil {
@@ -357,9 +358,9 @@ func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Now get the local config
-	atLocalConfig, err := client.AccessTier.GetLocalConfig(at.Name)
+	atLocalConfig, err := c.AccessTier.GetLocalConfig(at.Name)
 	if err != nil {
-		return diag.FromErr(errors.WithMessage(err, "couldn't read access tier local config"))
+		return diag.FromErr(err)
 	}
 	err = flattenLoggingParameters(d, atLocalConfig)
 	if err != nil {
@@ -377,46 +378,38 @@ func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	log.Printf("read access tier %s : %s", d.Get("name"), d.Id())
 	return
 }
 
-func atFromState(c *client.Holder, d *schema.ResourceData) (accessTier *accesstier.AccessTierPost) {
-	cluster, err := c.Shield.GetAll()
-	if err != nil {
-		return nil
-	}
+func atFromState(d *schema.ResourceData) (accessTier accesstier.AccessTierPost) {
 	at := accesstier.AccessTierPost{
 		Name:            d.Get("name").(string),
 		Address:         d.Get("address").(string),
 		TunnelSatellite: expandTunnelConfigSatellite(d),
 		TunnelEnduser:   expandTunnelConfigEndUser(d),
-		ClusterName:     cluster[0],
+		ClusterName:     d.Get("cluster").(string),
 		DisableSnat:     d.Get("disable_snat").(bool),
 		SrcNATCIDRRange: d.Get("src_nat_cidr_range").(string),
 		ApiKeyId:        d.Get("api_key_id").(string),
 	}
-	return &at
+	return at
 }
 
 func resourceAccessTierUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("updating access tier %s : %s", d.Get("name"), d.Id())
 	c := m.(*client.Holder)
-	at := atFromState(c, d)
-	state, err := c.AccessTier.Update(d.Id(), *at)
+	spec := atFromState(d)
+	updated, err := c.AccessTier.Update(d.Id(), spec)
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't update access tier"))
 	}
-	updateLocalConfig(d, c, state)
-	log.Printf("updated access tier %s : %s", at.Name, d.Id())
-	d.SetId(state.ID)
+	updateLocalConfig(d, c, updated)
+	d.SetId(updated.ID)
 	return
 }
 
 func resourceAccessTierDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("deleting access tier %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	err := client.AccessTier.Delete(d.Id())
+	c := m.(*client.Holder)
+	err := c.AccessTier.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return

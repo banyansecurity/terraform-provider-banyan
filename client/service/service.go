@@ -1,24 +1,19 @@
 package service
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
+	"github.com/banyansecurity/terraform-banyan-provider/client/crud"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"github.com/pkg/errors"
 	"html"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"net/url"
 )
 
-func (this *Service) Get(id string) (service GetServiceSpec, ok bool, err error) {
-	log.Printf("[SVC|CLIENT|GET] getting service with id: %q", id)
-	if id == "" {
-		err = errors.New("need an id to get a service")
-		return
-	}
+const apiVersion = "api/v1"
+const component = "service"
+
+func (s *Service) Get(id string) (service GetServiceSpec, err error) {
 	path := "api/v1/registered_services"
 	myUrl, err := url.Parse(path)
 	if err != nil {
@@ -26,34 +21,18 @@ func (this *Service) Get(id string) (service GetServiceSpec, ok bool, err error)
 	}
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
-	myUrl.RawQuery = query.Encode()
-	response, err := this.restClient.DoGet(myUrl.String())
-	if err != nil {
-		return
-	}
-	if response.StatusCode == 404 || response.StatusCode == 400 {
-		return
-	}
-	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
-		return
-	}
-	// Unmarshal the response into a service spec
-	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return
-	}
+	resp, err := crud.GetQuery(s.restClient, "service", id, query, path)
 	var createdServiceJson []GetServicesJson
-	err = json.Unmarshal(responseData, &createdServiceJson)
+	err = json.Unmarshal(resp, &createdServiceJson)
 	if err != nil {
 		return
 	}
 	if len(createdServiceJson) == 0 {
+		err = errors.New("service not found")
 		return
 	}
 	if len(createdServiceJson) > 1 {
-		err = errors.New("got more than one service")
+		err = errors.New("multiple services with same ID")
 		return
 	}
 	createdServiceJson[0].ServiceSpec = html.UnescapeString(createdServiceJson[0].ServiceSpec)
@@ -63,14 +42,10 @@ func (this *Service) Get(id string) (service GetServiceSpec, ok bool, err error)
 		return
 	}
 	createdServiceJson[0].CreateServiceSpec = createdSpec
-	service = MapToGetServiceSpec(createdServiceJson[0])
-	ok = true
-	log.Printf("[SVC|CLIENT|GET] got service with id: %q", id)
-	return
+	return MapToGetServiceSpec(createdServiceJson[0]), nil
 }
 
-func (this *Service) disable(id string) (err error) {
-	log.Printf("[SVC|CLIENT|DISABLE] disabling service id: %q", id)
+func (s *Service) Disable(id string) (err error) {
 	path := "api/v1/disable_registered_service"
 	myUrl, err := url.Parse(path)
 	if err != nil {
@@ -79,23 +54,22 @@ func (this *Service) disable(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
-	resp, err := this.restClient.DoPost(myUrl.String(), nil)
+	resp, err := s.restClient.DoPost(myUrl.String(), nil)
 	if err != nil {
 		return
 	}
 	if resp.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %v", resp))
+		err = errors.Errorf("could not disable service with id: %s", id)
 		return
 	}
-	log.Printf("[SVC|CLIENT|DISABLE] disabled service id: %q", id)
+	log.Printf("disabled service: %q", id)
 	return
 }
 
-func (this *Service) Delete(id string) (err error) {
-	log.Printf("[SVC|CLIENT|DELETE] delete service id: %q", id)
-	err = this.disable(id)
+func (s *Service) Delete(id string) (err error) {
+	err = s.Disable(id)
 	if err != nil {
-		log.Printf("Couldn't disable service: %s before delete", id)
+		return
 	}
 	path := "api/v1/delete_registered_service"
 	myUrl, err := url.Parse(path)
@@ -105,89 +79,48 @@ func (this *Service) Delete(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
-	resp, err := this.restClient.DoDelete(myUrl.String())
-	if err != nil {
-		return
-	}
-	if resp.StatusCode != 200 {
-		defer resp.Body.Close()
-		responseData, _ := ioutil.ReadAll(resp.Body)
-		// should clean this up to say everything, but recording the bnn-request-id header is useful.
-		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %#v with message: %s", resp, string(responseData)))
-		return
-	}
-	log.Printf("[SVC|CLIENT|DELETE] deleted service id: %q", id)
+	err = crud.DeleteQuery(s.restClient, "service", id, query, path)
+	log.Printf("deleted service: %q", id)
 	return
 }
 
-func (this *Service) DetachPolicy(serviceID string) (err error) {
-	paClient := policyattachment.NewClient(this.restClient)
-	policyAtt, ok, err := paClient.Get(serviceID, "service")
-	if !ok {
-		return
-	}
-	log.Printf("[SVC|CLIENT|DETACH] detaching policy id %s from service id: %q", policyAtt.PolicyID, serviceID)
-	err = paClient.DeleteServiceAttachment(policyAtt.PolicyID, serviceID)
+func (s *Service) DetachPolicy(serviceID string) (err error) {
+	c := policyattachment.NewClient(s.restClient)
+	policyAtt, err := c.Get(serviceID, "service")
 	if err != nil {
 		return
 	}
-	log.Printf("[SVC|CLIENT|DETACH] detached policy id %s from service id: %q", policyAtt.PolicyID, serviceID)
+	_ = c.DeleteServiceAttachment(policyAtt.PolicyID, serviceID)
 	return
 }
 
-func (this *Service) Create(svc CreateService) (service GetServiceSpec, err error) {
+func (s *Service) Create(spec CreateService) (created GetServiceSpec, err error) {
 	path := "api/v1/insert_registered_service"
-	log.Printf("[SVC|CLIENT|CREATE] Creating a new service %#v\n", svc)
-	toCreateSpec, err := json.MarshalIndent(svc, "", "   ")
-	log.Printf("[SVC|CLIENT|GET] retrieved spec\n %s", string(toCreateSpec))
-	body, err := json.Marshal(svc)
-	if err != nil {
-		log.Printf("[SVC|CLIENT|DELETE] marshaling a service to json, found an error %#v\n", err)
-		return
-	}
-	request, err := this.restClient.NewRequest(http.MethodPost, path, bytes.NewBuffer(body))
-	if err != nil {
-		log.Printf("[SVC|CLIENT|CREATE] Creating a new service request, found an error %#v\n", err)
-		return
-	}
-	log.Printf("[SVC|CLIENT|CREATE] %#v", request.URL)
-	response, err := this.restClient.Do(request)
+	body, err := json.Marshal(spec)
 	if err != nil {
 		return
 	}
-	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Printf("[SVC|CLIENT|CREATE] status code %#v, found an error when reading body %#v\n", response.StatusCode, err)
-	}
-	if response.StatusCode != 200 {
-		log.Printf("[SVC|CLIENT|CREATE] status code %#v, found an error %#v, message: %s\n", response.StatusCode, err, string(responseData))
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to create service, message: %s", response.Status, response, string(responseData)))
-		return
-	}
-	log.Printf("[SVC|CLIENT|CREATE] Created a new service %#v\n", string(responseData))
-	var getServicesJson GetServicesJson
-	err = json.Unmarshal(responseData, &getServicesJson)
+	resp, err := crud.Create(s.restClient, apiVersion, component, body, path)
+	var j GetServicesJson
+	err = json.Unmarshal(resp, &j)
 	if err != nil {
 		return
 	}
-	getServicesJson.ServiceSpec = html.UnescapeString(getServicesJson.ServiceSpec)
+	j.ServiceSpec = html.UnescapeString(j.ServiceSpec)
 	var createdService CreateService
-	err = json.Unmarshal([]byte(getServicesJson.ServiceSpec), &createdService)
+	err = json.Unmarshal([]byte(j.ServiceSpec), &createdService)
 	if err != nil {
 		return
 	}
-	getServicesJson.Spec = createdService.Spec
-	service = MapToGetServiceSpec(getServicesJson)
-	createdSpec, err := json.MarshalIndent(service, "", "   ")
-	log.Printf("[SVC|CLIENT|CREATE] created spec\n %s", string(createdSpec))
-	return
+	j.Spec = createdService.Spec
+	return MapToGetServiceSpec(j), nil
 }
 
-func (this *Service) Update(id string, svc CreateService) (service GetServiceSpec, err error) {
-	log.Printf("[SVC|CLIENT|UPDATE] updating service")
-	service, err = this.Create(svc)
-	log.Printf("[SVC|CLIENT|UPDATE] updated service")
+func (s *Service) Update(id string, spec CreateService) (updated GetServiceSpec, err error) {
+	updated, err = s.Create(spec)
+	if err != nil {
+		err = errors.Errorf("could not update service: %s", id)
+	}
 	return
 }
 

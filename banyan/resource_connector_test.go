@@ -14,7 +14,7 @@ import (
 func TestAccConnector_basic(t *testing.T) {
 	var bnnConnector satellite.SatelliteTunnelConfig
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -36,7 +36,7 @@ func TestAccConnector_basic(t *testing.T) {
 func TestAccConnector_tunnel(t *testing.T) {
 	var bnnConnector satellite.SatelliteTunnelConfig
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,

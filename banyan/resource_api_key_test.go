@@ -13,7 +13,7 @@ import (
 // Use the terraform plugin sdk testing framework for example testing apikey lifecycle
 func TestAccApiKey_basic(t *testing.T) {
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -32,7 +32,7 @@ func TestAccApiKey_basic(t *testing.T) {
 
 func TestAccApiKey_update(t *testing.T) {
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,

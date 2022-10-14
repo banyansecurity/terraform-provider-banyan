@@ -119,7 +119,6 @@ func testAccAccessTier_update_required(name string) string {
 resource banyan_accesstier "example" {
   name = "%s-updated"
   address = "*.updated.com"
-  cluster = "updated"
   api_key_id = "%s"
 }
 `, name, apiKeyID)

@@ -25,7 +25,7 @@ func TestSchemaServiceInfraRdp_rdp_conn(t *testing.T) {
 	}
 
 	d := schema.TestResourceDataRaw(t, resourceServiceInfraCommonSchema, svc_rdp_conn)
-	svc_obj := expandRDPCreateService(d)
+	svc_obj := RdpFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/rdp-conn.json")
 	var ref_obj service.CreateService
@@ -46,7 +46,7 @@ func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
 	}
 
 	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraRdpSchema(), svc_rdp_collection)
-	svc_obj := expandRDPCreateService(d)
+	svc_obj := RdpFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/rdp-collection.json")
 	var ref_obj service.CreateService
@@ -57,7 +57,7 @@ func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
 
 func TestAccService_rdp(t *testing.T) {
 	var bnnService service.GetServiceSpec
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),

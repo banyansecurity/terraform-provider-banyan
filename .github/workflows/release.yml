@@ -32,6 +32,9 @@ jobs:
       -
         name: Test
         run: go test ./banyan/... -v
+      -
+        name: Test
+        run: go test ./banyan/... -v
         env:
           TF_ACC: true
           TF_LOG: DEBUG

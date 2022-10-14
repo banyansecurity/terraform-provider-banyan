@@ -23,7 +23,7 @@ func TestSchemaServiceWeb_web_at(t *testing.T) {
 		"backend_port":   8000,
 	}
 	d := schema.TestResourceDataRaw(t, resourceServiceWebSchema, svc_web_at)
-	svc_obj := expandWebCreateService(d)
+	svc_obj := WebFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/web-at.json")
 	var ref_obj service.CreateService
@@ -43,7 +43,7 @@ func TestSchemaServiceWeb_web_conn(t *testing.T) {
 		"backend_port":   8080,
 	}
 	d := schema.TestResourceDataRaw(t, resourceServiceWebSchema, svc_web_conn)
-	svc_obj := expandWebCreateService(d)
+	svc_obj := WebFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/web-conn.json")
 	var ref_obj service.CreateService
@@ -67,7 +67,7 @@ func TestSchemaServiceWeb_web_certs(t *testing.T) {
 	}
 
 	d := schema.TestResourceDataRaw(t, resourceServiceWebSchema, svc_web_certs)
-	svc_obj := expandWebCreateService(d)
+	svc_obj := WebFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/web-certs.json")
 	var ref_obj service.CreateService
@@ -79,7 +79,7 @@ func TestSchemaServiceWeb_web_certs(t *testing.T) {
 // Use the terraform plugin sdk testing framework for acceptance testing banyan service lifecycle
 func TestAccService_basic_web(t *testing.T) {
 	var bnnService service.GetServiceSpec
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),

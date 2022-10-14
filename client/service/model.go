@@ -7,21 +7,20 @@ type Service struct {
 }
 
 // NewClient returns a new client for interaction with the service resource
-func NewClient(restClient *restclient.RestClient) ServiceClienter {
+func NewClient(restClient *restclient.RestClient) Client {
 	serviceClient := Service{
 		restClient: restClient,
 	}
 	return &serviceClient
 }
 
-// ServiceClienter is used to perform CRUD operations on the service resource
-type ServiceClienter interface {
-	Get(id string) (service GetServiceSpec, ok bool, err error)
-	Create(svc CreateService) (Service GetServiceSpec, err error)
-	Update(id string, svc CreateService) (Service GetServiceSpec, err error)
+type Client interface {
+	Get(id string) (spec GetServiceSpec, err error)
+	Create(spec CreateService) (created GetServiceSpec, err error)
+	Update(id string, spec CreateService) (updated GetServiceSpec, err error)
 	Delete(id string) (err error)
 	DetachPolicy(id string) (err error)
-	disable(id string) (err error)
+	Disable(id string) (err error)
 }
 
 type Services struct {

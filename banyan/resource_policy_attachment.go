@@ -3,7 +3,6 @@ package banyan
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -72,11 +71,11 @@ func getInfoFromPolicyAttachmentID(terraformPolicyAttachmentID string) (policyID
 	policyID = policyIDParts[0]
 	attachedToType = policyIDParts[1]
 	attachedToID = policyIDParts[2]
+
 	return
 }
 
 func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[POLICYATTACHMENT|RES|CREATE] creating policyAttachment")
 	client := m.(*client.Holder)
 	policyID, ok := d.Get("policy_id").(string)
 	if !ok {
@@ -104,59 +103,44 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 	if isEnforcing {
 		Enabled = "TRUE"
 	}
-
 	creatPolicyAttachment := policyattachment.CreateBody{
 		AttachedToID:   attachedToID,
 		AttachedToType: attachedToType,
 		IsEnabled:      isEnforcing,
 		Enabled:        Enabled,
 	}
-
-	log.Printf("[POLICYATTACHMENT|RES|CREATE] to be created: %#v\n", creatPolicyAttachment)
 	createdPolicyAttachment, err := client.PolicyAttachment.Create(policyID, creatPolicyAttachment)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	log.Printf("[POLICYATTACHMENT|RES|CREATE] createdpolicyAttachment %#v\n", createdPolicyAttachment)
 	d.SetId(getPolicyAttachmentID(createdPolicyAttachment))
 	return
 }
 
 func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[POLICYATTACHMENT|RES|UPDATE] updating policyAttachment")
 	diagnostics = resourcePolicyAttachmentCreate(ctx, d, m)
-	log.Println("[POLICYATTACHMENT|RES|UPDATE] updated policyAttachment")
 	return
 }
 
 func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[POLICYATTACHMENT|RES|READ] reading policyAttachment")
 	client := m.(*client.Holder)
 	id := d.Id()
 	_, attachedToType, attachedToID := getInfoFromPolicyAttachmentID(id)
-	attachment, ok, err := client.PolicyAttachment.Get(attachedToID, attachedToType)
+	attachment, err := client.PolicyAttachment.Get(attachedToID, attachedToType)
 	if err != nil {
 		return diag.FromErr(errors.WithMessagef(err, "couldn't get policyAttachment with id: %s", id))
 	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("policy attachment %q", d.Id()))
-	}
-	log.Printf("[POLICYATTACHMENT|RES|READ] got policyAttachment: %#v", attachment)
 	d.Set("policy_id", attachment.PolicyID)
 	d.Set("attached_to_id", attachment.AttachedToID)
 	d.Set("attached_to_type", attachment.AttachedToType)
 	d.Set("is_enforcing", attachment.IsEnabled)
-	log.Println("[POLICYATTACHMENT|RES|READ] read policyAttachment")
 	return
 }
 
 func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[POLICYATTACHMENT|RES|DELETE] deleting policyAttachment")
-
 	client := m.(*client.Holder)
 	policyID, attachedToType, attachedToID := getInfoFromPolicyAttachmentID(d.Id())
-
 	err := client.PolicyAttachment.Delete(policyID, policyattachment.DetachBody{
 		AttachedToID:   attachedToID,
 		AttachedToType: attachedToType,
@@ -165,6 +149,6 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	log.Println("[POLICYATTACHMENT|RES|DELETE] deleted policyAttachment")
+	d.SetId("")
 	return
 }

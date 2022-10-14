@@ -22,8 +22,8 @@ func TestSchemaServiceInfraSsh_ssh_at(t *testing.T) {
 		"http_connect":              true,
 		"client_ssh_host_directive": "10.10.1.*",
 	}
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraSshSchema(), svc_ssh_at)
-	svc_obj := expandSSHCreateService(d)
+	d := schema.TestResourceDataRaw(t, buildSshSchema(), svc_ssh_at)
+	svc_obj := SshFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/ssh-at.json")
 	var ref_obj service.CreateService
@@ -42,8 +42,8 @@ func TestSchemaServiceInfraSsh_ssh_conn(t *testing.T) {
 		"backend_domain": "10.10.1.1",
 		"backend_port":   22,
 	}
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraSshSchema(), svc_ssh_conn)
-	svc_obj := expandSSHCreateService(d)
+	d := schema.TestResourceDataRaw(t, buildSshSchema(), svc_ssh_conn)
+	svc_obj := SshFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/ssh-conn.json")
 	var ref_obj service.CreateService
@@ -54,7 +54,7 @@ func TestSchemaServiceInfraSsh_ssh_conn(t *testing.T) {
 
 func TestAccService_ssh(t *testing.T) {
 	var bnnService service.GetServiceSpec
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),

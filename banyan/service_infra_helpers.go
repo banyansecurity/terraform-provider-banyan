@@ -39,6 +39,22 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
 		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 	},
+	"domain": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The external-facing network address for this service; ex. website.example.com",
+	},
+	"backend_domain": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
+	},
+	"backend_port": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Description:  "The internal port where this service is hosted; set to 0 if using http_connect",
+		ValidateFunc: validatePort(),
+	},
 	"access_tier": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -50,33 +66,11 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
 		Default:     "",
 	},
-	"domain": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The external-facing network address for this service; ex. website.example.com",
-	},
 	"port": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		Description:  "The external-facing port for this service",
 		Default:      8443,
-		ValidateFunc: validatePort(),
-	},
-	"backend_http_connect": {
-		Type:        schema.TypeBool,
-		Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-		Optional:    true,
-		Default:     false,
-	},
-	"backend_domain": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
-	},
-	"backend_port": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Description:  "The internal port where this service is hosted; set to 0 if using backend_http_connect",
 		ValidateFunc: validatePort(),
 	},
 	"client_banyanproxy_listen_port": {
@@ -87,7 +81,7 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraCommonRead(c *client.Holder, service service.GetServiceSpec, d *schema.ResourceData) (diagnostics diag.Diagnostics) {
 	err := d.Set("name", service.ServiceName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
@@ -150,7 +144,6 @@ func resourceServiceInfraCommonRead(service service.GetServiceSpec, d *schema.Re
 			return diag.FromErr(err)
 		}
 	}
-
 	d.SetId(d.Id())
 	return
 }
@@ -211,29 +204,31 @@ func expandInfraFrontendAddresses(d *schema.ResourceData) (frontendAddresses []s
 }
 
 func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
-	http_connect := d.Get("backend_http_connect").(bool)
-	var allow_patterns []service.BackendAllowPattern
-	if http_connect {
-		allow_patterns = []service.BackendAllowPattern{{}}
+	var allowPatterns []service.BackendAllowPattern
+	httpConnect := false
+	_, ok := d.GetOk("http_connect")
+	if ok {
+		httpConnect = d.Get("http_connect").(bool)
 	}
-
+	if httpConnect {
+		allowPatterns = []service.BackendAllowPattern{{}}
+	}
 	backend = service.Backend{
-		Target:        expandInfraTarget(d),
-		HTTPConnect:   d.Get("backend_http_connect").(bool),
+		Target:        expandInfraTarget(d, httpConnect),
+		HTTPConnect:   httpConnect,
 		ConnectorName: d.Get("connector").(string),
 		DNSOverrides:  map[string]string{},
-		AllowPatterns: allow_patterns,
+		AllowPatterns: allowPatterns,
 		Whitelist:     []string{}, // deprecated
 	}
 	return
 }
 
-func expandInfraTarget(d *schema.ResourceData) (target service.Target) {
+func expandInfraTarget(d *schema.ResourceData, httpConnect bool) (target service.Target) {
 	// if http_connect, need to set Name and Port to ""
 	name := d.Get("backend_domain").(string)
 	port := strconv.Itoa(d.Get("backend_port").(int))
-	http_connect := d.Get("http_connect").(bool)
-	if http_connect {
+	if httpConnect {
 		name = ""
 		port = ""
 	}

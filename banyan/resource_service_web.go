@@ -7,8 +7,6 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
-	"log"
 	"strconv"
 )
 
@@ -104,96 +102,107 @@ var resourceServiceWebSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating web service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	svc := expandWebCreateService(d)
+func WebSchema() (s map[string]*schema.Schema) {
+	s = map[string]*schema.Schema{
+		"letsencrypt": {
+			Type:        schema.TypeBool,
+			Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
+			Optional:    true,
+			Default:     false,
+		},
+		"backend_tls": {
+			Type:        schema.TypeBool,
+			Description: "Indicates whether the connection to the backend server uses TLS",
+			Optional:    true,
+			Default:     false,
+		},
+		"backend_tls_insecure": {
+			Type:        schema.TypeBool,
+			Description: "Indicates the connection to the backend should not validate the backend server TLS certificate",
+			Optional:    true,
+			Default:     false,
+		},
+	}
+	return
+}
 
+func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	client := m.(*client.Holder)
+	svc := WebFromState(d)
 	newService, err := client.Service.Create(svc)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create web service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(err)
 	}
-	log.Printf("[SVC|RES|CREATE] Created web service %s : %s", d.Get("name"), d.Id())
 	d.SetId(newService.ServiceID)
 	return resourceServiceWebRead(ctx, d, m)
 }
 
-func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating web service %s : %s", d.Get("name"), d.Id())
-	resourceServiceWebCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated web service %s : %s", d.Get("name"), d.Id())
-	return
-}
-
 func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading web service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
+	c := m.(*client.Holder)
 	id := d.Id()
-	service, ok, err := client.Service.Get(id)
-	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get web servicewith id: %s", id))
-	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
-	}
-	err = d.Set("name", service.ServiceName)
+	resp, err := c.Service.Get(id)
+	handleNotFoundError(d, resp.ServiceID, err)
+	err = d.Set("name", resp.ServiceName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = d.Set("description", service.Description)
+	err = d.Set("description", resp.Description)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = d.Set("cluster", service.ClusterName)
+	err = d.Set("cluster", resp.ClusterName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = SetAccessTier(d, service, diagnostics)
-	err = d.Set("connector", service.CreateServiceSpec.Spec.Backend.ConnectorName)
+	err = SetAccessTier(d, resp, diagnostics)
+	err = d.Set("connector", resp.CreateServiceSpec.Spec.Backend.ConnectorName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
+	err = d.Set("domain", resp.CreateServiceSpec.Metadata.Tags.Domain)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	portVal := *service.CreateServiceSpec.Metadata.Tags.Port
+	portVal := *resp.CreateServiceSpec.Metadata.Tags.Port
 	portInt, _ := strconv.Atoi(portVal)
 	err = d.Set("port", portInt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("letsencrypt", service.CreateServiceSpec.Spec.CertSettings.Letsencrypt)
+	err = d.Set("letsencrypt", resp.CreateServiceSpec.Spec.CertSettings.Letsencrypt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
+	err = d.Set("backend_domain", resp.CreateServiceSpec.Spec.Backend.Target.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	bpInt, _ := strconv.Atoi(service.CreateServiceSpec.Spec.Backend.Target.Port)
+	bpInt, _ := strconv.Atoi(resp.CreateServiceSpec.Spec.Backend.Target.Port)
 	err = d.Set("backend_port", bpInt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_tls", service.CreateServiceSpec.Spec.Backend.Target.TLS)
+	err = d.Set("backend_tls", resp.CreateServiceSpec.Spec.Backend.Target.TLS)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_tls_insecure", service.CreateServiceSpec.Spec.Backend.Target.TLSInsecure)
+	err = d.Set("backend_tls_insecure", resp.CreateServiceSpec.Spec.Backend.Target.TLSInsecure)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
 	d.SetId(id)
 	return
 }
 
+func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	resourceServiceWebCreate(ctx, d, m)
+	return
+}
+
 func resourceServiceWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting web service with id: %q \n", d.Id())
 	client := m.(*client.Holder)
 	diagnostics = resourceServiceDetachPolicy(d, m)
 	if diagnostics.HasError() {
@@ -203,11 +212,11 @@ func resourceServiceWebDelete(ctx context.Context, d *schema.ResourceData, m int
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}
-	log.Printf("[SERVICE|RES|DELETE] deleted web service with id: %q \n", d.Id())
+	d.SetId("")
 	return
 }
 
-func expandWebCreateService(d *schema.ResourceData) (svc service.CreateService) {
+func WebFromState(d *schema.ResourceData) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),

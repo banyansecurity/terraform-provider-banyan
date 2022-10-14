@@ -10,7 +10,7 @@ resource "banyan_service_infra_db" "example" {
   cluster      = "us-west"
   access_tier   = "us-west1"
   domain      = "example-db.corp.com"
-  backend_domain = ""
+  backend_domain = "example-database.internal"
   backend_port = 0
   http_connect = true
 }

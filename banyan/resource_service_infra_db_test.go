@@ -13,7 +13,7 @@ import (
 )
 
 func TestSchemaServiceInfraDb_database_at(t *testing.T) {
-	svc_db_conn := map[string]interface{}{
+	conn := map[string]interface{}{
 		"name":                           "database-conn",
 		"description":                    "pybanyan database-conn",
 		"cluster":                        "managed-cl-edge1",
@@ -24,19 +24,17 @@ func TestSchemaServiceInfraDb_database_at(t *testing.T) {
 		"client_banyanproxy_listen_port": 9299,
 	}
 
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraDbSchema(), svc_db_conn)
-	svc_obj := expandDatabaseCreateService(d)
-
-	json_spec, _ := ioutil.ReadFile("./specs/database-conn.json")
+	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraDbSchema(), conn)
+	svc := DbFromState(d)
+	j, _ := ioutil.ReadFile("./specs/database-conn.json")
 	var ref_obj service.CreateService
-	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
-
-	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+	_ = json.Unmarshal(j, &ref_obj)
+	AssertCreateServiceEqual(t, svc, ref_obj)
 }
 
 func TestAccService_database(t *testing.T) {
 	var bnnService service.GetServiceSpec
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),

@@ -29,14 +29,14 @@ func NewClient(restClient *restclient.RestClient) Clienter {
 
 // Clienter is used to perform CRUD operations against the policy attachment resource
 type Clienter interface {
-	Get(attachedToID string, attachedToType string) (attachment GetBody, ok bool, err error)
+	Get(attachedToID string, attachedToType string) (attachment GetBody, err error)
 	Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error)
 	Update(policyID string, PolicyAttachment CreateBody) (updatedAttachment GetBody, err error)
 	Delete(policyID string, detachBody DetachBody) (err error)
 	DeleteServiceAttachment(policyID string, serviceID string) (err error)
 }
 
-func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (attachment GetBody, ok bool, err error) {
+func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (attachment GetBody, err error) {
 	log.Printf("[POLICYATTACHMENT|GET] reading policyattachment")
 	path := fmt.Sprintf("api/v1/policy/attachment/%s/%s", attachedToType, attachedToID)
 	response, err := this.restClient.DoGet(path)
@@ -80,7 +80,6 @@ func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (a
 		return
 	}
 	attachment.IsEnabled = isEnabled
-	ok = true
 	log.Printf("[POLICYATTACHMENT|GET] read policyattachment")
 	return
 }
@@ -151,7 +150,6 @@ func (this *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBod
 		return
 	}
 	if response.StatusCode != 200 {
-		log.Printf("[POLICYATTACHMENT|CREATE] status code %#v, with message %q\n", response.StatusCode, string(responseData))
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response message: %q for request to", response.Status, string(responseData)))
 		return
 	}
@@ -165,19 +163,16 @@ func (this *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBod
 		return
 	}
 	createdAttachment.IsEnabled = isEnabled
-	log.Printf("[POLICYATTACHMENT|CREATE] created policyattachment")
 	return
 }
 
 func (this *PolicyAttachment) Update(policyID string, attachment CreateBody) (updatedAttachment GetBody, err error) {
-	log.Printf("[POLICYATTACHMENT|UPDATE] updating policyattachment")
 	updatedAttachment, err = this.Create(policyID, attachment)
-	log.Printf("[POLICYATTACHMENT|UPDATE] updated policyattachment")
 	return
 }
 
 func (this *PolicyAttachment) DeleteServiceAttachment(policyID, serviceID string) (err error) {
-	path := "/api/v1/delete_security_attach_policy"
+	path := "api/v1/delete_security_attach_policy"
 
 	myUrl, err := url.Parse(path)
 	if err != nil {
@@ -191,13 +186,10 @@ func (this *PolicyAttachment) DeleteServiceAttachment(policyID, serviceID string
 	if err != nil {
 		return
 	}
-	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
 	if resp.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("didn't get a 200 status code instead got %v with message: %s", resp, string(respBody)))
+		err = errors.New("could not delete policy attachment")
 		return
 	}
-
 	return
 }
 
@@ -205,7 +197,6 @@ func (this *PolicyAttachment) Delete(policyID string, detachBody DetachBody) (er
 	if detachBody.AttachedToType == "service" {
 		return this.DeleteServiceAttachment(policyID, detachBody.AttachedToID)
 	}
-	log.Printf("[POLICYATTACHMENT|DELETE] deleting policyattachment")
 	path := fmt.Sprintf("/api/v1/policy/%s/detach", policyID)
 	body, err := json.Marshal(detachBody)
 	if err != nil {
@@ -215,16 +206,8 @@ func (this *PolicyAttachment) Delete(policyID string, detachBody DetachBody) (er
 	if err != nil {
 		return
 	}
-	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return
-	}
 	if response.StatusCode != 200 {
-		log.Printf("[POLICYATTACHMENT|DELETE] status code %#v, with message %q\n", response.StatusCode, string(responseData))
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response message: %q for request to", response.Status, string(responseData)))
-		return
+		err = errors.New(fmt.Sprintf("could not not delete policy attachment, got status code %q", response.Status))
 	}
-	log.Printf("[POLICYATTACHMENT|DELETE] deleted policyattachment")
 	return
 }
