@@ -108,7 +108,6 @@ func testAccAccessTier_create_required(name string) string {
 resource banyan_accesstier "example" {
   name = "%s"
   address = "*.example.com"
-  cluster = "tortoise"
   api_key_id = "%s"
 }
 `, name, apiKeyID)
@@ -132,16 +131,13 @@ func testAccAccessTier_create_optional(name string) string {
 resource banyan_accesstier "example" {
   name = "%s"
   address = "*.example.com"
-  cluster = "tortoise"
   api_key_id = "%s"
-  tunnel_connector {
-    port = 39103
-  }
-  tunnel_enduser {
-    port = 39104
-    cidrs = ["10.0.2.0/16"]
-    domains = ["corp.internal"]
-  }
+  tunnel_connector_port = 39103
+  tunnel_enduser_port = 39104
+  tunnel_enduser_cidrs = ["10.0.2.0/16"]
+  console_log_level = "DEBUG"
+  statsd = true
+  debug_keep_alive = true
 }
 `, name, apiKeyID)
 }
@@ -153,16 +149,12 @@ func testAccAccessTier_update_optional(name string) string {
 resource banyan_accesstier "example" {
   name = "%s"
   address = "*.updated.com"
-  cluster = "tortoise"
   api_key_id = "%s"
-  tunnel_connector {
-    port = 39104
-  }
-  tunnel_enduser {
-    port = 39105
-    cidrs = ["10.0.3.0/16"]
-    domains = ["corpupdated.internal"]
-  }
+  tunnel_connector_port = 39104
+  tunnel_enduser_port = 39105
+  tunnel_enduser_cidrs = ["10.0.3.0/16"]
+  console_log_level = "DEBUG"
+  statsd = false
 }
 `, name, apiKeyID)
 }
