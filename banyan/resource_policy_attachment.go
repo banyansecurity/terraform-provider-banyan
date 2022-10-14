@@ -15,7 +15,6 @@ import (
 
 // The policy attachment resource. For more information on Banyan policy attachments, see the documentation:
 func resourcePolicyAttachment() *schema.Resource {
-	log.Println("[POLICYATTACHMENT|RES] getting resource schema")
 	return &schema.Resource{
 		Description:   "A Banyan policy attachment. Attaches a policy.",
 		CreateContext: resourcePolicyAttachmentCreate,
