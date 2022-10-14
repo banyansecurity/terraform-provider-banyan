@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
 	admin "github.com/banyansecurity/terraform-banyan-provider/client/admin"
 	"github.com/banyansecurity/terraform-banyan-provider/client/apikey"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
@@ -9,8 +10,9 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	service "github.com/banyansecurity/terraform-banyan-provider/client/service"
-	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
+	"github.com/banyansecurity/terraform-banyan-provider/client/shield"
 	"log"
+	"os"
 )
 
 type Holder struct {
@@ -21,7 +23,9 @@ type Holder struct {
 	Admin            admin.Admin
 	Satellite        satellite.Clienter
 	ApiKey           apikey.Clienter
-	AccessTier       servicetunnel.Clienter
+	AccessTier       accesstier.Clienter
+	Shield           shield.Clienter
+	RestClient       *restclient.RestClient
 }
 
 // NewClientHolder returns a new client which is used to perform CRUD operations on all Banyan resources.
@@ -37,8 +41,18 @@ func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (clie
 		PolicyAttachment: policyattachment.NewClient(restClient),
 		Satellite:        satellite.NewClient(restClient),
 		ApiKey:           apikey.NewClient(restClient),
-		AccessTier:       servicetunnel.NewClient(restClient),
+		AccessTier:       accesstier.NewClient(restClient),
 		Admin:            admin.NewClient(restClient),
+		Shield:           shield.NewClient(restClient),
+		RestClient:       restClient,
 	}
 	return &c, err
+}
+
+func GetClientHolderForTest() (newClient *Holder, err error) {
+	newClient, err = NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_TOKEN"))
+	if err != nil {
+		log.Fatal("Could not create the test client")
+	}
+	return
 }
