@@ -13,7 +13,6 @@ import (
 
 // Schema for the connector resource. For more information on Banyan policies, see the documentation:
 func resourceConnector() *schema.Resource {
-	log.Println("[CONNECTOR|RES] getting resource schema")
 	return &schema.Resource{
 		Description:   "",
 		CreateContext: resourceConnectorCreate,
@@ -21,26 +20,56 @@ func resourceConnector() *schema.Resource {
 		UpdateContext: resourceConnectorUpdate,
 		DeleteContext: resourceConnectorDelete,
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the connector",
-			},
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "ID of the connector in Banyan",
 			},
-			"satellite_api_key_id": {
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "ID of the connector in Banyan",
+				Description: "Name of the connector",
+			},
+			"api_key": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of a satellite scoped API key to be used for connector authentication",
 			},
 			"keepalive": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: "ID of the connector in Banyan",
+				Description: "Keepalive value for the connector",
 				Default:     20,
+			},
+			"cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Specifies the IPv4 address ranges of your private network in CIDR notation, ex: 192.168.1.0/24. Note that you can only specify private IP address ranges as defined in RFC-1918.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"access_tiers": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Name of the access tier the connector will use to establish a secure dial-out connection. Set to \"global-edge\" for a global-edge connector",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"cluster": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "ID of the connector in Banyan. Defaults to banyan global-edge",
+				Default:     "global-edge",
+			},
+			"domains": {
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "Specifies the domains that should resolve at a DNS server in your private network, ex: mycompany.local.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -59,15 +88,17 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, m inte
 			DisplayName: d.Get("name").(string),
 		},
 		Spec: satellite.Spec{
-			APIKeyID:  d.Get("satellite_api_key_id").(string),
+			APIKeyID:  d.Get("api_key").(string),
 			Keepalive: int64(d.Get("keepalive").(int)),
-			CIDRs:     []string{},
+			CIDRs:     convertSchemaSetToStringSlice(d.Get("cidrs").(*schema.Set)),
 			PeerAccessTiers: []satellite.PeerAccessTier{
 				{
-					Cluster:     "global-edge",
+					Cluster:     d.Get("cluster").(string),
 					AccessTiers: []string{"access-tier"},
 				},
 			},
+			DisableSnat: false,
+			Domains:     convertSchemaSetToStringSlice(d.Get("domains").(*schema.Set)),
 		},
 	}
 	created, err := client.Satellite.Create(c)
@@ -102,7 +133,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("satellite_api_key_id", sat.APIKeyID)
+	err = d.Set("api_key", sat.APIKeyID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
