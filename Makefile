@@ -11,8 +11,8 @@ ARTIFACT_NAME = terraform-provider-banyan
 HOSTNAME=github.com
 NAMESPACE=banyansecurity
 NAME=banyan
-OS_ARCH=darwin_amd64
-VERSION=0.6.4
+OS_ARCH=darwin_arm64
+VERSION=0.7.0
 
 # ifeq ($(origin .RECIPEPREFIX), undefined)
 #   $(error This Make does not support .RECIPEPREFIX. Please use GNU Make 4.0 or later)
