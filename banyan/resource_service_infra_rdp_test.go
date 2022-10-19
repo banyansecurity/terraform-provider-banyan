@@ -25,7 +25,7 @@ func TestSchemaServiceInfraRdp_rdp_conn(t *testing.T) {
 	}
 
 	d := schema.TestResourceDataRaw(t, resourceServiceInfraCommonSchema, svc_rdp_conn)
-	svc_obj := RdpFromState(d)
+	svc_obj := RdpFromState(d, "")
 
 	json_spec, _ := ioutil.ReadFile("./specs/rdp-conn.json")
 	var ref_obj service.CreateService
@@ -46,7 +46,7 @@ func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
 	}
 
 	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraRdpSchema(), svc_rdp_collection)
-	svc_obj := RdpFromState(d)
+	svc_obj := RdpFromState(d, "")
 
 	json_spec, _ := ioutil.ReadFile("./specs/rdp-collection.json")
 	var ref_obj service.CreateService
@@ -55,7 +55,7 @@ func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
 	AssertCreateServiceEqual(t, svc_obj, ref_obj)
 }
 
-func TestAccService_rdp(t *testing.T) {
+func TestAccService_infra_rdp(t *testing.T) {
 	var bnnService service.GetServiceSpec
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
@@ -63,10 +63,10 @@ func TestAccService_rdp(t *testing.T) {
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccService_rdp_create(rName),
+				Config: testAccService_infra_rdp_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_infra_rdp.example", &bnnService),
-					testAccCheckAgainstJson(t, testAccService_rdp_create_json(rName), &bnnService.ServiceID),
+					testAccCheckAgainstJson(t, testAccService_infra_rdp_create_json(rName), &bnnService.ServiceID),
 				),
 			},
 		},
@@ -74,7 +74,7 @@ func TestAccService_rdp(t *testing.T) {
 }
 
 // Returns terraform configuration for a typical rdp service
-func testAccService_rdp_create(name string) string {
+func testAccService_infra_rdp_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service_infra_rdp" "example" {
   name           = "%s-rdp"
@@ -88,7 +88,7 @@ resource "banyan_service_infra_rdp" "example" {
 `, name, name, name)
 }
 
-func testAccService_rdp_create_json(name string) string {
+func testAccService_infra_rdp_create_json(name string) string {
 	return fmt.Sprintf(`
 {
     "kind": "BanyanService",

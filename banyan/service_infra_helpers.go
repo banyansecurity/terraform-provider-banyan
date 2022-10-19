@@ -1,6 +1,7 @@
 package banyan
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -35,9 +36,9 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 	"cluster": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Default:     "global-edge",
-		Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
-		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+		Computed:    true,
+		Description: "",
+		ForceNew:    true,
 	},
 	"domain": {
 		Type:        schema.TypeString,
@@ -81,7 +82,7 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceServiceInfraCommonRead(c *client.Holder, service service.GetServiceSpec, d *schema.ResourceData) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraCommonRead(c *client.Holder, service service.GetServiceSpec, d *schema.ResourceData, prefix string) (diagnostics diag.Diagnostics) {
 	err := d.Set("name", service.ServiceName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
@@ -92,11 +93,7 @@ func resourceServiceInfraCommonRead(c *client.Holder, service service.GetService
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = d.Set("cluster", service.ClusterName)
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
-	}
+	setCluster(c, d)
 	hostTagSelector := service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
 	accessTiers := strings.Split(siteName, "|")
@@ -123,7 +120,7 @@ func resourceServiceInfraCommonRead(c *client.Holder, service service.GetService
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("http_connect", service.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	err = d.Set(fmt.Sprintf("%shttp_connect", prefix), service.CreateServiceSpec.Spec.Backend.HTTPConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -149,12 +146,12 @@ func resourceServiceInfraCommonRead(c *client.Holder, service service.GetService
 }
 
 func resourceServiceInfraCommonDelete(d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*client.Holder)
+	c := m.(*client.Holder)
 	diagnostics = resourceServiceDetachPolicy(d, m)
 	if diagnostics.HasError() {
 		return
 	}
-	err := client.Service.Delete(d.Id())
+	err := c.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}

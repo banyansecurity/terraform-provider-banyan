@@ -101,6 +101,9 @@ func (s *Service) Create(spec CreateService) (created GetServiceSpec, err error)
 		return
 	}
 	resp, err := crud.Create(s.restClient, apiVersion, component, body, path)
+	if err != nil {
+		return
+	}
 	var j GetServicesJson
 	err = json.Unmarshal(resp, &j)
 	if err != nil {

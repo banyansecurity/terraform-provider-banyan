@@ -9,6 +9,7 @@ import (
 	"math"
 	"net"
 	"reflect"
+	"sort"
 	"strconv"
 )
 
@@ -57,53 +58,13 @@ func handleNotFoundError(d *schema.ResourceData, id string, err error) (diagnost
 	return
 }
 
-func validateL7Protocol() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		valid := []string{"http", "https"}
-		if !contains(valid, v) {
-			errs = append(errs, fmt.Errorf("%q must be one of %q", v, valid))
-		}
-		return
-	}
-}
-
 func validateTrustLevel() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		valid := []string{"High", "Medium", "Low", ""}
-		if !contains(valid, v) {
-			errs = append(errs, fmt.Errorf("%q must be one of %q", v, valid))
-		}
-		return
-	}
-}
-
-func validatePolicyTemplate() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		valid := []string{"USER"}
-		if !contains(valid, v) {
-			errs = append(errs, fmt.Errorf("%q must be one of %q", v, valid))
-		}
-		return
-	}
-}
-
-func validateContains() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		valid := []string{"WEB_USER", "TCP_USER", "CUSTOM"}
-		if !contains(valid, v) {
-			errs = append(errs, fmt.Errorf("%q must be one of %q", v, valid))
-		}
-		return
-	}
+	return validation.StringInSlice([]string{"LOW", "MEDIUM", "HIGH"}, false)
 }
 
 func contains(valid []string, v string) bool {
-	for _, v := range valid {
-		if v == v {
+	for _, s := range valid {
+		if s == v {
 			return true
 		}
 	}
@@ -139,30 +100,6 @@ func typeSwitchPort(val interface{}) (v int, err error) {
 	return
 }
 
-// typeSwitchPort type switches a string pointer to an int pointer if possible
-func typeSwitchPortPtr(val interface{}) (ptrv *int, err error) {
-	var v int
-	switch val.(type) {
-	case *int:
-		v = val.(int)
-	case *string:
-		if val.(*string) == nil {
-			ptrv = nil
-			return
-		}
-		vstring := val.(*string)
-		vstringval := *vstring
-		v, err = strconv.Atoi(vstringval)
-		if err != nil {
-			err = fmt.Errorf("%q could not be converted to an int", val)
-		}
-	default:
-		err = fmt.Errorf("could not validate port %q unsupported type", val)
-	}
-	ptrv = &v
-	return
-}
-
 func validateCIDR() func(val interface{}, key string) (warns []string, errs []error) {
 	return func(val interface{}, key string) (warns []string, errs []error) {
 		v := val.(string)
@@ -175,11 +112,6 @@ func validateCIDR() func(val interface{}, key string) (warns []string, errs []er
 		}
 		return
 	}
-}
-
-func validateHttpMethods() func(val interface{}, key string) (warns []string, errs []error) {
-	validMethods := []string{"GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"}
-	return validation.StringInSlice(validMethods, false)
 }
 
 func removeDuplicateStr(strSlice []string) []string {
@@ -215,21 +147,40 @@ func isNil(i interface{}) bool {
 }
 
 // TODO: revisit after cluster consolidation
+// sets the cluster to global-edge if global-edge is enabled.
+// errors if global-edge and cluster are both set
+// sets cluster to cluster value if cluster is set
+// sets default cluster by asking API if cluster and
 func setCluster(c *client.Holder, d *schema.ResourceData) (diagnostics diag.Diagnostics) {
-	globalEdge, ok := d.GetOk("global_edge")
-	if !ok {
-		cluster, err := c.Shield.GetAll()
-		if err != nil {
-			return diag.FromErr(err)
+	globalEdge, GLok := d.GetOk("global_edge")
+	if GLok {
+		if globalEdge.(bool) {
+			err := d.Set("cluster", "global-edge")
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
-		d.Set("cluster", cluster[0])
-		if err != nil {
-			return diag.FromErr(err)
-		}
+	}
+	_, CLok := d.GetOk("cluster")
+	if CLok && GLok {
+		return diag.Errorf("cluster and global-edge cannot both be set")
+	}
+	if CLok {
 		return
 	}
-	if globalEdge.(bool) {
-		d.Set("global_edge", true)
+	err := getCluster(c, d)
+	if err != nil {
+		return diag.FromErr(err)
 	}
+	return
+}
+
+func getCluster(c *client.Holder, d *schema.ResourceData) (err error) {
+	clusters, err := c.Shield.GetAll()
+	if err != nil {
+		return
+	}
+	sort.Strings(clusters)
+	err = d.Set("cluster", clusters[0])
 	return
 }

@@ -2,7 +2,6 @@ package banyan
 
 import (
 	"context"
-	"log"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -11,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraDb() *schema.Resource {
 	return &schema.Resource{
 		Description:   "resourceServiceInfraDb",
@@ -134,16 +132,16 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 
 func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	resp, err := c.Service.Get(d.Id())
+	svc, err := c.Service.Get(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(resp.ServiceID)
-	err = d.Set("client_banyanproxy_allowed_domains", resp.CreateServiceSpec.Metadata.Tags.IncludeDomains)
+	d.SetId(svc.ServiceID)
+	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	diagnostics = resourceServiceInfraCommonRead(c, resp, d)
+	diagnostics = resourceServiceInfraCommonRead(c, svc, d)
 	return
 }
 
@@ -154,6 +152,5 @@ func resourceServiceInfraDbUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceServiceInfraDbDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	diagnostics = resourceServiceInfraCommonDelete(d, m)
-	log.Printf("[SERVICE|RES|DELETE] deleted database service %s : %s", d.Get("name"), d.Id())
 	return
 }

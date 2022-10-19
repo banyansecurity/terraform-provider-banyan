@@ -58,7 +58,6 @@ func TestAccConnector_tunnel(t *testing.T) {
 // Checks that the resource with the name resourceName exists and returns the connector object from the Banyan API
 func testAccCheckExistingConnector(resourceName string, bnnConnector *satellite.SatelliteTunnelConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource not found in state %q", rs)
@@ -89,7 +88,7 @@ func testAccCheckConnectorDestroy(t *testing.T, resourceName string) resource.Te
 	}
 }
 
-// Returns terraform configuration for the connector. Takes in custom name.
+// Create a connector using terraform code and only the required parameters
 func testAccConnector_basic_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_api_key" "example" {
@@ -108,6 +107,7 @@ resource "banyan_connector" "example" {
 `, name, name)
 }
 
+// Create a connector with a tunnel using terraform code
 func testAccConnector_tunnel_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_api_key" "example" {

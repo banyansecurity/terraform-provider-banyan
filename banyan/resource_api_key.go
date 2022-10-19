@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Schema for the apikey resource. For more information on Banyan policies, see the documentation:
 func resourceApiKey() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Manages API keys",

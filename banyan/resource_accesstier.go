@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
-	"log"
 	"reflect"
 )
 
@@ -35,7 +34,7 @@ func resourceAccessTier() *schema.Resource {
 			"cluster": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "Cluster / shield name in Banyan",
 				ForceNew:    true,
 			},
 			"address": {
@@ -51,12 +50,12 @@ func resourceAccessTier() *schema.Resource {
 			"src_nat_cidr_range": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "",
+				Description: "Source Network Address Translation (SNAT) ",
 			},
 			"api_key_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "",
+				Description: "ID of the API key which is scoped to access tier",
 			},
 			"tunnel_connector_port": {
 				Type:         schema.TypeInt,
@@ -324,7 +323,7 @@ func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.Errorf("no clusters found for org: %s", err)
 	}
-	d.Set("cluster", cluster[0])
+	err = d.Set("cluster", cluster[0])
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -400,7 +399,7 @@ func resourceAccessTierUpdate(ctx context.Context, d *schema.ResourceData, m int
 	spec := atFromState(d)
 	updated, err := c.AccessTier.Update(d.Id(), spec)
 	if err != nil {
-		return diag.FromErr(errors.WithMessage(err, "couldn't update access tier"))
+		return diag.FromErr(err)
 	}
 	updateLocalConfig(d, c, updated)
 	d.SetId(updated.ID)
@@ -414,7 +413,6 @@ func resourceAccessTierDelete(ctx context.Context, d *schema.ResourceData, m int
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	log.Printf("deleted access tier %s : %s", d.Get("name"), d.Id())
 	d.SetId("")
 	return
 }

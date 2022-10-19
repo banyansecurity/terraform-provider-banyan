@@ -7,10 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
-	"log"
 )
 
-// Schema for the connector resource. For more information on Banyan policies, see the documentation:
 func resourceConnector() *schema.Resource {
 	return &schema.Resource{
 		Description:   "",
@@ -75,10 +73,8 @@ func resourceConnector() *schema.Resource {
 }
 
 func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[CONNECTOR|RES|CREATE] creating connector %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-
-	c := satellite.Info{
+	c := m.(*client.Holder)
+	spec := satellite.Info{
 		Kind:       "BanyanConnector",
 		APIVersion: "rbac.banyanops.com/v1",
 		Type:       "attribute-based",
@@ -100,27 +96,18 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, m inte
 			Domains:     convertSchemaSetToStringSlice(d.Get("domains").(*schema.Set)),
 		},
 	}
-	created, err := client.Satellite.Create(c)
+	created, err := c.Satellite.Create(spec)
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new connector"))
 	}
-	log.Printf("[CONNECTOR|RES|CREATE] created connector %s : %s", d.Get("name"), d.Id())
 	d.SetId(created.ID)
 	diagnostics = resourceConnectorRead(ctx, d, m)
 	return
 }
 
-func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[CONNECTOR|RES|UPDATE] updating connector %s : %s", d.Get("name"), d.Id())
-	diagnostics = resourceConnectorCreate(ctx, d, m)
-	log.Printf("[CONNECTOR|RES|UPDATE] updated connector %s : %s", d.Get("name"), d.Id())
-	return
-}
-
 func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[CONNECTOR|RES|READ] reading connector %sat : %sat", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	sat, err := client.Satellite.Get(d.Id())
+	c := m.(*client.Holder)
+	sat, err := c.Satellite.Get(d.Id())
 	err = d.Set("name", sat.Name)
 	if err != nil {
 		return diag.FromErr(err)
@@ -138,19 +125,21 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 	d.SetId(d.Id())
-	log.Printf("[CONNECTOR|RES|READ] read connector %sat : %sat", d.Get("name"), d.Id())
+	return
+}
+
+func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	diagnostics = resourceConnectorCreate(ctx, d, m)
 	return
 }
 
 func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[CONNECTOR|RES|DELETE] deleting connector")
-	client := m.(*client.Holder)
-	err := client.Satellite.Delete(d.Id())
+	c := m.(*client.Holder)
+	err := c.Satellite.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	log.Println("[CONNECTOR|RES|DELETE] deleted connector")
 	d.SetId("")
 	return
 }

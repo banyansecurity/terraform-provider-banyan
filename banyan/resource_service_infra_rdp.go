@@ -2,6 +2,7 @@ package banyan
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -38,9 +39,9 @@ func buildResourceServiceInfraRdpSchema() (schemaRdp map[string]*schema.Schema) 
 	return
 }
 
-func RdpSchema() (schemaRdp map[string]*schema.Schema) {
+func RdpSchema(prefix string) (schemaRdp map[string]*schema.Schema) {
 	schemaRdp = map[string]*schema.Schema{
-		"http_connect": {
+		fmt.Sprintf("%shttp_connect", prefix): {
 			Type:        schema.TypeBool,
 			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
 			Optional:    true,
@@ -52,7 +53,7 @@ func RdpSchema() (schemaRdp map[string]*schema.Schema) {
 
 func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	svc := RdpFromState(d)
+	svc := RdpFromState(d, "")
 
 	newService, err := c.Service.Create(svc)
 	if err != nil {
@@ -62,13 +63,13 @@ func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, 
 	return resourceServiceInfraRdpRead(ctx, d, m)
 }
 
-func RdpFromState(d *schema.ResourceData) (svc service.CreateService) {
+func RdpFromState(d *schema.ResourceData, prefix string) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
-			Tags:        expandRDPMetatdataTags(d),
+			Tags:        expandRDPMetatdataTags(d, prefix),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
@@ -78,7 +79,7 @@ func RdpFromState(d *schema.ResourceData) (svc service.CreateService) {
 	return
 }
 
-func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
+func expandRDPMetatdataTags(d *schema.ResourceData, prefix string) (metadatatags service.Tags) {
 	template := "TCP_USER"
 	userFacing := "true"
 	protocol := "tcp"
@@ -90,9 +91,9 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	descriptionLink := ""
 	allowUserOverride := true
 	banyanProxyMode := "TCP"
-	_, ok := d.GetOk("http_connect")
+	_, ok := d.GetOk(fmt.Sprintf("%shttp_connect", prefix))
 	if ok {
-		if d.Get("http_connect").(bool) {
+		if d.Get(fmt.Sprintf("%shttp_connect", prefix)).(bool) {
 			banyanProxyMode = "RDPGATEWAY"
 		}
 	}
@@ -124,7 +125,7 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 	id := d.Id()
 	svc, err := c.Service.Get(id)
 	handleNotFoundError(d, id, err)
-	diagnostics = resourceServiceInfraCommonRead(c, svc, d)
+	diagnostics = resourceServiceInfraCommonRead(c, svc, d, "rdp.")
 	d.SetId(id)
 	return
 }

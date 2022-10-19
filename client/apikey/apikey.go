@@ -41,12 +41,7 @@ func (k *ApiKey) Get(id string) (apikey Data, err error) {
 	if err != nil {
 		return
 	}
-	log.Printf("[APIKEY|GET] reading apikey")
-	apikey, ok := getOKid(id, responseJSON)
-	if !ok {
-		return apikey, errors.Errorf("[APIKEY|GET] could not find apikey with id %s", id)
-	}
-	log.Printf("[APIKEY|GET] read apikey")
+	apikey, err = findById(id, responseJSON)
 	return
 }
 
@@ -76,25 +71,26 @@ func getAll(k *ApiKey) (responseJSON Response, err error) {
 	return
 }
 
-func getOKname(name string, responseJSON Response) (apikey Data, ok bool) {
+func findByName(name string, responseJSON Response) (apikey Data, err error) {
 	for _, key := range responseJSON.Data {
 		if key.Name == name {
-			apikey = key
-			ok = true
+			return key, nil
 		}
+	}
+	if apikey.ID == "" {
+		err = errors.Errorf("API key not found: %s", name)
 	}
 	return
 }
 
-func getOKid(id string, responseJSON Response) (apikey Data, ok bool) {
+func findById(id string, responseJSON Response) (apikey Data, err error) {
 	for _, key := range responseJSON.Data {
 		if key.ID == id {
-			apikey = key
-			ok = true
+			return key, nil
 		}
 	}
 	if apikey.ID == "" {
-		ok = false
+		err = errors.Errorf("API key not found: %s", id)
 	}
 	return
 }
@@ -102,19 +98,17 @@ func getOKid(id string, responseJSON Response) (apikey Data, ok bool) {
 func (k *ApiKey) Create(post Post) (apikey Data, err error) {
 	// check that api key does not already exist
 	responseJSON, err := getAll(k)
-	apikey, ok := getOKname(post.Name, responseJSON)
-	if ok {
-		err = errors.Errorf("[APIKEY|POST] An API key with this name already exists %s", err)
+	apikey, err = findByName(post.Name, responseJSON)
+	if err != nil {
+		return
 	}
 	path := "api/experimental/v2/api_key"
 	body, err := json.Marshal(post)
 	if err != nil {
-		log.Printf("[APIKEY|POST] Creating a new apikey, found an error %#v\n", err)
 		return
 	}
 	request, err := k.restClient.NewRequest(http.MethodPost, path, bytes.NewBuffer(body))
 	if err != nil {
-		log.Printf("[APIKEY|POST] Creating a new request, found an error %#v\n", err)
 		return
 	}
 	response, err := k.restClient.Do(request)
@@ -134,21 +128,15 @@ func (k *ApiKey) Create(post Post) (apikey Data, err error) {
 	if err != nil {
 		return
 	}
-	apikey, ok = getOKname(post.Name, responseJSON)
-	if !ok {
-		err = errors.Errorf("Could not get key after creation: %s", apikey.Name)
-	}
-	log.Printf("[APIKEY|POST] created a new apikey %#v", apikey)
+	apikey, err = findByName(post.Name, responseJSON)
 	return
 }
 
 func (k *ApiKey) Update(post Post) (updatedApiKey Data, err error) {
-	log.Printf("[APIKEY|UPDATE] updating apikey")
 	updatedApiKey, err = k.Create(Post{})
 	if err != nil {
 		return
 	}
-	log.Printf("[APIKEY|UPDATE] updated apikey")
 	return
 }
 
@@ -159,7 +147,6 @@ func (k *ApiKey) Delete(id string) (err error) {
 	if apikey == emptyKey {
 		return
 	}
-	log.Printf("[APIKEY|DELETE] deleting apikey with id %s", apikey.ID)
 	path := fmt.Sprintf("api/experimental/v2/api_key/%s", apikey.ID)
 	myUrl, err := url.Parse(path)
 	if err != nil {

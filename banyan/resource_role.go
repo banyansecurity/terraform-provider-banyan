@@ -154,8 +154,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	c := m.(*client.Holder)
 	resp, err := c.Role.Create(RoleFromState(d))
 	if err != nil {
-		diag.FromErr(err)
-		return
+		return diag.FromErr(err)
 	}
 	d.SetId(resp.ID)
 	return
@@ -173,17 +172,50 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diag.FromErr(err)
 	}
 	d.SetId(resp.ID)
-	d.Set("name", resp.Name)
-	d.Set("description", resp.Description)
-	d.Set("container_fqdn", resp.UnmarshalledSpec.Spec.ContainerFQDN)
-	d.Set("image", resp.UnmarshalledSpec.Spec.Image)
-	d.Set("repo_tag", resp.UnmarshalledSpec.Spec.RepoTag)
-	d.Set("user_group", resp.UnmarshalledSpec.Spec.UserGroup)
-	d.Set("email", resp.UnmarshalledSpec.Spec.Email)
-	d.Set("device_ownership", resp.UnmarshalledSpec.Spec.DeviceOwnership)
-	d.Set("platform", resp.UnmarshalledSpec.Spec.Platform)
-	d.Set("known_device_only", resp.UnmarshalledSpec.Spec.KnownDeviceOnly)
-	d.Set("mdm_present", resp.UnmarshalledSpec.Spec.MDMPresent)
+	err = d.Set("name", resp.Name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("description", resp.Description)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("container_fqdn", resp.UnmarshalledSpec.Spec.ContainerFQDN)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("image", resp.UnmarshalledSpec.Spec.Image)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("repo_tag", resp.UnmarshalledSpec.Spec.RepoTag)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("user_group", resp.UnmarshalledSpec.Spec.UserGroup)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("email", resp.UnmarshalledSpec.Spec.Email)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("device_ownership", resp.UnmarshalledSpec.Spec.DeviceOwnership)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("platform", resp.UnmarshalledSpec.Spec.Platform)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("known_device_only", resp.UnmarshalledSpec.Spec.KnownDeviceOnly)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("mdm_present", resp.UnmarshalledSpec.Spec.MDMPresent)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 

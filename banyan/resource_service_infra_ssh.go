@@ -126,17 +126,17 @@ func resourceServiceInfraSshUpdate(ctx context.Context, d *schema.ResourceData, 
 func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
 	id := d.Id()
-	resp, err := c.Service.Get(id)
+	svc, err := c.Service.Get(id)
 	handleNotFoundError(d, id, err)
-	err = d.Set("client_ssh_auth", resp.CreateServiceSpec.Metadata.Tags.SSHServiceType)
+	err = d.Set("client_ssh_auth", svc.CreateServiceSpec.Metadata.Tags.SSHServiceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("client_ssh_host_directive", resp.CreateServiceSpec.Metadata.Tags.SSHHostDirective)
+	err = d.Set("client_ssh_host_directive", svc.CreateServiceSpec.Metadata.Tags.SSHHostDirective)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	diagnostics = resourceServiceInfraCommonRead(c, resp, d)
+	diagnostics = resourceServiceInfraCommonRead(c, svc, d)
 	return
 }
 

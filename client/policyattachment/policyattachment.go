@@ -80,7 +80,6 @@ func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (a
 		return
 	}
 	attachment.IsEnabled = isEnabled
-	log.Printf("[POLICYATTACHMENT|GET] read policyattachment")
 	return
 }
 
@@ -134,7 +133,6 @@ func (this *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBod
 	if PolicyAttachment.AttachedToType == "service" {
 		return this.createServiceAttachment(policyID, PolicyAttachment)
 	}
-	log.Printf("[POLICYATTACHMENT|CREATE] creating policyattachment")
 	path := fmt.Sprintf("/api/v1/policy/%s/attach", policyID)
 	body, err := json.Marshal(PolicyAttachment)
 	if err != nil {

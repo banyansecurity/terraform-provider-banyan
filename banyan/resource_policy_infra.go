@@ -6,7 +6,6 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourcePolicyInfra() *schema.Resource {
@@ -61,9 +60,7 @@ func resourcePolicyInfra() *schema.Resource {
 }
 
 func resourcePolicyInfraCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[POLICY_INFRA|RES|CREATE] creating infra policy %s : %s", d.Get("name"), d.Id())
 	client := m.(*client.Holder)
-
 	policyToCreate := policy.CreatePolicy{
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanPolicy",
