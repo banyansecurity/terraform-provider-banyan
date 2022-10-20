@@ -37,7 +37,7 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Description: "",
+		Description: "Sets the cluster / shield of the service",
 		ForceNew:    true,
 	},
 	"domain": {
@@ -82,7 +82,7 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceServiceInfraCommonRead(c *client.Holder, service service.GetServiceSpec, d *schema.ResourceData, prefix string) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraCommonRead(c *client.Holder, service service.GetServiceSpec, d *schema.ResourceData) (diagnostics diag.Diagnostics) {
 	err := d.Set("name", service.ServiceName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
@@ -120,7 +120,7 @@ func resourceServiceInfraCommonRead(c *client.Holder, service service.GetService
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set(fmt.Sprintf("%shttp_connect", prefix), service.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	err = d.Set(fmt.Sprintf("http_connect"), service.CreateServiceSpec.Spec.Backend.HTTPConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -42,9 +42,10 @@ var resourceServiceWebSchema = map[string]*schema.Schema{
 	},
 	"cluster": {
 		Type:        schema.TypeString,
+		Optional:    true,
 		Computed:    true,
-		Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
-		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+		Description: "Sets the cluster / shield of the service",
+		ForceNew:    true,
 	},
 	"access_tier": {
 		Type:        schema.TypeString,

@@ -125,7 +125,7 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 	id := d.Id()
 	svc, err := c.Service.Get(id)
 	handleNotFoundError(d, id, err)
-	diagnostics = resourceServiceInfraCommonRead(c, svc, d, "rdp.")
+	diagnostics = resourceServiceInfraCommonRead(c, svc, d)
 	d.SetId(id)
 	return
 }

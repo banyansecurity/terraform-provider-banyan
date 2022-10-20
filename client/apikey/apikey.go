@@ -99,7 +99,8 @@ func (k *ApiKey) Create(post Post) (apikey Data, err error) {
 	// check that api key does not already exist
 	responseJSON, err := getAll(k)
 	apikey, err = findByName(post.Name, responseJSON)
-	if err != nil {
+	if err == nil {
+		err = errors.Errorf("api key already exists: %s", post.Name)
 		return
 	}
 	path := "api/experimental/v2/api_key"
