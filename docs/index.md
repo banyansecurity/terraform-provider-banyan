@@ -20,7 +20,7 @@ Ensure to create a Banyan API token exclusive to Terraform. This will ensure tha
 For production use cases, ensure that the API token is stored in an environment variable and inject it into Terraform as such:
 ```hcl
 provider "banyan" {
-  api_token = "banyan-api-token-here-exclusive-to-terraform"
+  api_key = "banyan-api-token-here-exclusive-to-terraform"
 }
 ```
 
@@ -28,7 +28,7 @@ provider "banyan" {
 Ensure that the `host` parameter is set to the correct host:
 ```hcl
 provider "banyan" {
-  api_token = "banyan-api-token-here-exclusive-to-terraform"
+  api_key = "banyan-api-token-here-exclusive-to-terraform"
   host = "https://preview.console.banyanops.com/"
 }
 ```
@@ -45,7 +45,7 @@ terraform {
 }
 
 provider "banyan" {
-  api_token = "banyan-api-token-here-exclusive-to-terraform"
+  api_key = "banyan-api-token-here-exclusive-to-terraform"
 }
 ```
 
@@ -54,7 +54,7 @@ provider "banyan" {
 In this example we import the Banyan Terraform provider, and configure it with an admin API key. Then we create a service for a sensitive admin console, and attach an admin role with a strict admin policy to restrict access to only authorized administrators on trusted devices.
 ```hcl
 provider "banyan" {
-  api_token = var.banyan_refresh_token
+  api_key = var.banyan_refresh_token
   host      = var.banyan_host
 }
 
@@ -101,8 +101,10 @@ resource "banyan_policy_attachment" "example-high-trust-any" {
 
 ### Required
 
-- **api_token** (String) The Banyan Terraform Provider requires an API token
+- **api_key** (String) The Banyan Terraform Provider requires an API key
 
 ### Optional
 
 - **host** (String) The host parameter is used to point the Banyan Terraform Provider to a non-default url
+- **api_key** (String) **Deprecated** The Banyan Terraform Provider requires an API key
+- **refresh_token** (String) **Deprecated** The Banyan Terraform Provider requires an API key

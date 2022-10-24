@@ -23,7 +23,7 @@ func init() {
 }
 
 func NewAccClient() (c *client.Holder) {
-	c, err := client.NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_TOKEN"))
+	c, err := client.NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_KEY"))
 	if err != nil {
 		log.Fatal("Could not create the test client")
 	}
@@ -41,8 +41,8 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck() {
-	if err := os.Getenv("BANYAN_API_TOKEN"); err == "" {
-		log.Fatal("BANYAN_API_TOKEN must be set for acceptance tests")
+	if err := os.Getenv("BANYAN_API_KEY"); err == "" {
+		log.Fatal("BANYAN_API_KEY must be set for acceptance tests")
 	}
 	if err := os.Getenv("BANYAN_HOST"); err == "" {
 		log.Fatal("BANYAN_HOST must be set for acceptance tests")

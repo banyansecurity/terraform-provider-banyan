@@ -20,14 +20,23 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("BANYAN_HOST", "https://net.banyanops.com/"),
 			},
 			"api_token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("BANYAN_API_TOKEN", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Deprecated:    "Configure api_key instead. This attribute will be removed\n   in the 1.0 release of the provider.",
+				ConflictsWith: []string{"api_key", "refresh_token"},
+			},
+			"api_key": {
+				Type:          schema.TypeString,
+				Required:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("BANYAN_API_KEY", nil),
+				ConflictsWith: []string{"api_token", "refresh_token"},
 			},
 			"refresh_token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("BANYAN_REFRESH_TOKEN", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("BANYAN_REFRESH_TOKEN", nil),
+				Deprecated:    "Configure api_key instead. This attribute will be removed\n   in the 1.0 release of the provider.",
+				ConflictsWith: []string{"api_key", "api_token"},
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -52,20 +61,28 @@ func Provider() *schema.Provider {
 	}
 }
 
+// Remove once fully depreciated
+func chooseApiKey(d *schema.ResourceData) (apikey string) {
+	k, ok := d.GetOk("api_key")
+	if !ok {
+		return d.Get("api_token").(string)
+	}
+	return k.(string)
+}
+
 // Configures the Banyan provider with the given refresh / API token and host url
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (client interface{}, diagnostic diag.Diagnostics) {
 	host := d.Get("host").(string)
 	if !strings.HasSuffix(host, "/") {
 		host = host + "/"
 	}
-	client, err := bnnClient.NewClientHolder(host, d.Get("refresh_token").(string), d.Get("api_token").(string))
+	client, err := bnnClient.NewClientHolder(host, d.Get("refresh_token").(string), chooseApiKey(d))
 	if err != nil {
 		diagnostic = append(diagnostic, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create Banyan client",
-			Detail:   "Unable to authenticate with the given API token" + fmt.Sprintf("%+v", err),
+			Detail:   "Unable to authenticate to the Banyan API" + fmt.Sprintf("%+v", err),
 		})
-		return
 	}
 	return
 }
