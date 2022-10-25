@@ -50,7 +50,7 @@ func (p *policy) Get(id string) (spec GetPolicy, err error) {
 	}
 	query := myUrl.Query()
 	query.Set("PolicyID", id)
-	resp, err := crud.GetQuery(p.restClient, component, id, query, path)
+	resp, err := crud.ReadQuery(p.restClient, component, query, path)
 	if err != nil {
 		return
 	}

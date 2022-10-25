@@ -70,7 +70,7 @@ func (r *Role) Get(id string) (role GetRole, err error) {
 	}
 	query := myUrl.Query()
 	query.Set("RoleID", id)
-	resp, err := crud.GetQuery(r.restClient, component, id, query, path)
+	resp, err := crud.ReadQuery(r.restClient, component, query, path)
 	var j []GetRole
 	err = json.Unmarshal(resp, &j)
 	if err != nil {

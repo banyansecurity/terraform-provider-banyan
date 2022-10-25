@@ -25,7 +25,7 @@ func (s *Service) Get(id string) (service GetServiceSpec, err error) {
 	}
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
-	resp, err := crud.GetQuery(s.restClient, "service", id, query, path)
+	resp, err := crud.ReadQuery(s.restClient, component, query, path)
 	var createdServiceJson []GetServicesJson
 	err = json.Unmarshal(resp, &createdServiceJson)
 	if err != nil {
