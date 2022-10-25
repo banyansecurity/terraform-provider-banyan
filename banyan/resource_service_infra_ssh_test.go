@@ -22,7 +22,7 @@ func TestSchemaServiceInfraSsh_ssh_at(t *testing.T) {
 		"http_connect":              true,
 		"client_ssh_host_directive": "10.10.1.*",
 	}
-	d := schema.TestResourceDataRaw(t, buildSshSchema(), svc_ssh_at)
+	d := schema.TestResourceDataRaw(t, SshSchema(), svc_ssh_at)
 	svc_obj := SshFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/ssh-at.json")
@@ -42,7 +42,7 @@ func TestSchemaServiceInfraSsh_ssh_conn(t *testing.T) {
 		"backend_domain": "10.10.1.1",
 		"backend_port":   22,
 	}
-	d := schema.TestResourceDataRaw(t, buildSshSchema(), svc_ssh_conn)
+	d := schema.TestResourceDataRaw(t, SshSchema(), svc_ssh_conn)
 	svc_obj := SshFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/ssh-conn.json")

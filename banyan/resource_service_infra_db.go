@@ -12,17 +12,17 @@ import (
 
 func resourceServiceInfraDb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "resourceServiceInfraDb",
+		Description:   "Resource used for lifecycle management of database services",
 		CreateContext: resourceServiceInfraDbCreate,
 		ReadContext:   resourceServiceInfraDbRead,
 		UpdateContext: resourceServiceInfraDbUpdate,
-		DeleteContext: resourceServiceInfraDbDelete,
-		Schema:        buildResourceServiceInfraDbSchema(),
+		DeleteContext: resourceServiceDelete,
+		Schema:        DbSchema(),
 	}
 }
 
-func buildResourceServiceInfraDbSchema() (schemaDb map[string]*schema.Schema) {
-	schemaDb = map[string]*schema.Schema{
+func DbSchema() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
 		"client_banyanproxy_allowed_domains": {
 			Type:        schema.TypeSet,
 			Description: "Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity",
@@ -38,32 +38,31 @@ func buildResourceServiceInfraDbSchema() (schemaDb map[string]*schema.Schema) {
 			Default:     false,
 		},
 	}
-	for key, val := range resourceServiceInfraCommonSchema {
-		if schemaDb[key] == nil {
-			schemaDb[key] = val
-		}
+	return combineSchema(s, resourceServiceInfraCommonSchema)
+}
+
+func resourceServiceInfraDbCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	svc := DbFromState(d)
+	return resourceServiceCreate(svc, d, m)
+}
+
+func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	svc, err := c.Service.Get(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
 	}
+	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	diagnostics = resourceServiceInfraCommonRead(c, svc, d)
 	return
 }
 
-func DbSchema() (schemaDb map[string]*schema.Schema) {
-	schemaDb = map[string]*schema.Schema{
-		"client_banyanproxy_allowed_domains": {
-			Type:        schema.TypeSet,
-			Description: "Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity",
-			Optional:    true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-			Optional:    true,
-			Default:     false,
-		},
-	}
-	return
+func resourceServiceInfraDbUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	svc := DbFromState(d)
+	return resourceServiceUpdate(svc, d, m)
 }
 
 func DbFromState(d *schema.ResourceData) (svc service.CreateService) {
@@ -80,16 +79,6 @@ func DbFromState(d *schema.ResourceData) (svc service.CreateService) {
 		Spec:       expandInfraServiceSpec(d),
 	}
 	return
-}
-
-func resourceServiceInfraDbCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	created, err := c.Service.Create(DbFromState(d))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(created.ServiceID)
-	return resourceServiceInfraDbRead(ctx, d, m)
 }
 
 func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
@@ -127,30 +116,5 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 		AllowUserOverride: &allowUserOverride,
 		IncludeDomains:    &includeDomains,
 	}
-	return
-}
-
-func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	svc, err := c.Service.Get(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(svc.ServiceID)
-	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	diagnostics = resourceServiceInfraCommonRead(c, svc, d)
-	return
-}
-
-func resourceServiceInfraDbUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	resourceServiceInfraDbCreate(ctx, d, m)
-	return
-}
-
-func resourceServiceInfraDbDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	diagnostics = resourceServiceInfraCommonDelete(d, m)
 	return
 }

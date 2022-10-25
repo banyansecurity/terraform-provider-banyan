@@ -8,92 +8,72 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraK8s() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of database services",
+		Description:   "Resource used for lifecycle management of k8s services",
 		CreateContext: resourceServiceInfraK8sCreate,
 		ReadContext:   resourceServiceInfraK8sRead,
 		UpdateContext: resourceServiceInfraK8sUpdate,
-		DeleteContext: resourceServiceInfraK8sDelete,
-		Schema:        buildResourceServiceInfraK8sSchema(),
+		DeleteContext: resourceServiceDelete,
+		Schema:        K8sSchema(),
 	}
 }
 
-func buildResourceServiceInfraK8sSchema() (schemaK8s map[string]*schema.Schema) {
-	schemaK8s = map[string]*schema.Schema{
+func K8sSchema() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
 		"backend_dns_override_for_domain": {
 			Type:        schema.TypeString,
 			Description: "Override DNS for service domain name with this value",
-			Required:    true,
+			Optional:    true,
 		},
 		"client_kube_cluster_name": {
 			Type:        schema.TypeString,
 			Description: "Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters",
-			Required:    true,
+			Optional:    true,
 		},
 		"client_kube_ca_key": {
 			Type:        schema.TypeString,
 			Description: "CA Public Key generated during Kube-OIDC-Proxy deployment",
-			Required:    true,
-		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
 			Optional:    true,
-			Default:     true,
 		},
 	}
-	for key, val := range resourceServiceInfraCommonSchema {
-		if schemaK8s[key] == nil {
-			schemaK8s[key] = val
-		}
-		if schemaK8s[key] == nil {
-			schemaK8s[key] = val
-		}
-	}
-	return
-}
-
-func K8sSchema() (schemaK8s map[string]*schema.Schema) {
-	schemaK8s = map[string]*schema.Schema{
-		"backend_dns_override_for_domain": {
-			Type:        schema.TypeString,
-			Description: "Override DNS for service domain name with this value",
-			Required:    true,
-		},
-		"client_kube_cluster_name": {
-			Type:        schema.TypeString,
-			Description: "Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters",
-			Required:    true,
-		},
-		"client_kube_ca_key": {
-			Type:        schema.TypeString,
-			Description: "CA Public Key generated during Kube-OIDC-Proxy deployment",
-			Required:    true,
-		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-			Optional:    true,
-			Default:     true,
-		},
-	}
-	return
+	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
 
 func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
 	svc := K8sFromState(d)
-	created, err := c.Service.Create(svc)
+	return resourceServiceCreate(svc, d, m)
+}
+
+func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	resp, err := c.Service.Get(d.Id())
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create kubernetes service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(err)
 	}
-	d.SetId(created.ServiceID)
-	return resourceServiceInfraK8sRead(ctx, d, m)
+	domain := *resp.CreateServiceSpec.Metadata.Tags.Domain
+	override := resp.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	err = d.Set("backend_dns_override_for_domain", override)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_cluster_name", resp.CreateServiceSpec.Metadata.Tags.KubeClusterName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_ca_key", resp.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return resourceServiceInfraCommonRead(c, resp, d)
+}
+
+func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	svc := K8sFromState(d)
+	return resourceServiceUpdate(svc, d, m)
 }
 
 func K8sFromState(d *schema.ResourceData) (svc service.CreateService) {
@@ -147,44 +127,8 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	return
 }
 
-func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	resp, err := c.Service.Get(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(resp.ServiceID)
-	domain := *resp.CreateServiceSpec.Metadata.Tags.Domain
-	override := resp.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
-	err = d.Set("backend_dns_override_for_domain", override)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("client_kube_cluster_name", resp.CreateServiceSpec.Metadata.Tags.KubeClusterName)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("client_kube_ca_key", resp.CreateServiceSpec.Metadata.Tags.KubeCaKey)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	diagnostics = resourceServiceInfraCommonRead(c, resp, d)
-	return
-}
-
-func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	resourceServiceInfraK8sCreate(ctx, d, m)
-	return
-}
-
-func resourceServiceInfraK8sDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	diagnostics = resourceServiceInfraCommonDelete(d, m)
-	d.SetId("")
-	return
-}
-
+// cannot use expandInfraServiceSpec for k8s services
 func expandK8sServiceSpec(d *schema.ResourceData) (spec service.Spec) {
-	d.Set("http_connect", true)
 	spec = expandInfraServiceSpec(d)
 	domain := d.Get("domain").(string)
 	backendOverride := d.Get("backend_dns_override_for_domain").(string)
@@ -197,5 +141,8 @@ func expandK8sServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 		},
 	}
 	spec.Backend.AllowPatterns = allowPatterns
+	// force these for http_connect which is required for k8s
+	spec.Backend.HTTPConnect = true
+	spec.Backend.Target.Port = ""
 	return
 }

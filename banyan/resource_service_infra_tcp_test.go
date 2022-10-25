@@ -24,7 +24,7 @@ func TestSchemaServiceInfraTcp_tcp_at(t *testing.T) {
 		"backend_port":                   6006,
 		"client_banyanproxy_listen_port": 9119,
 	}
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraTcpSchema(), svc_tcp_at)
+	d := schema.TestResourceDataRaw(t, TcpSchema(), svc_tcp_at)
 	svc_obj := TcpFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/tcp-at.json")
@@ -46,7 +46,7 @@ func TestSchemaServiceInfraTcp_tcp_conn(t *testing.T) {
 		"client_banyanproxy_listen_port": 9118,
 		"allow_user_override":            true,
 	}
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraTcpSchema(), svc_tcp_conn)
+	d := schema.TestResourceDataRaw(t, TcpSchema(), svc_tcp_conn)
 	svc_obj := TcpFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/tcp-conn.json")

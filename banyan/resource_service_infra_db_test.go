@@ -24,7 +24,7 @@ func TestSchemaServiceInfraDb_database_at(t *testing.T) {
 		"client_banyanproxy_listen_port": 9299,
 	}
 
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraDbSchema(), conn)
+	d := schema.TestResourceDataRaw(t, DbSchema(), conn)
 	svc := DbFromState(d)
 	j, _ := ioutil.ReadFile("./specs/database-conn.json")
 	var ref_obj service.CreateService

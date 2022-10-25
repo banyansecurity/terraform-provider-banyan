@@ -24,12 +24,12 @@ func TestSchemaServiceInfraK8s_k8s_conn(t *testing.T) {
 		"client_kube_cluster_name":        "eks-hero",
 		"client_kube_ca_key":              "AAAA1234",
 	}
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraK8sSchema(), svc_k8s_conn)
+	d := schema.TestResourceDataRaw(t, K8sSchema(), svc_k8s_conn)
 	svc_obj := K8sFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/k8s-conn.json")
 	var ref_obj service.CreateService
-	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+	_ = json.Unmarshal(json_spec, &ref_obj)
 
 	AssertCreateServiceEqual(t, svc_obj, ref_obj)
 }
