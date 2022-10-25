@@ -14,6 +14,10 @@ const apiVersion = "api/v1"
 const component = "service"
 
 func (s *Service) Get(id string) (service GetServiceSpec, err error) {
+	if id == "" {
+		err = errors.New("need an id to get a service")
+		return
+	}
 	path := "api/v1/registered_services"
 	myUrl, err := url.Parse(path)
 	if err != nil {
