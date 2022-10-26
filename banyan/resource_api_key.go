@@ -60,12 +60,20 @@ func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(err)
 	}
 	d.SetId(key.ID)
-	diagnostics = resourceApiKeyRead(ctx, d, m)
 	return
 }
 
 func resourceApiKeyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	return resourceApiKeyCreate(ctx, d, m)
+	c := m.(*client.Holder)
+	_, err := c.ApiKey.Update(d.Id(), apikey.Post{
+		Name:        d.Get("name").(string),
+		Description: d.Get("description").(string),
+		Scope:       d.Get("scope").(string),
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return
 }
 
 func resourceApiKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {

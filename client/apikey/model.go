@@ -1,7 +1,7 @@
 package apikey
 
 type Response struct {
-	Data []Data `json:"data"`
+	Data Data `json:"data"`
 }
 
 type Post struct {
