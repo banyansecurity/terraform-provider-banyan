@@ -65,8 +65,7 @@ func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 }
 
 func resourceApiKeyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	diagnostics = resourceApiKeyCreate(ctx, d, m)
-	return
+	return resourceApiKeyCreate(ctx, d, m)
 }
 
 func resourceApiKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -92,7 +91,6 @@ func resourceApiKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(d.Id())
 	return
 }
 
