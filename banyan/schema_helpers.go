@@ -170,10 +170,10 @@ func buildHostTagSelector(d *schema.ResourceData) (hostTagSelector []map[string]
 }
 
 // TODO: revisit after cluster consolidation
-// sets the cluster to global-edge if global-edge is enabled.
-// errors if global-edge and cluster are both set
-// sets cluster to cluster value if cluster is set
-// sets default cluster by asking API if cluster and
+// sets the cluster to global-edge if connector is set.
+// errors if connector and access_tier are both set
+// sets cluster to same as access_tier value if access_tier is set
+// sets to first cluster if the access_tier does not exist
 func setCluster(d *schema.ResourceData, m interface{}) (err error) {
 	c := m.(*client.Holder)
 	clusterName, err := determineCluster(c, d)
