@@ -13,102 +13,81 @@ import (
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceWeb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "resourceServiceWeb",
+		Description:   "Resource used for lifecycle management of web services",
 		CreateContext: resourceServiceWebCreate,
 		ReadContext:   resourceServiceWebRead,
 		UpdateContext: resourceServiceWebUpdate,
-		DeleteContext: resourceServiceWebDelete,
-		Schema:        resourceServiceWebSchema,
+		DeleteContext: resourceServiceDelete,
+		Schema:        WebSchema(),
 	}
-}
-
-var resourceServiceWebSchema = map[string]*schema.Schema{
-	"id": {
-		Type:        schema.TypeString,
-		Description: "Id of the service",
-		Computed:    true,
-	},
-	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
-		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
-	},
-	"description": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Description of the service",
-		Default:     "resourceServiceWeb",
-	},
-	"cluster": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "Sets the cluster / shield of the service",
-		ForceNew:    true,
-	},
-	"access_tier": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
-		Default:     "",
-	},
-	"connector": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
-		Default:     "",
-	},
-	"domain": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The external-facing network address for this service; ex. website.example.com",
-	},
-	"port": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Description:  "The external-facing port for this service",
-		Default:      443,
-		ValidateFunc: validatePort(),
-	},
-	"letsencrypt": {
-		Type:        schema.TypeBool,
-		Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
-		Optional:    true,
-		Default:     false,
-	},
-	"backend_domain": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
-	},
-	"backend_port": {
-		Type:         schema.TypeInt,
-		Required:     true,
-		Description:  "The internal port where this service is hosted",
-		ValidateFunc: validatePort(),
-	},
-	"backend_tls": {
-		Type:        schema.TypeBool,
-		Description: "Indicates whether the connection to the backend server uses TLS",
-		Optional:    true,
-		Default:     false,
-	},
-	"backend_tls_insecure": {
-		Type:        schema.TypeBool,
-		Description: "Indicates the connection to the backend should not validate the backend server TLS certificate",
-		Optional:    true,
-		Default:     false,
-	},
 }
 
 func WebSchema() (s map[string]*schema.Schema) {
 	s = map[string]*schema.Schema{
+		"id": {
+			Type:        schema.TypeString,
+			Description: "Id of the service",
+			Computed:    true,
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
+			ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+		},
+		"description": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Description of the service",
+		},
+		"cluster": {
+			Type:       schema.TypeString,
+			Computed:   true,
+			Deprecated: "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+			ForceNew:   true,
+		},
+		"access_tier": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the access_tier which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"connector"},
+		},
+		"connector": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the connector which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"access_tier"},
+		},
+		"domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The external-facing network address for this service; ex. website.example.com",
+		},
+		"port": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Description:  "The external-facing port for this service",
+			Default:      443,
+			ValidateFunc: validatePort(),
+		},
 		"letsencrypt": {
 			Type:        schema.TypeBool,
 			Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
 			Optional:    true,
 			Default:     false,
+		},
+		"backend_domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
+		},
+		"backend_port": {
+			Type:         schema.TypeInt,
+			Required:     true,
+			Description:  "The internal port where this service is hosted",
+			ValidateFunc: validatePort(),
 		},
 		"backend_tls": {
 			Type:        schema.TypeBool,
@@ -131,8 +110,8 @@ func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m int
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(newService.ServiceID)
-	return resourceServiceWebRead(ctx, d, m)
+	svc := WebFromState(d)
+	return resourceServiceCreate(svc, d, m)
 }
 
 func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -196,22 +175,8 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 }
 
 func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	resourceServiceWebCreate(ctx, d, m)
-	return
-}
-
-func resourceServiceWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*client.Holder)
-	diagnostics = resourceServiceDetachPolicy(d, m)
-	if diagnostics.HasError() {
-		return
-	}
-	err := client.Service.Delete(d.Id())
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-	}
-	d.SetId("")
-	return
+	svc := WebFromState(d)
+	return resourceServiceUpdate(svc, d, m)
 }
 
 func WebFromState(d *schema.ResourceData) (svc service.CreateService) {
@@ -255,8 +220,12 @@ func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	attributes, err := expandWebAttributes(d)
+	if err != nil {
+		return
+	}
 	spec = service.Spec{
-		Attributes:   expandWebAttributes(d),
+		Attributes:   attributes,
 		Backend:      expandWebBackend(d),
 		CertSettings: expandWebCertSettings(d),
 		HTTPSettings: expandWebHTTPSettings(d),
@@ -265,19 +234,11 @@ func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	return
 }
 
-func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes) {
-	// if connector is set, ensure access_tier is *
-	accessTier := d.Get("access_tier").(string)
-	connector := d.Get("connector").(string)
-	if connector != "" {
-		accessTier = "*"
+func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes, err error) {
+	hostTagSelector, err := buildHostTagSelector(d)
+	if err != nil {
+		return
 	}
-
-	// build HostTagSelector from access_tier
-	var hostTagSelector []map[string]string
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": accessTier}
-	hostTagSelector = append(hostTagSelector, siteNameSelector)
-
 	attributes = service.Attributes{
 		TLSSNI:            []string{d.Get("domain").(string)},
 		FrontendAddresses: expandWebFrontendAddresses(d),
