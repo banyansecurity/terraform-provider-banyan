@@ -54,25 +54,25 @@ func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	resp, err := c.Service.Get(d.Id())
+	svc, err := c.Service.Get(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	domain := *resp.CreateServiceSpec.Metadata.Tags.Domain
-	override := resp.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	domain := *svc.CreateServiceSpec.Metadata.Tags.Domain
+	override := svc.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
 	err = d.Set("backend_dns_override_for_domain", override)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("client_kube_cluster_name", resp.CreateServiceSpec.Metadata.Tags.KubeClusterName)
+	err = d.Set("client_kube_cluster_name", svc.CreateServiceSpec.Metadata.Tags.KubeClusterName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("client_kube_ca_key", resp.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	err = d.Set("client_kube_ca_key", svc.CreateServiceSpec.Metadata.Tags.KubeCaKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	return resourceServiceInfraCommonRead(c, resp, d)
+	return resourceServiceInfraCommonRead(svc, d)
 }
 
 func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
