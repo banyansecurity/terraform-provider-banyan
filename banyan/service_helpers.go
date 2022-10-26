@@ -1,6 +1,7 @@
 package banyan
 
 import (
+	"context"
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"log"
@@ -561,5 +562,48 @@ func SetAccessTier(d *schema.ResourceData, service service.GetServiceSpec, diagn
 		diagnostics = diag.FromErr(err)
 		return
 	}
+	return
+}
+
+// combines two schemas into a single schema without duplicates
+func combineSchema(a map[string]*schema.Schema, b map[string]*schema.Schema) map[string]*schema.Schema {
+	for key, val := range a {
+		if b[key] == nil {
+			b[key] = val
+		}
+	}
+	return b
+}
+
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	diagnostics = resourceServiceDetachPolicy(d, m)
+	if diagnostics.HasError() {
+		return
+	}
+	err := c.Service.Delete(d.Id())
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+	}
+	return
+}
+
+func resourceServiceCreate(svc service.CreateService, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	created, err := c.Service.Create(svc)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(created.ServiceID)
+	return
+}
+
+func resourceServiceUpdate(svc service.CreateService, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	_, err := c.Service.Get(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	_, err = c.Service.Update(d.Id(), svc)
 	return
 }
