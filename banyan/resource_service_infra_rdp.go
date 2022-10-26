@@ -22,15 +22,7 @@ func resourceServiceInfraRdp() *schema.Resource {
 }
 
 func RdpSchema() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-			Optional:    true,
-			Default:     false,
-		},
-	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
+	return resourceServiceInfraCommonSchema
 }
 
 func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -48,13 +40,12 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	return resourceServiceInfraCommonRead(c, svc, d)
+	return resourceServiceInfraCommonRead(svc, d)
 }
 
 func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	svc := RdpFromState(d)
-	resourceServiceUpdate(svc, d, m)
-	return
+	return resourceServiceUpdate(svc, d, m)
 }
 
 func RdpFromState(d *schema.ResourceData) (svc service.CreateService) {

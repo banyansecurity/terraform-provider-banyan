@@ -2,6 +2,7 @@ package banyan
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -60,7 +61,11 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	diagnostics = resourceServiceInfraCommonRead(c, svc, d)
+	err = d.Set(fmt.Sprintf("http_connect"), svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	diagnostics = resourceServiceInfraCommonRead(svc, d)
 	return
 }
 
