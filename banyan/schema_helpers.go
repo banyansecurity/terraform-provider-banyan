@@ -1,6 +1,7 @@
 package banyan
 
 import (
+	"errors"
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -50,6 +51,8 @@ func convertSchemaSetToIntSlice(original *schema.Set) (stringSlice []int) {
 	return
 }
 
+// Returns a not found error from the API if there is one and sets the id
+// If the
 func handleNotFoundError(d *schema.ResourceData, id string, err error) (diagnostics diag.Diagnostics) {
 	if err != nil {
 		return diag.FromErr(err)
@@ -144,6 +147,26 @@ func isNil(i interface{}) bool {
 		return reflect.ValueOf(i).IsNil()
 	}
 	return false
+}
+
+// creates the hostTagSelector key
+func buildHostTagSelector(d *schema.ResourceData) (hostTagSelector []map[string]string, err error) {
+	conn, connOk := d.GetOk("connector")
+	at, atOk := d.GetOk("access_tier")
+
+	// error if both are set
+	if connOk && atOk {
+		err = errors.New("cannot have both access_tier and connector set")
+		return
+	}
+
+	// if connector is set, ensure access_tier is *
+	if conn.(string) != "" {
+		at = "*"
+	}
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": at.(string)}
+	hostTagSelector = append(hostTagSelector, siteNameSelector)
+	return
 }
 
 // TODO: revisit after cluster consolidation
