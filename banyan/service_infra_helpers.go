@@ -1,11 +1,9 @@
 package banyan
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,11 +32,24 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Default:     "resourceServiceInfraSsh",
 	},
 	"cluster": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "Sets the cluster / shield of the service",
-		ForceNew:    true,
+		Type:       schema.TypeString,
+		Computed:   true,
+		Deprecated: "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+		ForceNew:   true,
+	},
+	"access_tier": {
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "Name of the access_tier which will proxy requests to your service backend",
+		Default:       "",
+		ConflictsWith: []string{"connector"},
+	},
+	"connector": {
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "Name of the connector which will proxy requests to your service backend",
+		Default:       "",
+		ConflictsWith: []string{"access_tier"},
 	},
 	"domain": {
 		Type:        schema.TypeString,
@@ -56,17 +67,6 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Description:  "The internal port where this service is hosted; set to 0 if using http_connect",
 		ValidateFunc: validatePort(),
 	},
-	"access_tier": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
-	},
-	"connector": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
-		Default:     "",
-	},
 	"port": {
 		Type:         schema.TypeInt,
 		Optional:     true,
@@ -82,19 +82,16 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceServiceInfraCommonRead(c *client.Holder, service service.GetServiceSpec, d *schema.ResourceData) (diagnostics diag.Diagnostics) {
-	err := d.Set("name", service.ServiceName)
+func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.ResourceData) (diagnostics diag.Diagnostics) {
+	err := d.Set("name", svc.ServiceName)
 	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
+		return diag.FromErr(err)
 	}
-	err = d.Set("description", service.Description)
+	err = d.Set("description", svc.Description)
 	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
+		return diag.FromErr(err)
 	}
-	setCluster(c, d)
-	hostTagSelector := service.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
+	hostTagSelector := svc.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
 	accessTiers := strings.Split(siteName, "|")
 	if accessTiers[0] == "*" {
@@ -103,38 +100,33 @@ func resourceServiceInfraCommonRead(c *client.Holder, service service.GetService
 		err = d.Set("access_tier", accessTiers[0])
 	}
 	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
+		return diag.FromErr(err)
 	}
-	err = d.Set("connector", service.CreateServiceSpec.Spec.Backend.ConnectorName)
+	err = d.Set("connector", svc.CreateServiceSpec.Spec.Backend.ConnectorName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
+	err = d.Set("domain", svc.CreateServiceSpec.Metadata.Tags.Domain)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	portVal := *service.CreateServiceSpec.Metadata.Tags.Port
+	portVal := *svc.CreateServiceSpec.Metadata.Tags.Port
 	portInt, _ := strconv.Atoi(portVal)
 	err = d.Set("port", portInt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set(fmt.Sprintf("http_connect"), service.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.Target.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	bpInt, _ := strconv.Atoi(service.CreateServiceSpec.Spec.Backend.Target.Port)
+	bpInt, _ := strconv.Atoi(svc.CreateServiceSpec.Spec.Backend.Target.Port)
 	err = d.Set("backend_port", bpInt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if service.CreateServiceSpec.Metadata.Tags.AppListenPort != nil {
-		clientPortVal := *service.CreateServiceSpec.Metadata.Tags.AppListenPort
+	if svc.CreateServiceSpec.Metadata.Tags.AppListenPort != nil {
+		clientPortVal := *svc.CreateServiceSpec.Metadata.Tags.AppListenPort
 		clientPortInt, _ := strconv.Atoi(clientPortVal)
 		err = d.Set("client_banyanproxy_listen_port", clientPortInt)
 		if err != nil {
@@ -145,22 +137,13 @@ func resourceServiceInfraCommonRead(c *client.Holder, service service.GetService
 	return
 }
 
-func resourceServiceInfraCommonDelete(d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	diagnostics = resourceServiceDetachPolicy(d, m)
-	if diagnostics.HasError() {
+func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	attributes, err := expandInfraAttributes(d)
+	if err != nil {
 		return
 	}
-	err := c.Service.Delete(d.Id())
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-	}
-	return
-}
-
-func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	spec = service.Spec{
-		Attributes:   expandInfraAttributes(d),
+		Attributes:   attributes,
 		Backend:      expandInfraBackend(d),
 		CertSettings: expandInfraCertSettings(d),
 		HTTPSettings: expandInfraHTTPSettings(d),
@@ -169,19 +152,11 @@ func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	return
 }
 
-func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attributes) {
-	// if connector is set, ensure access_tier is *
-	accessTier := d.Get("access_tier").(string)
-	connector := d.Get("connector").(string)
-	if connector != "" {
-		accessTier = "*"
+func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attributes, err error) {
+	hostTagSelector, err := buildHostTagSelector(d)
+	if err != nil {
+		return
 	}
-
-	// build HostTagSelector from access_tier
-	var hostTagSelector []map[string]string
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": accessTier}
-	hostTagSelector = append(hostTagSelector, siteNameSelector)
-
 	attributes = service.Attributes{
 		TLSSNI:            []string{d.Get("domain").(string)},
 		FrontendAddresses: expandInfraFrontendAddresses(d),
@@ -222,7 +197,7 @@ func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
 }
 
 func expandInfraTarget(d *schema.ResourceData, httpConnect bool) (target service.Target) {
-	// if http_connect, need to set Name and Port to ""
+	// if http_connect, need to set Name to "" and Port to ""
 	name := d.Get("backend_domain").(string)
 	port := strconv.Itoa(d.Get("backend_port").(int))
 	if httpConnect {
