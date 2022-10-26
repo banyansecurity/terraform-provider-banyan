@@ -76,7 +76,6 @@ func testAccService_ssh_create(name string) string {
 resource "banyan_service_infra_ssh" "example" {
   name                      = "%s-ssh"
   description               = "some SSH service description"
-  cluster                   = "us-west"
   access_tier               = "us-west1"
   domain                    = "%s-ssh.corp.com"
   backend_domain            = "%s-ssh.internal"
@@ -95,7 +94,7 @@ func testAccService_ssh_create_json(name string) string {
     "metadata": {
         "name": "%s-ssh",
         "description": "some SSH service description",
-        "cluster": "us-west",
+        "cluster": "tortoise",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",

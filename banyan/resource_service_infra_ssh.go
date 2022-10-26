@@ -55,6 +55,10 @@ func SshSchema() map[string]*schema.Schema {
 }
 
 func resourceServiceInfraSshCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	err := setCluster(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	svc := SshFromState(d)
 	return resourceServiceCreate(svc, d, m)
 }

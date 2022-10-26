@@ -42,6 +42,10 @@ func DbSchema() map[string]*schema.Schema {
 }
 
 func resourceServiceInfraDbCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	err := setCluster(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	svc := DbFromState(d)
 	return resourceServiceCreate(svc, d, m)
 }

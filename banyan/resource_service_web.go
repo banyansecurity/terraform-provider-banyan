@@ -127,9 +127,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 }
 
 func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*client.Holder)
-	svc := WebFromState(d)
-	newService, err := client.Service.Create(svc)
+	err := setCluster(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}

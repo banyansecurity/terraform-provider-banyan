@@ -44,6 +44,10 @@ func K8sSchema() map[string]*schema.Schema {
 }
 
 func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	err := setCluster(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	svc := K8sFromState(d)
 	return resourceServiceCreate(svc, d, m)
 }

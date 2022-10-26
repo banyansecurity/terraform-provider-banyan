@@ -22,7 +22,7 @@ func TestSchemaServiceWeb_web_at(t *testing.T) {
 		"backend_domain": "10.10.1.1",
 		"backend_port":   8000,
 	}
-	d := schema.TestResourceDataRaw(t, resourceServiceWebSchema, svc_web_at)
+	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_at)
 	svc_obj := WebFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/web-at.json")
@@ -42,7 +42,7 @@ func TestSchemaServiceWeb_web_conn(t *testing.T) {
 		"backend_domain": "10.10.1.1",
 		"backend_port":   8080,
 	}
-	d := schema.TestResourceDataRaw(t, resourceServiceWebSchema, svc_web_conn)
+	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_conn)
 	svc_obj := WebFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/web-conn.json")
@@ -66,7 +66,7 @@ func TestSchemaServiceWeb_web_certs(t *testing.T) {
 		"backend_tls_insecure": true,
 	}
 
-	d := schema.TestResourceDataRaw(t, resourceServiceWebSchema, svc_web_certs)
+	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_certs)
 	svc_obj := WebFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/web-certs.json")
@@ -102,7 +102,6 @@ func testAccService_basic_web_create(name string) string {
 resource "banyan_service_web" "example" {
   name        = "%s-web"
   description = "some web service description"
-  cluster     = "us-west"
   access_tier   = "us-west1"
   domain = "%s-web.corp.com"
   port = 443
@@ -121,7 +120,7 @@ func testAccService_basic_web_create_json(name string) string {
     "metadata": {
         "name": "%s-web",
         "description": "some web service description",
-        "cluster": "us-west",
+        "cluster": "tortoise",
         "tags": {
             "template": "WEB_USER",
             "user_facing": "true",

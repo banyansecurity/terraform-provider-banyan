@@ -80,7 +80,6 @@ func testAccService_tcp_create(name string) string {
 resource "banyan_service_infra_tcp" "example" {
   name        = "%s-tcp"
   description = "some tcp service description"
-  cluster      = "us-west"
   access_tier   = "us-west1"
   domain      = "%s-tcp.corp.com"
   backend_domain = "%s-tcp.internal"
@@ -99,7 +98,7 @@ func testAccService_tcp_create_json(name string) string {
     "metadata": {
         "name": "%s-tcp",
         "description": "some tcp service description",
-        "cluster": "us-west",
+        "cluster": "tortoise",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",

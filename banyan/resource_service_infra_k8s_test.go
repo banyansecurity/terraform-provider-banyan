@@ -57,7 +57,6 @@ func testAccService_k8s_create(name string) string {
 resource "banyan_service_infra_k8s" "example" {
   name        = "%s-k8s"
   description = "some k8s service description"
-  cluster     = "us-west"
   access_tier = "us-west1"
   domain      = "%s-k8s.corp.com"
   backend_dns_override_for_domain = "%s-k8s.service"

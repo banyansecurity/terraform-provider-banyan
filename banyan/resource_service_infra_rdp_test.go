@@ -76,7 +76,6 @@ func testAccService_infra_rdp_create(name string) string {
 resource "banyan_service_infra_rdp" "example" {
   name           = "%s-rdp"
   description    = "some RDP service description"
-  cluster        = "us-west"
   access_tier    = "us-west1"
   domain         = "%s-rdp.corp.com"
   backend_domain = "%s-rdp.internal"
@@ -94,7 +93,7 @@ func testAccService_infra_rdp_create_json(name string) string {
     "metadata": {
         "name": "%s-rdp",
         "description": "some RDP service description",
-        "cluster": "us-west",
+        "cluster": "tortoise",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",

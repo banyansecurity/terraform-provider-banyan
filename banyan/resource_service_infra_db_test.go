@@ -56,7 +56,6 @@ func testAccService_database_create(name string) string {
 resource "banyan_service_infra_db" "example" {
   name        = "%s-db"
   description = "some database service description"
-  cluster      = "us-west"
   access_tier   = "us-west1"
   domain      = "%s-db.corp.com"
   backend_domain = ""
@@ -75,7 +74,7 @@ func testAccService_database_create_json(name string) string {
     "metadata": {
         "name": "%s-db",
         "description": "some database service description",
-        "cluster": "us-west",
+        "cluster": "tortoise",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",

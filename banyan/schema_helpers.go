@@ -151,36 +151,47 @@ func isNil(i interface{}) bool {
 // errors if global-edge and cluster are both set
 // sets cluster to cluster value if cluster is set
 // sets default cluster by asking API if cluster and
-func setCluster(c *client.Holder, d *schema.ResourceData) (diagnostics diag.Diagnostics) {
-	globalEdge, GLok := d.GetOk("global_edge")
-	if GLok {
-		if globalEdge.(bool) {
-			err := d.Set("cluster", "global-edge")
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-	_, CLok := d.GetOk("cluster")
-	if CLok && GLok {
-		return diag.Errorf("cluster and global-edge cannot both be set")
-	}
-	if CLok {
+func setCluster(d *schema.ResourceData, m interface{}) (err error) {
+	c := m.(*client.Holder)
+	clusterName, err := determineCluster(c, d)
+	if err != nil {
 		return
 	}
-	err := getCluster(c, d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	err = d.Set("cluster", clusterName)
 	return
 }
 
-func getCluster(c *client.Holder, d *schema.ResourceData) (err error) {
+func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName string, err error) {
+	_, connOk := d.GetOk("connector")
+	at, atOk := d.GetOk("access_tier")
+
+	// error if both are set
+	if connOk && atOk {
+		err = errors.New("cannot have both access_tier and connector set")
+	}
+
+	// set to global-edge if connector is set
+	if connOk {
+		clusterName = "global-edge"
+		return
+	}
+
+	// otherwise determine which cluster to set based off of the access tier
+	atDetails, err := c.AccessTier.GetName(at.(string))
+	if err != nil {
+		err = fmt.Errorf("accesstier %s not found", at.(string))
+		clusterName, err = getFirstCluster(c)
+		return
+	}
+	clusterName = atDetails.ClusterName
+	return
+}
+
+func getFirstCluster(c *client.Holder) (clusterName string, err error) {
 	clusters, err := c.Shield.GetAll()
 	if err != nil {
 		return
 	}
 	sort.Strings(clusters)
-	err = d.Set("cluster", clusters[0])
-	return
+	return clusters[0], nil
 }
