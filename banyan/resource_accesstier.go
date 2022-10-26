@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 	"reflect"
 )
 
@@ -33,9 +32,10 @@ func resourceAccessTier() *schema.Resource {
 			},
 			"cluster": {
 				Type:        schema.TypeString,
-				Computed:    true,
+				Optional:    true,
 				Description: "Cluster / shield name in Banyan",
 				ForceNew:    true,
+				Default:     "",
 			},
 			"address": {
 				Type:        schema.TypeString,
@@ -290,25 +290,37 @@ func updateLocalConfig(d *schema.ResourceData, c *client.Holder, spec accesstier
 	// Combining local config with accesstier facing config
 	_, err = c.AccessTier.UpdateLocalConfig(spec.Name, lc)
 	if err != nil {
-		return diag.FromErr(errors.Errorf("failed to update local configuration for %s", spec.Name))
+		return diag.Errorf("failed to update local configuration for %s", spec.Name)
 	}
 	return
 }
 
 func resourceAccessTierCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	cluster, err := c.Shield.GetAll()
-	if err != nil {
-		return diag.Errorf("no clusters found for org: %s", err)
-	}
-	d.Set("cluster", cluster[0])
-	spec, err := c.AccessTier.Create(atFromState(d))
+	clusterName, err := setAccessTierCluster(c, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(spec.ID)
+	spec, err := c.AccessTier.Create(atFromState(d, clusterName))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	updateLocalConfig(d, c, spec)
-	diagnostics = resourceAccessTierRead(ctx, d, m)
+	d.SetId(spec.ID)
+	return
+}
+
+// automatically set the cluster unless it is specified
+func setAccessTierCluster(c *client.Holder, d *schema.ResourceData) (clusterName string, err error) {
+	_, ok := d.GetOk("cluster")
+	if !ok {
+		clusterName, err = getFirstCluster(c)
+		if err != nil {
+			return
+		}
+	} else {
+		clusterName = d.Get("cluster").(string)
+	}
 	return
 }
 
@@ -319,14 +331,7 @@ func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 	d.SetId(at.ID)
-	cluster, err := c.Shield.GetAll()
-	if err != nil {
-		return diag.Errorf("no clusters found for org: %s", err)
-	}
-	err = d.Set("cluster", cluster[0])
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	// we do not read the cluster
 	err = d.Set("name", at.Name)
 	if err != nil {
 		return diag.FromErr(err)
@@ -380,13 +385,13 @@ func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m inter
 	return
 }
 
-func atFromState(d *schema.ResourceData) (accessTier accesstier.AccessTierPost) {
+func atFromState(d *schema.ResourceData, clusterName string) (accessTier accesstier.AccessTierPost) {
 	at := accesstier.AccessTierPost{
 		Name:            d.Get("name").(string),
 		Address:         d.Get("address").(string),
 		TunnelSatellite: expandTunnelConfigSatellite(d),
 		TunnelEnduser:   expandTunnelConfigEndUser(d),
-		ClusterName:     d.Get("cluster").(string),
+		ClusterName:     clusterName,
 		DisableSnat:     d.Get("disable_snat").(bool),
 		SrcNATCIDRRange: d.Get("src_nat_cidr_range").(string),
 		ApiKeyId:        d.Get("api_key_id").(string),
@@ -396,7 +401,11 @@ func atFromState(d *schema.ResourceData) (accessTier accesstier.AccessTierPost) 
 
 func resourceAccessTierUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	spec := atFromState(d)
+	clusterName, err := setAccessTierCluster(c, d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	spec := atFromState(d, clusterName)
 	updated, err := c.AccessTier.Update(d.Id(), spec)
 	if err != nil {
 		return diag.FromErr(err)
