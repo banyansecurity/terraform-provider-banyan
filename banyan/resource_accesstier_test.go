@@ -15,7 +15,8 @@ const apiKeyID = "f0da9734-10b7-4ace-85ae-05206119cc69"
 // The required test is used to test the lifecycle of a resource with only the required parameters set
 func TestAccAccessTier_required(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-
+	//address := "*.example.com"
+	//api_key_id := "%s"
 	r := accesstier.AccessTierInfo{}
 
 	resource.Test(t, resource.TestCase{
@@ -25,13 +26,13 @@ func TestAccAccessTier_required(t *testing.T) {
 			{
 				Config: testAccAccessTier_create_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists("banyan_accesstier.example", &r),
+					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
 			},
 			{
 				Config: testAccAccessTier_update_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists("banyan_accesstier.example", &r),
+					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
 			},
 		},
@@ -41,30 +42,56 @@ func TestAccAccessTier_required(t *testing.T) {
 // The optional test is used to test the lifecycle of a resource with the required parameters and optional parameters set
 func TestAccAccessTier_optional(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-
 	r := accesstier.AccessTierInfo{}
-
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAccessTierDestroy(t, "banyan_accesstier.example"),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessTier_create_optional(rName),
+				Config: fmt.Sprintf(`
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.example.com"
+						api_key_id = "%s"
+						tunnel_connector_port = 39103
+						tunnel_port = 39104
+						tunnel_cidrs = ["10.0.2.0/16"]
+						tunnel_private_domain = "test.com"
+						enable_hsts = true
+						forward_trust_cookie = true
+						events_rate_limiting = true
+						event_key_rate_limiting = true
+					}
+					`, rName, apiKeyID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists("banyan_accesstier.example", &r),
+					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
 			},
 			{
-				Config: testAccAccessTier_update_optional(rName),
+				Config: fmt.Sprintf(`
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.exampletwo.com"
+						api_key_id = "%s"
+						tunnel_connector_port = 39104
+						tunnel_port = 39105
+						tunnel_cidrs = ["10.0.3.0/16"]
+						tunnel_private_domain = "example.com"
+						enable_hsts = false
+						forward_trust_cookie = true
+						events_rate_limiting = true
+						event_key_rate_limiting = true
+					}
+					`, rName, apiKeyID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists("banyan_accesstier.example", &r),
+					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckExists(resourceName string, r *accesstier.AccessTierInfo) resource.TestCheckFunc {
+func testAccCheckAccessTierExists(resourceName string, r *accesstier.AccessTierInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) (err error) {
 		err = testAccCheckExistingAccessTier(resourceName, r, s)
 		if err != nil {
@@ -132,11 +159,13 @@ resource banyan_accesstier "example" {
   address = "*.example.com"
   api_key_id = "%s"
   tunnel_connector_port = 39103
-  tunnel_enduser_port = 39104
-  tunnel_enduser_cidrs = ["10.0.2.0/16"]
-  console_log_level = "DEBUG"
-  statsd = true
-  debug_keep_alive = true
+  tunnel_port = 39104
+  tunnel_cidrs = ["10.0.2.0/16"]
+  tunnel_private_domain = "test.com"
+  enable_hsts = true
+  forward_trust_cookie = true
+  events_rate_limiting = true
+  event_key_rate_limiting = true
 }
 `, name, apiKeyID)
 }
@@ -147,13 +176,16 @@ func testAccAccessTier_update_optional(name string) string {
 	return fmt.Sprintf(`
 resource banyan_accesstier "example" {
   name = "%s"
-  address = "*.updated.com"
+  address = "*.example.com"
   api_key_id = "%s"
-  tunnel_connector_port = 39104
-  tunnel_enduser_port = 39105
-  tunnel_enduser_cidrs = ["10.0.3.0/16"]
-  console_log_level = "DEBUG"
-  statsd = false
+  tunnel_connector_port = 39103
+  tunnel_port = 39104
+  tunnel_cidrs = ["10.0.2.0/16"]
+  tunnel_private_domain = "test.com"
+  enable_hsts = true
+  forward_trust_cookie = true
+  events_rate_limiting = false
+  event_key_rate_limiting = false
 }
 `, name, apiKeyID)
 }

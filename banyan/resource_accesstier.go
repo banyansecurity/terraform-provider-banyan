@@ -17,258 +17,251 @@ func resourceAccessTier() *schema.Resource {
 		ReadContext:   resourceAccessTierRead,
 		UpdateContext: resourceAccessTierUpdate,
 		DeleteContext: resourceAccessTierDelete,
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the access tier",
-				ForceNew:    true,
-			},
-			"id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "ID of the access tier in Banyan",
-				ForceNew:    true,
-			},
-			"cluster": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Cluster / shield name in Banyan",
-				ForceNew:    true,
-				Default:     "",
-			},
-			"address": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Public address of the access tier",
-			},
-			"disable_snat": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Disable Source Network Address Translation (SNAT)",
-			},
-			"src_nat_cidr_range": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Source Network Address Translation (SNAT) ",
-			},
-			"api_key_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "ID of the API key which is scoped to access tier",
-			},
-			"tunnel_connector_port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Description:  "UDP for for connectors to this access tier to utilize",
-				ValidateFunc: validatePort(),
-			},
-			"tunnel_enduser_dns_search_domains": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "",
-			},
-			"tunnel_enduser_port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Description:  "UDP for for end users to this access tier to utilize",
-				ValidateFunc: validatePort(),
-			},
-			"tunnel_enduser_dns_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "",
-				Default:     false,
-			},
-			"tunnel_enduser_cidrs": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"console_log_level": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Controls verbosity of logs to console",
-				ValidateFunc: validation.StringInSlice([]string{"ERR", "WARN", "INFO", "DEBUG"}, false),
-			},
-			"file_log_level": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Controls verbosity of logs to file",
-				ValidateFunc: validation.StringInSlice([]string{"ERR", "WARN", "INFO", "DEBUG"}, false),
-			},
-			"file_log": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether to log to file or not",
-			},
-			"log_num": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "For file logs: Number of files to use for log rotation",
-			},
-			"log_size": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "For file logs: Size of each file for log rotation",
-			},
-			"statsd": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable or disable StatsD",
-			},
-			"statsd_address": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "StatsD endpoint for use if StatsD is enabled",
-				ValidateFunc: validation.IsIPv4Address,
-			},
-			"access_event_credits_limiting": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable or disable Netagent access event rate limiting",
-			},
-			"access_event_key_limiting": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable or disable Netagent access key event rate limiting",
-			},
-			"forward_trust_cookie": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Forward Banyan trust cookie to upstream servers",
-			},
-			"disable_hsts": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Disable HTTP Strict Transport Security",
-			},
-			"infra_maximum_session_timeout": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "",
-			},
-			"debug_http_backend_log": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Verbose logging for HTTP backend traffic",
-			},
-			"debug_visibility_only": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable or disable visibility mode. If on, Netagent will not do policy enforcement on inbound traffic",
-			},
-			"debug_shield_timeout": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "If Shield is not available, policies will be treated as if they are permissive. Zero means this is disabled.",
-			},
-			"debug_keep_alive": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable TCP keepalive messages for TCP sockets handled by Netagent",
-			},
-			"debug_keep_idle": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Idle time before sending a TCP keepalive",
-			},
-			"debug_keep_interval": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Time between consecutive TCP keepalive messages",
-			},
-			"debug_keep_count": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Number of missing TCP keepalive acknowledgements before closing connection",
-			},
-			"debug_cpu_profile": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Output file for CPU profiling; may impact performance. If empty, this is disabled",
-			},
-			"debug_mem_profile": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Output file for memory profiling; may impact performance. If empty, this is disabled",
-			},
-			"debug_host_only": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Host only mode",
-			},
-			"debug_disable_docker": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Disable Docker monitoring",
-			},
-			"debug_send_zeros": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Send all-zero data points to Shield",
-			},
-			"debug_period": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Interval for reporting statistics",
-			},
-			"debug_request_level_events": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Generate access events at the request level",
-			},
-			"debug_address_transparency": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Provide client address transparency",
-			},
-			"debug_use_rsa": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Netagent will generate RSA instead of ECDSA keys",
-			},
-			"debug_full_server_cert_chain": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Include non-root (intermediate) CA certs during TLS handshakes",
-			},
-			"debug_code_flow": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable or disable OpenID Connect",
-			},
-			"debug_inactivity_timeout": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "HTTP inactivity timeout",
-			},
-			"debug_client_timeout": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Client identification timeout",
-			},
-			"debug_service_discovery_enable": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable or disable DNS and conntrack logging",
-			},
-			"debug_service_discovery_msg_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Description:  "Message threshold for batch processing",
-				ValidateFunc: validation.IntInSlice([]int{100, 1000, 5000}),
-			},
-			"debug_service_discovery_msg_timeout": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Timeout value for service discovery batch processing",
+		Schema:        AccessTierSchema(),
+	}
+}
+
+func AccessTierSchema() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the access tier",
+			ForceNew:    true,
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "ID of the access tier in Banyan",
+			ForceNew:    true,
+		},
+		"cluster": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Cluster / shield name in Banyan",
+			ForceNew:    true,
+			Default:     "",
+		},
+		"address": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Public address of the access tier",
+		},
+		"disable_snat": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Disable Source Network Address Translation (SNAT)",
+		},
+		"src_nat_cidr_range": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Source Network Address Translation (SNAT) ",
+		},
+		"api_key_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "ID of the API key which is scoped to access tier",
+		},
+		"tunnel_connector_port": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Description:  "UDP for for connectors to this access tier to utilize",
+			ValidateFunc: validatePort(),
+		},
+		"tunnel_port": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Description:  "UDP for for end users to this access tier to utilize",
+			ValidateFunc: validatePort(),
+		},
+		"tunnel_cidrs": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
 			},
 		},
+		"tunnel_private_domain": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "",
+		},
+		"console_log_level": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Controls verbosity of logs to console",
+			ValidateFunc: validation.StringInSlice([]string{"ERR", "WARN", "INFO", "DEBUG"}, false),
+		},
+		"file_log_level": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Controls verbosity of logs to file",
+			ValidateFunc: validation.StringInSlice([]string{"ERR", "WARN", "INFO", "DEBUG"}, false),
+		},
+		"file_log": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Whether to log to file or not",
+		},
+		"log_num": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "For file logs: Number of files to use for log rotation",
+		},
+		"log_size": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "For file logs: Size of each file for log rotation",
+		},
+		"statsd_address": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Address to send statsd messages: “hostname:port” for UDP, “unix:///path/to/socket” for UDS",
+		},
+		"events_rate_limiting": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enable rate limiting of Access Event generation based on a credit-based rate control mechanism",
+		},
+		"event_key_rate_limiting": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enable rate limiting of Access Event generation based on a credit-based rate control mechanism",
+		},
+		"forward_trust_cookie": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Forward the Banyan trust cookie to upstream servers. This may be enabled if upstream servers wish to make use of information in the Banyan trust cookie.",
+		},
+		"enable_hsts": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "If enabled, Banyan will send the HTTP Strict-Transport-Security response header",
+		},
+		"infra_maximum_session_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "",
+		},
+		"debug_http_backend_log": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Verbose logging for HTTP backend traffic",
+		},
+		"debug_visibility_only": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enable or disable visibility mode. If on, Netagent will not do policy enforcement on inbound traffic",
+		},
+		"debug_shield_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "If Shield is not available, policies will be treated as if they are permissive. Zero means this is disabled.",
+		},
+		"debug_keep_alive": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enable TCP keepalive messages for TCP sockets handled by Netagent",
+		},
+		"debug_keep_idle": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Idle time before sending a TCP keepalive",
+		},
+		"debug_keep_interval": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Time between consecutive TCP keepalive messages",
+		},
+		"debug_keep_count": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Number of missing TCP keepalive acknowledgements before closing connection",
+		},
+		"debug_cpu_profile": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Output file for CPU profiling; may impact performance. If empty, this is disabled",
+		},
+		"debug_mem_profile": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Output file for memory profiling; may impact performance. If empty, this is disabled",
+		},
+		"debug_host_only": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Host only mode",
+		},
+		"debug_disable_docker": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Disable Docker monitoring",
+		},
+		"debug_send_zeros": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Send all-zero data points to Shield",
+		},
+		"debug_period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Interval for reporting statistics",
+		},
+		"debug_request_level_events": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Generate access events at the request level",
+		},
+		"debug_address_transparency": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Provide client address transparency",
+		},
+		"debug_use_rsa": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Netagent will generate RSA instead of ECDSA keys",
+		},
+		"debug_full_server_cert_chain": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Include non-root (intermediate) CA certs during TLS handshakes",
+		},
+		"debug_code_flow": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enable or disable OpenID Connect",
+		},
+		"debug_inactivity_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "HTTP inactivity timeout",
+		},
+		"debug_client_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Client identification timeout",
+		},
+		"debug_service_discovery_enable": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enable or disable DNS and conntrack logging",
+		},
+		"debug_service_discovery_msg_limit": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Description:  "Message threshold for batch processing",
+			ValidateFunc: validation.IntInSlice([]int{100, 1000, 5000}),
+		},
+		"debug_service_discovery_msg_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Timeout value for service discovery batch processing",
+		},
 	}
+	return s
 }
 
 func updateLocalConfig(d *schema.ResourceData, c *client.Holder, spec accesstier.AccessTierInfo) (diagnostics diag.Diagnostics) {
@@ -288,7 +281,7 @@ func updateLocalConfig(d *schema.ResourceData, c *client.Holder, spec accesstier
 		DebuggingParameters:             expandDebugging(d),
 	}
 	// Combining local config with accesstier facing config
-	_, err = c.AccessTier.UpdateLocalConfig(spec.Name, lc)
+	_, err = c.AccessTier.UpdateLocalConfig(spec.ID, lc)
 	if err != nil {
 		return diag.Errorf("failed to update local configuration for %s", spec.Name)
 	}
@@ -374,6 +367,10 @@ func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	err = flattenWebServices(d, atLocalConfig)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	err = flattenInfrastructureServiceParameters(d, atLocalConfig)
 	if err != nil {
 		return diag.FromErr(err)
@@ -437,11 +434,18 @@ func expandTunnelConfigSatellite(d *schema.ResourceData) (expanded *accesstier.A
 }
 
 func expandTunnelConfigEndUser(d *schema.ResourceData) (expanded *accesstier.AccessTierTunnelInfoPost) {
+	DNSEnabled := false
+	var DNSSearchDomains string
+	dns, ok := d.GetOk("tunnel_private_domain")
+	if ok {
+		DNSEnabled = true
+		DNSSearchDomains = dns.(string)
+	}
 	e := accesstier.AccessTierTunnelInfoPost{
-		UDPPortNumber:    d.Get("tunnel_enduser_port").(int),
-		DNSSearchDomains: d.Get("tunnel_enduser_dns_search_domains").(string),
-		DNSEnabled:       d.Get("tunnel_enduser_dns_enabled").(bool),
-		CIDRs:            convertSchemaSetToStringSlice(d.Get("tunnel_enduser_cidrs").(*schema.Set)),
+		UDPPortNumber:    d.Get("tunnel_port").(int),
+		DNSSearchDomains: DNSSearchDomains,
+		DNSEnabled:       DNSEnabled,
+		CIDRs:            convertSchemaSetToStringSlice(d.Get("tunnel_cidrs").(*schema.Set)),
 	}
 	if reflect.DeepEqual(e, accesstier.AccessTierTunnelInfoPost{}) {
 		return nil
@@ -455,8 +459,11 @@ func expandLogging(d *schema.ResourceData) (expanded *accesstier.LoggingParamete
 	FileLog := d.Get("file_log").(bool)
 	LogNum := d.Get("log_num").(int)
 	LogSize := d.Get("log_size").(int)
-	StatsD := d.Get("statsd").(bool)
+	StatsD := false
 	StatsDAddress := d.Get("statsd_address").(string)
+	if StatsDAddress == "" {
+		StatsD = true
+	}
 
 	e := accesstier.LoggingParameters{
 		ConsoleLogLevel: &ConsoleLogLevel,
@@ -471,8 +478,8 @@ func expandLogging(d *schema.ResourceData) (expanded *accesstier.LoggingParamete
 }
 
 func expandEventParameters(d *schema.ResourceData) (expanded *accesstier.EventParameters) {
-	CreditsLimiting := d.Get("access_event_credits_limiting").(bool)
-	KeyLimiting := d.Get("access_event_key_limiting").(bool)
+	CreditsLimiting := d.Get("events_rate_limiting").(bool)
+	KeyLimiting := d.Get("event_key_rate_limiting").(bool)
 	e := accesstier.EventParameters{
 		CreditsLimiting: &CreditsLimiting,
 		KeyLimiting:     &KeyLimiting,
@@ -482,7 +489,7 @@ func expandEventParameters(d *schema.ResourceData) (expanded *accesstier.EventPa
 
 func expandHostedWebServices(d *schema.ResourceData) (expanded *accesstier.HostedWebServiceParameters) {
 	ForwardTrustCookie := d.Get("forward_trust_cookie").(bool)
-	DisableHSTS := d.Get("disable_hsts").(bool)
+	DisableHSTS := d.Get("enable_hsts").(bool)
 	e := accesstier.HostedWebServiceParameters{
 		ForwardTrustCookie: &ForwardTrustCookie,
 		DisableHSTS:        &DisableHSTS,
@@ -492,7 +499,6 @@ func expandHostedWebServices(d *schema.ResourceData) (expanded *accesstier.Hoste
 
 func expandInfrastructureService(d *schema.ResourceData) (expanded *accesstier.InfrastructureServiceParameters) {
 	MaximumSessionTimeout := d.Get("infra_maximum_session_timeout").(int)
-
 	e := accesstier.InfrastructureServiceParameters{
 		MaximumSessionTimeout: &MaximumSessionTimeout,
 	}
@@ -547,7 +553,7 @@ func expandDebugging(d *schema.ResourceData) (expanded *accesstier.DebuggingPara
 }
 
 func flattenDebuggingParameters(d *schema.ResourceData, atLocalConfig accesstier.AccessTierLocalConfig) (err error) {
-	if isNil(atLocalConfig.LoggingParameters) {
+	if isNil(atLocalConfig.DebuggingParameters) {
 		return
 	}
 	err = d.Set("debug_http_backend_log", atLocalConfig.DebuggingParameters.HTTPBackendLog)
@@ -648,27 +654,26 @@ func flattenEventParameters(d *schema.ResourceData, atLocalConfig accesstier.Acc
 	if isNil(atLocalConfig.EventParameters) {
 		return
 	}
-	err = d.Set("access_event_credits_limiting", atLocalConfig.EventParameters.CreditsLimiting)
+	err = d.Set("events_rate_limiting", atLocalConfig.EventParameters.CreditsLimiting)
 	if err != nil {
 		return
 	}
-	err = d.Set("access_event_credits_per_interval", atLocalConfig.EventParameters.CreditsPerInterval)
+	err = d.Set("event_key_rate_limiting", atLocalConfig.EventParameters.KeyLimiting)
 	if err != nil {
 		return
 	}
-	err = d.Set("access_event_credits_interval", atLocalConfig.EventParameters.CreditsInterval)
+	return
+}
+
+func flattenWebServices(d *schema.ResourceData, atLocalConfig accesstier.AccessTierLocalConfig) (err error) {
+	if isNil(atLocalConfig.LoggingParameters) {
+		return
+	}
+	err = d.Set("enable_hsts", atLocalConfig.HostedWebServiceParameters.DisableHSTS)
 	if err != nil {
 		return
 	}
-	err = d.Set("access_event_credits_max", atLocalConfig.EventParameters.CreditsMax)
-	if err != nil {
-		return
-	}
-	err = d.Set("access_event_key_limiting", atLocalConfig.EventParameters.KeyLimiting)
-	if err != nil {
-		return
-	}
-	err = d.Set("access_event_key_expiration", atLocalConfig.EventParameters.KeyExpiration)
+	err = d.Set("forward_trust_cookie", atLocalConfig.HostedWebServiceParameters.ForwardTrustCookie)
 	if err != nil {
 		return
 	}
@@ -699,10 +704,6 @@ func flattenLoggingParameters(d *schema.ResourceData, atLocalConfig accesstier.A
 	if err != nil {
 		return
 	}
-	err = d.Set("statsd", atLocalConfig.LoggingParameters.StatsD)
-	if err != nil {
-		return
-	}
 	err = d.Set("statsd_address", atLocalConfig.LoggingParameters.StatsDAddress)
 	if err != nil {
 		return
@@ -725,19 +726,15 @@ func flattenTunnelConfigEndUser(d *schema.ResourceData, at *accesstier.AccessTie
 	if isNil(at.TunnelEnduser) {
 		return
 	}
-	err = d.Set("tunnel_enduser_port", at.TunnelEnduser.UDPPortNumber)
+	err = d.Set("tunnel_port", at.TunnelEnduser.UDPPortNumber)
 	if err != nil {
 		return
 	}
-	err = d.Set("tunnel_enduser_dns_search_domains", at.TunnelEnduser.DNSSearchDomains)
+	err = d.Set("tunnel_private_domain", at.TunnelEnduser.DNSSearchDomains)
 	if err != nil {
 		return
 	}
-	err = d.Set("tunnel_enduser_dns_enabled", at.TunnelEnduser.DNSEnabled)
-	if err != nil {
-		return
-	}
-	err = d.Set("tunnel_enduser_cidrs", at.TunnelEnduser.CIDRs)
+	err = d.Set("tunnel_cidrs", at.TunnelEnduser.CIDRs)
 	if err != nil {
 		return
 	}
