@@ -1,6 +1,10 @@
 package apikey
 
 type Response struct {
+	Data []Data `json:"data"`
+}
+
+type CreateResponse struct {
 	Data Data `json:"data"`
 }
 
