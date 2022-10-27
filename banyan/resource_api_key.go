@@ -35,8 +35,8 @@ func resourceApiKey() *schema.Resource {
 			"secret": {
 				Type:        schema.TypeString,
 				Description: "API Secret key",
-				Computed:    true,
 				Sensitive:   true,
+				Computed:    true,
 				ForceNew:    true,
 			},
 			"scope": {
@@ -56,6 +56,10 @@ func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		Description: d.Get("description").(string),
 		Scope:       d.Get("scope").(string),
 	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("secret", key.Secret)
 	if err != nil {
 		return diag.FromErr(err)
 	}
