@@ -2,6 +2,7 @@ package banyan
 
 import (
 	"context"
+	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -308,11 +309,15 @@ func setAccessTierCluster(c *client.Holder, d *schema.ResourceData) (clusterName
 	_, ok := d.GetOk("cluster")
 	if !ok {
 		clusterName, err = getFirstCluster(c)
-		if err != nil {
-			return
-		}
-	} else {
-		clusterName = d.Get("cluster").(string)
+		return
+	}
+	clusterName = d.Get("cluster").(string)
+	clusters, err := c.Shield.GetAll()
+	if err != nil {
+		return
+	}
+	if !contains(clusters, clusterName) {
+		err = fmt.Errorf("no cluster with name %s found. valid cluster names for org: %s", clusterName, clusters)
 	}
 	return
 }
