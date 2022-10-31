@@ -72,8 +72,7 @@ func resourceConnector() *schema.Resource {
 	}
 }
 
-func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
+func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
 	spec := satellite.Info{
 		Kind:       "BanyanConnector",
 		APIVersion: "rbac.banyanops.com/v1",
@@ -96,7 +95,12 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, m inte
 			Domains:     convertSchemaSetToStringSlice(d.Get("domains").(*schema.Set)),
 		},
 	}
-	created, err := c.Satellite.Create(spec)
+	return spec
+}
+
+func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	created, err := c.Satellite.Create(connectorFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new connector"))
 	}
@@ -108,6 +112,10 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, m inte
 func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
 	sat, err := c.Satellite.Get(d.Id())
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
 	err = d.Set("name", sat.Name)
 	if err != nil {
 		return diag.FromErr(err)
@@ -124,12 +132,16 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(d.Id())
 	return
 }
 
 func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	diagnostics = resourceConnectorCreate(ctx, d, m)
+	c := m.(*client.Holder)
+	_, err := c.Satellite.Update(d.Id(), connectorFromState(d))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	diagnostics = resourceConnectorRead(ctx, d, m)
 	return
 }
 
