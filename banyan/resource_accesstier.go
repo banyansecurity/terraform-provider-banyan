@@ -6,9 +6,11 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"reflect"
+	"time"
 )
 
 func resourceAccessTier() *schema.Resource {
@@ -326,7 +328,8 @@ func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m inter
 	c := m.(*client.Holder)
 	at, err := c.AccessTier.Get(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		handleNotFoundError(d, err)
+		return
 	}
 	d.SetId(at.ID)
 	// we do not read the cluster
