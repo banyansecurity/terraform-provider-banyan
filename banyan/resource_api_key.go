@@ -85,7 +85,8 @@ func resourceApiKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	c := m.(*client.Holder)
 	key, err := c.ApiKey.Get(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		handleNotFoundError(d, err)
+		return
 	}
 	d.SetId(key.ID)
 	err = d.Set("name", key.Name)

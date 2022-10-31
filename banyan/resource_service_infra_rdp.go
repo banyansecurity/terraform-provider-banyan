@@ -38,7 +38,8 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 	c := m.(*client.Holder)
 	svc, err := c.Service.Get(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		handleNotFoundError(d, err)
+		return
 	}
 	return resourceServiceInfraCommonRead(svc, d)
 }

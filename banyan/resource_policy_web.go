@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
-	"log"
 	"reflect"
 )
 
@@ -85,8 +84,7 @@ func resourcePolicyWeb() *schema.Resource {
 }
 
 func resourcePolicyWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[POLICY WEB|RES|CREATE] creating web policy %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
+	c := m.(*client.Holder)
 
 	policyToCreate := policy.CreatePolicy{
 		APIVersion: "rbac.banyanops.com/v1",
@@ -108,11 +106,10 @@ func resourcePolicyWebCreate(ctx context.Context, d *schema.ResourceData, m inte
 			},
 		},
 	}
-	createdPolicy, err := client.Policy.Create(policyToCreate)
+	createdPolicy, err := c.Policy.Create(policyToCreate)
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new web policy"))
 	}
-	log.Printf("[POLICY WEB|RES|CREATE] created web policy %s : %s", d.Get("name"), d.Id())
 	d.SetId(createdPolicy.ID)
 	diagnostics = resourcePolicyWebRead(ctx, d, m)
 	return
@@ -127,7 +124,10 @@ func resourcePolicyWebRead(ctx context.Context, d *schema.ResourceData, m interf
 	c := m.(*client.Holder)
 	id := d.Id()
 	resp, err := c.Policy.Get(id)
-	handleNotFoundError(d, resp.ID, err)
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
 	err = d.Set("name", resp.Name)
 	if err != nil {
 		return diag.FromErr(err)

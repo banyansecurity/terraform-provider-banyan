@@ -118,7 +118,10 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	c := m.(*client.Holder)
 	id := d.Id()
 	resp, err := c.Service.Get(id)
-	handleNotFoundError(d, resp.ServiceID, err)
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
 	err = d.Set("name", resp.ServiceName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)

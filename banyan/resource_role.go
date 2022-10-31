@@ -169,7 +169,8 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	c := m.(*client.Holder)
 	resp, err := c.Role.Get(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		handleNotFoundError(d, err)
+		return
 	}
 	d.SetId(resp.ID)
 	err = d.Set("name", resp.Name)

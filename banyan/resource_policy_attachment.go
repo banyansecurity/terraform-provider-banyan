@@ -93,7 +93,8 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	_, attachedToType, attachedToID := getInfoFromPolicyAttachmentID(id)
 	attachment, err := c.PolicyAttachment.Get(attachedToID, attachedToType)
 	if err != nil {
-		return diag.FromErr(err)
+		handleNotFoundError(d, err)
+		return
 	}
 	err = d.Set("policy_id", attachment.PolicyID)
 	if err != nil {

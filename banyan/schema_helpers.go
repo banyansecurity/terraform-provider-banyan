@@ -51,13 +51,15 @@ func convertSchemaSetToIntSlice(original *schema.Set) (stringSlice []int) {
 	return
 }
 
-// Returns a not found error from the API if there is one and sets the id
-// If the
-func handleNotFoundError(d *schema.ResourceData, id string, err error) (diagnostics diag.Diagnostics) {
+// Adds a warning to the diagnostics if the resource is not found and sets the id to "" which deletes it from the schema
+func handleNotFoundError(d *schema.ResourceData, err error) (diagnostics diag.Diagnostics) {
 	if err != nil {
-		return diag.FromErr(err)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("%s not found", d.Id()),
+		})
+		d.SetId("")
 	}
-	d.SetId(id)
 	return
 }
 

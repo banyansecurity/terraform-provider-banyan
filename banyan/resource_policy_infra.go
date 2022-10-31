@@ -60,7 +60,7 @@ func resourcePolicyInfra() *schema.Resource {
 }
 
 func resourcePolicyInfraCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*client.Holder)
+	c := m.(*client.Holder)
 	policyToCreate := policy.CreatePolicy{
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanPolicy",
@@ -81,7 +81,7 @@ func resourcePolicyInfraCreate(ctx context.Context, d *schema.ResourceData, m in
 			},
 		},
 	}
-	resp, err := client.Policy.Create(policyToCreate)
+	resp, err := c.Policy.Create(policyToCreate)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -93,7 +93,10 @@ func resourcePolicyInfraCreate(ctx context.Context, d *schema.ResourceData, m in
 func resourcePolicyInfraRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
 	resp, err := c.Policy.Get(d.Id())
-	handleNotFoundError(d, resp.ID, err)
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
 	err = d.Set("name", resp.Name)
 	if err != nil {
 		return diag.FromErr(err)

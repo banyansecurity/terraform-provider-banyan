@@ -56,7 +56,8 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 	id := d.Id()
 	svc, err := c.Service.Get(id)
 	if err != nil {
-		return diag.FromErr(err)
+		handleNotFoundError(d, err)
+		return
 	}
 	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
 	if err != nil {
