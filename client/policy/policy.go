@@ -3,7 +3,6 @@ package policy
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/banyansecurity/terraform-banyan-provider/client/crud"
 	"html"
 	"io/ioutil"
 	"net/url"
@@ -50,7 +49,7 @@ func (p *policy) Get(id string) (spec GetPolicy, err error) {
 	}
 	query := myUrl.Query()
 	query.Set("PolicyID", id)
-	resp, err := crud.ReadQuery(p.restClient, component, query, path)
+	resp, err := p.restClient.ReadQuery(component, query, path)
 	if err != nil {
 		return
 	}
@@ -82,7 +81,7 @@ func (p *policy) Create(policy CreatePolicy) (created GetPolicy, err error) {
 	if err != nil {
 		return
 	}
-	resp, err := crud.Create(p.restClient, apiVersion, component, body, path)
+	resp, err := p.restClient.Create(apiVersion, component, body, path)
 	if err != nil {
 		return
 	}
@@ -140,6 +139,6 @@ func (p *policy) Delete(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("PolicyID", id)
 	myUrl.RawQuery = query.Encode()
-	err = crud.DeleteQuery(p.restClient, component, id, query, path)
+	err = p.restClient.DeleteQuery(component, id, query, path)
 	return
 }
