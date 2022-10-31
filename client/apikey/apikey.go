@@ -2,7 +2,6 @@ package apikey
 
 import (
 	"encoding/json"
-	"github.com/banyansecurity/terraform-banyan-provider/client/crud"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -31,7 +30,7 @@ type Clienter interface {
 }
 
 func (k *ApiKey) Get(id string) (apikey Data, err error) {
-	resp, err := crud.Read(k.restClient, apiVersion, component, id, "")
+	resp, err := k.restClient.Read(apiVersion, component, id, "")
 	if err != nil {
 		return
 	}
@@ -52,7 +51,7 @@ func (k *ApiKey) Create(post Post) (apikey Data, err error) {
 		return
 	}
 	body, err := json.Marshal(post)
-	response, err := crud.Create(k.restClient, apiVersion, component, body, "")
+	response, err := k.restClient.Create(apiVersion, component, body, "")
 	if err != nil {
 		return
 	}
@@ -67,13 +66,13 @@ func (k *ApiKey) Update(id string, post Post) (updatedApiKey Data, err error) {
 	if err != nil {
 		return
 	}
-	resp, err := crud.Update(k.restClient, apiVersion, component, id, body, "")
+	resp, err := k.restClient.Update(apiVersion, component, id, body, "")
 	err = json.Unmarshal(resp, &updatedApiKey)
 	return
 }
 
 func (k *ApiKey) Delete(id string) (err error) {
-	return crud.Delete(k.restClient, apiVersion, component, id, "")
+	return k.restClient.Delete(apiVersion, component, id, "")
 }
 
 func getAll(k *ApiKey) (responseJSON Response, err error) {

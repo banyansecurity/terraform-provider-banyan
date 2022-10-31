@@ -105,7 +105,6 @@ func (this *PolicyAttachment) createServiceAttachment(policyID string, PolicyAtt
 		return
 	}
 	if response.StatusCode != 200 {
-		log.Printf("[POLICYATTACHMENT|CREATE] status code %#v, with message %q\n", response.StatusCode, string(responseData))
 		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response message: %q for request to", response.Status, string(responseData)))
 		return
 	}

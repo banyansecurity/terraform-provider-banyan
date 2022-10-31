@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/banyansecurity/terraform-banyan-provider/client/crud"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"github.com/pkg/errors"
 	"html"
@@ -25,7 +24,7 @@ func (s *Service) Get(id string) (service GetServiceSpec, err error) {
 	}
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
-	resp, err := crud.ReadQuery(s.restClient, component, query, path)
+	resp, err := s.restClient.ReadQuery(component, query, path)
 	var createdServiceJson []GetServicesJson
 	err = json.Unmarshal(resp, &createdServiceJson)
 	if err != nil {
@@ -83,7 +82,7 @@ func (s *Service) Delete(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
-	err = crud.DeleteQuery(s.restClient, "service", id, query, path)
+	err = s.restClient.DeleteQuery("service", id, query, path)
 	log.Printf("deleted service: %q", id)
 	return
 }
@@ -104,7 +103,7 @@ func (s *Service) Create(spec CreateService) (created GetServiceSpec, err error)
 	if err != nil {
 		return
 	}
-	resp, err := crud.Create(s.restClient, apiVersion, component, body, path)
+	resp, err := s.restClient.Create(apiVersion, component, body, path)
 	if err != nil {
 		return
 	}

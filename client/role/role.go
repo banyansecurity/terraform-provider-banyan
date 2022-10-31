@@ -3,7 +3,6 @@ package role
 import (
 	"encoding/json"
 	"errors"
-	"github.com/banyansecurity/terraform-banyan-provider/client/crud"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"html"
 	"net/url"
@@ -70,7 +69,7 @@ func (r *Role) Get(id string) (role GetRole, err error) {
 	}
 	query := myUrl.Query()
 	query.Set("RoleID", id)
-	resp, err := crud.ReadQuery(r.restClient, component, query, path)
+	resp, err := r.restClient.ReadQuery(component, query, path)
 	var j []GetRole
 	err = json.Unmarshal(resp, &j)
 	if err != nil {
@@ -100,7 +99,7 @@ func (r *Role) Create(role CreateRole) (created GetRole, err error) {
 	if err != nil {
 		return
 	}
-	resp, err := crud.Create(r.restClient, apiVersion, component, body, path)
+	resp, err := r.restClient.Create(apiVersion, component, body, path)
 	err = json.Unmarshal(resp, &created)
 	if err != nil {
 		return
@@ -132,6 +131,6 @@ func (r *Role) Delete(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("RoleID", id)
 	myUrl.RawQuery = query.Encode()
-	err = crud.DeleteQuery(r.restClient, component, id, query, path)
+	err = r.restClient.DeleteQuery(component, id, query, path)
 	return
 }
