@@ -20,6 +20,7 @@ func resourceApiKey() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the API key",
+				ForceNew:    true,
 			},
 			"id": {
 				Type:        schema.TypeString,
@@ -42,7 +43,7 @@ func resourceApiKey() *schema.Resource {
 			"scope": {
 				Type:        schema.TypeString,
 				Description: "API Secret key",
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
 			},
 		},
