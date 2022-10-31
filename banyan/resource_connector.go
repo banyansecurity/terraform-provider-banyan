@@ -5,8 +5,10 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+	"time"
 )
 
 func resourceConnector() *schema.Resource {
@@ -151,6 +153,20 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, m inte
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
+	}
+	err = resource.RetryContext(ctx, 180*time.Second, func() *resource.RetryError {
+		err = c.AccessTier.Delete(d.Id())
+		if err != nil {
+			if err.Error() == "access_tier not found" {
+				return nil
+			}
+			return resource.RetryableError(err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return diag.Errorf("timed out deleting access tier: %s", d.Get("name").(string))
 	}
 	d.SetId("")
 	return
