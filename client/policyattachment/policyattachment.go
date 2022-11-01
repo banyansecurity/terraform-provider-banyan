@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -36,9 +35,9 @@ type Clienter interface {
 	DeleteServiceAttachment(policyID string, serviceID string) (err error)
 }
 
-func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (attachment GetBody, err error) {
+func (p *PolicyAttachment) Get(attachedToID string, attachedToType string) (attachment GetBody, err error) {
 	path := fmt.Sprintf("api/v1/policy/attachment/%s/%s", attachedToType, attachedToID)
-	response, err := this.restClient.DoGet(path)
+	response, err := p.restClient.DoGet(path)
 	if err != nil {
 		return
 	}
@@ -82,19 +81,19 @@ func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (a
 	return
 }
 
-func (this *PolicyAttachment) createServiceAttachment(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error) {
+func (p *PolicyAttachment) createServiceAttachment(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error) {
 	path := "/api/v1/insert_security_attach_policy"
 	form := url.Values{}
 	form.Add("PolicyID", policyID)
 	form.Add("ServiceID", PolicyAttachment.AttachedToID)
 	form.Add("Enabled", PolicyAttachment.Enabled)
 
-	request, err := this.restClient.NewRequest(http.MethodPost, path, strings.NewReader(form.Encode()))
+	request, err := p.restClient.NewRequest(http.MethodPost, path, strings.NewReader(form.Encode()))
 	if err != nil {
 		return
 	}
 	request.Header.Set("content-type", "application/x-www-form-urlencoded")
-	response, err := this.restClient.Do(request)
+	response, err := p.restClient.Do(request)
 	if err != nil {
 		return
 	}
@@ -123,20 +122,19 @@ func (this *PolicyAttachment) createServiceAttachment(policyID string, PolicyAtt
 		return
 	}
 	createdAttachment.IsEnabled = isEnabled
-	log.Printf("[POLICYATTACHMENT|CREATE|ATTACH] attached policyattachment to service")
 	return
 }
 
-func (this *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error) {
+func (p *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error) {
 	if PolicyAttachment.AttachedToType == "service" {
-		return this.createServiceAttachment(policyID, PolicyAttachment)
+		return p.createServiceAttachment(policyID, PolicyAttachment)
 	}
 	path := fmt.Sprintf("/api/v1/policy/%s/attach", policyID)
 	body, err := json.Marshal(PolicyAttachment)
 	if err != nil {
 		return
 	}
-	response, err := this.restClient.DoPut(path, bytes.NewBuffer(body))
+	response, err := p.restClient.DoPut(path, bytes.NewBuffer(body))
 	if err != nil {
 		return
 	}
@@ -162,12 +160,12 @@ func (this *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBod
 	return
 }
 
-func (this *PolicyAttachment) Update(policyID string, attachment CreateBody) (updatedAttachment GetBody, err error) {
-	updatedAttachment, err = this.Create(policyID, attachment)
+func (p *PolicyAttachment) Update(policyID string, attachment CreateBody) (updatedAttachment GetBody, err error) {
+	updatedAttachment, err = p.Create(policyID, attachment)
 	return
 }
 
-func (this *PolicyAttachment) DeleteServiceAttachment(policyID, serviceID string) (err error) {
+func (p *PolicyAttachment) DeleteServiceAttachment(policyID, serviceID string) (err error) {
 	path := "api/v1/delete_security_attach_policy"
 
 	myUrl, err := url.Parse(path)
@@ -178,7 +176,7 @@ func (this *PolicyAttachment) DeleteServiceAttachment(policyID, serviceID string
 	query.Set("PolicyID", policyID)
 	query.Set("ServiceID", serviceID)
 	myUrl.RawQuery = query.Encode()
-	resp, err := this.restClient.DoDelete(myUrl.String())
+	resp, err := p.restClient.DoDelete(myUrl.String())
 	if err != nil {
 		return
 	}
@@ -189,16 +187,16 @@ func (this *PolicyAttachment) DeleteServiceAttachment(policyID, serviceID string
 	return
 }
 
-func (this *PolicyAttachment) Delete(policyID string, detachBody DetachBody) (err error) {
+func (p *PolicyAttachment) Delete(policyID string, detachBody DetachBody) (err error) {
 	if detachBody.AttachedToType == "service" {
-		return this.DeleteServiceAttachment(policyID, detachBody.AttachedToID)
+		return p.DeleteServiceAttachment(policyID, detachBody.AttachedToID)
 	}
 	path := fmt.Sprintf("/api/v1/policy/%s/detach", policyID)
 	body, err := json.Marshal(detachBody)
 	if err != nil {
 		return
 	}
-	response, err := this.restClient.DoPut(path, bytes.NewBuffer(body))
+	response, err := p.restClient.DoPut(path, bytes.NewBuffer(body))
 	if err != nil {
 		return
 	}
