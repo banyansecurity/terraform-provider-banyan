@@ -56,12 +56,6 @@ func resourceConnector() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"cluster": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "ID of the connector in Banyan. Defaults to banyan global-edge",
-				Default:     "global-edge",
-			},
 			"domains": {
 				Type:        schema.TypeSet,
 				Required:    true,
@@ -89,7 +83,7 @@ func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
 			CIDRs:     convertSchemaSetToStringSlice(d.Get("cidrs").(*schema.Set)),
 			PeerAccessTiers: []satellite.PeerAccessTier{
 				{
-					Cluster:     d.Get("cluster").(string),
+					Cluster:     "global-edge",
 					AccessTiers: []string{"access-tier"},
 				},
 			},
