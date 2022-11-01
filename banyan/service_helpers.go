@@ -597,13 +597,21 @@ func resourceServiceCreate(svc service.CreateService, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	d.SetId(created.ServiceID)
+	err = attachPolicyToService(d, c)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return
+}
+
+func attachPolicyToService(d *schema.ResourceData, c *client.Holder) (err error) {
 	policyID := d.Get("policy").(string)
 	if policyID == "" {
 		return
 	}
 	pol, err := c.Policy.Get(policyID)
 	if pol.ID == "" {
-		return diag.Errorf("policy with id %s not found", policyID)
+		return fmt.Errorf("policy with id %s not found", policyID)
 	}
 	body := policyattachment.CreateBody{
 		AttachedToID:   d.Get("id").(string),
@@ -622,5 +630,9 @@ func resourceServiceUpdate(svc service.CreateService, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	_, err = c.Service.Update(d.Id(), svc)
+	err = attachPolicyToService(d, c)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
