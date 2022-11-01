@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"log"
 	"strconv"
 	"strings"
@@ -588,6 +589,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interf
 	return
 }
 
+// common function to create a service
 func resourceServiceCreate(svc service.CreateService, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
 	created, err := c.Service.Create(svc)
@@ -595,6 +597,21 @@ func resourceServiceCreate(svc service.CreateService, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	d.SetId(created.ServiceID)
+	policyID := d.Get("policy").(string)
+	if policyID == "" {
+		return
+	}
+	pol, err := c.Policy.Get(policyID)
+	if pol.ID == "" {
+		return diag.Errorf("policy with id %s not found", policyID)
+	}
+	body := policyattachment.CreateBody{
+		AttachedToID:   d.Get("id").(string),
+		AttachedToType: "service",
+		IsEnabled:      true,
+		Enabled:        "TRUE",
+	}
+	_, err = c.PolicyAttachment.Create(policyID, body)
 	return
 }
 

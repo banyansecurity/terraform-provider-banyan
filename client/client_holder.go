@@ -17,7 +17,7 @@ import (
 
 type Holder struct {
 	Service          service.Client
-	Policy           policy.PolicyClienter
+	Policy           policy.Client
 	Role             role.Client
 	PolicyAttachment policyattachment.Clienter
 	Admin            admin.Admin

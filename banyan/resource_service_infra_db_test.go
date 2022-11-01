@@ -61,8 +61,18 @@ resource "banyan_service_infra_db" "example" {
   backend_domain = ""
   backend_port = 0
   http_connect = true
+  policy = banyan_policy_infra.example.id
 }
-`, name, name)
+
+resource "banyan_policy_infra" "example" {
+  name        = "%s-pol"
+  description = "some infrastructure policy description"
+  access {
+    roles       = ["ANY"]
+    trust_level = "High"
+  }
+}
+`, name, name, name)
 }
 
 func testAccService_database_create_json(name string) string {

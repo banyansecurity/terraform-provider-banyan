@@ -1,6 +1,9 @@
 package service
 
-import "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+import (
+	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
+	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+)
 
 type Service struct {
 	restClient *restclient.RestClient
@@ -21,6 +24,7 @@ type Client interface {
 	Delete(id string) (err error)
 	DetachPolicy(id string) (err error)
 	Disable(id string) (err error)
+	GetPolicyForService(id string) (attachedPolicy policy.GetPolicy, err error)
 }
 
 type Services struct {
@@ -338,4 +342,11 @@ type GetServiceSpec struct {
 	IsDefault         bool   `json:"IsDefault"`
 	Spec              Spec
 	CreateServiceSpec CreateService
+}
+
+type SecurityPoliciesResponse struct {
+	PolicyID    string `json:"PolicyID"`
+	PolicyName  string `json:"PolicyName"`
+	PolicySpec  string `json:"PolicySpec"`
+	Description string `json:"Description"`
 }

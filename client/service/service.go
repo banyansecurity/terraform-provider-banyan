@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"github.com/pkg/errors"
 	"html"
@@ -157,5 +158,20 @@ func MapToGetServiceSpec(original GetServicesJson) (new GetServiceSpec) {
 		Spec:              original.Spec,
 		CreateServiceSpec: original.CreateServiceSpec,
 	}
+	return
+}
+
+// get policy for service
+func (s *Service) GetPolicyForService(id string) (attachedPolicy policy.GetPolicy, err error) {
+	paClient := policyattachment.NewClient(s.restClient)
+	pClient := policy.NewClient(s.restClient)
+	policyAtt, err := paClient.Get(id, "service")
+	if err != nil {
+		return
+	}
+	if policyAtt.PolicyID == "" {
+		return
+	}
+	attachedPolicy, err = pClient.Get(policyAtt.PolicyID)
 	return
 }

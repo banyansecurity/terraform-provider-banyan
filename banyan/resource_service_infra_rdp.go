@@ -41,7 +41,7 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 		handleNotFoundError(d, err)
 		return
 	}
-	return resourceServiceInfraCommonRead(svc, d)
+	return resourceServiceInfraCommonRead(svc, d, m)
 }
 
 func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {

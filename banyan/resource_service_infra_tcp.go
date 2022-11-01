@@ -63,7 +63,7 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	diagnostics = resourceServiceInfraCommonRead(svc, d)
+	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
 	return
 }
 

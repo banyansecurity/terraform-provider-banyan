@@ -37,7 +37,6 @@ type Clienter interface {
 }
 
 func (this *PolicyAttachment) Get(attachedToID string, attachedToType string) (attachment GetBody, err error) {
-	log.Printf("[POLICYATTACHMENT|GET] reading policyattachment")
 	path := fmt.Sprintf("api/v1/policy/attachment/%s/%s", attachedToType, attachedToID)
 	response, err := this.restClient.DoGet(path)
 	if err != nil {

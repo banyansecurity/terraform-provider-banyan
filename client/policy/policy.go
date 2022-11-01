@@ -21,15 +21,14 @@ type policy struct {
 }
 
 // NewClient returns a new policy client
-func NewClient(restClient *restclient.RestClient) PolicyClienter {
+func NewClient(restClient *restclient.RestClient) Client {
 	policyClient := policy{
 		restClient: restClient,
 	}
 	return &policyClient
 }
 
-// PolicyClienter is used for CRUD operations against the policy resource
-type PolicyClienter interface {
+type Client interface {
 	Get(id string) (spec GetPolicy, err error)
 	Create(policy CreatePolicy) (created GetPolicy, err error)
 	Update(policy CreatePolicy) (updated GetPolicy, err error)
@@ -59,19 +58,19 @@ func (p *policy) Get(id string) (spec GetPolicy, err error) {
 		return
 	}
 	if len(j) == 0 {
-		err = errors.New("did not get service")
+		err = errors.New("did not get policy")
 		return
 	}
 	if len(j) > 1 {
-		err = errors.New("got more than one service")
+		err = errors.New("got more than one policy")
 		return
 	}
-	spec = j[0]
-	pol := html.UnescapeString(spec.Spec)
-	err = json.Unmarshal([]byte(pol), &spec.UnmarshalledPolicy)
+	htmlString := html.UnescapeString(j[0].Spec)
+	err = json.Unmarshal([]byte(htmlString), &j[0].UnmarshalledPolicy)
 	if err != nil {
 		return
 	}
+	spec = j[0]
 	return
 }
 

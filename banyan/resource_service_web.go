@@ -101,6 +101,11 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Default:     false,
 		},
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
 	}
 	return
 }
@@ -174,6 +179,16 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 	d.SetId(id)
+
+	// set policy for service
+	policy, err := c.Service.GetPolicyForService(resp.ServiceID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("policy", policy.ID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 

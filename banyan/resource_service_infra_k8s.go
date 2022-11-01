@@ -73,7 +73,7 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	return resourceServiceInfraCommonRead(svc, d)
+	return resourceServiceInfraCommonRead(svc, d, m)
 }
 
 func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
