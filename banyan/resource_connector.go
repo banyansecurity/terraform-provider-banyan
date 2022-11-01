@@ -149,9 +149,9 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, m inte
 		return
 	}
 	err = resource.RetryContext(ctx, 180*time.Second, func() *resource.RetryError {
-		err = c.AccessTier.Delete(d.Id())
+		err = c.Satellite.Delete(d.Id())
 		if err != nil {
-			if err.Error() == "access_tier not found" {
+			if err.Error() == "connector not found" {
 				return nil
 			}
 			return resource.RetryableError(err)
@@ -160,7 +160,7 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, m inte
 	})
 
 	if err != nil {
-		return diag.Errorf("timed out deleting access tier: %s", d.Get("name").(string))
+		return diag.Errorf("timed out deleting connector: %s", d.Get("name").(string))
 	}
 	d.SetId("")
 	return
