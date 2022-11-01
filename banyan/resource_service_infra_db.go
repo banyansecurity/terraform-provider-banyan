@@ -22,6 +22,18 @@ func resourceServiceInfraDb() *schema.Resource {
 	}
 }
 
+func resourceServiceInfraDbDepreciated() *schema.Resource {
+	return &schema.Resource{
+		Description:        "Resource used for lifecycle management of database services",
+		CreateContext:      resourceServiceInfraDbCreate,
+		ReadContext:        resourceServiceInfraDbRead,
+		UpdateContext:      resourceServiceInfraDbUpdate,
+		DeleteContext:      resourceServiceDelete,
+		Schema:             DbSchema(),
+		DeprecationMessage: "This resource will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_db",
+	}
+}
+
 func DbSchema() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"client_banyanproxy_allowed_domains": {

@@ -21,6 +21,18 @@ func resourceServiceInfraRdp() *schema.Resource {
 	}
 }
 
+func resourceServiceInfraRdpDepreciated() *schema.Resource {
+	return &schema.Resource{
+		Description:        "Resource used for lifecycle management of RDP services",
+		CreateContext:      resourceServiceInfraRdpCreate,
+		ReadContext:        resourceServiceInfraRdpRead,
+		UpdateContext:      resourceServiceInfraRdpUpdate,
+		DeleteContext:      resourceServiceDelete,
+		Schema:             RdpSchema(),
+		DeprecationMessage: "",
+	}
+}
+
 func RdpSchema() map[string]*schema.Schema {
 	return resourceServiceInfraCommonSchema
 }

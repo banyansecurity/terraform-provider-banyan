@@ -22,6 +22,18 @@ func resourceServiceInfraK8s() *schema.Resource {
 	}
 }
 
+func resourceServiceInfraK8sDepreciated() *schema.Resource {
+	return &schema.Resource{
+		Description:        "Resource used for lifecycle management of k8s services",
+		CreateContext:      resourceServiceInfraK8sCreate,
+		ReadContext:        resourceServiceInfraK8sRead,
+		UpdateContext:      resourceServiceInfraK8sUpdate,
+		DeleteContext:      resourceServiceDelete,
+		Schema:             K8sSchema(),
+		DeprecationMessage: "",
+	}
+}
+
 func K8sSchema() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"backend_dns_override_for_domain": {

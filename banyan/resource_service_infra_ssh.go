@@ -23,6 +23,18 @@ func resourceServiceInfraSsh() *schema.Resource {
 	}
 }
 
+func resourceServiceInfraSshDepreciated() *schema.Resource {
+	return &schema.Resource{
+		Description:        "Resource used for lifecycle management of SSH services",
+		CreateContext:      resourceServiceInfraSshCreate,
+		ReadContext:        resourceServiceInfraSshRead,
+		UpdateContext:      resourceServiceInfraSshUpdate,
+		DeleteContext:      resourceServiceDelete,
+		Schema:             SshSchema(),
+		DeprecationMessage: "",
+	}
+}
+
 func SshSchema() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"client_ssh_auth": {

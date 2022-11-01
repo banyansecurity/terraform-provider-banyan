@@ -22,6 +22,18 @@ func resourceServiceInfraTcp() *schema.Resource {
 	}
 }
 
+func resourceServiceInfraTcpDepreciated() *schema.Resource {
+	return &schema.Resource{
+		Description:        "Resource used for lifecycle management of TCP services",
+		CreateContext:      resourceServiceInfraTcpCreate,
+		ReadContext:        resourceServiceInfraTcpRead,
+		UpdateContext:      resourceServiceInfraTcpUpdate,
+		DeleteContext:      resourceServiceDelete,
+		Schema:             TcpSchema(),
+		DeprecationMessage: "",
+	}
+}
+
 func TcpSchema() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"client_banyanproxy_allowed_domains": {
