@@ -100,7 +100,6 @@ resource "banyan_api_key" "example" {
 resource "banyan_connector" "example" {
   name              = "%s"
   api_key = resource.banyan_api_key.example.id
-  cluster = "example"
   access_tiers = ["example"]
   domains = ["example.com"]
 }
@@ -119,7 +118,6 @@ resource "banyan_api_key" "example" {
 resource "banyan_connector" "example" {
   name              = "%s"
   api_key = resource.banyan_api_key.example.id
-  cluster = "example"
   access_tiers = ["global-edge"]
   cidrs = ["10.5.0.1/24"]
   domains = ["example.com"]
