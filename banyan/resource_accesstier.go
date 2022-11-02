@@ -58,7 +58,7 @@ func AccessTierSchema() map[string]*schema.Schema {
 		"src_nat_cidr_range": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Source Network Address Translation (SNAT) ",
+			Description: "CIDR range which source Network Address Translation (SNAT) will be disabled for",
 		},
 		"api_key_id": {
 			Type:        schema.TypeString,
@@ -68,13 +68,13 @@ func AccessTierSchema() map[string]*schema.Schema {
 		"tunnel_connector_port": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Description:  "UDP for for connectors to this access tier to utilize",
+			Description:  "UDP port for connectors to associated with this access tier to utilize",
 			ValidateFunc: validatePort(),
 		},
 		"tunnel_port": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Description:  "UDP for for end users to this access tier to utilize",
+			Description:  "UDP port for end users to this access tier to utilize when using service tunnel",
 			ValidateFunc: validatePort(),
 		},
 		"tunnel_cidrs": {

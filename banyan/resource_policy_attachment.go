@@ -14,11 +14,12 @@ import (
 
 func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The policy attachment resource. For more information on Banyan policy attachments, see the documentation:",
-		CreateContext: resourcePolicyAttachmentCreate,
-		ReadContext:   resourcePolicyAttachmentRead,
-		UpdateContext: resourcePolicyAttachmentUpdate,
-		DeleteContext: resourcePolicyAttachmentDelete,
+		Description:        "The policy attachment resource. For more information on Banyan policy attachments, see the documentation:",
+		CreateContext:      resourcePolicyAttachmentCreate,
+		ReadContext:        resourcePolicyAttachmentRead,
+		UpdateContext:      resourcePolicyAttachmentUpdate,
+		DeleteContext:      resourcePolicyAttachmentDelete,
+		DeprecationMessage: "This resource is depreciated and will be removed from the provider in the 1.0 release. Please utilize the \"policy\" attribute of each service for policy attachments",
 		Schema: map[string]*schema.Schema{
 			"policy_id": {
 				Type:        schema.TypeString,

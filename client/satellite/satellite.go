@@ -59,5 +59,6 @@ func (s *Satellite) Update(id string, satellite Info) (updated SatelliteTunnelCo
 }
 
 func (s *Satellite) Delete(id string) (err error) {
-	return s.restClient.Delete(apiVersion, component, id, "")
+	err = s.restClient.Delete(apiVersion, component, id, "")
+	return
 }

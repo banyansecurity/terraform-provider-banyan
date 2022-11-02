@@ -30,7 +30,7 @@ func resourceServiceInfraDbDepreciated() *schema.Resource {
 		UpdateContext:      resourceServiceInfraDbUpdate,
 		DeleteContext:      resourceServiceDelete,
 		Schema:             DbSchema(),
-		DeprecationMessage: "This resource will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_db",
+		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_db",
 	}
 }
 

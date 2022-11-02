@@ -151,7 +151,7 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, m inte
 	err = resource.RetryContext(ctx, 180*time.Second, func() *resource.RetryError {
 		err = c.Satellite.Delete(d.Id())
 		if err != nil {
-			if err.Error() == "connector not found" {
+			if err.Error() == "" {
 				return nil
 			}
 			return resource.RetryableError(err)
