@@ -4,6 +4,10 @@ type Response struct {
 	Data []Data `json:"data"`
 }
 
+type CreateResponse struct {
+	Data Data `json:"data"`
+}
+
 type Post struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
