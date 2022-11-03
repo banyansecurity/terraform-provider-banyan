@@ -9,6 +9,49 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+//func TestSchemaServiceInfraRdp_rdp_conn(t *testing.T) {
+//	svc_rdp_conn := map[string]interface{}{
+//		"name":                           "rdp-conn",
+//		"description":                    "pybanyan rdp-conn",
+//		"cluster":                        "managed-cl-edge1",
+//		"connector":                      "test-connector",
+//		"domain":                         "test-rdp-conn.tdupnsan.getbnn.com",
+//		"backend_domain":                 "10.10.2.1",
+//		"backend_port":                   3309,
+//		"client_banyanproxy_listen_port": 9109,
+//	}
+//
+//	d := schema.TestResourceDataRaw(t, resourceServiceInfraCommonSchema, svc_rdp_conn)
+//	svc_obj := RdpFromState(d, "")
+//
+//	json_spec, _ := ioutil.ReadFile("./specs/rdp-conn.json")
+//	var ref_obj service.CreateService
+//	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+//
+//	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+//}
+//
+//func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
+//	svc_rdp_collection := map[string]interface{}{
+//		"name":                           "rdp-collection",
+//		"description":                    "pybanyan rdp-collection",
+//		"cluster":                        "managed-cl-edge1",
+//		"connector":                      "test-connector",
+//		"domain":                         "test-rdp-collection.tdupnsan.getbnn.com",
+//		"http_connect":                   true,
+//		"client_banyanproxy_listen_port": 9108,
+//	}
+//
+//	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraRdpSchema(), svc_rdp_collection)
+//	svc_obj := RdpFromState(d, "")
+//
+//	json_spec, _ := ioutil.ReadFile("./specs/rdp-collection.json")
+//	var ref_obj service.CreateService
+//	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+//
+//	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+//}
+
 func TestAccService_infra_rdp(t *testing.T) {
 	var bnnService service.GetServiceSpec
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))

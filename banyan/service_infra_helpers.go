@@ -32,6 +32,12 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Description: "Description of the service",
 		Default:     "resourceServiceInfraSsh",
 	},
+	"cluster": {
+		Type:       schema.TypeString,
+		Computed:   true,
+		Deprecated: "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+		ForceNew:   true,
+	},
 	"access_tier": {
 		Type:          schema.TypeString,
 		Optional:      true,
@@ -91,11 +97,6 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	err = d.Set("description", svc.Description)
 	if err != nil {
 		return diag.FromErr(err)
-	}
-	err = d.Set("cluster", svc.ClusterName)
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
 	}
 	hostTagSelector := svc.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]

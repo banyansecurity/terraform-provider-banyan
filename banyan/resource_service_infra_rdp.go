@@ -23,32 +23,18 @@ func resourceServiceInfraRdp() *schema.Resource {
 
 func resourceServiceInfraRdpDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of RDP services",
+		Description:        "Resource used for lifecycle management of RDP services",
 		CreateContext:      resourceServiceInfraRdpCreate,
-		ReadContext:        resourceServiceInfraRdpReadDepreciated,
+		ReadContext:        resourceServiceInfraRdpRead,
 		UpdateContext:      resourceServiceInfraRdpUpdate,
 		DeleteContext:      resourceServiceDelete,
-		Schema:             RdpSchemaDepreciated(),
+		Schema:             RdpSchema(),
 		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_rdp",
 	}
 }
 
 func RdpSchema() map[string]*schema.Schema {
 	return resourceServiceInfraCommonSchema
-}
-
-func RdpSchemaDepreciated() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"cluster": {
-			Type:        schema.TypeString,
-			Description: "(Depreciated) Sets the cluster / shield for the service",
-			Computed:    true,
-			Optional:    true,
-			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
-			ForceNew:    true,
-		},
-	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
 
 func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -68,19 +54,6 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 		return
 	}
 	return resourceServiceInfraCommonRead(svc, d, m)
-}
-
-func resourceServiceInfraRdpReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	svc, err := c.Service.Get(d.Id())
-	if err != nil {
-		handleNotFoundError(d, err)
-		return
-	}
-	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	// trick to allow this key to stay in the schema
-	err = d.Set("policy", nil)
-	return
 }
 
 func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
-	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"github.com/pkg/errors"
 	"html"
 	"log"
@@ -27,9 +26,6 @@ func (s *Service) Get(id string) (service GetServiceSpec, err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	resp, err := s.restClient.ReadQuery(component, query, path)
-	if err != nil {
-		return
-	}
 	var createdServiceJson []GetServicesJson
 	err = json.Unmarshal(resp, &createdServiceJson)
 	if err != nil {
@@ -63,7 +59,13 @@ func (s *Service) Disable(id string) (err error) {
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
 	resp, err := s.restClient.DoPost(myUrl.String(), nil)
-	_, err = restclient.HandleResponse(resp, "disable_registered_service")
+	if err != nil {
+		return
+	}
+	if resp.StatusCode != 200 {
+		err = errors.Errorf("could not disable service with id: %s", id)
+		return
+	}
 	log.Printf("disabled service: %q", id)
 	return
 }

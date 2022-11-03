@@ -25,12 +25,12 @@ func resourceServiceInfraSsh() *schema.Resource {
 
 func resourceServiceInfraSshDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of SSH services",
+		Description:        "Resource used for lifecycle management of SSH services",
 		CreateContext:      resourceServiceInfraSshCreate,
-		ReadContext:        resourceServiceInfraSshReadDepreciated,
+		ReadContext:        resourceServiceInfraSshRead,
 		UpdateContext:      resourceServiceInfraSshUpdate,
 		DeleteContext:      resourceServiceDelete,
-		Schema:             SshSchemaDepreciated(),
+		Schema:             SshSchema(),
 		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_ssh",
 	}
 }
@@ -66,45 +66,6 @@ func SshSchema() map[string]*schema.Schema {
 	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
 
-func SshSchemaDepreciated() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"client_ssh_auth": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Specifies which certificates - TRUSTCERT | SSHCERT | BOTH - should be used when the user connects to this service; default: TRUSTCERT",
-			ValidateFunc: validation.StringInSlice([]string{"TRUSTCERT", "SSHCERT", "BOTH"}, false),
-			Default:      "TRUSTCERT",
-		},
-		"client_ssh_host_directive": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Creates an entry in the SSH config file using the Host keyword. Wildcards are supported such as \"192.168.*.?\"; default: <service name>",
-			Default:     "",
-		},
-		"client_banyanproxy_listen_port": {
-			Type:        schema.TypeInt,
-			Description: "For SSH, banyanproxy uses stdin instead of a local port",
-			Computed:    true,
-			Default:     nil,
-		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-			Optional:    true,
-			Default:     false,
-		},
-		"cluster": {
-			Type:        schema.TypeString,
-			Description: "(Depreciated) Sets the cluster / shield for the service",
-			Computed:    true,
-			Optional:    true,
-			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
-			ForceNew:    true,
-		},
-	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
-}
-
 func resourceServiceInfraSshCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	err := setCluster(d, m)
 	if err != nil {
@@ -131,28 +92,6 @@ func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	return
-}
-
-func resourceServiceInfraSshReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	id := d.Id()
-	svc, err := c.Service.Get(id)
-	if err != nil {
-		handleNotFoundError(d, err)
-		return
-	}
-	err = d.Set("client_ssh_auth", svc.CreateServiceSpec.Metadata.Tags.SSHServiceType)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("client_ssh_host_directive", svc.CreateServiceSpec.Metadata.Tags.SSHHostDirective)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	// trick to allow this key to stay in the schema
-	err = d.Set("policy", nil)
 	return
 }
 

@@ -40,16 +40,24 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "Description of the service",
 		},
+		"cluster": {
+			Type:       schema.TypeString,
+			Computed:   true,
+			Deprecated: "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+			ForceNew:   true,
+		},
 		"access_tier": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Description:   "Name of the access_tier which will proxy requests to your service backend",
+			Default:       "",
 			ConflictsWith: []string{"connector"},
 		},
 		"connector": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Description:   "Name of the connector which will proxy requests to your service backend",
+			Default:       "",
 			ConflictsWith: []string{"access_tier"},
 		},
 		"domain": {
@@ -98,14 +106,6 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "Policy ID to be attached to this service",
 		},
-		"cluster": {
-			Type:        schema.TypeString,
-			Description: "(Depreciated) Sets the cluster / shield for the service",
-			Computed:    true,
-			Optional:    true,
-			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
-			ForceNew:    true,
-		},
 	}
 	return
 }
@@ -123,6 +123,63 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	c := m.(*client.Holder)
 	id := d.Id()
 	resp, err := c.Service.Get(id)
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
+	err = d.Set("name", resp.ServiceName)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	err = d.Set("description", resp.Description)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	err = d.Set("cluster", resp.ClusterName)
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	err = SetAccessTier(d, resp, diagnostics)
+	err = d.Set("connector", resp.CreateServiceSpec.Spec.Backend.ConnectorName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("domain", resp.CreateServiceSpec.Metadata.Tags.Domain)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	portVal := *resp.CreateServiceSpec.Metadata.Tags.Port
+	portInt, _ := strconv.Atoi(portVal)
+	err = d.Set("port", portInt)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("letsencrypt", resp.CreateServiceSpec.Spec.CertSettings.Letsencrypt)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("backend_domain", resp.CreateServiceSpec.Spec.Backend.Target.Name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	bpInt, _ := strconv.Atoi(resp.CreateServiceSpec.Spec.Backend.Target.Port)
+	err = d.Set("backend_port", bpInt)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("backend_tls", resp.CreateServiceSpec.Spec.Backend.Target.TLS)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("backend_tls_insecure", resp.CreateServiceSpec.Spec.Backend.Target.TLSInsecure)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(id)
+
 	// set policy for service
 	policy, err := c.Service.GetPolicyForService(resp.ServiceID)
 	if err != nil {
