@@ -1,9 +1,10 @@
 package banyan
 
 import (
+	"context"
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
-	"log"
+	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"strconv"
 	"strings"
 
@@ -67,18 +68,6 @@ func expandMetatdataTags(m []interface{}) (metadatatags service.Tags) {
 		DescriptionLink:   &descriptionLink,
 		IncludeDomains:    &includeDomains,
 	}
-	return
-}
-
-func resourceServiceDetachPolicy(d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DETACH] detaching polices from service with id: %q \n", d.Id())
-	client := m.(*client.Holder)
-	err := client.Service.DetachPolicy(d.Id())
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
-	}
-	log.Printf("[SERVICE|RES|DETACH] detached polices from service with id: %q \n", d.Id())
 	return
 }
 
@@ -560,6 +549,84 @@ func SetAccessTier(d *schema.ResourceData, service service.GetServiceSpec, diagn
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
+	}
+	return
+}
+
+// combines two schemas into a single schema without duplicates
+func combineSchema(a map[string]*schema.Schema, b map[string]*schema.Schema) map[string]*schema.Schema {
+	for key, val := range a {
+		if b[key] == nil {
+			b[key] = val
+		}
+	}
+	return b
+}
+
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	err := c.Service.DetachPolicy(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = c.Service.Delete(d.Id())
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+	}
+	return
+}
+
+// common function to create a service
+func resourceServiceCreate(svc service.CreateService, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	created, err := c.Service.Create(svc)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(created.ServiceID)
+	err = attachPolicyToService(d, c)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return
+}
+
+func attachPolicyToService(d *schema.ResourceData, c *client.Holder) (err error) {
+	currentPolicy, err := c.Service.GetPolicyForService(d.Id())
+	if currentPolicy.ID != "" {
+		err = c.Policy.Detach(currentPolicy.ID)
+		if err != nil {
+			return
+		}
+	}
+	policyID := d.Get("policy").(string)
+	if policyID == "" {
+		return
+	}
+	pol, err := c.Policy.Get(policyID)
+	if pol.ID == "" {
+		return fmt.Errorf("policy with id %s not found", policyID)
+	}
+	body := policyattachment.CreateBody{
+		AttachedToID:   d.Get("id").(string),
+		AttachedToType: "service",
+		IsEnabled:      true,
+		Enabled:        "TRUE",
+	}
+	_, err = c.PolicyAttachment.Create(policyID, body)
+	return
+}
+
+func resourceServiceUpdate(svc service.CreateService, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	_, err := c.Service.Get(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	_, err = c.Service.Update(d.Id(), svc)
+	err = attachPolicyToService(d, c)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 	return
 }

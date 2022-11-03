@@ -19,11 +19,11 @@ func TestSchemaServiceInfraSsh_ssh_at(t *testing.T) {
 		"cluster":                   "cluster1",
 		"access_tier":               "gcp-wg",
 		"domain":                    "test-ssh-at.bar.com",
-		"backend_http_connect":      true,
+		"http_connect":              true,
 		"client_ssh_host_directive": "10.10.1.*",
 	}
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraSshSchema(), svc_ssh_at)
-	svc_obj := expandSSHCreateService(d)
+	d := schema.TestResourceDataRaw(t, SshSchema(), svc_ssh_at)
+	svc_obj := SshFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/ssh-at.json")
 	var ref_obj service.CreateService
@@ -42,8 +42,8 @@ func TestSchemaServiceInfraSsh_ssh_conn(t *testing.T) {
 		"backend_domain": "10.10.1.1",
 		"backend_port":   22,
 	}
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraSshSchema(), svc_ssh_conn)
-	svc_obj := expandSSHCreateService(d)
+	d := schema.TestResourceDataRaw(t, SshSchema(), svc_ssh_conn)
+	svc_obj := SshFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/ssh-conn.json")
 	var ref_obj service.CreateService
@@ -54,7 +54,7 @@ func TestSchemaServiceInfraSsh_ssh_conn(t *testing.T) {
 
 func TestAccService_ssh(t *testing.T) {
 	var bnnService service.GetServiceSpec
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
@@ -76,7 +76,6 @@ func testAccService_ssh_create(name string) string {
 resource "banyan_service_infra_ssh" "example" {
   name                      = "%s-ssh"
   description               = "some SSH service description"
-  cluster                   = "us-west"
   access_tier               = "us-west1"
   domain                    = "%s-ssh.corp.com"
   backend_domain            = "%s-ssh.internal"
@@ -95,7 +94,7 @@ func testAccService_ssh_create_json(name string) string {
     "metadata": {
         "name": "%s-ssh",
         "description": "some SSH service description",
-        "cluster": "us-west",
+        "cluster": "tortoise",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",

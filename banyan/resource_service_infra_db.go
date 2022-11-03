@@ -3,30 +3,39 @@ package banyan
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
-// Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraDb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "resourceServiceInfraDb",
+		Description:   "Resource used for lifecycle management of database services",
 		CreateContext: resourceServiceInfraDbCreate,
 		ReadContext:   resourceServiceInfraDbRead,
 		UpdateContext: resourceServiceInfraDbUpdate,
-		DeleteContext: resourceServiceInfraDbDelete,
-		Schema:        buildResourceServiceInfraDbSchema(),
+		DeleteContext: resourceServiceDelete,
+		Schema:        DbSchema(),
 	}
 }
 
-func buildResourceServiceInfraDbSchema() (schemaDb map[string]*schema.Schema) {
-	schemaDb = map[string]*schema.Schema{
+func resourceServiceInfraDbDepreciated() *schema.Resource {
+	return &schema.Resource{
+		Description:        "Resource used for lifecycle management of database services",
+		CreateContext:      resourceServiceInfraDbCreate,
+		ReadContext:        resourceServiceInfraDbRead,
+		UpdateContext:      resourceServiceInfraDbUpdate,
+		DeleteContext:      resourceServiceDelete,
+		Schema:             DbSchema(),
+		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_db",
+	}
+}
+
+func DbSchema() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
 		"client_banyanproxy_allowed_domains": {
 			Type:        schema.TypeSet,
 			Description: "Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity",
@@ -35,30 +44,50 @@ func buildResourceServiceInfraDbSchema() (schemaDb map[string]*schema.Schema) {
 				Type: schema.TypeString,
 			},
 		},
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+			Optional:    true,
+			Default:     false,
+		},
 	}
-	for key, val := range resourceServiceInfraCommonSchema {
-		if schemaDb[key] == nil {
-			schemaDb[key] = val
-		}
-	}
-	return
+	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
 
 func resourceServiceInfraDbCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating database service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	svc := expandDatabaseCreateService(d)
-
-	newService, err := client.Service.Create(svc)
+	err := setCluster(d, m)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create database service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(err)
 	}
-	log.Printf("[SVC|RES|CREATE] Created database service %s : %s", d.Get("name"), d.Id())
-	d.SetId(newService.ServiceID)
-	return resourceServiceInfraDbRead(ctx, d, m)
+	svc := DbFromState(d)
+	return resourceServiceCreate(svc, d, m)
 }
 
-func expandDatabaseCreateService(d *schema.ResourceData) (svc service.CreateService) {
+func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	svc, err := c.Service.Get(d.Id())
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
+	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set(fmt.Sprintf("http_connect"), svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
+	return
+}
+
+func resourceServiceInfraDbUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	svc := DbFromState(d)
+	return resourceServiceUpdate(svc, d, m)
+}
+
+func DbFromState(d *schema.ResourceData) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
@@ -85,9 +114,8 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 	serviceAppType := "DATABASE"
 	descriptionLink := ""
 	allowUserOverride := true
-
 	banyanProxyMode := "TCP"
-	if d.Get("backend_http_connect").(bool) {
+	if d.Get("http_connect").(bool) {
 		banyanProxyMode = "CHAIN"
 	}
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
@@ -96,7 +124,6 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 	if includeDomains == nil {
 		includeDomains = []string{}
 	}
-
 	metadatatags = service.Tags{
 		Template:          &template,
 		UserFacing:        &userFacing,
@@ -111,39 +138,5 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 		AllowUserOverride: &allowUserOverride,
 		IncludeDomains:    &includeDomains,
 	}
-	return
-}
-
-func resourceServiceInfraDbUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating database service %s : %s", d.Get("name"), d.Id())
-	resourceServiceInfraDbCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated database service %s : %s", d.Get("name"), d.Id())
-	return
-}
-
-func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|READ] reading database service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	id := d.Id()
-	svc, ok, err := client.Service.Get(id)
-	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get database svc with id: %s", id))
-	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("svc %q", d.Id()))
-	}
-	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	log.Printf("[SVC|RES|READ] read database svc %s : %s", d.Get("name"), d.Id())
-	return
-}
-
-func resourceServiceInfraDbDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting database service %s : %s", d.Get("name"), d.Id())
-	diagnostics = resourceServiceInfraCommonDelete(d, m)
-	log.Printf("[SERVICE|RES|DELETE] deleted database service %s : %s", d.Get("name"), d.Id())
 	return
 }
