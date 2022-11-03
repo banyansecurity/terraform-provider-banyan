@@ -1,27 +1,30 @@
 package service
 
-import "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+import (
+	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
+	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+)
 
 type Service struct {
-	restClient *restclient.RestClient
+	restClient *restclient.Client
 }
 
 // NewClient returns a new client for interaction with the service resource
-func NewClient(restClient *restclient.RestClient) ServiceClienter {
+func NewClient(restClient *restclient.Client) Client {
 	serviceClient := Service{
 		restClient: restClient,
 	}
 	return &serviceClient
 }
 
-// ServiceClienter is used to perform CRUD operations on the service resource
-type ServiceClienter interface {
-	Get(id string) (service GetServiceSpec, ok bool, err error)
-	Create(svc CreateService) (Service GetServiceSpec, err error)
-	Update(id string, svc CreateService) (Service GetServiceSpec, err error)
+type Client interface {
+	Get(id string) (spec GetServiceSpec, err error)
+	Create(spec CreateService) (created GetServiceSpec, err error)
+	Update(id string, spec CreateService) (updated GetServiceSpec, err error)
 	Delete(id string) (err error)
 	DetachPolicy(id string) (err error)
-	disable(id string) (err error)
+	Disable(id string) (err error)
+	GetPolicyForService(id string) (attachedPolicy policy.GetPolicy, err error)
 }
 
 type Services struct {
@@ -339,4 +342,11 @@ type GetServiceSpec struct {
 	IsDefault         bool   `json:"IsDefault"`
 	Spec              Spec
 	CreateServiceSpec CreateService
+}
+
+type SecurityPoliciesResponse struct {
+	PolicyID    string `json:"PolicyID"`
+	PolicyName  string `json:"PolicyName"`
+	PolicySpec  string `json:"PolicySpec"`
+	Description string `json:"Description"`
 }
