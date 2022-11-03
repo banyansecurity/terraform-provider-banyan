@@ -15,14 +15,14 @@ type ApiKey struct {
 const apiVersion = "api/v2"
 const component = "api_key"
 
-func NewClient(restClient *restclient.Client) Clienter {
+func NewClient(restClient *restclient.Client) Client {
 	apikeyClient := ApiKey{
 		restClient: restClient,
 	}
 	return &apikeyClient
 }
 
-type Clienter interface {
+type Client interface {
 	Get(id string) (apikey Data, err error)
 	Create(post Post) (createdApiKey Data, err error)
 	Update(id string, post Post) (updatedApiKey Data, err error)
