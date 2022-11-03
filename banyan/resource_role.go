@@ -2,14 +2,11 @@ package banyan
 
 import (
 	"context"
-	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
-	"log"
 )
 
 // The role resource. For more information on Banyan roles, please see the documentation:
@@ -123,10 +120,8 @@ func resourceRole() *schema.Resource {
 	}
 }
 
-func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[ROLE|RES|CREATE] creating role %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	roleToCreate := role.CreateRole{
+func RoleFromState(d *schema.ResourceData) (r role.CreateRole) {
+	r = role.CreateRole{
 		Metadata: role.Metadata{
 			ID:          d.Get("id").(string),
 			Name:        d.Get("name").(string),
@@ -152,70 +147,85 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 			MDMPresent:      d.Get("mdm_present").(bool),
 		},
 	}
-	createdRole, err := client.Role.Create(roleToCreate)
-	if err != nil {
-		diag.FromErr(errors.WithMessage(err, "couldn't create new role"))
-		return
-	}
+	return
+}
 
-	log.Printf("[ROLE|RES|CREATE] created role %s : %s", d.Get("name"), d.Id())
-	d.SetId(createdRole.ID)
-	diagnostics = resourceRoleRead(ctx, d, m)
+func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	resp, err := c.Role.Create(RoleFromState(d))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(resp.ID)
 	return
 }
 
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[ROLE|RES|UPDATE] updating role %s : %s", d.Get("name"), d.Id())
 	diagnostics = resourceRoleCreate(ctx, d, m)
-	log.Printf("[ROLE|RES|UPDATE] updated role %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[ROLE|RES|READ] reading role %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	id := d.Id()
-	role, ok, err := client.Role.Get(id)
+	c := m.(*client.Holder)
+	resp, err := c.Role.Get(d.Id())
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get role with id: %s", id))
+		handleNotFoundError(d, err)
+		return
 	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("role %q", d.Id()))
+	d.SetId(resp.ID)
+	err = d.Set("name", resp.Name)
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	log.Printf("[ROLE|RES|READ] got role: %#v", role)
-	d.Set("name", role.Name)
-	d.Set("description", role.Description)
-	d.Set("id", role.ID)
-	d.Set("container_fqdn", role.UnmarshalledSpec.Spec.ContainerFQDN)
-	d.Set("image", role.UnmarshalledSpec.Spec.Image)
-	d.Set("repo_tag", role.UnmarshalledSpec.Spec.RepoTag)
-	d.Set("user_group", role.UnmarshalledSpec.Spec.UserGroup)
-	d.Set("email", role.UnmarshalledSpec.Spec.Email)
-	d.Set("device_ownership", role.UnmarshalledSpec.Spec.DeviceOwnership)
-	d.Set("platform", role.UnmarshalledSpec.Spec.Platform)
-	d.Set("known_device_only", role.UnmarshalledSpec.Spec.KnownDeviceOnly)
-	d.Set("mdm_present", role.UnmarshalledSpec.Spec.MDMPresent)
-	log.Printf("[ROLE|RES|READ] read role %s : %s", d.Get("name"), d.Id())
+	err = d.Set("description", resp.Description)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("container_fqdn", resp.UnmarshalledSpec.Spec.ContainerFQDN)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("image", resp.UnmarshalledSpec.Spec.Image)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("repo_tag", resp.UnmarshalledSpec.Spec.RepoTag)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("user_group", resp.UnmarshalledSpec.Spec.UserGroup)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("email", resp.UnmarshalledSpec.Spec.Email)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("device_ownership", resp.UnmarshalledSpec.Spec.DeviceOwnership)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("platform", resp.UnmarshalledSpec.Spec.Platform)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("known_device_only", resp.UnmarshalledSpec.Spec.KnownDeviceOnly)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("mdm_present", resp.UnmarshalledSpec.Spec.MDMPresent)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[ROLE|RES|DELETE] deleting role %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	err := client.Role.Delete(d.Id())
+	c := m.(*client.Holder)
+	err := c.Role.Delete(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	log.Printf("[ROLE|RES|DELETE] deleted role %s : %s", d.Get("name"), d.Id())
+	d.SetId("")
 	return
-}
-
-func validateRoleTemplate() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if v != "USER" && v != "" {
-			errs = append(errs, fmt.Errorf("%q must be %q or \"\", got: %q", key, "USER", v))
-		}
-		return
-	}
 }
