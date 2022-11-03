@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
-	"log"
 	"strconv"
 	"strings"
 
@@ -69,18 +68,6 @@ func expandMetatdataTags(m []interface{}) (metadatatags service.Tags) {
 		DescriptionLink:   &descriptionLink,
 		IncludeDomains:    &includeDomains,
 	}
-	return
-}
-
-func resourceServiceDetachPolicy(d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DETACH] detaching polices from service with id: %q \n", d.Id())
-	client := m.(*client.Holder)
-	err := client.Service.DetachPolicy(d.Id())
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
-	}
-	log.Printf("[SERVICE|RES|DETACH] detached polices from service with id: %q \n", d.Id())
 	return
 }
 
@@ -578,11 +565,11 @@ func combineSchema(a map[string]*schema.Schema, b map[string]*schema.Schema) map
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	diagnostics = resourceServiceDetachPolicy(d, m)
-	if diagnostics.HasError() {
-		return
+	err := c.Service.DetachPolicy(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	err := c.Service.Delete(d.Id())
+	err = c.Service.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 	}
@@ -605,6 +592,13 @@ func resourceServiceCreate(svc service.CreateService, d *schema.ResourceData, m 
 }
 
 func attachPolicyToService(d *schema.ResourceData, c *client.Holder) (err error) {
+	currentPolicy, err := c.Service.GetPolicyForService(d.Id())
+	if currentPolicy.ID != "" {
+		err = c.Policy.Detach(currentPolicy.ID)
+		if err != nil {
+			return
+		}
+	}
 	policyID := d.Get("policy").(string)
 	if policyID == "" {
 		return
