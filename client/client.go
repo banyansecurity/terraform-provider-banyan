@@ -6,12 +6,13 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 )
 
-const defaultHostUrl = "http://net.banyanops.com/"
+const defaultHostUrl = "http://net.banyanops.com"
 
 // type BnnClient interface {
 // 	OidcSettingsClienter
@@ -35,6 +36,10 @@ func New(hostUrl string, refreshToken string) (client *Client, err error) {
 	clientHostUrl := defaultHostUrl
 	if hostUrl != "" {
 		clientHostUrl = hostUrl
+	}
+
+	if !strings.HasSuffix(hostUrl, "/") {
+		clientHostUrl = hostUrl + "/"
 	}
 
 	client = &Client{
