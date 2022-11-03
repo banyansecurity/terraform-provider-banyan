@@ -13,7 +13,7 @@ type OidcSettingsClienter interface {
 	Get() (Spec, error)
 }
 
-func Client(restClient *restclient.RestClient) OidcSettingsClienter {
+func Client(restClient *restclient.Client) OidcSettingsClienter {
 	newClient := OidcSettings{restClient: restClient}
 	return &newClient
 }
@@ -31,16 +31,16 @@ type Spec struct {
 }
 
 type OidcSettings struct {
-	restClient *restclient.RestClient
+	restClient *restclient.Client
 }
 
-func (this *OidcSettings) Get() (oidcSettings Spec, err error) {
+func (o OidcSettings) Get() (oidcSettings Spec, err error) {
 	path := "api/v1/oidc_settings"
 
-	request, err := this.restClient.Get(path)
+	request, err := o.restClient.Get(path)
 
 	// initiate request for response
-	response, err := this.restClient.Do(request)
+	response, err := o.restClient.Do(request)
 	if err != nil {
 		return
 	}
