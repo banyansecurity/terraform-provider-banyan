@@ -3,33 +3,32 @@ package banyan
 import (
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-// Use the terraform plugin sdk testing framework for acceptance testing policyattachment lifecycle
-func TestAccPolicyAttachment_lifecycle(t *testing.T) {
-
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPolicyAttachment_lifecycle_create(rName),
-			},
-			{
-				Config: testAccPolicyAttachment_lifecycle_attach_multiple(rName),
-			},
-			{
-				Config: testAccPolicyAttachment_lifecycle_detach(rName),
-			},
-		},
-	})
-}
+//// Use the terraform plugin sdk testing framework for acceptance testing policyattachment lifecycle
+//func TestAccPolicyAttachment_lifecycle(t *testing.T) {
+//
+//	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+//
+//	resource.Test(t, resource.TestCase{
+//		Providers: testAccProviders,
+//		Steps: []resource.TestStep{
+//			{
+//				Config: testAccPolicyAttachment_lifecycle_create(rName),
+//			},
+//			{
+//				Config: testAccPolicyAttachment_lifecycle_attach_multiple(rName),
+//			},
+//			{
+//				Config: testAccPolicyAttachment_lifecycle_detach(rName),
+//			},
+//		},
+//	})
+//}
 
 // Checks that the resource with the name resourceName exists and returns the policyattachment object from the Banyan API
 func testAccCheckExistingPolicyAttachment(resourceName string, policyAttachment *policyattachment.GetBody) resource.TestCheckFunc {
@@ -39,7 +38,7 @@ func testAccCheckExistingPolicyAttachment(resourceName string, policyAttachment 
 		if !ok {
 			return fmt.Errorf("resource not found %q", rs)
 		}
-		resp, _, err := testAccClient.PolicyAttachment.Get(rs.Primary.Attributes["attached_to_id"], rs.Primary.Attributes["attached_to_type"])
+		resp, err := testAccClient.PolicyAttachment.Get(rs.Primary.Attributes["attached_to_id"], rs.Primary.Attributes["attached_to_type"])
 		if err != nil {
 			return err
 		}
@@ -70,7 +69,7 @@ func testAccCheckPolicyAttachmentUpdated(t *testing.T, bnnPolicyAttachment *poli
 func testAccCheckPolicyAttachmentDestroy(t *testing.T, policyAttachment *policyattachment.GetBody) resource.TestCheckFunc {
 	emptyPolicyAttachment := policyattachment.GetBody{}
 	return func(s *terraform.State) error {
-		r, _, err := testAccClient.PolicyAttachment.Get(policyAttachment.AttachedToID, policyAttachment.AttachedToType)
+		r, err := testAccClient.PolicyAttachment.Get(policyAttachment.AttachedToID, policyAttachment.AttachedToType)
 		assert.Equal(t, r, emptyPolicyAttachment)
 		return err
 	}
