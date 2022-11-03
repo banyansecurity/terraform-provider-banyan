@@ -14,7 +14,7 @@ import (
 func TestAccRole_basic(t *testing.T) {
 	var bnnRole role.GetRole
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -36,7 +36,7 @@ func TestAccRole_basic(t *testing.T) {
 func TestAccRole_complex(t *testing.T) {
 	var bnnRole role.GetRole
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -72,7 +72,7 @@ func testAccCheckExistingRole(resourceName string, bnnRole *role.GetRole) resour
 		if !ok {
 			return fmt.Errorf("resource not found %q", rs)
 		}
-		resp, _, err := testAccClient.Role.Get(rs.Primary.ID)
+		resp, err := testAccClient.Role.Get(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -96,11 +96,10 @@ func testAccCheckRoleGroupsUpdated(t *testing.T, bnnRole *role.GetRole, group []
 
 // Uses the API to check that the role was destroyed
 func testAccCheckRoleDestroy(t *testing.T, id *string) resource.TestCheckFunc {
-	emptyRole := role.GetRole{}
 	return func(s *terraform.State) error {
-		r, _, err := testAccClient.Role.Get(*id)
-		assert.Equal(t, r, emptyRole)
-		return err
+		r, _ := testAccClient.Role.Get(*id)
+		assert.Equal(t, r.ID, "")
+		return nil
 	}
 }
 
