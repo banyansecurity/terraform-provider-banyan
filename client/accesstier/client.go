@@ -12,11 +12,11 @@ const apiVersion = "api/v2"
 const component = "access_tier"
 
 type AccessTier struct {
-	restClient *restclient.RestClient
+	restClient *restclient.Client
 }
 
 // NewClient returns a new client for interacting with the access tier resource
-func NewClient(restClient *restclient.RestClient) Client {
+func NewClient(restClient *restclient.Client) Client {
 	client := AccessTier{
 		restClient: restClient,
 	}
