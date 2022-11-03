@@ -12,11 +12,14 @@ const (
 	Terminated       SatelliteStatus = "Terminated"
 )
 
-const DefaultName = "default-connector"
-
 type SatelliteTunnelResponse struct {
 	Data SatelliteTunnelConfig `json:"data"`
 }
+
+const (
+	DefaultName      = "default-connector"
+	ConnectorNameKey = "connector"
+)
 
 type SatelliteTunnelConfig struct {
 	ID                  string       `json:"id"`
@@ -40,6 +43,8 @@ type SatelliteTunnelConfig struct {
 	CreatedBy           string       `json:"created_by"`
 	UpdatedBy           string       `json:"updated_by"`
 	Spec                string       `json:"spec"`
+	IpTables            string       `json:"ip_tables,omitempty"`
+	Domains             []string     `json:"domains"`
 }
 
 type AccessTier struct {
@@ -95,6 +100,8 @@ type Spec struct {
 	Keepalive       int64            `json:"keepalive"`
 	CIDRs           []string         `json:"cidrs"`
 	PeerAccessTiers []PeerAccessTier `json:"peer_access_tiers"`
+	DisableSnat     bool             `json:"disable_snat"`
+	Domains         []string         `json:"domains,omitempty"`
 }
 
 type PeerAccessTier struct {
