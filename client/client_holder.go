@@ -19,16 +19,16 @@ type Holder struct {
 	Service          service.Client
 	Policy           policy.Client
 	Role             role.Client
-	PolicyAttachment policyattachment.Clienter
-	Admin            admin.Admin
-	Satellite        satellite.Clienter
-	ApiKey           apikey.Clienter
+	PolicyAttachment policyattachment.Client
+	Admin            admin.Client
+	Satellite        satellite.Client
+	ApiKey           apikey.Client
 	AccessTier       accesstier.Client
-	Shield           shield.Clienter
-	RestClient       *restclient.RestClient
+	Shield           shield.Client
+	RestClient       *restclient.Client
 }
 
-// NewClientHolder returns a new client which is used to perform CRUD operations on all Banyan resources.
+// NewClientHolder returns a new client which is used to perform operations on all Banyan resources.
 func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (client *Holder, err error) {
 	restClient, err := restclient.New(hostUrl, refreshToken, apiToken)
 	if err != nil {
