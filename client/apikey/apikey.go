@@ -9,13 +9,13 @@ import (
 )
 
 type ApiKey struct {
-	restClient *restclient.RestClient
+	restClient *restclient.Client
 }
 
 const apiVersion = "api/v2"
 const component = "api_key"
 
-func NewClient(restClient *restclient.RestClient) Clienter {
+func NewClient(restClient *restclient.Client) Clienter {
 	apikeyClient := ApiKey{
 		restClient: restClient,
 	}
