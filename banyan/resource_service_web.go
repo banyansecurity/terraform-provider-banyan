@@ -7,207 +7,197 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
-	"log"
 	"strconv"
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceWeb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "resourceServiceWeb",
+		Description:   "Resource used for lifecycle management of web services",
 		CreateContext: resourceServiceWebCreate,
 		ReadContext:   resourceServiceWebRead,
 		UpdateContext: resourceServiceWebUpdate,
-		DeleteContext: resourceServiceWebDelete,
-		Schema:        resourceServiceWebSchema,
+		DeleteContext: resourceServiceDelete,
+		Schema:        WebSchema(),
 	}
 }
 
-var resourceServiceWebSchema = map[string]*schema.Schema{
-	"id": {
-		Type:        schema.TypeString,
-		Description: "Id of the service",
-		Computed:    true,
-	},
-	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
-		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
-	},
-	"description": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Description of the service",
-		Default:     "resourceServiceWeb",
-	},
-	"cluster": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Default:     "global-edge",
-		Description: "Name of the cluster used for your deployment; for Global Edge set to \"global-edge\", for Private Edge set to \"cluster1\"",
-		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
-	},
-	"access_tier": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Name of the access_tier which will proxy requests to your service backend; set to \"\" if using Global Edge deployment'",
-		Default:     "",
-	},
-	"connector": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Name of the connector which will proxy requests to your service backend; set to \"\" if using Private Edge deployment",
-		Default:     "",
-	},
-	"domain": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The external-facing network address for this service; ex. website.example.com",
-	},
-	"port": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Description:  "The external-facing port for this service",
-		Default:      443,
-		ValidateFunc: validatePort(),
-	},
-	"letsencrypt": {
-		Type:        schema.TypeBool,
-		Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
-		Optional:    true,
-		Default:     false,
-	},
-	"backend_domain": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using backend_http_connect",
-	},
-	"backend_port": {
-		Type:         schema.TypeInt,
-		Required:     true,
-		Description:  "The internal port where this service is hosted",
-		ValidateFunc: validatePort(),
-	},
-	"backend_tls": {
-		Type:        schema.TypeBool,
-		Description: "Indicates whether the connection to the backend server uses TLS.",
-		Optional:    true,
-		Default:     false,
-	},
-	"backend_tls_insecure": {
-		Type:        schema.TypeBool,
-		Description: "Indicates the connection to the backend should not validate the backend server TLS certficate",
-		Optional:    true,
-		Default:     false,
-	},
-}
-
-func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating web service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	svc := expandWebCreateService(d)
-
-	newService, err := client.Service.Create(svc)
-	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create web service %s : %s", d.Get("name"), d.Id()))
+func WebSchema() (s map[string]*schema.Schema) {
+	s = map[string]*schema.Schema{
+		"id": {
+			Type:        schema.TypeString,
+			Description: "Id of the service",
+			Computed:    true,
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
+			ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+		},
+		"description": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Description of the service",
+		},
+		"cluster": {
+			Type:       schema.TypeString,
+			Computed:   true,
+			Deprecated: "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+			ForceNew:   true,
+		},
+		"access_tier": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the access_tier which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"connector"},
+		},
+		"connector": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the connector which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"access_tier"},
+		},
+		"domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The external-facing network address for this service; ex. website.example.com",
+		},
+		"port": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Description:  "The external-facing port for this service",
+			Default:      443,
+			ValidateFunc: validatePort(),
+		},
+		"letsencrypt": {
+			Type:        schema.TypeBool,
+			Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
+			Optional:    true,
+			Default:     false,
+		},
+		"backend_domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
+		},
+		"backend_port": {
+			Type:         schema.TypeInt,
+			Required:     true,
+			Description:  "The internal port where this service is hosted",
+			ValidateFunc: validatePort(),
+		},
+		"backend_tls": {
+			Type:        schema.TypeBool,
+			Description: "Indicates whether the connection to the backend server uses TLS",
+			Optional:    true,
+			Default:     false,
+		},
+		"backend_tls_insecure": {
+			Type:        schema.TypeBool,
+			Description: "Indicates the connection to the backend should not validate the backend server TLS certificate",
+			Optional:    true,
+			Default:     false,
+		},
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
 	}
-	log.Printf("[SVC|RES|CREATE] Created web service %s : %s", d.Get("name"), d.Id())
-	d.SetId(newService.ServiceID)
-	return resourceServiceWebRead(ctx, d, m)
-}
-
-func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating web service %s : %s", d.Get("name"), d.Id())
-	resourceServiceWebCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated web service %s : %s", d.Get("name"), d.Id())
 	return
 }
 
+func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	err := setCluster(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	svc := WebFromState(d)
+	return resourceServiceCreate(svc, d, m)
+}
+
 func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading web service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
+	c := m.(*client.Holder)
 	id := d.Id()
-	service, ok, err := client.Service.Get(id)
+	resp, err := c.Service.Get(id)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get web servicewith id: %s", id))
+		handleNotFoundError(d, err)
+		return
 	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
-	}
-	err = d.Set("name", service.ServiceName)
+	err = d.Set("name", resp.ServiceName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = d.Set("description", service.Description)
+	err = d.Set("description", resp.Description)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = d.Set("cluster", service.ClusterName)
+	err = d.Set("cluster", resp.ClusterName)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = SetAccessTier(d, service, diagnostics)
-	err = d.Set("connector", service.CreateServiceSpec.Spec.Backend.ConnectorName)
+	err = SetAccessTier(d, resp, diagnostics)
+	err = d.Set("connector", resp.CreateServiceSpec.Spec.Backend.ConnectorName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("domain", service.CreateServiceSpec.Metadata.Tags.Domain)
+	err = d.Set("domain", resp.CreateServiceSpec.Metadata.Tags.Domain)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	portVal := *service.CreateServiceSpec.Metadata.Tags.Port
+	portVal := *resp.CreateServiceSpec.Metadata.Tags.Port
 	portInt, _ := strconv.Atoi(portVal)
 	err = d.Set("port", portInt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("letsencrypt", service.CreateServiceSpec.Spec.CertSettings.Letsencrypt)
+	err = d.Set("letsencrypt", resp.CreateServiceSpec.Spec.CertSettings.Letsencrypt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_domain", service.CreateServiceSpec.Spec.Backend.Target.Name)
+	err = d.Set("backend_domain", resp.CreateServiceSpec.Spec.Backend.Target.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	bpInt, _ := strconv.Atoi(service.CreateServiceSpec.Spec.Backend.Target.Port)
+	bpInt, _ := strconv.Atoi(resp.CreateServiceSpec.Spec.Backend.Target.Port)
 	err = d.Set("backend_port", bpInt)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_tls", service.CreateServiceSpec.Spec.Backend.Target.TLS)
+	err = d.Set("backend_tls", resp.CreateServiceSpec.Spec.Backend.Target.TLS)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_tls_insecure", service.CreateServiceSpec.Spec.Backend.Target.TLSInsecure)
+	err = d.Set("backend_tls_insecure", resp.CreateServiceSpec.Spec.Backend.Target.TLSInsecure)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
 	d.SetId(id)
-	return
-}
 
-func resourceServiceWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting web service with id: %q \n", d.Id())
-	client := m.(*client.Holder)
-	diagnostics = resourceServiceDetachPolicy(d, m)
-	if diagnostics.HasError() {
-		return
-	}
-	err := client.Service.Delete(d.Id())
+	// set policy for service
+	policy, err := c.Service.GetPolicyForService(resp.ServiceID)
 	if err != nil {
-		diagnostics = diag.FromErr(err)
+		return diag.FromErr(err)
 	}
-	log.Printf("[SERVICE|RES|DELETE] deleted web service with id: %q \n", d.Id())
+	err = d.Set("policy", policy.ID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 
-func expandWebCreateService(d *schema.ResourceData) (svc service.CreateService) {
+func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	svc := WebFromState(d)
+	return resourceServiceUpdate(svc, d, m)
+}
+
+func WebFromState(d *schema.ResourceData) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
@@ -248,8 +238,12 @@ func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 }
 
 func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	attributes, err := expandWebAttributes(d)
+	if err != nil {
+		return
+	}
 	spec = service.Spec{
-		Attributes:   expandWebAttributes(d),
+		Attributes:   attributes,
 		Backend:      expandWebBackend(d),
 		CertSettings: expandWebCertSettings(d),
 		HTTPSettings: expandWebHTTPSettings(d),
@@ -258,19 +252,11 @@ func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	return
 }
 
-func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes) {
-	// if connector is set, ensure access_tier is *
-	accessTier := d.Get("access_tier").(string)
-	connector := d.Get("connector").(string)
-	if connector != "" {
-		accessTier = "*"
+func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes, err error) {
+	hostTagSelector, err := buildHostTagSelector(d)
+	if err != nil {
+		return
 	}
-
-	// build HostTagSelector from access_tier
-	var hostTagSelector []map[string]string
-	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": accessTier}
-	hostTagSelector = append(hostTagSelector, siteNameSelector)
-
 	attributes = service.Attributes{
 		TLSSNI:            []string{d.Get("domain").(string)},
 		FrontendAddresses: expandWebFrontendAddresses(d),

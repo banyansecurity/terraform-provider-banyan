@@ -13,7 +13,7 @@ import (
 )
 
 func TestSchemaServiceInfraDb_database_at(t *testing.T) {
-	svc_rdp_conn := map[string]interface{}{
+	conn := map[string]interface{}{
 		"name":                           "database-conn",
 		"description":                    "pybanyan database-conn",
 		"cluster":                        "managed-cl-edge1",
@@ -24,19 +24,17 @@ func TestSchemaServiceInfraDb_database_at(t *testing.T) {
 		"client_banyanproxy_listen_port": 9299,
 	}
 
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraDbSchema(), svc_rdp_conn)
-	svc_obj := expandDatabaseCreateService(d)
-
-	json_spec, _ := ioutil.ReadFile("./specs/database-conn.json")
+	d := schema.TestResourceDataRaw(t, DbSchema(), conn)
+	svc := DbFromState(d)
+	j, _ := ioutil.ReadFile("./specs/database-conn.json")
 	var ref_obj service.CreateService
-	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
-
-	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+	_ = json.Unmarshal(j, &ref_obj)
+	AssertCreateServiceEqual(t, svc, ref_obj)
 }
 
 func TestAccService_database(t *testing.T) {
 	var bnnService service.GetServiceSpec
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
@@ -58,14 +56,23 @@ func testAccService_database_create(name string) string {
 resource "banyan_service_infra_db" "example" {
   name        = "%s-db"
   description = "some database service description"
-  cluster      = "us-west"
   access_tier   = "us-west1"
   domain      = "%s-db.corp.com"
   backend_domain = ""
   backend_port = 0
-  backend_http_connect = true
+  http_connect = true
+  policy = banyan_policy_infra.example.id
 }
-`, name, name)
+
+resource "banyan_policy_infra" "example" {
+  name        = "%s-pol"
+  description = "some infrastructure policy description"
+  access {
+    roles       = ["ANY"]
+    trust_level = "High"
+  }
+}
+`, name, name, name)
 }
 
 func testAccService_database_create_json(name string) string {
@@ -77,7 +84,7 @@ func testAccService_database_create_json(name string) string {
     "metadata": {
         "name": "%s-db",
         "description": "some database service description",
-        "cluster": "us-west",
+        "cluster": "tortoise",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
