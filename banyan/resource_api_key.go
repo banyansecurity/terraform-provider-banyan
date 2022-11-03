@@ -6,6 +6,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/apikey"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceApiKey() *schema.Resource {
@@ -41,10 +42,11 @@ func resourceApiKey() *schema.Resource {
 				ForceNew:    true,
 			},
 			"scope": {
-				Type:        schema.TypeString,
-				Description: "API Secret key",
-				Required:    true,
-				ForceNew:    true,
+				Type:         schema.TypeString,
+				Description:  "Scope for the API key. Must be one of: \"satellite\", \"access_tier\", \"read_logs\", \"Admin\", \"ServiceAuthor\", \"PolicyAuthor\", \"EventWriter\", \"ReadOnly\"",
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{"satellite", "access_tier", "read_logs", "Admin", "ServiceAuthor", "PolicyAuthor", "EventWriter", "ReadOnly"}, false),
 			},
 		},
 	}
