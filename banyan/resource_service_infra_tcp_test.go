@@ -24,8 +24,8 @@ func TestSchemaServiceInfraTcp_tcp_at(t *testing.T) {
 		"backend_port":                   6006,
 		"client_banyanproxy_listen_port": 9119,
 	}
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraTcpSchema(), svc_tcp_at)
-	svc_obj := expandTcpCreateService(d)
+	d := schema.TestResourceDataRaw(t, TcpSchema(), svc_tcp_at)
+	svc_obj := TcpFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/tcp-at.json")
 	var ref_obj service.CreateService
@@ -46,8 +46,8 @@ func TestSchemaServiceInfraTcp_tcp_conn(t *testing.T) {
 		"client_banyanproxy_listen_port": 9118,
 		"allow_user_override":            true,
 	}
-	d := schema.TestResourceDataRaw(t, buildResourceServiceInfraTcpSchema(), svc_tcp_conn)
-	svc_obj := expandTcpCreateService(d)
+	d := schema.TestResourceDataRaw(t, TcpSchema(), svc_tcp_conn)
+	svc_obj := TcpFromState(d)
 
 	json_spec, _ := ioutil.ReadFile("./specs/tcp-conn.json")
 	var ref_obj service.CreateService
@@ -58,7 +58,7 @@ func TestSchemaServiceInfraTcp_tcp_conn(t *testing.T) {
 
 func TestAccService_tcp(t *testing.T) {
 	var bnnService service.GetServiceSpec
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
@@ -80,7 +80,6 @@ func testAccService_tcp_create(name string) string {
 resource "banyan_service_infra_tcp" "example" {
   name        = "%s-tcp"
   description = "some tcp service description"
-  cluster      = "us-west"
   access_tier   = "us-west1"
   domain      = "%s-tcp.corp.com"
   backend_domain = "%s-tcp.internal"
@@ -99,7 +98,7 @@ func testAccService_tcp_create_json(name string) string {
     "metadata": {
         "name": "%s-tcp",
         "description": "some tcp service description",
-        "cluster": "us-west",
+        "cluster": "tortoise",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
