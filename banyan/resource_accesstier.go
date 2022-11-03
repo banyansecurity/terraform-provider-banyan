@@ -424,8 +424,7 @@ func resourceAccessTierDelete(ctx context.Context, d *schema.ResourceData, m int
 	c := m.(*client.Holder)
 	err := c.AccessTier.Delete(d.Id())
 	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
+		return diag.FromErr(err)
 	}
 	err = resource.RetryContext(ctx, 180*time.Second, func() *resource.RetryError {
 		err = c.AccessTier.Delete(d.Id())
@@ -437,7 +436,6 @@ func resourceAccessTierDelete(ctx context.Context, d *schema.ResourceData, m int
 		}
 		return nil
 	})
-
 	if err != nil {
 		return diag.Errorf("timed out deleting access tier: %s", d.Get("name").(string))
 	}
