@@ -468,100 +468,69 @@ func expandTunnelConfigEndUser(d *schema.ResourceData) (expanded *accesstier.Acc
 }
 
 func expandLogging(d *schema.ResourceData) (expanded *accesstier.LoggingParameters) {
-	ConsoleLogLevel := d.Get("console_log_level").(string)
-	FileLogLevel := d.Get("file_log_level").(string)
-	FileLog := d.Get("file_log").(bool)
-	LogNum := d.Get("log_num").(int)
-	LogSize := d.Get("log_size").(int)
-	StatsD := false
-	StatsDAddress := d.Get("statsd_address").(string)
-	if StatsDAddress == "" {
-		StatsD = true
+	var statsd *bool
+	statsdAddress := GetStringPtr(d, "statsd_address")
+	if statsdAddress != nil {
+		s := true
+		statsd = &s
 	}
-
 	e := accesstier.LoggingParameters{
-		ConsoleLogLevel: &ConsoleLogLevel,
-		FileLogLevel:    &FileLogLevel,
-		FileLog:         &FileLog,
-		LogNum:          &LogNum,
-		LogSize:         &LogSize,
-		StatsD:          &StatsD,
-		StatsDAddress:   &StatsDAddress,
+		ConsoleLogLevel: GetStringPtr(d, "console_log_level"),
+		FileLogLevel:    GetStringPtr(d, "file_log_level"),
+		FileLog:         GetBoolPtr(d, "file_log"),
+		LogNum:          GetIntPtr(d, "log_num"),
+		LogSize:         GetIntPtr(d, "log_size"),
+		StatsD:          statsd,
+		StatsDAddress:   GetStringPtr(d, "stats_d_address"),
 	}
 	return &e
 }
 
 func expandEventParameters(d *schema.ResourceData) (expanded *accesstier.EventParameters) {
-	CreditsLimiting := d.Get("events_rate_limiting").(bool)
-	KeyLimiting := d.Get("event_key_rate_limiting").(bool)
 	e := accesstier.EventParameters{
-		CreditsLimiting: &CreditsLimiting,
-		KeyLimiting:     &KeyLimiting,
+		CreditsLimiting: GetBoolPtr(d, "events_rate_limiting"),
+		KeyLimiting:     GetBoolPtr(d, "event_key_rate_limiting"),
 	}
 	return &e
 }
 
 func expandHostedWebServices(d *schema.ResourceData) (expanded *accesstier.HostedWebServiceParameters) {
-	ForwardTrustCookie := d.Get("forward_trust_cookie").(bool)
-	DisableHSTS := d.Get("enable_hsts").(bool)
 	e := accesstier.HostedWebServiceParameters{
-		ForwardTrustCookie: &ForwardTrustCookie,
-		DisableHSTS:        &DisableHSTS,
+		ForwardTrustCookie: GetBoolPtr(d, "forward_trust_cookie"),
+		DisableHSTS:        GetBoolPtr(d, "enable_hsts"),
 	}
 	return &e
 }
 
 func expandInfrastructureService(d *schema.ResourceData) (expanded *accesstier.InfrastructureServiceParameters) {
-	MaximumSessionTimeout := d.Get("infra_maximum_session_timeout").(int)
 	e := accesstier.InfrastructureServiceParameters{
-		MaximumSessionTimeout: &MaximumSessionTimeout,
+		MaximumSessionTimeout: GetIntPtr(d, "infra_maximum_session_timeout"),
 	}
 	return &e
 }
 
 func expandDebugging(d *schema.ResourceData) (expanded *accesstier.DebuggingParameters) {
-	HTTPBackendLog := d.Get("debug_http_backend_log").(bool)
-	VisibilityOnly := d.Get("debug_visibility_only").(bool)
-	ShieldTimeout := d.Get("debug_shield_timeout").(int)
-	KeepAlive := d.Get("debug_keep_alive").(bool)
-	KeepIdle := d.Get("debug_keep_idle").(int)
-	KeepInterval := d.Get("debug_keep_interval").(int)
-	KeepCount := d.Get("debug_keep_count").(int)
-	CPUProfile := d.Get("debug_cpu_profile").(string)
-	MemProfile := d.Get("debug_mem_profile").(bool)
-	HostOnly := d.Get("debug_host_only").(bool)
-	DisableDocker := d.Get("debug_disable_docker").(bool)
-	SendZeros := d.Get("debug_send_zeros").(bool)
-	Period := d.Get("debug_period").(int)
-	RequestLevelEvents := d.Get("debug_request_level_events").(bool)
-	AddressTransparency := d.Get("debug_address_transparency").(bool)
-	UseRSA := d.Get("debug_use_rsa").(bool)
-	FullServerCertChain := d.Get("debug_full_server_cert_chain").(bool)
-	CodeFlow := d.Get("debug_code_flow").(bool)
-	InactivityTimeout := d.Get("debug_inactivity_timeout").(int)
-	ClientTimeout := d.Get("debug_client_timeout").(int)
-
 	e := accesstier.DebuggingParameters{
-		HTTPBackendLog:      &HTTPBackendLog,
-		VisibilityOnly:      &VisibilityOnly,
-		ShieldTimeout:       &ShieldTimeout,
-		KeepAlive:           &KeepAlive,
-		KeepIdle:            &KeepIdle,
-		KeepInterval:        &KeepInterval,
-		KeepCount:           &KeepCount,
-		CPUProfile:          &CPUProfile,
-		MemProfile:          &MemProfile,
-		HostOnly:            &HostOnly,
-		DisableDocker:       &DisableDocker,
-		SendZeros:           &SendZeros,
-		Period:              &Period,
-		RequestLevelEvents:  &RequestLevelEvents,
-		AddressTransparency: &AddressTransparency,
-		UseRSA:              &UseRSA,
-		FullServerCertChain: &FullServerCertChain,
-		CodeFlow:            &CodeFlow,
-		InactivityTimeout:   &InactivityTimeout,
-		ClientTimeout:       &ClientTimeout,
+		HTTPBackendLog:      GetBoolPtr(d, "debug_http_backend_log"),
+		VisibilityOnly:      GetBoolPtr(d, "debug_visibility_only"),
+		ShieldTimeout:       GetIntPtr(d, "debug_shield_timeout"),
+		KeepAlive:           GetBoolPtr(d, "debug_keep_alive"),
+		KeepIdle:            GetIntPtr(d, "debug_keep_idle"),
+		KeepInterval:        GetIntPtr(d, "debug_keep_interval"),
+		KeepCount:           GetIntPtr(d, "debug_keep_count"),
+		CPUProfile:          GetStringPtr(d, "debug_cpu_profile"),
+		MemProfile:          GetBoolPtr(d, "debug_mem_profile"),
+		HostOnly:            GetBoolPtr(d, "debug_host_only"),
+		DisableDocker:       GetBoolPtr(d, "debug_disable_docker"),
+		SendZeros:           GetBoolPtr(d, "debug_send_zeros"),
+		Period:              GetIntPtr(d, "debug_period"),
+		RequestLevelEvents:  GetBoolPtr(d, "debug_request_level_events"),
+		AddressTransparency: GetBoolPtr(d, "debug_address_transparency"),
+		UseRSA:              GetBoolPtr(d, "debug_use_rsa"),
+		FullServerCertChain: GetBoolPtr(d, "debug_full_server_cert_chain"),
+		CodeFlow:            GetBoolPtr(d, "debug_code_flow"),
+		InactivityTimeout:   GetIntPtr(d, "debug_inactivity_timeout"),
+		ClientTimeout:       GetIntPtr(d, "debug_client_timeout"),
 	}
 	return &e
 }
