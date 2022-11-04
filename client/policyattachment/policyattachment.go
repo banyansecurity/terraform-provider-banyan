@@ -15,19 +15,21 @@ import (
 )
 
 type PolicyAttachment struct {
-	restClient *restclient.Client
+	restClient *restclient.RestClient
 }
 
 // NewClient returns a new policyAttachment client
-func NewClient(restClient *restclient.Client) Client {
+func NewClient(restClient *restclient.RestClient) Clienter {
 	PolicyAttachmentClient := PolicyAttachment{
 		restClient: restClient,
 	}
 	return &PolicyAttachmentClient
 }
 
-// Client is used to perform CRUD operations against the policy attachment resource
-type Client interface {
+const component = "policyattachment"
+
+// Clienter is used to perform CRUD operations against the policy attachment resource
+type Clienter interface {
 	Get(attachedToID string, attachedToType string) (attachment GetBody, err error)
 	Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error)
 	Update(policyID string, PolicyAttachment CreateBody) (updatedAttachment GetBody, err error)
@@ -41,38 +43,21 @@ func (p *PolicyAttachment) Get(attachedToID string, attachedToType string) (atta
 	if err != nil {
 		return
 	}
-	if response.StatusCode == 404 {
-		err = errors.New(fmt.Sprintf("policyattachment with id %s/%s not founds", attachedToType, attachedToID))
-		return
-	}
-	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
-		return
-	}
-	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path))
-		return
-	}
-
-	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
+	data, err := restclient.HandleResponse(response, component)
+	var j []GetBody
+	err = json.Unmarshal(data, &j)
 	if err != nil {
 		return
 	}
-	var getPolicyAttachmentJson []GetBody
-	err = json.Unmarshal(responseData, &getPolicyAttachmentJson)
-	if err != nil {
-		return
-	}
-	if len(getPolicyAttachmentJson) > 1 {
+	if len(j) > 1 {
 		err = errors.New("got more than one policy attachment")
 		return
 	}
-	if len(getPolicyAttachmentJson) == 0 {
+	if len(j) == 0 {
 		return
 	}
 
-	attachment = getPolicyAttachmentJson[0]
+	attachment = j[0]
 	isEnabled, err := strconv.ParseBool(attachment.Enabled)
 	if err != nil {
 		return
@@ -138,16 +123,8 @@ func (p *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBody) 
 	if err != nil {
 		return
 	}
-	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return
-	}
-	if response.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("unsuccessful, got status code %q with response message: %q for request to", response.Status, string(responseData)))
-		return
-	}
-	err = json.Unmarshal(responseData, &createdAttachment)
+	data, err := restclient.HandleResponse(response, component)
+	err = json.Unmarshal(data, &createdAttachment)
 	if err != nil {
 		return
 	}
