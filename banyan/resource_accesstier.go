@@ -15,7 +15,7 @@ import (
 
 func resourceAccessTier() *schema.Resource {
 	return &schema.Resource{
-		Description:   "",
+		Description:   "Resource for managing access tiers",
 		CreateContext: resourceAccessTierCreate,
 		ReadContext:   resourceAccessTierRead,
 		UpdateContext: resourceAccessTierUpdate,
@@ -41,7 +41,7 @@ func AccessTierSchema() map[string]*schema.Schema {
 		"cluster": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Cluster / shield name in Banyan",
+			Description: "Cluster / shield name in Banyan. If not provided then the cluster will be chosen automatically",
 			ForceNew:    true,
 			Default:     "",
 		},
@@ -80,7 +80,7 @@ func AccessTierSchema() map[string]*schema.Schema {
 		"tunnel_cidrs": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Description: "",
+			Description: "Backend CIDR Ranges that correspond to the IP addresses in your private network(s)",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
