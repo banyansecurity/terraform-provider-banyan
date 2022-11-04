@@ -270,7 +270,11 @@ func HandleResponse(response *http.Response, component string) (responseData []b
 	if err != nil {
 		return
 	}
-	if response.StatusCode == 404 || response.StatusCode == 400 {
+	if response.StatusCode == 400 {
+		err = errors.New("400 bad request")
+		return
+	}
+	if response.StatusCode == 404 {
 		err = fmt.Errorf("%s not found", component)
 		return
 	}
