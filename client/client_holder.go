@@ -12,6 +12,7 @@ import (
 	service "github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/banyansecurity/terraform-banyan-provider/client/shield"
 	"log"
+	"os"
 )
 
 type Holder struct {
@@ -46,4 +47,12 @@ func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (clie
 		RestClient:       restClient,
 	}
 	return &c, err
+}
+
+func GetClientHolderForTest() (newClient *Holder, err error) {
+	newClient, err = NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_KEY"))
+	if err != nil {
+		log.Fatal("Could not create the test client")
+	}
+	return
 }

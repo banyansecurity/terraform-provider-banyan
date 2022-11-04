@@ -14,8 +14,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Client is the struct used interact with the Banyan REST API.
-type Client struct {
+// RestClient is the struct used interact with the Banyan REST API.
+type RestClient struct {
 	accessToken string
 	hostUrl     string
 	httpClient  *http.Client
@@ -25,7 +25,7 @@ const defaultHostUrl = "https://net.banyanops.com"
 
 // New creates a new client that will let the user interact with the REST API server.
 // As part of this it exchanges the given refreshtoken or api key
-func New(hostUrl string, refreshToken string, apiToken string) (client *Client, err error) {
+func New(hostUrl string, refreshToken string, apiToken string) (client *RestClient, err error) {
 	clientHostUrl := defaultHostUrl
 	if hostUrl != "" {
 		clientHostUrl = hostUrl
@@ -37,7 +37,7 @@ func New(hostUrl string, refreshToken string, apiToken string) (client *Client, 
 
 	var accessToken string
 	if refreshToken != "" {
-		client = &Client{
+		client = &RestClient{
 			accessToken: "",
 			hostUrl:     clientHostUrl,
 			httpClient:  &http.Client{Timeout: 10 * time.Second},
@@ -54,7 +54,7 @@ func New(hostUrl string, refreshToken string, apiToken string) (client *Client, 
 		accessToken = apiToken
 	}
 
-	client = &Client{
+	client = &RestClient{
 		accessToken: accessToken,
 		hostUrl:     clientHostUrl,
 		httpClient:  &http.Client{Timeout: 10 * time.Second},
@@ -64,7 +64,7 @@ func New(hostUrl string, refreshToken string, apiToken string) (client *Client, 
 }
 
 // DoPut posts a message to host url, with the method path and body listed
-func (c *Client) DoPut(path string, body io.Reader) (response *http.Response, err error) {
+func (c *RestClient) DoPut(path string, body io.Reader) (response *http.Response, err error) {
 	req, err := c.NewRequest(http.MethodPut, path, body)
 	if err != nil {
 		return
@@ -74,7 +74,7 @@ func (c *Client) DoPut(path string, body io.Reader) (response *http.Response, er
 }
 
 // DoPost posts a message to host url, with the method path and body listed
-func (c *Client) DoPost(path string, body io.Reader) (response *http.Response, err error) {
+func (c *RestClient) DoPost(path string, body io.Reader) (response *http.Response, err error) {
 	req, err := c.NewRequest(http.MethodPost, path, body)
 	if err != nil {
 		return
@@ -84,7 +84,7 @@ func (c *Client) DoPost(path string, body io.Reader) (response *http.Response, e
 }
 
 // DoGet sends and does the get request
-func (c *Client) DoGet(path string) (response *http.Response, err error) {
+func (c *RestClient) DoGet(path string) (response *http.Response, err error) {
 	request, err := c.Get(path)
 	if err != nil {
 		return
@@ -94,7 +94,7 @@ func (c *Client) DoGet(path string) (response *http.Response, err error) {
 }
 
 // DoDelete sends the delete request
-func (c *Client) DoDelete(path string) (response *http.Response, err error) {
+func (c *RestClient) DoDelete(path string) (response *http.Response, err error) {
 	request, err := c.delete(path)
 	if err != nil {
 		return
@@ -103,30 +103,30 @@ func (c *Client) DoDelete(path string) (response *http.Response, err error) {
 	return
 }
 
-func (c *Client) delete(path string) (request *http.Request, err error) {
+func (c *RestClient) delete(path string) (request *http.Request, err error) {
 	return c.NewRequest(http.MethodDelete, path, nil)
 }
 
 // Get creates a new Get request, saving the user from needing to pass in a nil value
-func (c *Client) Get(path string) (request *http.Request, err error) {
+func (c *RestClient) Get(path string) (request *http.Request, err error) {
 	return c.NewRequest("GET", path, nil)
 }
 
-func (c *Client) get(url string) (request *http.Request, err error) {
+func (c *RestClient) get(url string) (request *http.Request, err error) {
 	return c.newRequest("GET", url, nil)
 }
 
 // Do executes the request and returns the response
-func (c *Client) Do(request *http.Request) (response *http.Response, err error) {
+func (c *RestClient) Do(request *http.Request) (response *http.Response, err error) {
 	return c.httpClient.Do(request)
 }
 
 // NewRequest creates a new request with the accessToken added as a header
-func (c *Client) NewRequest(method string, path string, body io.Reader) (request *http.Request, err error) {
+func (c *RestClient) NewRequest(method string, path string, body io.Reader) (request *http.Request, err error) {
 	return c.newRequest(method, c.hostUrl+path, body)
 }
 
-func (c *Client) newRequest(method string, url string, body io.Reader) (request *http.Request, err error) {
+func (c *RestClient) newRequest(method string, url string, body io.Reader) (request *http.Request, err error) {
 	request, err = http.NewRequest(method, url, body)
 	if err != nil {
 		return
@@ -135,8 +135,7 @@ func (c *Client) newRequest(method string, url string, body io.Reader) (request 
 	return
 }
 
-// This will be depreciated out fo the provider which will only use API keys
-func (c *Client) exhangeRefreshTokenForAccessToken(clientHostUrl string, refreshToken string) (accessToken string, err error) {
+func (c *RestClient) exhangeRefreshTokenForAccessToken(clientHostUrl string, refreshToken string) (accessToken string, err error) {
 	req, err := http.NewRequest("POST", clientHostUrl+"api/v1/refresh_token", nil)
 	req.Header.Add("Authorization", "Bearer "+refreshToken)
 	resp, err := c.httpClient.Do(req)
@@ -176,7 +175,7 @@ type ErrorResponse struct {
 	Message string `json:"error_description"`
 }
 
-func (c *Client) Read(api string, component string, id string, path string) (resp []byte, err error) {
+func (c *RestClient) Read(api string, component string, id string, path string) (resp []byte, err error) {
 	if id == "" {
 		err = fmt.Errorf("need an id to get %s", component)
 		return
@@ -192,7 +191,7 @@ func (c *Client) Read(api string, component string, id string, path string) (res
 	return HandleResponse(response, component)
 }
 
-func (c *Client) ReadQuery(component string, query url.Values, path string) (r []byte, err error) {
+func (c *RestClient) ReadQuery(component string, query url.Values, path string) (r []byte, err error) {
 	myUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -205,7 +204,7 @@ func (c *Client) ReadQuery(component string, query url.Values, path string) (r [
 	return HandleResponse(response, component)
 }
 
-func (c *Client) Create(api string, component string, body []byte, path string) (r []byte, err error) {
+func (c *RestClient) Create(api string, component string, body []byte, path string) (r []byte, err error) {
 	if path == "" {
 		path = fmt.Sprintf("%s/%s", api, component)
 	}
@@ -220,7 +219,7 @@ func (c *Client) Create(api string, component string, body []byte, path string) 
 	return HandleResponse(response, component)
 }
 
-func (c *Client) Update(api string, component string, id string, body []byte, path string) (r []byte, err error) {
+func (c *RestClient) Update(api string, component string, id string, body []byte, path string) (r []byte, err error) {
 	if path == "" {
 		path = fmt.Sprintf("%s/%s/%s", api, component, id)
 	}
@@ -232,7 +231,7 @@ func (c *Client) Update(api string, component string, id string, body []byte, pa
 	return HandleResponse(response, component)
 }
 
-func (c *Client) Delete(api string, component string, id string, path string) (err error) {
+func (c *RestClient) Delete(api string, component string, id string, path string) (err error) {
 	if id == "" {
 		err = fmt.Errorf("need an id to delete %s", component)
 		return
@@ -249,7 +248,7 @@ func (c *Client) Delete(api string, component string, id string, path string) (e
 	return
 }
 
-func (c *Client) DeleteQuery(component string, id string, query url.Values, path string) (err error) {
+func (c *RestClient) DeleteQuery(component string, id string, query url.Values, path string) (err error) {
 	if id == "" {
 		err = fmt.Errorf("need an id to delete %s", component)
 		return
@@ -270,11 +269,7 @@ func HandleResponse(response *http.Response, component string) (responseData []b
 	if err != nil {
 		return
 	}
-	if response.StatusCode == 400 {
-		err = errors.New("400 bad request")
-		return
-	}
-	if response.StatusCode == 404 {
+	if response.StatusCode == 404 || response.StatusCode == 400 {
 		err = fmt.Errorf("%s not found", component)
 		return
 	}
