@@ -390,6 +390,7 @@ func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m inter
 	return
 }
 
+// creates an access tier from the terraform state
 func atFromState(d *schema.ResourceData, clusterName string) (accessTier accesstier.AccessTierPost) {
 	at := accesstier.AccessTierPost{
 		Name:            d.Get("name").(string),
