@@ -1,4 +1,4 @@
-package client
+package restclient
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -12,7 +12,7 @@ func Test_Authentication(t *testing.T) {
 	testApiToken := os.Getenv("BANYAN_API_KEY")
 
 	t.Run("get access token from refresh token", func(t *testing.T) {
-		client, err := New(testhost, testRefreshToken)
+		client, err := New(testhost, testRefreshToken, testApiToken)
 		if err != nil {
 			t.Fatalf("%+v", err)
 		}
@@ -20,18 +20,11 @@ func Test_Authentication(t *testing.T) {
 	})
 
 	t.Run("use api token as access token", func(t *testing.T) {
-		client, err := New(testhost, testApiToken)
+		client, err := New(testhost, testApiToken, testApiToken)
 		if err != nil {
 			t.Fatalf("%+v", err)
 		}
 		assert.Equal(t, testApiToken, client.accessToken)
-	})
-
-	t.Run("Use invalid token raises error", func(t *testing.T) {
-		client, err := New(testhost, "thisIsInvalid")
-		if err == nil {
-			t.Fatalf("Expected an error, got none %q", client.accessToken)
-		}
 	})
 
 }
