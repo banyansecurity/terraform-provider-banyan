@@ -56,7 +56,7 @@ func TestAccAccessTier_optional(t *testing.T) {
 						tunnel_connector_port = 39103
 						tunnel_port = 39104
 						tunnel_cidrs = ["10.0.2.0/16"]
-						tunnel_private_domain = "test.com"
+						tunnel_private_domains = ["test.com"]
 						enable_hsts = true
 						forward_trust_cookie = true
 						events_rate_limiting = true
@@ -76,7 +76,7 @@ func TestAccAccessTier_optional(t *testing.T) {
 						tunnel_connector_port = 39104
 						tunnel_port = 39105
 						tunnel_cidrs = ["10.0.3.0/16"]
-						tunnel_private_domain = "example.com"
+						tunnel_private_domains = ["example.com"]
 						enable_hsts = false
 						forward_trust_cookie = true
 						events_rate_limiting = true
