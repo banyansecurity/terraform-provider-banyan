@@ -85,10 +85,13 @@ func AccessTierSchema() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"tunnel_private_domain": {
-			Type:        schema.TypeString,
+		"tunnel_private_domains": {
+			Type:        schema.TypeSet,
 			Optional:    true,
-			Description: "",
+			Description: "Any internal domains that can only be resolved on your internal network’s private DNS",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 		"console_log_level": {
 			Type:         schema.TypeString,
@@ -455,18 +458,12 @@ func expandTunnelConfigSatellite(d *schema.ResourceData) (expanded *accesstier.A
 }
 
 func expandTunnelConfigEndUser(d *schema.ResourceData) (expanded *accesstier.AccessTierTunnelInfoPost) {
-	DNSEnabled := false
-	var DNSSearchDomains string
-	dns, ok := d.GetOk("tunnel_private_domain")
-	if ok {
-		DNSEnabled = true
-		DNSSearchDomains = dns.(string)
-	}
+	_, ok := d.GetOk("tunnel_private_domains")
 	e := accesstier.AccessTierTunnelInfoPost{
-		UDPPortNumber:    d.Get("tunnel_port").(int),
-		DNSSearchDomains: DNSSearchDomains,
-		DNSEnabled:       DNSEnabled,
-		CIDRs:            convertSchemaSetToStringSlice(d.Get("tunnel_cidrs").(*schema.Set)),
+		UDPPortNumber: d.Get("tunnel_port").(int),
+		DNSEnabled:    ok,
+		CIDRs:         convertSchemaSetToStringSlice(d.Get("tunnel_cidrs").(*schema.Set)),
+		Domains:       convertSchemaSetToStringSlice(d.Get("tunnel_private_domains").(*schema.Set)),
 	}
 	if reflect.DeepEqual(e, accesstier.AccessTierTunnelInfoPost{}) {
 		return nil
@@ -751,7 +748,7 @@ func flattenTunnelConfigEndUser(d *schema.ResourceData, at *accesstier.AccessTie
 	if err != nil {
 		return
 	}
-	err = d.Set("tunnel_private_domain", at.TunnelEnduser.DNSSearchDomains)
+	err = d.Set("tunnel_private_domains", at.TunnelEnduser.Domains)
 	if err != nil {
 		return
 	}
