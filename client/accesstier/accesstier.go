@@ -2,14 +2,6 @@ package accesstier
 
 type AccessTierStatus string
 
-const (
-	AccessTierStatusReporting  AccessTierStatus = "Reporting"
-	AccessTierStatusPending    AccessTierStatus = "Pending"
-	AccessTierStatusTerminated AccessTierStatus = "Terminated"
-)
-
-const AccessTierNameKey = "access_tier_name"
-
 type HostInfo struct {
 	Hostname string
 	IPs      []string
