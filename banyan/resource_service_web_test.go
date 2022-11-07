@@ -20,14 +20,23 @@ func TestAccService_required_web(t *testing.T) {
 			// Create the service using terraform config and check that it exists
 			{
 				Config: fmt.Sprintf(`
+					resource "banyan_policy_web" "example" {
+						name        = "%s-pol"
+						description = "some web policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
 					resource "banyan_service_web" "example" {
 						name        = "%s-web"
 						access_tier   = "us-west1"
 						domain = "%s-web.corp.com"
 						backend_domain = "%s-web.internal"
 						backend_port = 8443
+						policy = banyan_policy_web.example.id
 					}
-					`, rName, rName, rName),
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_web.example", &bnnService),
 					testAccCheckAgainstJson(t, testAccService_basic_web_create_json(rName), &bnnService.ServiceID),
@@ -35,14 +44,23 @@ func TestAccService_required_web(t *testing.T) {
 			},
 			{
 				Config: fmt.Sprintf(`
+					resource "banyan_policy_web" "example" {
+						name        = "%s-pol"
+						description = "some web policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
 					resource "banyan_service_web" "example" {
 						name        = "%s-web"
 						access_tier   = "us-west1"
 						domain = "%s-web-updated.corp.com"
 						backend_domain = "%s-web-updated.internal"
 						backend_port = 8444
+						policy = banyan_policy_web.example.id
 					}
-					`, rName, rName, rName),
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_web.example", &bnnService),
 					testAccCheckAgainstJson(t, testAccService_basic_web_update_json(rName), &bnnService.ServiceID),
