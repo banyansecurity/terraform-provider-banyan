@@ -50,14 +50,12 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Description:   "Name of the access_tier which will proxy requests to your service backend",
-			Default:       "",
 			ConflictsWith: []string{"connector"},
 		},
 		"connector": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Description:   "Name of the connector which will proxy requests to your service backend",
-			Default:       "",
 			ConflictsWith: []string{"access_tier"},
 		},
 		"domain": {
