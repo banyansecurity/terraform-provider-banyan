@@ -41,13 +41,14 @@ func AssertCreateServiceEqual(t *testing.T, got service.CreateService, want serv
 	}
 }
 
-func testAccCheckAgainstJson(t *testing.T, path string, id *string) resource.TestCheckFunc {
+// Asserts that the json string j is equal to the service spec in the API with id
+func testAccCheckAgainstJson(t *testing.T, j string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		got, err := testAccClient.Service.Get(*id)
 		if err != nil {
 			return err
 		}
-		err, want := ReadJSONServiceSpec(path)
+		err, want := ReadJSONServiceSpec(j)
 		if err != nil {
 			return err
 		}
