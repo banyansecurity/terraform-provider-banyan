@@ -23,5 +23,5 @@ jobs:
         env:
           TF_ACC: true
           TF_LOG: INFO
-          BANYAN_API_TOKEN: ${{ secrets.BANYAN_API_TOKEN }}
+          BANYAN_API_KEY: ${{ secrets.BANYAN_API_TOKEN }}
           BANYAN_HOST: https://dev06.console.banyanops.com
