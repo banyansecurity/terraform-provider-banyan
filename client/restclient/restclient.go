@@ -269,20 +269,16 @@ func HandleResponse(response *http.Response, component string) (responseData []b
 	if err != nil {
 		return
 	}
-	if response.StatusCode == 404 || response.StatusCode == 400 {
-		err = fmt.Errorf("%s not found", component)
-		return
-	}
-	if response.StatusCode != 200 {
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		var errResp ErrorResponse
 		if err != nil {
 			return
 		}
 		uerr := json.Unmarshal(responseData, &errResp)
-		if uerr == nil {
-			err = fmt.Errorf("received error code %d with message: %s", response.StatusCode, errResp.Message)
+		if uerr != nil {
+			err = fmt.Errorf("got failing status for %s: %d", component, response.StatusCode)
 		}
-		return
+		return responseData, fmt.Errorf("got failing status for %s: %d, response: %s", component, response.StatusCode, responseData)
 	}
 	return
 }
