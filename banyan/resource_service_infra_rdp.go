@@ -12,7 +12,7 @@ import (
 
 func resourceServiceInfraRdp() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of RDP services",
+		Description:   "Resource used for lifecycle management of microsoft remote desktop services. For more information on microsoft remote desktop services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/rdp-servers/)",
 		CreateContext: resourceServiceInfraRdpCreate,
 		ReadContext:   resourceServiceInfraRdpRead,
 		UpdateContext: resourceServiceInfraRdpUpdate,
@@ -23,7 +23,7 @@ func resourceServiceInfraRdp() *schema.Resource {
 
 func resourceServiceInfraRdpDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of RDP services",
+		Description:        "(Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize `service_rdp` instead",
 		CreateContext:      resourceServiceInfraRdpCreate,
 		ReadContext:        resourceServiceInfraRdpReadDepreciated,
 		UpdateContext:      resourceServiceInfraRdpUpdate,

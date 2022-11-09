@@ -54,13 +54,12 @@ func TestAccService_database(t *testing.T) {
 func testAccService_database_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service_db" "example" {
-  name        = "%s-db"
+  name        = "%s"
   description = "some database service description"
   access_tier   = "us-west1"
-  domain      = "%s-db.corp.com"
-  backend_domain = ""
-  backend_port = 0
-  http_connect = true
+  domain      = "%s.us-west.mycompany.com"
+  backend_domain = "example-db.internal"
+  backend_port = 3306
   policy = banyan_policy_infra.example.id
 }
 

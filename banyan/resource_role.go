@@ -12,7 +12,7 @@ import (
 // The role resource. For more information on Banyan roles, please see the documentation:
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
-		Description:   "A role represents a group of users in the organization.",
+		Description:   "The role resource represents a group of users in the organization. For more information on Banyan roles, see the [documentation.](https://docs.banyansecurity.io/docs/feature-guides/administer-security-policies/roles/manage-roles/)",
 		CreateContext: resourceRoleCreate,
 		ReadContext:   resourceRoleRead,
 		UpdateContext: resourceRoleUpdate,

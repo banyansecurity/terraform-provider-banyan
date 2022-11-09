@@ -15,7 +15,7 @@ import (
 
 func resourceAccessTier() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource for managing access tiers",
+		Description:   "The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider",
 		CreateContext: resourceAccessTierCreate,
 		ReadContext:   resourceAccessTierRead,
 		UpdateContext: resourceAccessTierUpdate,

@@ -11,7 +11,7 @@ import (
 
 func resourceServiceTunnel() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manages the service tunnel resource",
+		Description:   "Resource used for lifecycle management of service tunnels. In order to properly function this resource must be utilized with the banyan_accesstier resource or banyan_accesstier2 terraform registry modules. Please see the examples. For more information on SSH services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/service-tunnels/)",
 		CreateContext: resourceServiceTunnelCreate,
 		ReadContext:   resourceServiceTunnelRead,
 		UpdateContext: resourceServiceTunnelUpdate,
