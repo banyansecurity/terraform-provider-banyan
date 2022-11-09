@@ -304,7 +304,7 @@ func resourceAccessTierCreate(ctx context.Context, d *schema.ResourceData, m int
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	updateLocalConfig(d, c, spec)
+	diagnostics = updateLocalConfig(d, c, spec)
 	d.SetId(spec.ID)
 	return
 }
@@ -419,7 +419,7 @@ func resourceAccessTierUpdate(ctx context.Context, d *schema.ResourceData, m int
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	updateLocalConfig(d, c, updated)
+	diagnostics = updateLocalConfig(d, c, updated)
 	d.SetId(updated.ID)
 	return
 }
