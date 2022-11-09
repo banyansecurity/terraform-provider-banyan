@@ -2,88 +2,154 @@ package banyan
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraK8s() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of database services",
+		Description:   "Resource used for lifecycle management of k8s services",
 		CreateContext: resourceServiceInfraK8sCreate,
 		ReadContext:   resourceServiceInfraK8sRead,
 		UpdateContext: resourceServiceInfraK8sUpdate,
-		DeleteContext: resourceServiceInfraK8sDelete,
-		Schema:        buildResourceServiceInfraK8sSchema(),
+		DeleteContext: resourceServiceDelete,
+		Schema:        K8sSchema(),
 	}
 }
 
-func buildResourceServiceInfraK8sSchema() (schemaK8s map[string]*schema.Schema) {
-	schemaK8s = map[string]*schema.Schema{
-		"backend_http_connect": {
-			Type:        schema.TypeBool,
-			Description: "For K8S, we use Client Specified connectivity",
-			Computed:    true,
-			Default:     nil,
-		},
-		"backend_domain": {
-			Type:        schema.TypeString,
-			Description: "For K8S, we use Client Specified connectivity",
-			Computed:    true,
-			Default:     nil,
-		},
-		"backend_port": {
-			Type:        schema.TypeInt,
-			Description: "For K8S, we use Client Specified connectivity",
-			Computed:    true,
-			Default:     nil,
-		},
+func resourceServiceInfraK8sDepreciated() *schema.Resource {
+	return &schema.Resource{
+		Description:        "(Depreciated) Resource used for lifecycle management of k8s services",
+		CreateContext:      resourceServiceInfraK8sCreate,
+		ReadContext:        resourceServiceInfraK8sReadDepreciated,
+		UpdateContext:      resourceServiceInfraK8sUpdate,
+		DeleteContext:      resourceServiceDelete,
+		Schema:             K8sSchemaDepreciated(),
+		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_k8s",
+	}
+}
+
+func K8sSchema() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
 		"backend_dns_override_for_domain": {
 			Type:        schema.TypeString,
 			Description: "Override DNS for service domain name with this value",
-			Required:    true,
+			Optional:    true,
 		},
 		"client_kube_cluster_name": {
 			Type:        schema.TypeString,
 			Description: "Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters",
-			Required:    true,
+			Optional:    true,
 		},
 		"client_kube_ca_key": {
 			Type:        schema.TypeString,
 			Description: "CA Public Key generated during Kube-OIDC-Proxy deployment",
-			Required:    true,
+			Optional:    true,
 		},
 	}
-	for key, val := range resourceServiceInfraCommonSchema {
-		if schemaK8s[key] == nil {
-			schemaK8s[key] = val
-		}
+	return combineSchema(s, resourceServiceInfraCommonSchema)
+}
+
+func K8sSchemaDepreciated() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"backend_dns_override_for_domain": {
+			Type:        schema.TypeString,
+			Description: "Override DNS for service domain name with this value",
+			Optional:    true,
+		},
+		"client_kube_cluster_name": {
+			Type:        schema.TypeString,
+			Description: "Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters",
+			Optional:    true,
+		},
+		"client_kube_ca_key": {
+			Type:        schema.TypeString,
+			Description: "CA Public Key generated during Kube-OIDC-Proxy deployment",
+			Optional:    true,
+		},
+		"cluster": {
+			Type:        schema.TypeString,
+			Description: "(Depreciated) Sets the cluster / shield for the service",
+			Computed:    true,
+			Optional:    true,
+			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+			ForceNew:    true,
+		},
 	}
-	return
+	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
 
 func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating kubernetes service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	svc := expandK8sCreateService(d)
-
-	newService, err := client.Service.Create(svc)
+	err := setCluster(d, m)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create kubernetes service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(err)
 	}
-	log.Printf("[SVC|RES|CREATE] created kubernetes service %s : %s", d.Get("name"), d.Id())
-	d.SetId(newService.ServiceID)
-	return resourceServiceInfraK8sRead(ctx, d, m)
+	svc := K8sFromState(d)
+	return resourceServiceCreate(svc, d, m)
 }
 
-func expandK8sCreateService(d *schema.ResourceData) (svc service.CreateService) {
+func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	svc, err := c.Service.Get(d.Id())
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
+	domain := *svc.CreateServiceSpec.Metadata.Tags.Domain
+	override := svc.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	err = d.Set("backend_dns_override_for_domain", override)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_cluster_name", svc.CreateServiceSpec.Metadata.Tags.KubeClusterName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_ca_key", svc.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return resourceServiceInfraCommonRead(svc, d, m)
+}
+
+func resourceServiceInfraK8sReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	svc, err := c.Service.Get(d.Id())
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
+	domain := *svc.CreateServiceSpec.Metadata.Tags.Domain
+	override := svc.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	err = d.Set("backend_dns_override_for_domain", override)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_cluster_name", svc.CreateServiceSpec.Metadata.Tags.KubeClusterName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("client_kube_ca_key", svc.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
+	// trick to allow this key to stay in the schema
+	err = d.Set("policy", nil)
+	return
+}
+
+func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	svc := K8sFromState(d)
+	return resourceServiceUpdate(svc, d, m)
+}
+
+func K8sFromState(d *schema.ResourceData) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
@@ -110,7 +176,6 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	serviceAppType := "K8S"
 	descriptionLink := ""
 	allowUserOverride := true
-
 	banyanProxyMode := "CHAIN"
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alpInt)
@@ -127,74 +192,30 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 		ServiceAppType:    &serviceAppType,
 		DescriptionLink:   &descriptionLink,
 		AllowUserOverride: &allowUserOverride,
-
-		AppListenPort:   &appListenPort,
-		BanyanProxyMode: &banyanProxyMode,
-		KubeClusterName: &kubeClusterName,
-		KubeCaKey:       &kubeCaKey,
+		AppListenPort:     &appListenPort,
+		BanyanProxyMode:   &banyanProxyMode,
+		KubeClusterName:   &kubeClusterName,
+		KubeCaKey:         &kubeCaKey,
 	}
 	return
 }
 
+// cannot use expandInfraServiceSpec for k8s services
 func expandK8sServiceSpec(d *schema.ResourceData) (spec service.Spec) {
-	d.Set("backend_http_connect", true)
 	spec = expandInfraServiceSpec(d)
-
 	domain := d.Get("domain").(string)
-	backend_override := d.Get("backend_dns_override_for_domain").(string)
+	backendOverride := d.Get("backend_dns_override_for_domain").(string)
 	spec.Backend.DNSOverrides = map[string]string{
-		domain: backend_override,
+		domain: backendOverride,
 	}
-
-	allow_patterns := []service.BackendAllowPattern{
+	allowPatterns := []service.BackendAllowPattern{
 		{
 			Hostnames: []string{domain},
 		},
 	}
-	spec.Backend.AllowPatterns = allow_patterns
-	return
-}
-
-func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|READ] reading kubernetes service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	id := d.Id()
-	service, ok, err := client.Service.Get(id)
-	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get kubernetes service with id: %s", id))
-	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
-	}
-	domain := *service.CreateServiceSpec.Metadata.Tags.Domain
-	override := service.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
-	err = d.Set("backend_dns_override_for_domain", override)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("client_kube_cluster_name", service.CreateServiceSpec.Metadata.Tags.KubeClusterName)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("client_kube_ca_key", service.CreateServiceSpec.Metadata.Tags.KubeCaKey)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	diagnostics = resourceServiceInfraCommonRead(service, d, m)
-	log.Printf("[SVC|RES|READ] read kubernetes service %s : %s", d.Get("name"), d.Id())
-	return
-}
-
-func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating kubernetes service %s : %s", d.Get("name"), d.Id())
-	resourceServiceInfraK8sCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated kubernetes service %s : %s", d.Get("name"), d.Id())
-	return
-}
-
-func resourceServiceInfraK8sDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting kubernetes service %s : %s", d.Get("name"), d.Id())
-	diagnostics = resourceServiceInfraCommonDelete(d, m)
-	log.Printf("[SERVICE|RES|DELETE] deleted kubernetes service %s : %s", d.Get("name"), d.Id())
+	spec.Backend.AllowPatterns = allowPatterns
+	// force these for http_connect which is required for k8s
+	spec.Backend.HTTPConnect = true
+	spec.Backend.Target.Port = ""
 	return
 }

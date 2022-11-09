@@ -143,24 +143,18 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m inte
 
 func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	err := c.Satellite.Delete(d.Id())
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
-	}
-	err = resource.RetryContext(ctx, 180*time.Second, func() *resource.RetryError {
-		err = c.Satellite.Delete(d.Id())
+	err := resource.RetryContext(ctx, 180*time.Second, func() *resource.RetryError {
+		err := c.Satellite.Delete(d.Id())
 		if err != nil {
-			if err.Error() == "" {
+			if err.Error() == "connector not found" {
 				return nil
 			}
 			return resource.RetryableError(err)
 		}
 		return nil
 	})
-
 	if err != nil {
-		return diag.Errorf("timed out deleting connector: %s", d.Get("name").(string))
+		return diag.Errorf("timed out deleting access tier: %s", d.Get("name").(string))
 	}
 	d.SetId("")
 	return

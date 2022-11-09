@@ -2,6 +2,8 @@ package banyan
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -39,17 +41,56 @@ func AssertCreateServiceEqual(t *testing.T, got service.CreateService, want serv
 	}
 }
 
-func testAccCheckAgainstJson(t *testing.T, path string, id *string) resource.TestCheckFunc {
+// Asserts that the json string j is equal to the service spec in the API with id
+func testAccCheckAgainstJson(t *testing.T, j string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		got, _, err := testAccClient.Service.Get(*id)
+		got, err := testAccClient.Service.Get(*id)
 		if err != nil {
 			return err
 		}
-		err, want := ReadJSONServiceSpec(path)
+		err, want := ReadJSONServiceSpec(j)
 		if err != nil {
 			return err
 		}
 		AssertServiceSpecEqual(t, got, want)
+		return nil
+	}
+}
+
+// Checks that the resource with the name resourceName exists and returns the role object from the Banyan API
+func testAccCheckExistingService(resourceName string, bnnService *service.GetServiceSpec) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found %q", rs)
+		}
+		resp, err := testAccClient.Service.Get(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+		if resp.ServiceID != rs.Primary.ID {
+			return fmt.Errorf("expected resource id %q got %q instead", resp.ServiceID, rs.Primary.ID)
+		}
+		*bnnService = resp
+		return nil
+	}
+}
+
+// Asserts using the API that the Spec.Backend.ConnectorName for the service was updated
+func testAccCheckServiceConnectorNameUpdated(bnnService *service.GetServiceSpec, connectorName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if connectorName != bnnService.CreateServiceSpec.Spec.Backend.ConnectorName {
+			return fmt.Errorf("incorrect connector_name, expected %s, got: %s", connectorName, bnnService.CreateServiceSpec.Spec.Backend.ConnectorName)
+		}
+		return nil
+	}
+}
+
+// Uses the API to check that the service was destroyed
+func testAccCheckService_destroy(t *testing.T, id *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		r, _ := testAccClient.AccessTier.Get(*id)
+		assert.Equal(t, r.ID, "")
 		return nil
 	}
 }

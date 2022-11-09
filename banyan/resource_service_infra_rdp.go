@@ -2,43 +2,93 @@ package banyan
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 func resourceServiceInfraRdp() *schema.Resource {
 	return &schema.Resource{
-		Description:   "resourceServiceInfraRdp",
+		Description:   "Resource used for lifecycle management of RDP services",
 		CreateContext: resourceServiceInfraRdpCreate,
 		ReadContext:   resourceServiceInfraRdpRead,
 		UpdateContext: resourceServiceInfraRdpUpdate,
-		DeleteContext: resourceServiceInfraRdpDelete,
-		Schema:        resourceServiceInfraCommonSchema,
+		DeleteContext: resourceServiceDelete,
+		Schema:        RdpSchema(),
 	}
+}
+
+func resourceServiceInfraRdpDepreciated() *schema.Resource {
+	return &schema.Resource{
+		Description:        "(Depreciated) Resource used for lifecycle management of RDP services",
+		CreateContext:      resourceServiceInfraRdpCreate,
+		ReadContext:        resourceServiceInfraRdpReadDepreciated,
+		UpdateContext:      resourceServiceInfraRdpUpdate,
+		DeleteContext:      resourceServiceDelete,
+		Schema:             RdpSchemaDepreciated(),
+		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_rdp",
+	}
+}
+
+func RdpSchema() map[string]*schema.Schema {
+	return resourceServiceInfraCommonSchema
+}
+
+func RdpSchemaDepreciated() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"cluster": {
+			Type:        schema.TypeString,
+			Description: "(Depreciated) Sets the cluster / shield for the service",
+			Computed:    true,
+			Optional:    true,
+			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+			ForceNew:    true,
+		},
+	}
+	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
 
 func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|CREATE] creating RDP service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	svc := expandRDPCreateService(d)
-
-	newService, err := client.Service.Create(svc)
+	err := setCluster(d, m)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "could not create RDP service %s : %s", d.Get("name"), d.Id()))
+		return diag.FromErr(err)
 	}
-	log.Printf("[SVC|RES|CREATE] Created RDP service %s : %s", d.Get("name"), d.Id())
-	d.SetId(newService.ServiceID)
-	return resourceServiceInfraRdpRead(ctx, d, m)
+	svc := RdpFromState(d)
+	return resourceServiceCreate(svc, d, m)
 }
 
-func expandRDPCreateService(d *schema.ResourceData) (svc service.CreateService) {
+func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	svc, err := c.Service.Get(d.Id())
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
+	return resourceServiceInfraCommonRead(svc, d, m)
+}
+
+func resourceServiceInfraRdpReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	svc, err := c.Service.Get(d.Id())
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
+	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
+	// trick to allow this key to stay in the schema
+	err = d.Set("policy", nil)
+	return
+}
+
+func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	svc := RdpFromState(d)
+	return resourceServiceUpdate(svc, d, m)
+}
+
+func RdpFromState(d *schema.ResourceData) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
@@ -65,14 +115,15 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	serviceAppType := "RDP"
 	descriptionLink := ""
 	allowUserOverride := true
-
 	banyanProxyMode := "TCP"
-	if d.Get("backend_http_connect").(bool) {
-		banyanProxyMode = "RDPGATEWAY"
+	httpConnect, ok := d.GetOk("http_connect")
+	if ok {
+		if httpConnect.(bool) {
+			banyanProxyMode = "RDPGATEWAY"
+		}
 	}
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alpInt)
-
 	metadatatags = service.Tags{
 		Template:          &template,
 		UserFacing:        &userFacing,
@@ -86,36 +137,5 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 		AllowUserOverride: &allowUserOverride,
 		DescriptionLink:   &descriptionLink,
 	}
-	return
-}
-
-func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] updating RDP service %s : %s", d.Get("name"), d.Id())
-	resourceServiceInfraRdpCreate(ctx, d, m)
-	log.Printf("[SVC|RES|UPDATE] updated RDP service %s : %s", d.Get("name"), d.Id())
-	return
-}
-
-func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SVC|RES|UPDATE] Reading RDP service %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
-	id := d.Id()
-	service, ok, err := client.Service.Get(id)
-	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get database service with id: %s", id))
-	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("service %q", d.Id()))
-	}
-	diagnostics = resourceServiceInfraCommonRead(service, d, m)
-	log.Printf("[SVC|RES|READ] read RDP service %s : %s", d.Get("name"), d.Id())
-	d.SetId(id)
-	return
-}
-
-func resourceServiceInfraRdpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[SERVICE|RES|DELETE] deleting RDP service %s : %s", d.Get("name"), d.Id())
-	diagnostics = resourceServiceInfraCommonDelete(d, m)
-	log.Printf("[SERVICE|RES|DELETE] deleted RDP service %s : %s", d.Get("name"), d.Id())
 	return
 }
