@@ -7,8 +7,6 @@ import (
 	"testing"
 )
 
-const apiKeyID = "f0da9734-10b7-4ace-85ae-05206119cc69"
-
 // Use the terraform plugin sdk testing framework for example testing servicetunnel lifecycle
 func TestAccServiceTunnel_basic(t *testing.T) {
 
