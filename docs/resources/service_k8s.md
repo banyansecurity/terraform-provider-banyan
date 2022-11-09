@@ -3,17 +3,17 @@
 page_title: "banyan_service_k8s Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  Resource used for lifecycle management of kubernetes services. For more information on kubernetes services see the documentation https://docs.banyansecurity.io/docs/feature-guides/infrastructure/kubernetes/
+  Resource used for lifecycle management of kubernetes services. For more information on kubernetes services see the documentation https://docs.banyansecurity.io/docs/feature-guides/infrastructure/k8s-api/
 ---
 
 # banyan_service_k8s (Resource)
 
-Resource used for lifecycle management of kubernetes services. For more information on kubernetes services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/kubernetes/)
+Resource used for lifecycle management of kubernetes services. For more information on kubernetes services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/k8s-api/)
 
 ## Example Usage
 
 ```terraform
-resource "banyan_service_infra_k8s" "example" {
+resource "banyan_service_k8s" "example" {
   name                            = "example-k8s"
   description                     = "some k8s service description"
   access_tier                     = "us-west1"

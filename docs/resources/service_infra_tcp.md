@@ -3,12 +3,12 @@
 page_title: "banyan_service_infra_tcp Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  (Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize service_tcp instead
+  (Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize banyan_service_tcp instead
 ---
 
 # banyan_service_infra_tcp (Resource)
 
-(Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize `service_tcp` instead
+(Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize `banyan_service_tcp` instead
 
 ## Example Usage
 

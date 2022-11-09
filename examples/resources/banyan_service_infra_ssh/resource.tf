@@ -1,4 +1,4 @@
-resource "banyan_service_ssh" "example" {
+resource "banyan_service_infra_ssh" "example" {
   name           = "example-ssh"
   description    = "some SSH service description"
   access_tier    = "us-west1"

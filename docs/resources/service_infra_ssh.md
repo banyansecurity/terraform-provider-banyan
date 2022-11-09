@@ -3,17 +3,17 @@
 page_title: "banyan_service_infra_ssh Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  (Depreciated) Resource used for lifecycle management of SSH services. Please utilize service_ssh instead
+  (Depreciated) Resource used for lifecycle management of SSH services. Please utilize banyan_service_ssh instead
 ---
 
 # banyan_service_infra_ssh (Resource)
 
-(Depreciated) Resource used for lifecycle management of SSH services. Please utilize `service_ssh` instead
+(Depreciated) Resource used for lifecycle management of SSH services. Please utilize `banyan_service_ssh` instead
 
 ## Example Usage
 
 ```terraform
-resource "banyan_service_ssh" "example" {
+resource "banyan_service_infra_ssh" "example" {
   name           = "example-ssh"
   description    = "some SSH service description"
   access_tier    = "us-west1"

@@ -13,7 +13,7 @@ Resource used for lifecycle management of microsoft remote desktop services. For
 ## Example Usage
 
 ```terraform
-resource "banyan_service_infra_rdp" "example" {
+resource "banyan_service_rdp" "example" {
   name           = "example-rdp"
   description    = "some RDP service description"
   access_tier    = "us-west1"

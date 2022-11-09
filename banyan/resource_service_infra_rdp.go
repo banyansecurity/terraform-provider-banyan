@@ -23,7 +23,7 @@ func resourceServiceInfraRdp() *schema.Resource {
 
 func resourceServiceInfraRdpDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize `service_rdp` instead",
+		Description:        "(Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize `banyan_service_rdp` instead",
 		CreateContext:      resourceServiceInfraRdpCreate,
 		ReadContext:        resourceServiceInfraRdpReadDepreciated,
 		UpdateContext:      resourceServiceInfraRdpUpdate,

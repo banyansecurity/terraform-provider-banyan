@@ -3,12 +3,12 @@
 page_title: "banyan_service_infra_k8s Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  (Depreciated) Resource used for lifecycle management of kubernetes services. Please utilize service_k8s instead
+  (Depreciated) Resource used for lifecycle management of kubernetes services. Please utilize banyan_service_k8s instead
 ---
 
 # banyan_service_infra_k8s (Resource)
 
-(Depreciated) Resource used for lifecycle management of kubernetes services. Please utilize `service_k8s` instead
+(Depreciated) Resource used for lifecycle management of kubernetes services. Please utilize `banyan_service_k8s` instead
 
 ## Example Usage
 

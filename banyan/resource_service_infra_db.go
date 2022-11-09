@@ -24,7 +24,7 @@ func resourceServiceInfraDb() *schema.Resource {
 
 func resourceServiceInfraDbDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of database services. Please utilize `service_db` instead",
+		Description:        "(Depreciated) Resource used for lifecycle management of database services. Please utilize `banyan_service_db` instead",
 		CreateContext:      resourceServiceInfraDbCreate,
 		ReadContext:        resourceServiceInfraDbReadDepreciated,
 		UpdateContext:      resourceServiceInfraDbUpdate,

@@ -3,12 +3,12 @@
 page_title: "banyan_service_infra_db Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  (Depreciated) Resource used for lifecycle management of database services. Please utilize service_db instead
+  (Depreciated) Resource used for lifecycle management of database services. Please utilize banyan_service_db instead
 ---
 
 # banyan_service_infra_db (Resource)
 
-(Depreciated) Resource used for lifecycle management of database services. Please utilize `service_db` instead
+(Depreciated) Resource used for lifecycle management of database services. Please utilize `banyan_service_db` instead
 
 ## Example Usage
 

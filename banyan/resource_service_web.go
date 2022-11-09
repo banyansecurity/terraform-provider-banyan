@@ -13,7 +13,7 @@ import (
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceWeb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of web services",
+		Description:   "Resource used for lifecycle management of web services. For more information on web services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/hosted-websites/)",
 		CreateContext: resourceServiceWebCreate,
 		ReadContext:   resourceServiceWebRead,
 		UpdateContext: resourceServiceWebUpdate,

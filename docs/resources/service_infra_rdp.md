@@ -3,12 +3,12 @@
 page_title: "banyan_service_infra_rdp Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  (Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize service_rdp instead
+  (Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize banyan_service_rdp instead
 ---
 
 # banyan_service_infra_rdp (Resource)
 
-(Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize `service_rdp` instead
+(Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize `banyan_service_rdp` instead
 
 ## Example Usage
 

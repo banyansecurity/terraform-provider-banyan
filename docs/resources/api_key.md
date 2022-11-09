@@ -3,12 +3,12 @@
 page_title: "banyan_api_key Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  Manages API keys
+  The API key resource manages the lifecycle of API keys. API keys are used to provide authentication inside various permissions scopes. For more information on API keys see the documentation https://docs.banyansecurity.io/docs/banyan-components/command-center/api-keys/
 ---
 
 # banyan_api_key (Resource)
 
-Manages API keys
+The API key resource manages the lifecycle of API keys. API keys are used to provide authentication inside various permissions scopes. For more information on API keys see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/command-center/api-keys/)
 
 ## Example Usage
 

@@ -16,10 +16,10 @@ The infrastructure policy resource is used to manage the lifecycle of policies w
 resource "banyan_policy_web" "example" {
   name        = "example"
   description = "some web policy description"
-    access {
-      roles                             = ["ANY"]
-      trust_level                       = "High"
-    }
+  access {
+    roles       = ["ANY"]
+    trust_level = "High"
+  }
 }
 ```
 

@@ -24,7 +24,7 @@ func resourceServiceInfraTcp() *schema.Resource {
 
 func resourceServiceInfraTcpDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize `service_tcp` instead",
+		Description:        "(Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize `banyan_service_tcp` instead",
 		CreateContext:      resourceServiceInfraTcpCreate,
 		ReadContext:        resourceServiceInfraTcpReadDepreciated,
 		UpdateContext:      resourceServiceInfraTcpUpdate,

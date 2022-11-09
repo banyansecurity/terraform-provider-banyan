@@ -13,7 +13,7 @@ import (
 
 func resourceConnector() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The connector resource allows for configuration of the connector API object. We recommend utilizing the banyansecurity/banyan-connector terraform registry module specific to your cloud provider",
+		Description:   "The connector resource allows for configuration of the connector API object. We recommend utilizing the banyansecurity/banyan-connector terraform registry module specific to your cloud provider. For more information on connector resource see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/connector/)",
 		CreateContext: resourceConnectorCreate,
 		ReadContext:   resourceConnectorRead,
 		UpdateContext: resourceConnectorUpdate,

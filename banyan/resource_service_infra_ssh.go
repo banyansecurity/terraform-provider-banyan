@@ -25,7 +25,7 @@ func resourceServiceInfraSsh() *schema.Resource {
 
 func resourceServiceInfraSshDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of SSH services. Please utilize `service_ssh` instead",
+		Description:        "(Depreciated) Resource used for lifecycle management of SSH services. Please utilize `banyan_service_ssh` instead",
 		CreateContext:      resourceServiceInfraSshCreate,
 		ReadContext:        resourceServiceInfraSshReadDepreciated,
 		UpdateContext:      resourceServiceInfraSshUpdate,

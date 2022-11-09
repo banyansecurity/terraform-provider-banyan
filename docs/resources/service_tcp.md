@@ -13,7 +13,7 @@ Resource used for lifecycle management of generic TCP services. For more informa
 ## Example Usage
 
 ```terraform
-resource "banyan_service_infra_tcp" "example" {
+resource "banyan_service_tcp" "example" {
   name           = "example-tcp"
   description    = "some tcp service description"
   access_tier    = "us-west1"

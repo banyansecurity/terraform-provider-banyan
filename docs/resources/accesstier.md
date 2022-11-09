@@ -3,12 +3,12 @@
 page_title: "banyan_accesstier Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider
+  The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider. For more information about the access tier see the documentation https://docs.banyansecurity.io/docs/banyan-components/accesstier/
 ---
 
 # banyan_accesstier (Resource)
 
-The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider
+The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider. For more information about the access tier see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/accesstier/)
 
 ## Example Usage
 
@@ -69,7 +69,7 @@ resource "banyan_api_key" "example" {
 - `file_log` (Boolean) Whether to log to file or not
 - `file_log_level` (String) Controls verbosity of logs to file. Must be one of "ERR", "WARN", "INFO", "DEBUG"
 - `forward_trust_cookie` (Boolean) Forward the Banyan trust cookie to upstream servers. This may be enabled if upstream servers wish to make use of information in the Banyan trust cookie.
-- `infra_maximum_session_timeout` (Number)
+- `infra_maximum_session_timeout` (Number) Timeout in seconds infrastructure sessions connected via the access tier
 - `log_num` (Number) For file logs: Number of files to use for log rotation
 - `log_size` (Number) For file logs: Size of each file for log rotation
 - `src_nat_cidr_range` (String) CIDR range which source Network Address Translation (SNAT) will be disabled for
