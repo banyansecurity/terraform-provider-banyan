@@ -74,7 +74,6 @@ func TestAccAccessTier_optional(t *testing.T) {
 						address = "*.exampletwo.com"
 						api_key_id = "%s"
 						tunnel_connector_port = 39104
-						tunnel_port = 39105
 						tunnel_cidrs = ["10.0.3.0/16"]
 						tunnel_private_domains = ["example.com"]
 						enable_hsts = false
@@ -147,45 +146,6 @@ resource banyan_accesstier "example" {
   name = "%s-updated"
   address = "*.updated.com"
   api_key_id = "%s"
-}
-`, name, apiKeyID)
-}
-
-// Returns terraform configuration with the required and optional parameters set
-func testAccAccessTier_create_optional(name string) string {
-	return fmt.Sprintf(`
-resource banyan_accesstier "example" {
-  name = "%s"
-  address = "*.example.com"
-  api_key_id = "%s"
-  tunnel_connector_port = 39103
-  tunnel_port = 39104
-  tunnel_cidrs = ["10.0.2.0/16"]
-  tunnel_private_domain = "test.com"
-  enable_hsts = true
-  forward_trust_cookie = true
-  events_rate_limiting = true
-  event_key_rate_limiting = true
-}
-`, name, apiKeyID)
-}
-
-// Returns terraform configuration with the required and optional
-// parameters updated ('ForceNew' elements should be omitted)
-func testAccAccessTier_update_optional(name string) string {
-	return fmt.Sprintf(`
-resource banyan_accesstier "example" {
-  name = "%s"
-  address = "*.example.com"
-  api_key_id = "%s"
-  tunnel_connector_port = 39103
-  tunnel_port = 39104
-  tunnel_cidrs = ["10.0.2.0/16"]
-  tunnel_private_domain = "test.com"
-  enable_hsts = true
-  forward_trust_cookie = true
-  events_rate_limiting = false
-  event_key_rate_limiting = false
 }
 `, name, apiKeyID)
 }

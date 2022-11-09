@@ -71,12 +71,6 @@ func AccessTierSchema() map[string]*schema.Schema {
 			Description:  "UDP port for connectors to associated with this access tier to utilize",
 			ValidateFunc: validatePort(),
 		},
-		"tunnel_port": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Description:  "UDP port for end users to this access tier to utilize when using service tunnel",
-			ValidateFunc: validatePort(),
-		},
 		"tunnel_cidrs": {
 			Type:        schema.TypeSet,
 			Optional:    true,
