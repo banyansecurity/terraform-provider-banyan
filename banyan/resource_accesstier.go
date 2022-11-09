@@ -142,7 +142,7 @@ func AccessTierSchema() map[string]*schema.Schema {
 		"infra_maximum_session_timeout": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "",
+			Description: "Timeout in seconds infrastructure sessions connected via the access tier",
 		},
 		"debug_http_backend_log": {
 			Type:        schema.TypeBool,
