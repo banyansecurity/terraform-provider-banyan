@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 func convertInterfaceMapToStringMap(original map[string]interface{}) (newMap map[string]string) {
@@ -53,7 +54,7 @@ func convertSchemaSetToIntSlice(original *schema.Set) (stringSlice []int) {
 
 // Adds a warning to the diagnostics if the resource is not found and sets the id to "" which deletes it from the schema
 func handleNotFoundError(d *schema.ResourceData, err error) (diagnostics diag.Diagnostics) {
-	if err != nil {
+	if strings.Contains(err.Error(), "not found") {
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  fmt.Sprintf("%s not found", d.Id()),
