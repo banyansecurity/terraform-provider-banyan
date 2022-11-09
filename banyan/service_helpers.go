@@ -594,7 +594,7 @@ func resourceServiceCreate(svc service.CreateService, d *schema.ResourceData, m 
 func attachPolicyToService(d *schema.ResourceData, c *client.Holder) (err error) {
 	currentPolicy, err := c.Service.GetPolicyForService(d.Id())
 	if currentPolicy.ID != "" {
-		err = c.Policy.Detach(currentPolicy.ID)
+		err = c.Policy.Detach(c.PolicyAttachment, currentPolicy.ID)
 		if err != nil {
 			return
 		}
