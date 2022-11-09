@@ -91,3 +91,17 @@ type AccessTierComplete struct {
 	AccessTierInfo
 	AccessTierLocalConfig
 }
+
+type Metadata struct {
+	Name         string `json:"name,omitempty"`
+	FriendlyName string `json:"friendly_name,omitempty"`
+	Description  string `json:"description,omitempty"`
+	Tags         Tags   `json:"tags"`
+}
+
+type Tags struct {
+	Template        *string `json:"template,omitempty"`
+	UserFacing      *string `json:"user_facing,omitempty"`
+	Icon            *string `json:"icon,omitempty"`
+	DescriptionLink *string `json:"description_link,omitempty"`
+}
