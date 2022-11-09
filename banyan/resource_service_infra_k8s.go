@@ -10,10 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraK8s() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of k8s services",
+		Description:   "Resource used for lifecycle management of kubernetes services. For more information on kubernetes services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/kubernetes/)",
 		CreateContext: resourceServiceInfraK8sCreate,
 		ReadContext:   resourceServiceInfraK8sRead,
 		UpdateContext: resourceServiceInfraK8sUpdate,
@@ -24,7 +23,7 @@ func resourceServiceInfraK8s() *schema.Resource {
 
 func resourceServiceInfraK8sDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of k8s services",
+		Description:        "(Depreciated) Resource used for lifecycle management of kubernetes services. Please utilize `service_k8s` instead",
 		CreateContext:      resourceServiceInfraK8sCreate,
 		ReadContext:        resourceServiceInfraK8sReadDepreciated,
 		UpdateContext:      resourceServiceInfraK8sUpdate,

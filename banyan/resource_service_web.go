@@ -26,7 +26,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 	s = map[string]*schema.Schema{
 		"id": {
 			Type:        schema.TypeString,
-			Description: "Id of the service",
+			Description: "Id of the service in Banyan",
 			Computed:    true,
 		},
 		"name": {
