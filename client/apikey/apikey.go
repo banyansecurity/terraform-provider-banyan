@@ -45,12 +45,18 @@ func (k *ApiKey) Get(id string) (apikey Data, err error) {
 func (k *ApiKey) Create(post Post) (apikey Data, err error) {
 	// check if key exists already
 	responseJSON, err := getAll(k)
+	if err != nil {
+		return
+	}
 	apikey, err = findByName(post.Name, responseJSON)
 	if err == nil {
 		err = errors.Errorf("api key already exists: %s", post.Name)
 		return
 	}
 	body, err := json.Marshal(post)
+	if err != nil {
+		return
+	}
 	response, err := k.restClient.Create(apiVersion, component, body, "")
 	if err != nil {
 		return
@@ -67,6 +73,9 @@ func (k *ApiKey) Update(id string, post Post) (updatedApiKey Data, err error) {
 		return
 	}
 	resp, err := k.restClient.Update(apiVersion, component, id, body, "")
+	if err != nil {
+		return
+	}
 	err = json.Unmarshal(resp, &updatedApiKey)
 	return
 }
