@@ -10,12 +10,14 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	service "github.com/banyansecurity/terraform-banyan-provider/client/service"
+	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"github.com/banyansecurity/terraform-banyan-provider/client/shield"
 	"log"
 )
 
 type Holder struct {
 	Service          service.Client
+	ServiceTunnel    servicetunnel.Client
 	Policy           policy.Client
 	Role             role.Client
 	PolicyAttachment policyattachment.Client
@@ -35,6 +37,7 @@ func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (clie
 	}
 	c := Holder{
 		Service:          service.NewClient(restClient),
+		ServiceTunnel:    servicetunnel.NewClient(restClient),
 		Policy:           policy.NewClient(restClient),
 		Role:             role.NewClient(restClient),
 		PolicyAttachment: policyattachment.NewClient(restClient),
