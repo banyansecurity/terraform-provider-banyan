@@ -15,11 +15,11 @@ import (
 )
 
 type PolicyAttachment struct {
-	restClient *restclient.RestClient
+	restClient *restclient.Client
 }
 
 // NewClient returns a new policyAttachment client
-func NewClient(restClient *restclient.RestClient) Clienter {
+func NewClient(restClient *restclient.Client) Client {
 	PolicyAttachmentClient := PolicyAttachment{
 		restClient: restClient,
 	}
@@ -29,23 +29,34 @@ func NewClient(restClient *restclient.RestClient) Clienter {
 const component = "policyattachment"
 
 // Clienter is used to perform CRUD operations against the policy attachment resource
-type Clienter interface {
+type Client interface {
 	Get(attachedToID string, attachedToType string) (attachment GetBody, err error)
 	Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error)
 	Update(policyID string, PolicyAttachment CreateBody) (updatedAttachment GetBody, err error)
-	Delete(policyID string, detachBody DetachBody) (err error)
+	Delete(policyID string) (err error)
 	DeleteServiceAttachment(policyID string, serviceID string) (err error)
 }
 
 func (p *PolicyAttachment) Get(attachedToID string, attachedToType string) (attachment GetBody, err error) {
 	path := fmt.Sprintf("api/v1/policy/attachment/%s/%s", attachedToType, attachedToID)
-	response, err := p.restClient.DoGet(path)
+	myUrl, _ := url.Parse(path)
+	response, err := p.restClient.DoGet(myUrl.String())
+	if err != nil {
+		if response.StatusCode == 404 {
+			err = nil
+			return
+		}
+		return
+	}
+	responseData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return
 	}
-	data, err := restclient.HandleResponse(response, component)
+	if len(responseData) == 0 {
+		return
+	}
 	var j []GetBody
-	err = json.Unmarshal(data, &j)
+	err = json.Unmarshal(responseData, &j)
 	if err != nil {
 		return
 	}
@@ -164,19 +175,40 @@ func (p *PolicyAttachment) DeleteServiceAttachment(policyID, serviceID string) (
 	return
 }
 
-func (p *PolicyAttachment) Delete(policyID string, detachBody DetachBody) (err error) {
-	if detachBody.AttachedToType == "service" {
-		return p.DeleteServiceAttachment(policyID, detachBody.AttachedToID)
+func (p *PolicyAttachment) Delete(policyID string) (err error) {
+	pAttachment, err := p.Get(policyID, "service")
+	if pAttachment.AttachedToType == "service" {
+		err = p.DeleteServiceAttachment(policyID, pAttachment.AttachedToID)
+		if err != nil {
+			return
+		}
 	}
-	path := fmt.Sprintf("/api/v1/policy/%s/detach", policyID)
+	pAttachment, err = p.Get(policyID, "service_tunnel")
+	if pAttachment.AttachedToType == "service_tunnel" {
+		err = detachServiceTunnel(p.restClient, pAttachment)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func detachService(r *restclient.Client, policyID string, detachBody DetachBody) (err error) {
+	path := fmt.Sprintf("api/v1/policy/%s/detach", policyID)
 	body, err := json.Marshal(detachBody)
 	if err != nil {
 		return
 	}
-	response, err := p.restClient.DoPut(path, bytes.NewBuffer(body))
-	if err != nil {
-		return
+	response, err := r.DoPut(path, bytes.NewBuffer(body))
+	if response.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("could not not delete policy attachment, got status code %q", response.Status))
 	}
+	return
+}
+
+func detachServiceTunnel(r *restclient.Client, pAttachment GetBody) (err error) {
+	path := fmt.Sprintf("api/v2/service_tunnel/%s/security_policy/%s", pAttachment.AttachedToID, pAttachment.PolicyID)
+	response, err := r.DoDelete(path)
 	if response.StatusCode != 200 {
 		err = errors.New(fmt.Sprintf("could not not delete policy attachment, got status code %q", response.Status))
 	}

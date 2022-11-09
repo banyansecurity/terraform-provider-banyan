@@ -2,9 +2,7 @@ package policy
 
 import (
 	"encoding/json"
-	"fmt"
 	"html"
-	"io/ioutil"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -32,8 +30,8 @@ type Client interface {
 	Get(id string) (spec GetPolicy, err error)
 	Create(policy CreatePolicy) (created GetPolicy, err error)
 	Update(policy CreatePolicy) (updated GetPolicy, err error)
-	Detach(id string) (err error)
 	Delete(id string) (err error)
+	Detach(paClient policyattachment.Client, id string) (err error)
 }
 
 func (p *policy) Get(id string) (spec GetPolicy, err error) {
@@ -95,37 +93,9 @@ func (p *policy) Update(policy CreatePolicy) (updated GetPolicy, err error) {
 	return
 }
 
-func (p *policy) Detach(id string) (err error) {
-	path := fmt.Sprintf("api/v1/policy/%s/attachment", id)
-	myUrl, _ := url.Parse(path)
-	response, err := p.restClient.DoGet(myUrl.String())
-	if err != nil {
-		return
-	}
-	if response.StatusCode != 200 {
-		err = errors.New("could not detach policy")
-	}
-	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return
-	}
-	var policyAttachments []policyattachment.GetBody
-	err = json.Unmarshal(responseData, &policyAttachments)
-	if err != nil {
-		return
-	}
-	for _, policyAtt := range policyAttachments {
-		policyAttachmentClient := policyattachment.NewClient(p.restClient)
-		err = policyAttachmentClient.Delete(policyAtt.PolicyID, policyattachment.DetachBody{
-			AttachedToID:   policyAtt.AttachedToID,
-			AttachedToType: policyAtt.AttachedToType,
-		})
-		if err != nil {
-			return
-		}
-	}
-	return nil
+func (p *policy) Detach(paClient policyattachment.Client, id string) (err error) {
+	err = paClient.Delete(id)
+	return
 }
 
 func (p *policy) Delete(id string) (err error) {

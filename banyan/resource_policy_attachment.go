@@ -123,11 +123,7 @@ func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	policyID, attachedToType, attachedToID := getInfoFromPolicyAttachmentID(d.Id())
-	err := c.PolicyAttachment.Delete(policyID, policyattachment.DetachBody{
-		AttachedToID:   attachedToID,
-		AttachedToType: attachedToType,
-	})
+	err := c.PolicyAttachment.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
