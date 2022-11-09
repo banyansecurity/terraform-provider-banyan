@@ -15,8 +15,6 @@ const apiKeyID = "f0da9734-10b7-4ace-85ae-05206119cc69"
 // The required test is used to test the lifecycle of a resource with only the required parameters set
 func TestAccAccessTier_required(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	//address := "*.example.com"
-	//api_key_id := "%s"
 	r := accesstier.AccessTierInfo{}
 
 	resource.Test(t, resource.TestCase{
