@@ -52,6 +52,9 @@ func (a *ServiceTunnel) Create(spec Info) (created ServiceTunnelInfo, err error)
 		},
 		Spec: spec.Spec,
 	})
+	if err != nil {
+		return
+	}
 	resp, err := a.restClient.Create(apiVersion, component, body, "")
 	if err != nil {
 		return
@@ -72,6 +75,9 @@ func (a *ServiceTunnel) Update(id string, spec Info) (updated ServiceTunnelInfo,
 		},
 		Spec: spec.Spec,
 	})
+	if err != nil {
+		return
+	}
 	resp, err := a.restClient.Update(apiVersion, component, id, body, "")
 	if err != nil {
 		return
@@ -100,6 +106,9 @@ func (a *ServiceTunnel) AttachPolicy(id string, post PolicyAttachmentPost) (crea
 		err = fmt.Errorf("need service tunnel id to attach a policy")
 	}
 	body, err := json.Marshal(post)
+	if err != nil {
+		return
+	}
 	path := fmt.Sprintf("%s/%s/%s/security_policy", apiVersion, component, id)
 	resp, err := a.restClient.Create(apiVersion, component, body, path)
 	if err != nil {
@@ -127,6 +136,9 @@ func specFromResponse(respData []byte) (created ServiceTunnelInfo, err error) {
 	var jSpec Info
 	specString := html.UnescapeString(spec.Spec)
 	err = json.Unmarshal([]byte(specString), &jSpec)
+	if err != nil {
+		return
+	}
 	created = ServiceTunnelInfo{
 		ID:           spec.ID,
 		OrgID:        spec.OrgID,
