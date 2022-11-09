@@ -38,7 +38,7 @@ resource "banyan_api_key" "example" {
 ### Optional
 
 - `cluster` (String) Cluster / shield name in Banyan. If not provided then the cluster will be chosen automatically
-- `console_log_level` (String) Controls verbosity of logs to console
+- `console_log_level` (String) Controls verbosity of logs to console. Must be one of "ERR", "WARN", "INFO", "DEBUG"
 - `debug_address_transparency` (Boolean) Provide client address transparency
 - `debug_client_timeout` (Number) Client identification timeout
 - `debug_code_flow` (Boolean) Enable or disable OpenID Connect
@@ -67,7 +67,7 @@ resource "banyan_api_key" "example" {
 - `event_key_rate_limiting` (Boolean) Enable rate limiting of Access Event generation based on a credit-based rate control mechanism
 - `events_rate_limiting` (Boolean) Enable rate limiting of Access Event generation based on a credit-based rate control mechanism
 - `file_log` (Boolean) Whether to log to file or not
-- `file_log_level` (String) Controls verbosity of logs to file
+- `file_log_level` (String) Controls verbosity of logs to file. Must be one of "ERR", "WARN", "INFO", "DEBUG"
 - `forward_trust_cookie` (Boolean) Forward the Banyan trust cookie to upstream servers. This may be enabled if upstream servers wish to make use of information in the Banyan trust cookie.
 - `infra_maximum_session_timeout` (Number)
 - `log_num` (Number) For file logs: Number of files to use for log rotation

@@ -90,13 +90,13 @@ func AccessTierSchema() map[string]*schema.Schema {
 		"console_log_level": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			Description:  "Controls verbosity of logs to console",
+			Description:  "Controls verbosity of logs to console. Must be one of \"ERR\", \"WARN\", \"INFO\", \"DEBUG\"",
 			ValidateFunc: validation.StringInSlice([]string{"ERR", "WARN", "INFO", "DEBUG"}, false),
 		},
 		"file_log_level": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			Description:  "Controls verbosity of logs to file",
+			Description:  "Controls verbosity of logs to file. Must be one of \"ERR\", \"WARN\", \"INFO\", \"DEBUG\"",
 			ValidateFunc: validation.StringInSlice([]string{"ERR", "WARN", "INFO", "DEBUG"}, false),
 		},
 		"file_log": {
