@@ -450,7 +450,7 @@ func expandTunnelConfigSatellite(d *schema.ResourceData) (expanded *accesstier.A
 func expandTunnelConfigEndUser(d *schema.ResourceData) (expanded *accesstier.AccessTierTunnelInfoPost) {
 	_, ok := d.GetOk("tunnel_private_domains")
 	e := accesstier.AccessTierTunnelInfoPost{
-		UDPPortNumber: d.Get("tunnel_port").(int),
+		UDPPortNumber: 51820,
 		DNSEnabled:    ok,
 		CIDRs:         convertSchemaSetToStringSlice(d.Get("tunnel_cidrs").(*schema.Set)),
 		Domains:       convertSchemaSetToStringSlice(d.Get("tunnel_private_domains").(*schema.Set)),
@@ -701,10 +701,6 @@ func flattenTunnelConfigSatellite(d *schema.ResourceData, at *accesstier.AccessT
 
 func flattenTunnelConfigEndUser(d *schema.ResourceData, at *accesstier.AccessTierInfo) (err error) {
 	if isNil(at.TunnelEnduser) {
-		return
-	}
-	err = d.Set("tunnel_port", at.TunnelEnduser.UDPPortNumber)
-	if err != nil {
 		return
 	}
 	err = d.Set("tunnel_private_domains", at.TunnelEnduser.Domains)
