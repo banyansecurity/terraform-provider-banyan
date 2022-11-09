@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -85,7 +86,7 @@ func (k *ApiKey) Delete(id string) (err error) {
 }
 
 func getAll(k *ApiKey) (responseJSON Response, err error) {
-	path := "api/experimental/v2/api_key"
+	path := fmt.Sprintf("%s/%s", apiVersion, component)
 	myUrl, err := url.Parse(path)
 	if err != nil {
 		return
