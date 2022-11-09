@@ -21,13 +21,13 @@ type OrgIdpConfigClienter interface {
 	// Delete() error
 }
 
-func Client(restClient *restclient.RestClient) OrgIdpConfigClienter {
+func Client(restClient *restclient.Client) OrgIdpConfigClienter {
 	newClient := OrgIdpConfig{restClient: restClient}
 	return &newClient
 }
 
 type OrgIdpConfig struct {
-	restClient *restclient.RestClient
+	restClient *restclient.Client
 }
 
 type orgIdpConfigJson struct {
