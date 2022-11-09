@@ -1,13 +1,16 @@
 package banyan
 
 import (
+	"errors"
 	"fmt"
+	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
 	"math"
 	"net"
+	"reflect"
+	"sort"
 	"strconv"
 )
 
@@ -48,60 +51,25 @@ func convertSchemaSetToIntSlice(original *schema.Set) (stringSlice []int) {
 	return
 }
 
-func handleNotFoundError(d *schema.ResourceData, resource string) (diagnostics diag.Diagnostics) {
-	log.Printf("[WARN] Removing %s because it's gone", resource)
-	// The resource doesn't exist anymore, setting its id to "" deletes it from the state
-	d.SetId("")
-	return nil
-}
-
-func validateL7Protocol() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		valid := []string{"http", "https"}
-		if !contains(valid, v) {
-			errs = append(errs, fmt.Errorf("%q must be one of %q", v, valid))
-		}
-		return
+// Adds a warning to the diagnostics if the resource is not found and sets the id to "" which deletes it from the schema
+func handleNotFoundError(d *schema.ResourceData, err error) (diagnostics diag.Diagnostics) {
+	if err != nil {
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("%s not found", d.Id()),
+		})
+		d.SetId("")
 	}
+	return
 }
 
 func validateTrustLevel() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		valid := []string{"High", "Medium", "Low", ""}
-		if !contains(valid, v) {
-			errs = append(errs, fmt.Errorf("%q must be one of %q", v, valid))
-		}
-		return
-	}
-}
-
-func validatePolicyTemplate() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		valid := []string{"USER"}
-		if !contains(valid, v) {
-			errs = append(errs, fmt.Errorf("%q must be one of %q", v, valid))
-		}
-		return
-	}
-}
-
-func validateContains() func(val interface{}, key string) (warns []string, errs []error) {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		valid := []string{"WEB_USER", "TCP_USER", "CUSTOM"}
-		if !contains(valid, v) {
-			errs = append(errs, fmt.Errorf("%q must be one of %q", v, valid))
-		}
-		return
-	}
+	return validation.StringInSlice([]string{"Low", "Medium", "High"}, false)
 }
 
 func contains(valid []string, v string) bool {
-	for _, v := range valid {
-		if v == v {
+	for _, s := range valid {
+		if s == v {
 			return true
 		}
 	}
@@ -137,30 +105,6 @@ func typeSwitchPort(val interface{}) (v int, err error) {
 	return
 }
 
-// typeSwitchPort type switches a string pointer to an int pointer if possible
-func typeSwitchPortPtr(val interface{}) (ptrv *int, err error) {
-	var v int
-	switch val.(type) {
-	case *int:
-		v = val.(int)
-	case *string:
-		if val.(*string) == nil {
-			ptrv = nil
-			return
-		}
-		vstring := val.(*string)
-		vstringval := *vstring
-		v, err = strconv.Atoi(vstringval)
-		if err != nil {
-			err = fmt.Errorf("%q could not be converted to an int", val)
-		}
-	default:
-		err = fmt.Errorf("could not validate port %q unsupported type", val)
-	}
-	ptrv = &v
-	return
-}
-
 func validateCIDR() func(val interface{}, key string) (warns []string, errs []error) {
 	return func(val interface{}, key string) (warns []string, errs []error) {
 		v := val.(string)
@@ -173,11 +117,6 @@ func validateCIDR() func(val interface{}, key string) (warns []string, errs []er
 		}
 		return
 	}
-}
-
-func validateHttpMethods() func(val interface{}, key string) (warns []string, errs []error) {
-	validMethods := []string{"GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"}
-	return validation.StringInSlice(validMethods, false)
 }
 
 func removeDuplicateStr(strSlice []string) []string {
@@ -199,4 +138,110 @@ func removeFromSlice(slice []string, s string) (result []string) {
 		}
 	}
 	return
+}
+
+func isNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
+		return reflect.ValueOf(i).IsNil()
+	}
+	return false
+}
+
+func GetStringPtr(d *schema.ResourceData, key string) (result *string) {
+	r, ok := d.GetOk(key)
+	if !ok {
+		return nil
+	}
+	return r.(*string)
+}
+
+func GetBoolPtr(d *schema.ResourceData, key string) (result *bool) {
+	r, ok := d.GetOk(key)
+	if !ok {
+		return nil
+	}
+	x := r.(bool)
+	return &x
+}
+
+func GetIntPtr(d *schema.ResourceData, key string) (result *int) {
+	r, ok := d.GetOk(key)
+	if !ok {
+		return nil
+	}
+	return r.(*int)
+}
+
+// creates the hostTagSelector key
+func buildHostTagSelector(d *schema.ResourceData) (hostTagSelector []map[string]string, err error) {
+	conn, connOk := d.GetOk("connector")
+	at, atOk := d.GetOk("access_tier")
+
+	// error if both are set
+	if connOk && atOk {
+		err = errors.New("cannot have both access_tier and connector set")
+		return
+	}
+
+	// if connector is set, ensure access_tier is *
+	if conn.(string) != "" {
+		at = "*"
+	}
+	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": at.(string)}
+	hostTagSelector = append(hostTagSelector, siteNameSelector)
+	return
+}
+
+// TODO: revisit after cluster consolidation
+// sets the cluster to global-edge if connector is set.
+// errors if connector and access_tier are both set
+// sets cluster to same as access_tier value if access_tier is set
+// sets to first cluster if the access_tier does not exist
+func setCluster(d *schema.ResourceData, m interface{}) (err error) {
+	c := m.(*client.Holder)
+	clusterName, err := determineCluster(c, d)
+	if err != nil {
+		return
+	}
+	err = d.Set("cluster", clusterName)
+	return
+}
+
+func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName string, err error) {
+	_, connOk := d.GetOk("connector")
+	at, atOk := d.GetOk("access_tier")
+
+	// error if both are set
+	if connOk && atOk {
+		err = errors.New("cannot have both access_tier and connector set")
+	}
+
+	// set to global-edge if connector is set
+	if connOk {
+		clusterName = "global-edge"
+		return
+	}
+
+	// otherwise determine which cluster to set based off of the access tier
+	atDetails, err := c.AccessTier.GetName(at.(string))
+	if err != nil {
+		err = fmt.Errorf("accesstier %s not found", at.(string))
+		clusterName, err = getFirstCluster(c)
+		return
+	}
+	clusterName = atDetails.ClusterName
+	return
+}
+
+func getFirstCluster(c *client.Holder) (clusterName string, err error) {
+	clusters, err := c.Shield.GetAll()
+	if err != nil {
+		return
+	}
+	sort.Strings(clusters)
+	return clusters[0], nil
 }
