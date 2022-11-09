@@ -3,7 +3,6 @@ package banyan
 import (
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
-	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -15,7 +14,7 @@ import (
 func TestAccPolicy_web_basic(t *testing.T) {
 	var bnnPolicy policy.GetPolicy
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -37,7 +36,7 @@ func TestAccPolicy_web_basic(t *testing.T) {
 func TestAccPolicy_web_l7(t *testing.T) {
 	var bnnPolicy policy.GetPolicy
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -62,7 +61,7 @@ func testAccCheckExistingPolicy(resourceName string, bnnPolicy *policy.GetPolicy
 		if !ok {
 			return fmt.Errorf("resource not found %q", rs)
 		}
-		resp, _, err := testAccClient.Policy.Get(rs.Primary.ID)
+		resp, err := testAccClient.Policy.Get(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -76,11 +75,10 @@ func testAccCheckExistingPolicy(resourceName string, bnnPolicy *policy.GetPolicy
 
 // Uses the API to check that the policy was destroyed
 func testAccCheckPolicy_destroy(t *testing.T, id *string) resource.TestCheckFunc {
-	emptyRole := role.GetRole{}
 	return func(s *terraform.State) error {
-		r, _, err := testAccClient.Role.Get(*id)
-		assert.Equal(t, r, emptyRole)
-		return err
+		r, _ := testAccClient.Policy.Get(*id)
+		assert.Equal(t, r.ID, "")
+		return nil
 	}
 }
 

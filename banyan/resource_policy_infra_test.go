@@ -11,7 +11,7 @@ import (
 func TestAccPolicy_infrastructure(t *testing.T) {
 	var bnnPolicy policy.GetPolicy
 
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,

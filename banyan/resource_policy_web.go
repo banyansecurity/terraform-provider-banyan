@@ -2,14 +2,12 @@ package banyan
 
 import (
 	"context"
-	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
-	"log"
 	"reflect"
 )
 
@@ -86,8 +84,7 @@ func resourcePolicyWeb() *schema.Resource {
 }
 
 func resourcePolicyWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[POLICY WEB|RES|CREATE] creating web policy %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
+	c := m.(*client.Holder)
 
 	policyToCreate := policy.CreatePolicy{
 		APIVersion: "rbac.banyanops.com/v1",
@@ -109,66 +106,56 @@ func resourcePolicyWebCreate(ctx context.Context, d *schema.ResourceData, m inte
 			},
 		},
 	}
-	createdPolicy, err := client.Policy.Create(policyToCreate)
+	createdPolicy, err := c.Policy.Create(policyToCreate)
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new web policy"))
 	}
-	log.Printf("[POLICY WEB|RES|CREATE] created web policy %s : %s", d.Get("name"), d.Id())
 	d.SetId(createdPolicy.ID)
 	diagnostics = resourcePolicyWebRead(ctx, d, m)
 	return
 }
 
 func resourcePolicyWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[POLICY WEB|RES|UPDATE] updating web policy %s : %s", d.Get("name"), d.Id())
 	diagnostics = resourcePolicyWebCreate(ctx, d, m)
-	log.Printf("[POLICY WEB|RES|UPDATE] updated web policy %s : %s", d.Get("name"), d.Id())
 	return
 }
 
 func resourcePolicyWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Printf("[POLICY WEB|RES|READ] reading web policy %s : %s", d.Get("name"), d.Id())
-	client := m.(*client.Holder)
+	c := m.(*client.Holder)
 	id := d.Id()
-	policy, ok, err := client.Policy.Get(id)
+	resp, err := c.Policy.Get(id)
 	if err != nil {
-		return diag.FromErr(errors.WithMessagef(err, "couldn't get web policy with id: %s", id))
+		handleNotFoundError(d, err)
+		return
 	}
-	if !ok {
-		return handleNotFoundError(d, fmt.Sprintf("web policy %q", d.Id()))
-	}
-	err = d.Set("name", policy.Name)
+	err = d.Set("name", resp.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("description", policy.Description)
+	err = d.Set("description", resp.Description)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("access", flattenPolicyWebAccess(policy.UnmarshalledPolicy.Spec.Access))
+	err = d.Set("access", flattenPolicyWebAccess(resp.UnmarshalledPolicy.Spec.Access))
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(policy.ID)
-	log.Printf("[POLICY WEB|RES|READ] read policy %s : %s", d.Get("name"), d.Id())
+	d.SetId(resp.ID)
 	return
 }
 
 func resourcePolicyWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	log.Println("[POLICY WEB|RES|DELETE] deleting web policy")
-
-	client := m.(*client.Holder)
-	err := client.Policy.Detach(d.Id())
+	c := m.(*client.Holder)
+	err := c.Policy.Detach(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = client.Policy.Delete(d.Id())
+	err = c.Policy.Delete(d.Id())
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	log.Println("[POLICY WEB|RES|DELETE] deleted web policy")
 	return
 }
 
