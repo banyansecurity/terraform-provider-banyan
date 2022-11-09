@@ -24,12 +24,12 @@ func resourceServiceInfraTcp() *schema.Resource {
 
 func resourceServiceInfraTcpDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "Resource used for lifecycle management of TCP services",
+		Description:        "(Depreciated) Resource used for lifecycle management of TCP services",
 		CreateContext:      resourceServiceInfraTcpCreate,
-		ReadContext:        resourceServiceInfraTcpRead,
+		ReadContext:        resourceServiceInfraTcpReadDepreciated,
 		UpdateContext:      resourceServiceInfraTcpUpdate,
 		DeleteContext:      resourceServiceDelete,
-		Schema:             TcpSchema(),
+		Schema:             TcpSchemaDepreciated(),
 		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_tcp",
 	}
 }
@@ -49,6 +49,34 @@ func TcpSchema() map[string]*schema.Schema {
 			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
 			Optional:    true,
 			Default:     false,
+		},
+	}
+	return combineSchema(s, resourceServiceInfraCommonSchema)
+}
+
+func TcpSchemaDepreciated() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"client_banyanproxy_allowed_domains": {
+			Type:        schema.TypeSet,
+			Description: "Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity",
+			Optional:    true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+			Optional:    true,
+			Default:     false,
+		},
+		"cluster": {
+			Type:        schema.TypeString,
+			Description: "(Depreciated) Sets the cluster / shield for the service",
+			Computed:    true,
+			Optional:    true,
+			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+			ForceNew:    true,
 		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
@@ -76,6 +104,24 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
+	return
+}
+
+func resourceServiceInfraTcpReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	id := d.Id()
+	svc, err := c.Service.Get(id)
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
+	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
+	// trick to allow this key to stay in the schema
+	err = d.Set("policy", nil)
 	return
 }
 
