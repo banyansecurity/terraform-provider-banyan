@@ -62,7 +62,7 @@ func TestAccService_ssh(t *testing.T) {
 			{
 				Config: testAccService_ssh_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_ssh.example", &bnnService),
+					testAccCheckExistingService("banyan_service_ssh.example", &bnnService),
 					testAccCheckAgainstJson(t, testAccService_ssh_create_json(rName), &bnnService.ServiceID),
 				),
 			},
@@ -105,7 +105,7 @@ func testAccService_ssh_create_json(name string) string {
             "ssh_service_type": "TRUSTCERT",
             "write_ssh_config": true,
             "ssh_chain_mode": false,
-            "ssh_host_directive": "%s-ssh.corp.com",
+            "ssh_host_directive": "",
             "description_link": ""
         }
     },
@@ -197,5 +197,5 @@ func testAccService_ssh_create_json(name string) string {
         "client_cidrs": []
     }
 }
-`, name, name, name, name, name, name)
+`, name, name, name, name, name)
 }
