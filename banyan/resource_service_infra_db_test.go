@@ -83,7 +83,7 @@ func testAccService_database_create_json(name string) string {
     "metadata": {
         "name": "%s",
         "description": "some database service description",
-        "cluster": "tortoise",
+        "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",

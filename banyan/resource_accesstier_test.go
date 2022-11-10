@@ -24,7 +24,7 @@ func TestAccAccessTier_required(t *testing.T) {
 					resource "banyan_api_key" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						scope             = "satellite"
+						scope             = "access_tier"
 					}
 					resource banyan_accesstier "example" {
 						name = "%s"
@@ -41,7 +41,7 @@ func TestAccAccessTier_required(t *testing.T) {
 					resource "banyan_api_key" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						scope             = "satellite"
+						scope             = "access_tier"
 					}
 					resource banyan_accesstier "example" {
 						name = "%s"
@@ -70,7 +70,7 @@ func TestAccAccessTier_optional(t *testing.T) {
 					resource "banyan_api_key" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						scope             = "satellite"
+						scope             = "access_tier"
 					}
 
 					resource banyan_accesstier "example" {
@@ -96,13 +96,13 @@ func TestAccAccessTier_optional(t *testing.T) {
 					resource "banyan_api_key" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						scope             = "satellite"
+						scope             = "access_tier"
 					}
 
 					resource banyan_accesstier "example" {
 						name = "%s"
 						address = "*.exampletwo.com"
-						api_key_id = "%s"
+						api_key_id = banyan_api_key.example.id
 						tunnel_connector_port = 39104
 						tunnel_cidrs = ["10.0.3.0/16"]
 						tunnel_private_domains = ["example.com"]
@@ -112,7 +112,7 @@ func TestAccAccessTier_optional(t *testing.T) {
 						event_key_rate_limiting = true
                         statsd_address = "10.0.3.6"
 					}
-					`, rName, rName, rName),
+					`, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
@@ -153,7 +153,7 @@ func testAccCheckAccessTierDestroy(t *testing.T, resourceName string) resource.T
 		if !ok {
 			return fmt.Errorf("resource not found in state %q", rs)
 		}
-		r, _ := testAccClient.AccessTier.Get(rs.Primary.ID)
+		r, _ := testAccClient.AccessTier.Get(resourceName)
 		assert.Equal(t, r, emptyAccessTier)
 		return nil
 	}

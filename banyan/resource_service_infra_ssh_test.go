@@ -93,7 +93,7 @@ func testAccService_ssh_create_json(name string) string {
     "metadata": {
         "name": "%s-ssh",
         "description": "some SSH service description",
-        "cluster": "tortoise",
+        "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",

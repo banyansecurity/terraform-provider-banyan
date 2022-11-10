@@ -475,7 +475,7 @@ func expandLogging(d *schema.ResourceData) (expanded *accesstier.LoggingParamete
 		LogNum:          GetIntPtr(d, "log_num"),
 		LogSize:         GetIntPtr(d, "log_size"),
 		StatsD:          statsd,
-		StatsDAddress:   GetStringPtr(d, "stats_d_address"),
+		StatsDAddress:   statsdAddress,
 	}
 	return &e
 }

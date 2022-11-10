@@ -50,7 +50,7 @@ func testAccService_infra_rdp_create_json(name string) string {
     "metadata": {
         "name": "%s-rdp",
         "description": "some RDP service description",
-        "cluster": "tortoise",
+        "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",

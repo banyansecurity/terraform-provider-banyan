@@ -128,7 +128,7 @@ func testAccService_tcp_create_json(name string) string {
     "metadata": {
         "name": "%s-tcp",
         "description": "some tcp service description",
-        "cluster": "tortoise",
+        "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
