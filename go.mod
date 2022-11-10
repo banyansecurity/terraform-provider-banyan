@@ -7,6 +7,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v1.3.1 // indirect
+	github.com/hashicorp/terraform-plugin-docs v0.13.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.14.1 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.0
 	github.com/hashicorp/yamux v0.1.1 // indirect
@@ -16,6 +17,7 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.2
+	github.com/terraform-docs/terraform-docs v0.16.0 // indirect
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	github.com/zclconf/go-cty v1.12.1 // indirect
 	golang.org/x/crypto v0.1.0 // indirect

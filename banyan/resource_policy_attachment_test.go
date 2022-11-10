@@ -25,12 +25,6 @@ func TestAccPolicyAttachment_lifecycle(t *testing.T) {
 				Config: testAccPolicyAttachment_lifecycle_create(rName),
 				Check:  testAccCheckExistingPolicyAttachment("banyan_policy_attachment.example", &policyAttachment),
 			},
-			{
-				Config: testAccPolicyAttachment_lifecycle_attach_multiple(rName),
-			},
-			{
-				Config: testAccPolicyAttachment_lifecycle_detach(rName),
-			},
 		},
 	})
 }
@@ -60,7 +54,7 @@ func testAccPolicyAttachment_lifecycle_create(name string) string {
 resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   name        = "%s"
   description = "some tcp service description"
-  cluster     = "tortoise"
+  cluster     = "cluster1"
   access_tier   = "us-west1"
   domain =  "%s.corp.com"
   backend_domain = "%s.internal"
@@ -95,7 +89,7 @@ func testAccPolicyAttachment_lifecycle_attach_multiple(name string) string {
 resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   name        = "%s"
   description = "some tcp service description"
-  cluster     = "tortoise"
+  cluster     = "cluster1"
   access_tier   = "us-west1"
   domain =  "%s.corp.com"
   backend_domain = "%s.internal"
@@ -105,7 +99,7 @@ resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
 resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle-two" {
   name        = "%s-two"
   description = "some tcp service description"
-  cluster     = "tortoise"
+  cluster     = "cluster1"
   access_tier   = "us-west1"
   domain =  "%s-two.corp.com"
   backend_domain = "%s-two.internal"
@@ -148,7 +142,7 @@ func testAccPolicyAttachment_lifecycle_detach(name string) string {
 resource "banyan_service_infra_tcp" "acctest-policy-attachment-lifecycle" {
   name        = "%s"
   description = "some tcp service description"
-  cluster     = "tortoise"
+  cluster     = "cluster1"
   access_tier   = "us-west1"
   domain =  "%s.corp.com"
   backend_domain = "%s.internal"

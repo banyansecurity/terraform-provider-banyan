@@ -15,7 +15,7 @@ import (
 
 func resourceAccessTier() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource for managing access tiers",
+		Description:   "The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider. For more information about the access tier see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/accesstier/)",
 		CreateContext: resourceAccessTierCreate,
 		ReadContext:   resourceAccessTierRead,
 		UpdateContext: resourceAccessTierUpdate,
@@ -90,13 +90,13 @@ func AccessTierSchema() map[string]*schema.Schema {
 		"console_log_level": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			Description:  "Controls verbosity of logs to console",
+			Description:  "Controls verbosity of logs to console. Must be one of \"ERR\", \"WARN\", \"INFO\", \"DEBUG\"",
 			ValidateFunc: validation.StringInSlice([]string{"ERR", "WARN", "INFO", "DEBUG"}, false),
 		},
 		"file_log_level": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			Description:  "Controls verbosity of logs to file",
+			Description:  "Controls verbosity of logs to file. Must be one of \"ERR\", \"WARN\", \"INFO\", \"DEBUG\"",
 			ValidateFunc: validation.StringInSlice([]string{"ERR", "WARN", "INFO", "DEBUG"}, false),
 		},
 		"file_log": {
@@ -142,7 +142,7 @@ func AccessTierSchema() map[string]*schema.Schema {
 		"infra_maximum_session_timeout": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "",
+			Description: "Timeout in seconds infrastructure sessions connected via the access tier",
 		},
 		"debug_http_backend_log": {
 			Type:        schema.TypeBool,
@@ -475,7 +475,7 @@ func expandLogging(d *schema.ResourceData) (expanded *accesstier.LoggingParamete
 		LogNum:          GetIntPtr(d, "log_num"),
 		LogSize:         GetIntPtr(d, "log_size"),
 		StatsD:          statsd,
-		StatsDAddress:   GetStringPtr(d, "stats_d_address"),
+		StatsDAddress:   statsdAddress,
 	}
 	return &e
 }

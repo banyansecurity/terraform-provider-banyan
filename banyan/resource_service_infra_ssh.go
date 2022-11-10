@@ -14,7 +14,7 @@ import (
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraSsh() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of SSH services",
+		Description:   "Resource used for lifecycle management of SSH services. For more information on SSH services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/ssh-servers/)",
 		CreateContext: resourceServiceInfraSshCreate,
 		ReadContext:   resourceServiceInfraSshRead,
 		UpdateContext: resourceServiceInfraSshUpdate,
@@ -25,7 +25,7 @@ func resourceServiceInfraSsh() *schema.Resource {
 
 func resourceServiceInfraSshDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of SSH services",
+		Description:        "(Depreciated) Resource used for lifecycle management of SSH services. Please utilize `banyan_service_ssh` instead",
 		CreateContext:      resourceServiceInfraSshCreate,
 		ReadContext:        resourceServiceInfraSshReadDepreciated,
 		UpdateContext:      resourceServiceInfraSshUpdate,

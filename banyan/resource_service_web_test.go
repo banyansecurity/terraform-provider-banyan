@@ -126,7 +126,7 @@ func testAccService_basic_web_create_json(name string) string {
     "metadata": {
         "name": "%s-web",
         "description": "",
-        "cluster": "tortoise",
+        "cluster": "cluster1",
         "tags": {
             "template": "WEB_USER",
             "user_facing": "true",
@@ -225,7 +225,7 @@ func testAccService_basic_web_update_json(name string) string {
     "metadata": {
         "name": "%s-web",
         "description": "",
-        "cluster": "tortoise",
+        "cluster": "cluster1",
         "tags": {
             "template": "WEB_USER",
             "user_facing": "true",

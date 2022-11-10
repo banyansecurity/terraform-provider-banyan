@@ -56,6 +56,23 @@ func TestSchemaServiceInfraTcp_tcp_conn(t *testing.T) {
 	AssertCreateServiceEqual(t, svc_obj, ref_obj)
 }
 
+func TestAccService_tcp_depr(t *testing.T) {
+	var bnnService service.GetServiceSpec
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccService_tcp_depr_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingService("banyan_service_infra_tcp.example", &bnnService),
+				),
+			},
+		},
+	})
+}
+
 func TestAccService_tcp(t *testing.T) {
 	var bnnService service.GetServiceSpec
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -75,7 +92,7 @@ func TestAccService_tcp(t *testing.T) {
 }
 
 // Returns terraform configuration for a typical k8s service
-func testAccService_tcp_create(name string) string {
+func testAccService_tcp_depr_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service_infra_tcp" "example" {
   name        = "%s-tcp"
@@ -89,6 +106,19 @@ resource "banyan_service_infra_tcp" "example" {
 `, name, name, name)
 }
 
+func testAccService_tcp_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_service_infra_tcp" "example" {
+  name        = "%s-tcp"
+  description = "some tcp service description"
+  access_tier   = "us-west1"
+  domain      = "%s-tcp.corp.com"
+  backend_domain = "%s-tcp.internal"
+  backend_port = 5673
+}
+`, name, name, name)
+}
+
 func testAccService_tcp_create_json(name string) string {
 	return fmt.Sprintf(`
 {
@@ -98,7 +128,7 @@ func testAccService_tcp_create_json(name string) string {
     "metadata": {
         "name": "%s-tcp",
         "description": "some tcp service description",
-        "cluster": "tortoise",
+        "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
@@ -108,7 +138,7 @@ func testAccService_tcp_create_json(name string) string {
             "icon": "",
             "service_app_type": "GENERIC",
             "banyanproxy_mode": "TCP",
-            "app_listen_port": "5673",
+            "app_listen_port": "0",
             "allow_user_override": true,
             "description_link": "",
    			"include_domains": []

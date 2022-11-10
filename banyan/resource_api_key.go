@@ -11,7 +11,7 @@ import (
 
 func resourceApiKey() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manages API keys",
+		Description:   "The API key resource manages the lifecycle of API keys. API keys are used to provide authentication inside various permissions scopes. For more information on API keys see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/command-center/api-keys/)",
 		CreateContext: resourceApiKeyCreate,
 		ReadContext:   resourceApiKeyRead,
 		UpdateContext: resourceApiKeyUpdate,

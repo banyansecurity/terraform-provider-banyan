@@ -13,7 +13,7 @@ import (
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceWeb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of web services",
+		Description:   "Resource used for lifecycle management of web services. For more information on web services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/hosted-websites/)",
 		CreateContext: resourceServiceWebCreate,
 		ReadContext:   resourceServiceWebRead,
 		UpdateContext: resourceServiceWebUpdate,
@@ -26,7 +26,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 	s = map[string]*schema.Schema{
 		"id": {
 			Type:        schema.TypeString,
-			Description: "Id of the service",
+			Description: "Id of the service in Banyan",
 			Computed:    true,
 		},
 		"name": {
@@ -137,7 +137,12 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	svc := WebFromState(d)
-	return resourceServiceUpdate(svc, d, m)
+	diagnostics = resourceServiceUpdate(svc, d, m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+	diagnostics = resourceServiceWebRead(ctx, d, m)
+	return
 }
 
 func WebFromState(d *schema.ResourceData) (svc service.CreateService) {

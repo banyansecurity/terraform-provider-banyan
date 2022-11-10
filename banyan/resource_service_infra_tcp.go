@@ -13,7 +13,7 @@ import (
 // Schema for the service resource. For more information on Banyan services, see the documentation
 func resourceServiceInfraTcp() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of TCP services",
+		Description:   "Resource used for lifecycle management of generic TCP services. For more information on generic TCP services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/tcp-services/)",
 		CreateContext: resourceServiceInfraTcpCreate,
 		ReadContext:   resourceServiceInfraTcpRead,
 		UpdateContext: resourceServiceInfraTcpUpdate,
@@ -24,7 +24,7 @@ func resourceServiceInfraTcp() *schema.Resource {
 
 func resourceServiceInfraTcpDepreciated() *schema.Resource {
 	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of TCP services",
+		Description:        "(Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize `banyan_service_tcp` instead",
 		CreateContext:      resourceServiceInfraTcpCreate,
 		ReadContext:        resourceServiceInfraTcpReadDepreciated,
 		UpdateContext:      resourceServiceInfraTcpUpdate,
@@ -127,7 +127,12 @@ func resourceServiceInfraTcpReadDepreciated(ctx context.Context, d *schema.Resou
 
 func resourceServiceInfraTcpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	svc := TcpFromState(d)
-	return resourceServiceUpdate(svc, d, m)
+	diagnostics = resourceServiceUpdate(svc, d, m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+	diagnostics = resourceServiceInfraTcpRead(ctx, d, m)
+	return
 }
 
 func TcpFromState(d *schema.ResourceData) (svc service.CreateService) {
