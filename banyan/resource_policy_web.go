@@ -146,12 +146,17 @@ func resourcePolicyWebRead(ctx context.Context, d *schema.ResourceData, m interf
 
 func resourcePolicyWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	err := c.Policy.Detach(c.PolicyAttachment, d.Id())
+	resp, err := c.Policy.Get(d.Id())
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
+	err = c.Policy.Detach(c.PolicyAttachment, resp.ID)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	err = c.Policy.Delete(d.Id())
+	err = c.Policy.Delete(resp.ID)
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
