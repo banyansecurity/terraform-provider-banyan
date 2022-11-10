@@ -127,7 +127,12 @@ func resourceServiceInfraTcpReadDepreciated(ctx context.Context, d *schema.Resou
 
 func resourceServiceInfraTcpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	svc := TcpFromState(d)
-	return resourceServiceUpdate(svc, d, m)
+	diagnostics = resourceServiceUpdate(svc, d, m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+	diagnostics = resourceServiceInfraTcpRead(ctx, d, m)
+	return
 }
 
 func TcpFromState(d *schema.ResourceData) (svc service.CreateService) {

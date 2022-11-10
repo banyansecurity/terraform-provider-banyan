@@ -137,7 +137,12 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	svc := WebFromState(d)
-	return resourceServiceUpdate(svc, d, m)
+	diagnostics = resourceServiceUpdate(svc, d, m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+	diagnostics = resourceServiceWebRead(ctx, d, m)
+	return
 }
 
 func WebFromState(d *schema.ResourceData) (svc service.CreateService) {
