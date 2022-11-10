@@ -14,7 +14,7 @@ For more information visit the [Banyan website](https://www.banyansecurity.io/) 
 
 # Release Notes
 
-For important information on this release please visit the [Release Notes](https://github.com/banyansecurity/terraform-provider-banyan/releases/tag/v0.9.0)
+For important information on this release please visit the [Release Notes](https://github.com/banyansecurity/terraform-provider-banyan/releases/tag/v0.9.1)
 
 ## Example Usage
 
