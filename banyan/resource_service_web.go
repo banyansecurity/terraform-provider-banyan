@@ -116,22 +116,21 @@ func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 	svc := WebFromState(d)
-	return resourceServiceCreate(svc, d, m)
+	diagnostics = resourceServiceCreate(svc, d, m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+	return resourceServiceWebRead(ctx, d, m)
 }
 
 func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	id := d.Id()
-	resp, err := c.Service.Get(id)
-	// set policy for service
-	policy, err := c.Service.GetPolicyForService(resp.ServiceID)
+	svc, err := c.Service.Get(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		handleNotFoundError(d, err)
+		return
 	}
-	err = d.Set("policy", policy.ID)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
 	return
 }
 

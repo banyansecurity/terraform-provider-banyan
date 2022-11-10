@@ -6,9 +6,9 @@ description: |-
   (Depreciated) Resource used for lifecycle management of kubernetes services. Please utilize banyan_service_k8s instead
 ---
 
-# banyan_service_infra_k8s (Resource)
+# banyan_service_infra_k8s (Resource) (Depreciated)
 
-(Depreciated) Resource used for lifecycle management of kubernetes services. Please utilize `banyan_service_k8s` instead
+Resource used for lifecycle management of kubernetes services. Please utilize `banyan_service_k8s` instead
 
 ## Example Usage
 
@@ -17,7 +17,8 @@ resource "banyan_service_infra_k8s" "example" {
   name                            = "example-k8s"
   description                     = "some k8s service description"
   access_tier                     = "us-west1"
-  domain                          = "example-k8s.corp.com"
+  domain                          = "example-k8s.us-west1.mycompany.com"
+  backend_domain                  = "example-k8s.internal"
   backend_dns_override_for_domain = "example-k8s.service"
   client_kube_cluster_name        = "k8s-cluster"
   client_kube_ca_key              = "k8scAk3yH3re"
@@ -29,6 +30,8 @@ resource "banyan_service_infra_k8s" "example" {
 
 ### Required
 
+- `backend_domain` (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using http_connect
+- `backend_port` (Number) The internal port where this service is hosted; set to 0 if using http_connect
 - `domain` (String) The external-facing network address for this service; ex. website.example.com
 - `name` (String) Name of the service; use lowercase alphanumeric characters or "-"
 
@@ -36,18 +39,12 @@ resource "banyan_service_infra_k8s" "example" {
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
-- `backend_domain` (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using http_connect
-- `backend_port` (Number) The internal port where this service is hosted; set to 0 if using http_connect
-- `client_banyanproxy_allowed_domains` (Set of String) Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity
 - `client_banyanproxy_listen_port` (Number) Local listen port to be used by client proxy; if not specified, a random local port will be used
 - `client_kube_ca_key` (String) CA Public Key generated during Kube-OIDC-Proxy deployment
 - `client_kube_cluster_name` (String) Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters
-- `client_ssh_auth` (String) Specifies which certificates - TRUSTCERT | SSHCERT | BOTH - should be used when the user connects to this service; default: TRUSTCERT
-- `client_ssh_host_directive` (String) Creates an entry in the SSH config file using the Host keyword. Wildcards are supported such as "192.168.*.?"; default: <service name>
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
-- `http_connect` (Boolean) Indicates to use HTTP Connect request to derive the backend target address.
 - `policy` (String) Policy ID to be attached to this service
 - `port` (Number) The external-facing port for this service
 

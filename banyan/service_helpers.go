@@ -565,7 +565,12 @@ func combineSchema(a map[string]*schema.Schema, b map[string]*schema.Schema) map
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	err := c.Service.DetachPolicy(d.Id())
+	svc, err := c.Service.Get(d.Id())
+	if err != nil {
+		handleNotFoundError(d, err)
+		return
+	}
+	err = c.Service.DetachPolicy(svc.ServiceID)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -1,3 +1,4 @@
+---
 page_title: "banyan_accesstier Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-

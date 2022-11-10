@@ -37,7 +37,7 @@ resource "banyan_connector" "example" {
 
 ### Optional
 
-- `access_tiers` (Set of String) Name of the access tier the connector will use to establish a secure dial-out connection. Will be set automatically if omitted.
+- `access_tiers` (Set of String) Names of the access tiers the connector will use to establish a secure dial-out connection. Will be set automatically if omitted (Recommended).
 - `cidrs` (Set of String) Specifies the IPv4 address ranges of your private network in CIDR notation, ex: 192.168.1.0/24. Note that you can only specify private IP address ranges as defined in RFC-1918.
 - `keepalive` (Number) Keepalive value for the connector
 
