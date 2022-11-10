@@ -6,9 +6,9 @@ description: |-
   (Depreciated) Resource used for lifecycle management of database services. Please utilize banyan_service_db instead
 ---
 
-# banyan_service_infra_db (Resource)
+# banyan_service_infra_db (Resource) (Depreciated)
 
-(Depreciated) Resource used for lifecycle management of database services. Please utilize `banyan_service_db` instead
+Resource used for lifecycle management of database services. Please utilize `banyan_service_db` instead
 
 ## Example Usage
 

@@ -6,9 +6,9 @@ description: |-
   (Depreciated) The policy attachment resource attaches a policy to a service. This functionality has been moved to the "policy" parameter of the respective service resource
 ---
 
-# banyan_policy_attachment (Resource)
+# banyan_policy_attachment (Resource) (Depreciated)
 
-(Depreciated) The policy attachment resource attaches a policy to a service. This functionality has been moved to the "policy" parameter of the respective service resource
+The policy attachment resource attaches a policy to a service. This functionality has been moved to the "policy" parameter of the respective service resource
 
 ## Example Usage
 

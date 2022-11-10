@@ -6,9 +6,9 @@ description: |-
   (Depreciated) Resource used for lifecycle management of SSH services. Please utilize banyan_service_ssh instead
 ---
 
-# banyan_service_infra_ssh (Resource)
+# banyan_service_infra_ssh (Resource) (Depreciated)
 
-(Depreciated) Resource used for lifecycle management of SSH services. Please utilize `banyan_service_ssh` instead
+Resource used for lifecycle management of SSH services. Please utilize `banyan_service_ssh` instead
 
 ## Example Usage
 

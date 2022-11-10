@@ -6,9 +6,9 @@ description: |-
   (Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize banyan_service_tcp instead
 ---
 
-# banyan_service_infra_tcp (Resource)
+# banyan_service_infra_tcp (Resource) (Depreciated)
 
-(Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize `banyan_service_tcp` instead
+Resource used for lifecycle management of generic TCP services. Please utilize `banyan_service_tcp` instead
 
 ## Example Usage
 

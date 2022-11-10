@@ -6,9 +6,9 @@ description: |-
   (Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize banyan_service_rdp instead
 ---
 
-# banyan_service_infra_rdp (Resource)
+# banyan_service_infra_rdp (Resource) (Depreciated)
 
-(Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize `banyan_service_rdp` instead
+Resource used for lifecycle management of microsoft remote desktop services. Please utilize `banyan_service_rdp` instead
 
 ## Example Usage
 
