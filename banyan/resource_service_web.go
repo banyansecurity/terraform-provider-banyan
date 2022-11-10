@@ -116,7 +116,11 @@ func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 	svc := WebFromState(d)
-	return resourceServiceCreate(svc, d, m)
+	diagnostics = resourceServiceCreate(svc, d, m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+	return resourceServiceWebRead(ctx, d, m)
 }
 
 func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {

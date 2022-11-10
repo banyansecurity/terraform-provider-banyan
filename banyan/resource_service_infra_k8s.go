@@ -89,7 +89,11 @@ func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 	svc := K8sFromState(d)
-	return resourceServiceCreate(svc, d, m)
+	diagnostics = resourceServiceCreate(svc, d, m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+	return resourceServiceInfraK8sRead(ctx, d, m)
 }
 
 func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {

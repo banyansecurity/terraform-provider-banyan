@@ -111,7 +111,11 @@ func resourceServiceInfraSshCreate(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 	svc := SshFromState(d)
-	return resourceServiceCreate(svc, d, m)
+	diagnostics = resourceServiceCreate(svc, d, m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+	return resourceServiceInfraSshRead(ctx, d, m)
 }
 
 func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {

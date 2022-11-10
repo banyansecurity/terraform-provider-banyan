@@ -88,7 +88,11 @@ func resourceServiceInfraTcpCreate(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 	svc := TcpFromState(d)
-	return resourceServiceCreate(svc, d, m)
+	diagnostics = resourceServiceCreate(svc, d, m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+	return resourceServiceInfraTcpRead(ctx, d, m)
 }
 
 func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
