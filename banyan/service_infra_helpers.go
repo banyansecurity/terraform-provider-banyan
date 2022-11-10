@@ -30,7 +30,6 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Description of the service",
-		Default:     "resourceServiceInfraSsh",
 	},
 	"access_tier": {
 		Type:          schema.TypeString,
