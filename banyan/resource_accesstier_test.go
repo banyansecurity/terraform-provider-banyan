@@ -10,13 +10,9 @@ import (
 	"testing"
 )
 
-const apiKeyID = "f0da9734-10b7-4ace-85ae-05206119cc69"
-
 // The required test is used to test the lifecycle of a resource with only the required parameters set
 func TestAccAccessTier_required(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	//address := "*.example.com"
-	//api_key_id := "%s"
 	r := accesstier.AccessTierInfo{}
 
 	resource.Test(t, resource.TestCase{
@@ -24,13 +20,35 @@ func TestAccAccessTier_required(t *testing.T) {
 		CheckDestroy: testAccCheckAccessTierDestroy(t, "banyan_accesstier.example"),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessTier_create_required(rName),
+				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.example.com"
+						api_key_id = banyan_api_key.example.id
+					}
+					`, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
 			},
 			{
-				Config: testAccAccessTier_update_required(rName),
+				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.example.com"
+						api_key_id = banyan_api_key.example.id
+					}
+					`, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
@@ -49,10 +67,16 @@ func TestAccAccessTier_optional(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
 					resource banyan_accesstier "example" {
 						name = "%s"
 						address = "*.example.com"
-						api_key_id = "%s"
+						api_key_id = banyan_api_key.example.id
 						tunnel_connector_port = 39103
 						tunnel_cidrs = ["10.0.2.0/16"]
 						tunnel_private_domains = ["test.com"]
@@ -60,18 +84,25 @@ func TestAccAccessTier_optional(t *testing.T) {
 						forward_trust_cookie = true
 						events_rate_limiting = true
 						event_key_rate_limiting = true
+                        statsd_address = "10.0.3.5"
 					}
-					`, rName, apiKeyID),
+					`, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
 			},
 			{
 				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
 					resource banyan_accesstier "example" {
 						name = "%s"
 						address = "*.exampletwo.com"
-						api_key_id = "%s"
+						api_key_id = banyan_api_key.example.id
 						tunnel_connector_port = 39104
 						tunnel_cidrs = ["10.0.3.0/16"]
 						tunnel_private_domains = ["example.com"]
@@ -79,8 +110,9 @@ func TestAccAccessTier_optional(t *testing.T) {
 						forward_trust_cookie = true
 						events_rate_limiting = true
 						event_key_rate_limiting = true
+                        statsd_address = "10.0.3.6"
 					}
-					`, rName, apiKeyID),
+					`, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
@@ -121,30 +153,8 @@ func testAccCheckAccessTierDestroy(t *testing.T, resourceName string) resource.T
 		if !ok {
 			return fmt.Errorf("resource not found in state %q", rs)
 		}
-		r, _ := testAccClient.AccessTier.Get(rs.Primary.ID)
+		r, _ := testAccClient.AccessTier.Get(resourceName)
 		assert.Equal(t, r, emptyAccessTier)
 		return nil
 	}
-}
-
-// Returns terraform configuration with the required parameters set
-func testAccAccessTier_create_required(name string) string {
-	return fmt.Sprintf(`
-resource banyan_accesstier "example" {
-  name = "%s"
-  address = "*.example.com"
-  api_key_id = "%s"
-}
-`, name, apiKeyID)
-}
-
-// Returns terraform configuration with the required parameters updated
-func testAccAccessTier_update_required(name string) string {
-	return fmt.Sprintf(`
-resource banyan_accesstier "example" {
-  name = "%s-updated"
-  address = "*.updated.com"
-  api_key_id = "%s"
-}
-`, name, apiKeyID)
 }

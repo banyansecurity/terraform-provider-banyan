@@ -157,7 +157,8 @@ func GetStringPtr(d *schema.ResourceData, key string) (result *string) {
 	if !ok {
 		return nil
 	}
-	return r.(*string)
+	x := r.(string)
+	return &x
 }
 
 func GetBoolPtr(d *schema.ResourceData, key string) (result *bool) {
@@ -174,7 +175,8 @@ func GetIntPtr(d *schema.ResourceData, key string) (result *int) {
 	if !ok {
 		return nil
 	}
-	return r.(*int)
+	x := r.(int)
+	return &x
 }
 
 // creates the hostTagSelector key

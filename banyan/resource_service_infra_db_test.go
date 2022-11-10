@@ -54,13 +54,12 @@ func TestAccService_database(t *testing.T) {
 func testAccService_database_create(name string) string {
 	return fmt.Sprintf(`
 resource "banyan_service_db" "example" {
-  name        = "%s-db"
+  name        = "%s"
   description = "some database service description"
   access_tier   = "us-west1"
-  domain      = "%s-db.corp.com"
-  backend_domain = ""
-  backend_port = 0
-  http_connect = true
+  domain      = "%s.us-west.mycompany.com"
+  backend_domain = "example-db.internal"
+  backend_port = 3306
   policy = banyan_policy_infra.example.id
 }
 
@@ -82,18 +81,18 @@ func testAccService_database_create_json(name string) string {
     "apiVersion": "rbac.banyanops.com/v1",
     "type": "origin",
     "metadata": {
-        "name": "%s-db",
+        "name": "%s",
         "description": "some database service description",
-        "cluster": "tortoise",
+        "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
             "protocol": "tcp",
-            "domain": "%s-db.corp.com",
+            "domain": "%s.us-west.mycompany.com",
             "port": "8443",
             "icon": "",
             "service_app_type": "DATABASE",
-            "banyanproxy_mode": "CHAIN",
+            "banyanproxy_mode": "TCP",
             "app_listen_port": "0",
             "allow_user_override": true,
             "description_link": "",
@@ -103,7 +102,7 @@ func testAccService_database_create_json(name string) string {
     "spec": {
         "attributes": {
             "tls_sni": [
-                "%s-db.corp.com"
+                "%s.us-west.mycompany.com"
             ],
             "frontend_addresses": [
                 {
@@ -120,23 +119,20 @@ func testAccService_database_create_json(name string) string {
         },
         "backend": {
             "target": {
-                "name": "",
-                "port": "",
+                "name": "example-db.internal",
+                "port": "3306",
                 "tls": false,
                 "tls_insecure": false,
                 "client_certificate": false
             },
             "dns_overrides": {},
-            "whitelist": [],
-            "allow_patterns": [
-                {}
-            ],            
-            "http_connect": true,
+            "whitelist": [], 
+            "http_connect": false,
             "connector_name": ""
         },
         "cert_settings": {
             "dns_names": [
-                "%s-db.corp.com"
+                "%s.us-west.mycompany.com"
             ],
             "custom_tls_cert": {
                 "enabled": false,

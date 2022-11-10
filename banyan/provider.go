@@ -17,21 +17,25 @@ func Provider() *schema.Provider {
 			"host": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Description: "The Banyan Command Center API URL",
 				DefaultFunc: schema.EnvDefaultFunc("BANYAN_HOST", "https://net.banyanops.com/"),
 			},
 			"api_token": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Configure api_key instead. This attribute will be removed\n   in the 1.0 release of the provider.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "(Deprecated) A Banyan refresh token. Configure api_key instead",
+				Deprecated:  "Configure api_key instead. This attribute will be removed\n   in the 1.0 release of the provider.",
 			},
 			"api_key": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Description: "An admin scoped API key",
 				DefaultFunc: schema.EnvDefaultFunc("BANYAN_API_KEY", nil),
 			},
 			"refresh_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Description: "(Deprecated) A Banyan refresh token, Configure api_key instead",
 				DefaultFunc: schema.EnvDefaultFunc("BANYAN_REFRESH_TOKEN", nil),
 				Deprecated:  "Configure api_key instead. This attribute will be removed\n   in the 1.0 release of the provider.",
 			},

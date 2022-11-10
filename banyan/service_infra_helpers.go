@@ -17,7 +17,7 @@ import (
 var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 	"id": {
 		Type:        schema.TypeString,
-		Description: "Id of the service",
+		Description: "Id of the service in Banyan",
 		Computed:    true,
 	},
 	"name": {

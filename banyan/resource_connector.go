@@ -13,7 +13,7 @@ import (
 
 func resourceConnector() *schema.Resource {
 	return &schema.Resource{
-		Description:   "",
+		Description:   "The connector resource allows for configuration of the connector API object. We recommend utilizing the banyansecurity/banyan-connector terraform registry module specific to your cloud provider. For more information on connector resource see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/connector/)",
 		CreateContext: resourceConnectorCreate,
 		ReadContext:   resourceConnectorRead,
 		UpdateContext: resourceConnectorUpdate,
@@ -51,7 +51,7 @@ func resourceConnector() *schema.Resource {
 			"access_tiers": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Name of the access tier the connector will use to establish a secure dial-out connection. Set to \"global-edge\" for a global-edge connector",
+				Description: "Name of the access tier the connector will use to establish a secure dial-out connection. Will be set automatically if omitted.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

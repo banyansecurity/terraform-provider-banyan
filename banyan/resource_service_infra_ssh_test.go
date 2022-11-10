@@ -62,7 +62,7 @@ func TestAccService_ssh(t *testing.T) {
 			{
 				Config: testAccService_ssh_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_ssh.example", &bnnService),
+					testAccCheckExistingService("banyan_service_ssh.example", &bnnService),
 					testAccCheckAgainstJson(t, testAccService_ssh_create_json(rName), &bnnService.ServiceID),
 				),
 			},
@@ -73,16 +73,15 @@ func TestAccService_ssh(t *testing.T) {
 // Returns terraform configuration for a typical ssh service
 func testAccService_ssh_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_infra_ssh" "example" {
+resource "banyan_service_ssh" "example" {
   name                      = "%s-ssh"
   description               = "some SSH service description"
   access_tier               = "us-west1"
   domain                    = "%s-ssh.corp.com"
   backend_domain            = "%s-ssh.internal"
   backend_port              = 22
-  client_ssh_host_directive = "%s-ssh.corp.com"
 }
-`, name, name, name, name)
+`, name, name, name)
 }
 
 func testAccService_ssh_create_json(name string) string {
@@ -94,7 +93,7 @@ func testAccService_ssh_create_json(name string) string {
     "metadata": {
         "name": "%s-ssh",
         "description": "some SSH service description",
-        "cluster": "tortoise",
+        "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
@@ -106,7 +105,7 @@ func testAccService_ssh_create_json(name string) string {
             "ssh_service_type": "TRUSTCERT",
             "write_ssh_config": true,
             "ssh_chain_mode": false,
-            "ssh_host_directive": "%s-ssh.corp.com",
+            "ssh_host_directive": "",
             "description_link": ""
         }
     },
@@ -198,5 +197,5 @@ func testAccService_ssh_create_json(name string) string {
         "client_cidrs": []
     }
 }
-`, name, name, name, name, name, name)
+`, name, name, name, name, name)
 }

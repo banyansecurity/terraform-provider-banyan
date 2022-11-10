@@ -19,10 +19,16 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 			// Creates the servicetunnel with the given terraform configuration and asserts that the servicetunnel is created
 			{
 				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
 					resource banyan_accesstier "example" {
 						name = "%s"
 						address = "*.example.com"
-						api_key_id = "%s"
+						api_key_id = banyan_api_key.example.id
 					}
 
 					resource "banyan_policy_infra" "example" {
@@ -40,18 +46,23 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 						access_tier       = banyan_accesstier.example.name
                         policy            = banyan_policy_infra.example.id
 					}
-					`, rName, apiKeyID, rName, rName),
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("banyan_service_tunnel.example", "name", rName),
 				),
 			},
 			{
 				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
 					resource banyan_accesstier "example" {
 						name = "%s"
 						address = "*.example.com"
-						api_key_id = "%s"
-						tunnel_cidrs = ["10.0.0.1/24"]
+						api_key_id = banyan_api_key.example.id
 					}
 
 					resource "banyan_policy_infra" "example" {
@@ -69,7 +80,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 						access_tier       = banyan_accesstier.example.name
                         policy            = banyan_policy_infra.example.id
 					}
-					`, rName, apiKeyID, rName, rName),
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("banyan_service_tunnel.example", "name", rName),
 				),
