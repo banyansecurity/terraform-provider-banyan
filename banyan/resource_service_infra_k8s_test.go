@@ -65,5 +65,5 @@ resource "banyan_service_infra_k8s" "example" {
   client_kube_ca_key = "k8scAk3yH3re"
   client_banyanproxy_listen_port = "9119"
 }
-`, name, name, name)
+`, name, name, name, name)
 }
