@@ -2,9 +2,9 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
-	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"github.com/pkg/errors"
 	"html"
 	"log"
@@ -62,8 +62,10 @@ func (s *Service) Disable(id string) (err error) {
 	query := myUrl.Query()
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
-	resp, err := s.restClient.DoPost(myUrl.String(), nil)
-	_, err = restclient.HandleResponse(resp, "disable_registered_service")
+	_, err = s.restClient.DoPost(myUrl.String(), nil)
+	if err != nil {
+		err = fmt.Errorf("error disabling service %s", err)
+	}
 	log.Printf("disabled service: %q", id)
 	return
 }
@@ -82,6 +84,9 @@ func (s *Service) Delete(id string) (err error) {
 	query.Set("ServiceID", id)
 	myUrl.RawQuery = query.Encode()
 	err = s.restClient.DeleteQuery("service", id, query, path)
+	if err != nil {
+		err = fmt.Errorf("error deleting service %s", err)
+	}
 	log.Printf("deleted service: %q", id)
 	return
 }
