@@ -217,8 +217,5 @@ func expandK8sServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 		},
 	}
 	spec.Backend.AllowPatterns = allowPatterns
-	// force these for http_connect which is required for k8s
-	spec.Backend.HTTPConnect = true
-	spec.Backend.Target.Port = ""
 	return
 }
