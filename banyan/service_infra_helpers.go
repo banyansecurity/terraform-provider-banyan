@@ -52,12 +52,12 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 	},
 	"backend_domain": {
 		Type:        schema.TypeString,
-		Optional:    true,
+		Required:    true,
 		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
 	},
 	"backend_port": {
 		Type:         schema.TypeInt,
-		Optional:     true,
+		Required:     true,
 		Description:  "The internal port where this service is hosted; set to 0 if using http_connect",
 		ValidateFunc: validatePort(),
 	},
