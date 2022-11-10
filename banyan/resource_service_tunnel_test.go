@@ -40,7 +40,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 						access_tier       = banyan_accesstier.example.name
                         policy            = banyan_policy_infra.example.id
 					}
-					`, rName, apiKeyID, rName, rName),
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("banyan_service_tunnel.example", "name", rName),
 				),
@@ -69,7 +69,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 						access_tier       = banyan_accesstier.example.name
                         policy            = banyan_policy_infra.example.id
 					}
-					`, rName, apiKeyID, rName, rName),
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("banyan_service_tunnel.example", "name", rName),
 				),
