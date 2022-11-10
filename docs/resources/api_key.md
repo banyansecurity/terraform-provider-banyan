@@ -16,7 +16,7 @@ The API key resource manages the lifecycle of API keys. API keys are used to pro
 resource "banyan_api_key" "example" {
   name        = "my-api-key"
   description = "my api key"
-  scope       = "access_tier"
+  scope       = "connector"
 }
 ```
 

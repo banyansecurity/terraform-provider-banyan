@@ -32,14 +32,11 @@ resource "banyan_role" "example" {
 
 ### Optional
 
-- `container_fqdn` (Set of String) FQDN for the container
 - `device_ownership` (Set of String) Device ownership specification for the role
 - `email` (Set of String) Email address for the user or group of users in the role
-- `image` (Set of String) Image
 - `known_device_only` (Boolean) Enforces whether the role requires known devices only for access
 - `mdm_present` (Boolean) Enforces whether the role requires an MDM to be present on the device
 - `platform` (Set of String) Platform type which is required by the role
-- `repo_tag` (Set of String) Repo Tag
 - `service_accounts` (Set of String) Service accounts to be included in the role
 - `user_group` (Set of String) Name of the group (from your IdP) which will be included in the role
 

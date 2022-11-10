@@ -1,21 +1,25 @@
-# Example access tier with service tunnel and policy
+resource "banyan_api_key" "example" {
+  name        = "example api key"
+  description = "example api key"
+  scope       = "access_tier"
+}
 
 resource "banyan_accesstier" "example" {
   name         = "example"
   address      = "*.example.mycompany.com"
-  api_key_id   = "example"
+  api_key_id   = banyan_api_key.example.name
   tunnel_cidrs = ["10.10.1.0/24"]
 }
 
 resource "banyan_service_tunnel" "example" {
-  name        = "example"
-  description = "allows access to ${banyan_accesstier.example.name} service tunnel"
+  name        = "example-anyone-high"
+  description = "tunnel allowing anyone with a high trust level"
   access_tier = banyan_accesstier.example.name
-  policy      = banyan_policy_infra.example.id
+  policy      = banyan_policy_infra.anyone-high.id
 }
 
-resource "banyan_policy_infra" "example" {
-  name        = banyan_accesstier.example.name
+resource "banyan_policy_infra" "anyone-high" {
+  name        = "allow anyone"
   description = "${banyan_accesstier.example.name} allow"
   access {
     roles       = ["ANY"]

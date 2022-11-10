@@ -1,3 +1,17 @@
+terraform {
+  required_providers {
+    banyan = {
+      source  = "github.com/banyansecurity/banyan"
+      version = ">=0.9.0"
+    }
+  }
+}
+
+provider "banyan" {
+  api_key = "DAM-sKTrYSgkG9BI1o0KO1mI0hbRrda33_sEcgOCa9Y"
+  host = "https://dev06.console.bnntest.com"
+}
+
 resource "banyan_api_key" "example" {
   name        = "my-connector"
   description = "realdescription"

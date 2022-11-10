@@ -10,7 +10,11 @@ description: |-
 
 The Banyan Terraform Provider contains resources used to automate zero trust network access utilizing the Banyan API.
 
-For mor information visit the [Banyan website](https://www.banyansecurity.io/) or the [Banyan documentation](https://docs.banyansecurity.io/docs/)
+For more information visit the [Banyan website](https://www.banyansecurity.io/) or the [Banyan documentation](https://docs.banyansecurity.io/docs/)
+
+# Release Notes
+
+For important information on this release please visit the [Release Notes](https://github.com/banyansecurity/terraform-provider-banyan/releases/tag/v0.9.0)
 
 ## Example Usage
 
