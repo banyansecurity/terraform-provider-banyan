@@ -13,11 +13,12 @@ Resource used for lifecycle management of kubernetes services. For more informat
 ## Example Usage
 
 ```terraform
-resource "banyan_service_k8s" "example" {
+resource "banyan_service_infra_k8s" "example" {
   name                            = "example-k8s"
   description                     = "some k8s service description"
   access_tier                     = "us-west1"
-  domain                          = "example-k8s.corp.com"
+  domain                          = "example-k8s.us-west1.mycompany.com"
+  backend_domain                  = "example-k8s.internal"
   backend_dns_override_for_domain = "example-k8s.service"
   client_kube_cluster_name        = "k8s-cluster"
   client_kube_ca_key              = "k8scAk3yH3re"
