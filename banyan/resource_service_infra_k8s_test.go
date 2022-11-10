@@ -60,6 +60,7 @@ resource "banyan_service_infra_k8s" "example" {
   access_tier = "us-west1"
   domain      = "%s-k8s.corp.com"
   backend_domain      = "%s-k8s.internal"
+  backend_port = 6443
   backend_dns_override_for_domain = "%s-k8s.service"
   client_kube_cluster_name = "k8s-cluster"
   client_kube_ca_key = "k8scAk3yH3re"
