@@ -79,6 +79,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:         schema.TypeInt,
 			Required:     true,
 			Description:  "The internal port where this service is hosted",
+			Default:      443,
 			ValidateFunc: validatePort(),
 		},
 		"backend_tls": {
