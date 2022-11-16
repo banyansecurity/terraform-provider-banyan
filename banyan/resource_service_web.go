@@ -7,6 +7,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"log"
 	"strconv"
 )
 
@@ -125,6 +126,7 @@ func resourceServiceWebCreate(ctx context.Context, d *schema.ResourceData, m int
 }
 
 func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	log.Printf("[INFO] Reading service %s", d.Id())
 	c := m.(*client.Holder)
 	svc, err := c.Service.Get(d.Id())
 	if err != nil {
