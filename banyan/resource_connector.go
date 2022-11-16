@@ -48,7 +48,6 @@ func resourceConnector() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Default: []string{"*"},
 			},
 			"cidrs": {
 				Type:        schema.TypeSet,
@@ -71,6 +70,11 @@ func resourceConnector() *schema.Resource {
 }
 
 func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
+	// if access_tiers not set, use ["*"]
+	ats := convertSchemaSetToStringSlice(d.Get("access_tiers").(*schema.Set))
+	if ats == nil {
+		ats = []string{"*"}
+	}
 	spec := satellite.Info{
 		Kind:       "BanyanConnector",
 		APIVersion: "rbac.banyanops.com/v1",
@@ -84,7 +88,7 @@ func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
 			PeerAccessTiers: []satellite.PeerAccessTier{
 				{
 					Cluster:     d.Get("cluster").(string),
-					AccessTiers: convertSchemaSetToStringSlice(d.Get("access_tiers").(*schema.Set)),
+					AccessTiers: ats,
 				},
 			},
 			CIDRs:   convertSchemaSetToStringSlice(d.Get("cidrs").(*schema.Set)),
