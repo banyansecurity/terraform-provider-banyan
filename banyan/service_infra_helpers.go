@@ -2,6 +2,7 @@ package banyan
 
 import (
 	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"log"
 	"strconv"
 	"strings"
 
@@ -149,6 +150,7 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	d.SetId(d.Id())
+	log.Printf("[INFO] Read service %s", d.Id())
 	return
 }
 

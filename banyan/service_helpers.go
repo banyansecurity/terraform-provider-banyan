@@ -597,6 +597,7 @@ func resourceServiceCreate(svc service.CreateService, d *schema.ResourceData, m 
 }
 
 func attachPolicyToService(d *schema.ResourceData, c *client.Holder) (err error) {
+	log.Printf("[INFO] Getting policy for attachment %s", d.Id())
 	currentPolicy, err := c.Service.GetPolicyForService(d.Id())
 	if currentPolicy.ID != "" {
 		err = c.Policy.Detach(c.PolicyAttachment, currentPolicy.ID)
@@ -618,7 +619,11 @@ func attachPolicyToService(d *schema.ResourceData, c *client.Holder) (err error)
 		IsEnabled:      true,
 		Enabled:        "TRUE",
 	}
-	_, err = c.PolicyAttachment.Create(policyID, body)
+	pa, err := c.PolicyAttachment.Create(policyID, body)
+	if err != nil {
+		return
+	}
+	log.Printf("[INFO] Created policy attachment %s : %s", pa.PolicyID, pa.AttachedToID)
 	return
 }
 

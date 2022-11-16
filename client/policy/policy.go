@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"html"
+	"log"
 	"net/url"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
@@ -66,6 +67,7 @@ func (p *policy) Update(policy CreatePolicy) (updated GetPolicy, err error) {
 }
 
 func (p *policy) Detach(paClient policyattachment.Client, id string) (err error) {
+	log.Printf("[INFO] Detaching policy %s", id)
 	err = paClient.Delete(id)
 	return
 }
