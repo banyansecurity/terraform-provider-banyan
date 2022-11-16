@@ -15,9 +15,10 @@ After feedback and usage of the provider it was determined to consolidate and si
 Most notable are the service and policy resources.
 * The `banyan_service` resources now have a `policy` attribute which replaces the `banyan_policy_attachment` resource
 * The `banyan_service` resources no longer require a `cluster` attribute. This value will be determined automatically by the `access_tier` or `connector` attribute
-* The cluster parameter is not longer needed for any resources and should only be set for backwards compatibility (i.e. upgrading pre 0.9.0 terraform code)
-* The `banyan_service` resources no longer requires a `cluster` attribute. This value will be determined by the `access_tier` or `connector` attribute
-*  The `banyan_service_infra` resources have been depreciated and renamed. It is safe to modify existing terraform code to utilize the new shorted name, and to add the id of the policy to attach to the `policy` attribute. see the upgraded resources examples.
+* The cluster parameter is no longer needed for any resources and should only be set for backwards compatibility (i.e. upgrading pre 0.9.0 terraform code)
+* The `banyan_service` resources no longer requires a `cluster` attribute. This value will be determined by the `access_tier` or `connector` attribut
+* `banyan_policy_attachment` has been depreciated. This now exists as the `policy` attribute for the service resourcee
+*  The `banyan_service_infra` resources have been depreciated and renamed. It is safe to modify existing terraform code to utilize the new shorted name, and to add the id of the policy to attach to the `policy` attribute. see the upgraded resources examples. This would effectively recreate the services with the new format and remove the services and policy attachments created in the old format.
 * `banyan_policy_attachment` has been depreciated. This now exists as the `policy` attribute for the service resource
 
 The corresponding command center release brings with it new changes to the access tier which are reflected in this release of the terraform provider
