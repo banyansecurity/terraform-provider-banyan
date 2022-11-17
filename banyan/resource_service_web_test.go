@@ -1,13 +1,80 @@
 package banyan
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func TestSchemaServiceWeb_web_at(t *testing.T) {
+	svc_web_at := map[string]interface{}{
+		"name":           "web-at",
+		"description":    "pybanyan web-at",
+		"cluster":        "cluster1",
+		"access_tier":    "gcp-wg",
+		"domain":         "test-web-at.bar.com",
+		"backend_domain": "10.10.1.1",
+		"backend_port":   8000,
+	}
+	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_at)
+	svc_obj := WebFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/web-at.json")
+	var ref_obj service.CreateService
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+}
+
+func TestSchemaServiceWeb_web_conn(t *testing.T) {
+	svc_web_conn := map[string]interface{}{
+		"name":           "web-conn",
+		"description":    "pybanyan web-conn",
+		"cluster":        "managed-cl-edge1",
+		"connector":      "test-connector",
+		"domain":         "test-web-conn.tdupnsan.getbnn.com",
+		"backend_domain": "10.10.1.1",
+		"backend_port":   8080,
+	}
+	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_conn)
+	svc_obj := WebFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/web-conn.json")
+	var ref_obj service.CreateService
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+}
+
+func TestSchemaServiceWeb_web_certs(t *testing.T) {
+	svc_web_certs := map[string]interface{}{
+		"name":                 "web-certs",
+		"description":          "pybanyan web-certs",
+		"cluster":              "managed-cl-edge1",
+		"connector":            "test-connector",
+		"domain":               "test-web-certs.tdupnsan.getbnn.com",
+		"letsencrypt":          true,
+		"backend_domain":       "foo.backend.int",
+		"backend_port":         8080,
+		"backend_tls":          true,
+		"backend_tls_insecure": true,
+	}
+
+	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_certs)
+	svc_obj := WebFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/web-certs.json")
+	var ref_obj service.CreateService
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+}
 
 // Creates and updates a web service with required parameters
 func TestAccService_required_web(t *testing.T) {
