@@ -1,11 +1,35 @@
 package banyan
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"testing"
+
+	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"testing"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func TestSchemaServiceTunnel_tunnel_public(t *testing.T) {
+	svc_tunnel_public := map[string]interface{}{
+		"name":                   "tunnel-domains",
+		"description":            "describe tunnel-domains",
+		"cluster":                "cluster1",
+		"access_tiers":           []interface{}{"gcp-tdnovpn-v2"},
+		"public_cidrs_include":   []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
+		"public_domains_include": []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
+	}
+	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
+	svc_obj := TunFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/tunnel-public.json")
+	var ref_obj servicetunnel.Info
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertServiceTunnelEqual(t, svc_obj, ref_obj)
+}
 
 // Use the terraform plugin sdk testing framework for example testing servicetunnel lifecycle
 func TestAccServiceTunnel_basic(t *testing.T) {
