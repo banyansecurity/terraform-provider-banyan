@@ -50,6 +50,11 @@ func TcpSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     false,
 		},
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
 }

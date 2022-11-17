@@ -34,7 +34,14 @@ func resourceServiceInfraRdpDepreciated() *schema.Resource {
 }
 
 func RdpSchema() map[string]*schema.Schema {
-	return resourceServiceInfraCommonSchema
+	s := map[string]*schema.Schema{
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
+	}
+	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
 
 func RdpSchemaDepreciated() map[string]*schema.Schema {
