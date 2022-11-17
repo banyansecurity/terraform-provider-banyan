@@ -1,0 +1,30 @@
+{
+    "kind": "BanyanServiceTunnel",
+    "api_version": "rbac.banyanops.com/v1",
+    "type": "origin",
+    "metadata":
+    {
+        "name": "tunnel-at",
+        "friendly_name": "tunnel-at",
+        "description": "describe tunnel-at",
+        "tags":
+        {
+            "icon": "",
+            "description_link": ""
+        }
+    },
+    "spec":
+    {
+        "peer_access_tiers":
+        [
+            {
+                "cluster": "cluster1",
+                "access_tiers":
+                [
+                    "gcp-tdnovpn-v1",
+                    "gcp-tdnovpn-v2"
+                ]
+            }
+        ]
+    }
+}

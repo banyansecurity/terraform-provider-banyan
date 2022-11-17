@@ -12,6 +12,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func TestSchemaServiceTunnel_tunnel_at(t *testing.T) {
+	svc_tunnel_at := map[string]interface{}{
+		"name":         "tunnel-at",
+		"description":  "describe tunnel-at",
+		"cluster":      "cluster1",
+		"access_tiers": []interface{}{"gcp-tdnovpn-v1", "gcp-tdnovpn-v2"},
+	}
+	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_at)
+	svc_obj := TunFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/tunnel-at.json")
+	var ref_obj servicetunnel.Info
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertServiceTunnelEqual(t, svc_obj, ref_obj)
+}
+
+func TestSchemaServiceTunnel_tunnel_conn(t *testing.T) {
+	svc_tunnel_conn := map[string]interface{}{
+		"name":        "global-edge-tunnel",
+		"description": "Geo DNS to multiple ATs",
+		"cluster":     "managed-cl-edge1",
+		"connectors":  []interface{}{"gcp-test-drive", "td-gcp-tdnovpn"},
+	}
+	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_conn)
+	svc_obj := TunFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/tunnel-conn.json")
+	var ref_obj servicetunnel.Info
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertServiceTunnelEqual(t, svc_obj, ref_obj)
+}
+
 func TestSchemaServiceTunnel_tunnel_public(t *testing.T) {
 	svc_tunnel_public := map[string]interface{}{
 		"name":                   "tunnel-domains",

@@ -1,0 +1,34 @@
+{
+    "kind": "BanyanServiceTunnel",
+    "api_version": "rbac.banyanops.com/v1",
+    "type": "origin",
+    "metadata":
+    {
+        "name": "global-edge-tunnel",
+        "friendly_name": "global-edge-tunnel",
+        "description": "Geo DNS to multiple ATs",
+        "tags":
+        {
+            "icon": "",
+            "description_link": ""
+        }
+    },
+    "spec":
+    {
+        "peer_access_tiers":
+        [
+            {
+                "cluster": "managed-cl-edge1",
+                "access_tiers":
+                [
+                    "*"
+                ],
+                "connectors":
+                [
+                    "gcp-test-drive",
+                    "td-gcp-tdnovpn"
+                ]
+            }
+        ]
+    }
+}
