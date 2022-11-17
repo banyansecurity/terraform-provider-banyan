@@ -189,7 +189,7 @@ func (c *Client) Read(api string, component string, id string, path string) (res
 		return
 	}
 	response, err := c.DoGet(myUrl.String())
-	return HandleResponse(response, component)
+	return HandleResponse(response, myUrl.String())
 }
 
 func (c *Client) ReadQuery(component string, query url.Values, path string) (r []byte, err error) {
@@ -202,7 +202,7 @@ func (c *Client) ReadQuery(component string, query url.Values, path string) (r [
 	if err != nil {
 		return
 	}
-	return HandleResponse(response, component)
+	return HandleResponse(response, myUrl.String())
 }
 
 func (c *Client) Create(api string, component string, body []byte, path string) (r []byte, err error) {
@@ -217,7 +217,7 @@ func (c *Client) Create(api string, component string, body []byte, path string) 
 	if err != nil {
 		return
 	}
-	return HandleResponse(response, component)
+	return HandleResponse(response, path)
 }
 
 func (c *Client) Update(api string, component string, id string, body []byte, path string) (r []byte, err error) {
@@ -229,7 +229,7 @@ func (c *Client) Update(api string, component string, id string, body []byte, pa
 		return
 	}
 	response, err := c.Do(request)
-	return HandleResponse(response, component)
+	return HandleResponse(response, path)
 }
 
 func (c *Client) Delete(api string, component string, id string, path string) (err error) {
@@ -245,7 +245,7 @@ func (c *Client) Delete(api string, component string, id string, path string) (e
 		return
 	}
 	response, err := c.DoDelete(myUrl.String())
-	_, err = HandleResponse(response, component)
+	_, err = HandleResponse(response, myUrl.String())
 	return
 }
 
@@ -260,22 +260,22 @@ func (c *Client) DeleteQuery(component string, id string, query url.Values, path
 	}
 	myUrl.RawQuery = query.Encode()
 	response, err := c.DoDelete(myUrl.String())
-	_, err = HandleResponse(response, component)
+	_, err = HandleResponse(response, myUrl.String())
 	return
 }
 
-func HandleResponse(response *http.Response, component string) (responseData []byte, err error) {
+func HandleResponse(response *http.Response, requestStr string) (responseData []byte, err error) {
 	defer response.Body.Close()
 	responseData, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		return
 	}
 	if response.StatusCode == 400 {
-		err = errors.New("400 bad request")
+		err = fmt.Errorf("400 bad request: %s", requestStr)
 		return
 	}
 	if response.StatusCode == 404 {
-		err = fmt.Errorf("%s not found", component)
+		err = fmt.Errorf("404 not found: %s", requestStr)
 		return
 	}
 	if response.StatusCode != 200 {
@@ -285,7 +285,7 @@ func HandleResponse(response *http.Response, component string) (responseData []b
 		}
 		uerr := json.Unmarshal(responseData, &errResp)
 		if uerr == nil {
-			err = fmt.Errorf("received error code %d with message: %s", response.StatusCode, errResp.Message)
+			err = fmt.Errorf("received error code %d for request to %s with message: %s", response.StatusCode, requestStr, errResp.Message)
 		}
 		return
 	}

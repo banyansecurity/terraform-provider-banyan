@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
-	"strconv"
-	"strings"
-
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"log"
+	"strconv"
+	"strings"
 )
 
 // This file contains the common expand / flatten functions which map directly to the service structs
