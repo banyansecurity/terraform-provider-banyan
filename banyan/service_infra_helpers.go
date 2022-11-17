@@ -2,6 +2,7 @@ package banyan
 
 import (
 	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"log"
 	"strconv"
 	"strings"
 
@@ -74,11 +75,6 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Description:  "Local listen port to be used by client proxy; if not specified, a random local port will be used",
 		ValidateFunc: validatePort(),
 	},
-	"policy": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Policy ID to be attached to this service",
-	},
 }
 
 func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -149,6 +145,7 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	d.SetId(d.Id())
+	log.Printf("[INFO] Read service %s", d.Id())
 	return
 }
 

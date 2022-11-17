@@ -50,6 +50,11 @@ func K8sSchema() map[string]*schema.Schema {
 			Description: "CA Public Key generated during Kube-OIDC-Proxy deployment",
 			Optional:    true,
 		},
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
 }

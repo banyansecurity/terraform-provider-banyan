@@ -75,12 +75,18 @@ func (a *AccessTier) Create(spec AccessTierPost) (created AccessTierInfo, err er
 		},
 		Spec: spec,
 	})
+	if err != nil {
+		return
+	}
 	resp, err := a.restClient.Create(apiVersion, component, body, "")
 	if err != nil {
 		return
 	}
 	var j ATResponse
 	err = json.Unmarshal(resp, &j)
+	if err != nil {
+		return
+	}
 	created = j.Data
 	return
 }
