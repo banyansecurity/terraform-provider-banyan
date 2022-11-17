@@ -101,7 +101,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						access_tier       = banyan_accesstier.example.name
+						access_tiers      = [banyan_accesstier.example.name]
                         policy            = banyan_policy_infra.example.id
 					}
 					`, rName, rName, rName, rName),
@@ -135,7 +135,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "realdescription update"
-						access_tier       = banyan_accesstier.example.name
+						access_tiers      = [banyan_accesstier.example.name]
                         policy            = banyan_policy_infra.example.id
 					}
 					`, rName, rName, rName, rName),

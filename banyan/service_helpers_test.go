@@ -10,6 +10,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -44,7 +45,9 @@ func AssertCreateServiceEqual(t *testing.T, got service.CreateService, want serv
 }
 
 func AssertServiceTunnelEqual(t *testing.T, got servicetunnel.Info, want servicetunnel.Info) {
-	if diff := cmp.Diff(want, got); diff != "" {
+	less := func(a, b string) bool { return a < b }
+
+	if diff := cmp.Diff(want, got, cmpopts.SortSlices(less)); diff != "" {
 		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
 	}
 }

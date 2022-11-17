@@ -31,8 +31,7 @@
                         "75.75.75.75/32",
                         "75.75.76.76/32"
                     ],
-                    "exclude":
-                    []
+                    "exclude": null
                 },
                 "public_domains":
                 {
@@ -44,8 +43,7 @@
                         "yahoo.com",
                         "banyansecurity.io"
                     ],
-                    "exclude":
-                    []
+                    "exclude": null
                 }
             }
         ]

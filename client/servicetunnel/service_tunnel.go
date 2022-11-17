@@ -23,7 +23,7 @@ type PolicyResponse struct {
 	Count            int                  `json:"count"`
 }
 
-//ServiceTunnelInfo used to send data to shield over websocket from restapi
+// ServiceTunnelInfo used to send data to shield over websocket from restapi
 type ServiceTunnelInfo struct {
 	ID           string `json:"id"`
 	OrgID        string `json:"org_id"`
@@ -38,7 +38,7 @@ type ServiceTunnelInfo struct {
 	UpdatedBy    string `json:"updated_by"`
 }
 
-//Contains the spec string from the api response
+// Contains the spec string from the api response
 type ServiceTunnelInfoResponse struct {
 	ID           string `json:"id"`
 	OrgID        string `json:"org_id"`
@@ -87,6 +87,14 @@ type PeerAccessTier struct {
 	Cluster     string   `json:"cluster"`
 	AccessTiers []string `json:"access_tiers"`
 	Connectors  []string `json:"connectors,omitempty"`
+
+	PublicCIDRs   *PublicCIDRDomain `json:"public_cidrs,omitempty"`
+	PublicDomains *PublicCIDRDomain `json:"public_domains,omitempty"`
+}
+
+type PublicCIDRDomain struct {
+	Include []string `json:"include"`
+	Exclude []string `json:"exclude"`
 }
 
 type Response struct {

@@ -206,6 +206,11 @@ func buildHostTagSelector(d *schema.ResourceData) (hostTagSelector []map[string]
 // sets cluster to same as access_tier value if access_tier is set
 // sets to first cluster if the access_tier does not exist
 func setCluster(d *schema.ResourceData, m interface{}) (err error) {
+	_, clusterOk := d.GetOk("cluster")
+	if clusterOk {
+		return
+	}
+
 	c := m.(*client.Holder)
 	clusterName, err := determineCluster(c, d)
 	if err != nil {
@@ -243,7 +248,7 @@ func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName str
 
 	// if multiple ats use the 1st one
 	if atsOk {
-		at = ats.([]string)[0]
+		at = convertSchemaSetToStringSlice(ats.(*schema.Set))[0]
 	}
 
 	// otherwise determine which cluster to set based off of the access tier

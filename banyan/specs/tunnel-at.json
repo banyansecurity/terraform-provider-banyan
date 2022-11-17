@@ -21,10 +21,16 @@
                 "cluster": "cluster1",
                 "access_tiers":
                 [
-                    "gcp-tdnovpn-v1",
+                    "gcp-tdnovpn-v1"
+                ]
+            },
+            {
+                "cluster": "cluster1",
+                "access_tiers":
+                [
                     "gcp-tdnovpn-v2"
                 ]
-            }
+            }            
         ]
     }
 }
