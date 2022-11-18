@@ -1,11 +1,10 @@
 resource "banyan_api_key" "example" {
-  name        = "my-connector"
-  description = "realdescription"
-  scope       = "satellite"
+  name              = "%s"
+  description       = "realdescription"
+  scope             = "satellite"
 }
 
 resource "banyan_connector" "example" {
-  name    = "my-connector"
-  api_key = banyan_api_key.example.name
-  domains = ["my-connector.mycompany.com"]
+  name              = "%s"
+  api_key_id 		= banyan_api_key.example.id
 }
