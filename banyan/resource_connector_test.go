@@ -54,11 +54,27 @@ func TestAccConnector_tunnel(t *testing.T) {
 					
 					resource "banyan_connector" "example" {
 						name           = "%s"
-						api_key_id     = resource.banyan_api_key.example.id
+						api_key_id     = banyan_api_key.example.id
 						cidrs          = ["10.5.0.1/24"]
 						domains        = ["example.com"]
 					}
-					`, rName, rName),
+
+					resource "banyan_policy_tunnel" "example" {
+						name        = "%s"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+
+					resource "banyan_service_tunnel" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						connectors        = [banyan_connector.example.name]
+                        policy            = banyan_policy_tunnel.example.id
+					}
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingConnector("banyan_connector.example", &bnnConnector),
 					resource.TestCheckResourceAttr("banyan_connector.example", "name", rName),
