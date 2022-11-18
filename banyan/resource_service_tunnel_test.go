@@ -91,7 +91,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 
 					resource "banyan_policy_tunnel" "example" {
 						name        = "%s"
-						description = "some infrastructure policy description"
+						description = "some tunnel policy description"
 						access {
 							roles       = ["ANY"]
 							trust_level = "High"
@@ -134,7 +134,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
-						description       = "realdescription update"
+						description       = "some description"
 						access_tiers      = [banyan_accesstier.example.name]
                         policy            = banyan_policy_tunnel.example.id
 					}
