@@ -11,15 +11,15 @@ resource "banyan_policy_web" "example" {
   name        = "example"
   description = "some web policy description"
   access {
-    roles       = ["Admins"]
-    trust_level = "High"
+    roles        = ["Admins"]
+    trust_level  = "High"
     l7_resources = ["/admin"]
     l7_actions   = ["READ"]
   }
 
   access {
-    roles       = ["ANY"]
-    trust_level = "High"
+    roles        = ["ANY"]
+    trust_level  = "High"
     l7_resources = ["/app"]
     l7_actions   = ["READ"]
   }

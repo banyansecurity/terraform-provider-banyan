@@ -3,12 +3,12 @@
 page_title: "banyan_policy_infra Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  The infrastructure policy resource is used to manage the lifecycle of policies which will be attached to services of the type "banyanservicedb" "banyanservicek8s" "banyanservicerdp" "banyanservicessh" and "banyanservicetunnel". For more information on Banyan policies, see the documentation. https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/
+  The infrastructure policy resource is used to manage the lifecycle of policies which will be attached to services of the type "banyanservicedb" "banyanservicek8s" "banyanservicerdp" and "banyanservicessh" . For more information on Banyan policies, see the documentation. https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/
 ---
 
 # banyan_policy_infra (Resource)
 
-The infrastructure policy resource is used to manage the lifecycle of policies which will be attached to services of the type "banyan_service_db" "banyan_service_k8s" "banyan_service_rdp" "banyan_service_ssh" and "banyan_service_tunnel". For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)
+The infrastructure policy resource is used to manage the lifecycle of policies which will be attached to services of the type "banyan_service_db" "banyan_service_k8s" "banyan_service_rdp" and "banyan_service_ssh" . For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)
 
 ## Example Usage
 

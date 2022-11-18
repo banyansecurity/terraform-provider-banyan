@@ -29,13 +29,13 @@ resource "banyan_service_web" "example" {
 ### Required
 
 - `backend_domain` (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using http_connect
-- `backend_port` (Number) The internal port where this service is hosted
 - `domain` (String) The external-facing network address for this service; ex. website.example.com
 - `name` (String) Name of the service; use lowercase alphanumeric characters or "-"
 
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
+- `backend_port` (Number) The internal port where this service is hosted. Default is 443
 - `backend_tls` (Boolean) Indicates whether the connection to the backend server uses TLS
 - `backend_tls_insecure` (Boolean) Indicates the connection to the backend should not validate the backend server TLS certificate
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
