@@ -3,6 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -51,14 +52,6 @@ func AssertPolicySpecEqual(t *testing.T, got policy.Object, want policy.Object) 
 
 func AssertCreateServiceEqual(t *testing.T, got service.CreateService, want service.CreateService) {
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func AssertServiceTunnelEqual(t *testing.T, got servicetunnel.Info, want servicetunnel.Info) {
-	less := func(a, b string) bool { return a < b }
-
-	if diff := cmp.Diff(want, got, cmpopts.SortSlices(less)); diff != "" {
 		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
 	}
 }
