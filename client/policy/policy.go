@@ -29,8 +29,8 @@ func NewClient(restClient *restclient.Client) Client {
 
 type Client interface {
 	Get(id string) (spec GetPolicy, err error)
-	Create(policy CreatePolicy) (created GetPolicy, err error)
-	Update(policy CreatePolicy) (updated GetPolicy, err error)
+	Create(policy Object) (created GetPolicy, err error)
+	Update(id string, policy Object) (updated GetPolicy, err error)
 	Delete(id string) (err error)
 	Detach(paClient policyattachment.Client, id string) (err error)
 }
@@ -40,7 +40,8 @@ func (p *policy) Get(id string) (spec GetPolicy, err error) {
 	return
 }
 
-func (p *policy) Create(policy CreatePolicy) (created GetPolicy, err error) {
+func (p *policy) Create(policy Object) (created GetPolicy, err error) {
+	log.Printf("[INFO] Creating policy %s", policy.Name)
 	path := "api/v1/insert_security_policy"
 	body, err := json.Marshal(policy)
 	if err != nil {
@@ -61,8 +62,15 @@ func (p *policy) Create(policy CreatePolicy) (created GetPolicy, err error) {
 	return
 }
 
-func (p *policy) Update(policy CreatePolicy) (updated GetPolicy, err error) {
-	updated, err = p.Create(policy)
+func (p *policy) Update(id string, policy Object) (updated GetPolicy, err error) {
+	log.Printf("[INFO] Updating policy %s", policy.Name)
+	body, err := json.Marshal(policy)
+	if err != nil {
+		return
+	}
+	resp, err := p.restClient.Update(apiVersion, component, id, body, "")
+	var j GetPolicy
+	err = json.Unmarshal(resp, &j)
 	return
 }
 
@@ -73,6 +81,7 @@ func (p *policy) Detach(paClient policyattachment.Client, id string) (err error)
 }
 
 func (p *policy) Delete(id string) (err error) {
+	log.Printf("[INFO] Deleting policy %s", id)
 	path := "api/v1/delete_security_policy"
 	myUrl, err := url.Parse(path)
 	if err != nil {
