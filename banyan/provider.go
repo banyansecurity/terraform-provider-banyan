@@ -55,6 +55,7 @@ func Provider() *schema.Provider {
 			"banyan_service_tunnel":    resourceServiceTunnel(),
 			"banyan_policy_web":        resourcePolicyWeb(),
 			"banyan_policy_infra":      resourcePolicyInfra(),
+			"banyan_policy_tunnel":     resourcePolicyTunnel(),
 			"banyan_role":              resourceRole(),
 			"banyan_policy_attachment": resourcePolicyAttachment(),
 			"banyan_api_key":           resourceApiKey(),
