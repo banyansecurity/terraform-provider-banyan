@@ -248,7 +248,7 @@ func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName str
 
 	// if multiple ats use the 1st one
 	if atsOk {
-		at = convertSchemaSetToStringSlice(ats.(*schema.Set))[0]
+		at = ats.([]interface{})[0].(string)
 	}
 
 	// otherwise determine which cluster to set based off of the access tier
