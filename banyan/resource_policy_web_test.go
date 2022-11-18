@@ -22,15 +22,73 @@ func TestAccPolicy_web_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create the policy using terraform config and check that it exists
 			{
-				Config: testAccPolicy_web_basic_create(rName),
+				Config: fmt.Sprintf(`
+					resource "banyan_policy_web" "example" {
+						name        = %q
+						description = "some web policy description"
+						access {
+							roles                             = ["ANY"]
+							trust_level                       = "High"
+						}
+					}
+					`, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingPolicy("banyan_policy_web.example", &bnnPolicy),
 					resource.TestCheckResourceAttr("banyan_policy_web.example", "name", rName),
 					resource.TestCheckResourceAttrPtr("banyan_policy_web.example", "id", &bnnPolicy.ID),
+					testAccCheckPolicyAgainstJson(t, testAccPolicy_web_basic_create_json(rName), &bnnPolicy.ID),
 				),
 			},
 		},
 	})
+}
+
+func testAccPolicy_web_basic_create_json(name string) string {
+	return fmt.Sprintf(`
+{
+    "kind": "BanyanPolicy",
+    "apiVersion": "rbac.banyanops.com/v1",
+    "metadata": {
+        "name": "%s",
+        "description": "some web policy description",
+        "tags": {
+            "template": "USER"
+        }
+    },
+    "type": "USER",
+    "spec": {
+        "access": [
+            {
+                "roles": [
+                    "ANY"
+                ],
+                "rules": {
+                    "l7_access": [
+                        {
+                            "resources": [
+                                "*"
+                            ],
+                            "actions": [
+                                "*"
+                            ]
+                        }
+                    ],
+                    "conditions": {
+                        "trust_level": "High"
+                    }
+                }
+            }
+        ],
+        "exception": {
+            "src_addr": []
+        },
+        "options": {
+            "disable_tls_client_authentication": true,
+            "l7_protocol": "http"
+        }
+    }
+}
+    `, name)
 }
 
 func TestAccPolicy_web_l7(t *testing.T) {
@@ -80,20 +138,6 @@ func testAccCheckPolicy_destroy(t *testing.T, id *string) resource.TestCheckFunc
 		assert.Equal(t, r.ID, "")
 		return nil
 	}
-}
-
-// Returns terraform configuration for the policy
-func testAccPolicy_web_basic_create(name string) string {
-	return fmt.Sprintf(`
-resource "banyan_policy_web" "example" {
-  name        = %q
-  description = "some web policy description"
-  access {
-    roles                             = ["ANY", "HI"]
-    trust_level                       = "High"
-  }
-}
-`, name)
 }
 
 // Returns terraform configuration for the policy

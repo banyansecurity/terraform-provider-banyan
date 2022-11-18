@@ -106,7 +106,7 @@ func TestAccService_required_web(t *testing.T) {
 					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_web.example", &bnnService),
-					testAccCheckAgainstJson(t, testAccService_basic_web_create_json(rName), &bnnService.ServiceID),
+					testAccCheckServiceAgainstJson(t, testAccService_basic_web_create_json(rName), &bnnService.ServiceID),
 				),
 			},
 			{
@@ -130,7 +130,7 @@ func TestAccService_required_web(t *testing.T) {
 					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_web.example", &bnnService),
-					testAccCheckAgainstJson(t, testAccService_basic_web_update_json(rName), &bnnService.ServiceID),
+					testAccCheckServiceAgainstJson(t, testAccService_basic_web_update_json(rName), &bnnService.ServiceID),
 				),
 			},
 		},

@@ -34,6 +34,57 @@ func TestAccConnector_basic(t *testing.T) {
 	})
 }
 
+func TestAccConnector_tunnel(t *testing.T) {
+	var bnnConnector satellite.SatelliteTunnelConfig
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConnectorDestroy(t, "banyan_connector.example"),
+		Steps: []resource.TestStep{
+			// Creates the connector with the given terraform configuration and asserts that the connector is created
+			{
+				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "satellite"
+					}
+					
+					resource "banyan_connector" "example" {
+						name           = "%s"
+						api_key_id     = banyan_api_key.example.id
+						cidrs          = ["10.5.0.1/24"]
+						domains        = ["example.com"]
+					}
+
+					resource "banyan_policy_tunnel" "example" {
+						name        = "%s"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+
+					resource "banyan_service_tunnel" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						connectors        = [banyan_connector.example.name]
+                        policy            = banyan_policy_tunnel.example.id
+					}
+					`, rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingConnector("banyan_connector.example", &bnnConnector),
+					resource.TestCheckResourceAttr("banyan_connector.example", "name", rName),
+					resource.TestCheckResourceAttrPtr("banyan_connector.example", "id", &bnnConnector.ID),
+				),
+			},
+		},
+	})
+}
+
 // Checks that the resource with the name resourceName exists and returns the connector object from the Banyan API
 func testAccCheckExistingConnector(resourceName string, bnnConnector *satellite.SatelliteTunnelConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -79,25 +130,6 @@ resource "banyan_api_key" "example" {
 resource "banyan_connector" "example" {
   name              = "%s"
   api_key_id 		= resource.banyan_api_key.example.id
-}
-`, name, name)
-}
-
-// Create a connector with a tunnel using terraform code
-func testAccConnector_tunnel_create(name string) string {
-	return fmt.Sprintf(`
-resource "banyan_api_key" "example" {
-  name              = "%s"
-  description       = "realdescription"
-  scope             = "satellite"
-}
-
-resource "banyan_connector" "example" {
-  name              = "%s"
-  api_key_id = resource.banyan_api_key.example.id
-  access_tiers = ["global-edge"]
-  cidrs = ["10.5.0.1/24"]
-  domains = ["example.com"]
 }
 `, name, name)
 }

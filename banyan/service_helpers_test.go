@@ -3,6 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,8 +33,19 @@ func ReadJSONServiceSpec(jsonSpec string) (err error, svc service.GetServiceSpec
 	return
 }
 
+func ReadJSONPolicySpec(jsonSpec string) (err error, pol policy.Object) {
+	err = json.Unmarshal([]byte(jsonSpec), &pol)
+	return
+}
+
 func AssertServiceSpecEqual(t *testing.T, got service.GetServiceSpec, want service.GetServiceSpec) {
 	if diff := cmp.Diff(want.CreateServiceSpec, got.CreateServiceSpec); diff != "" {
+		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func AssertPolicySpecEqual(t *testing.T, got policy.Object, want policy.Object) {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -53,7 +65,7 @@ func AssertServiceTunnelEqual(t *testing.T, got servicetunnel.Info, want service
 }
 
 // Asserts that the json string j is equal to the service spec in the API with id
-func testAccCheckAgainstJson(t *testing.T, j string, id *string) resource.TestCheckFunc {
+func testAccCheckServiceAgainstJson(t *testing.T, j string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		got, err := testAccClient.Service.Get(*id)
 		if err != nil {
@@ -64,6 +76,22 @@ func testAccCheckAgainstJson(t *testing.T, j string, id *string) resource.TestCh
 			return err
 		}
 		AssertServiceSpecEqual(t, got, want)
+		return nil
+	}
+}
+
+// Asserts that the json string j is equal to the policy spec in the API with id
+func testAccCheckPolicyAgainstJson(t *testing.T, j string, id *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		got, err := testAccClient.Policy.Get(*id)
+		if err != nil {
+			return err
+		}
+		err, want := ReadJSONPolicySpec(j)
+		if err != nil {
+			return err
+		}
+		AssertPolicySpecEqual(t, got.UnmarshalledPolicy, want)
 		return nil
 	}
 }

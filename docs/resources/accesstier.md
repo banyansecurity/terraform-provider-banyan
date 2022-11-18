@@ -9,7 +9,7 @@ description: |-
 
 The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider. For more information about the access tier see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/accesstier/)
 
-## Example Access Tier
+## Example Usage
 ```terraform
 resource "banyan_api_key" "example" {
   name        = "example api key"
@@ -18,9 +18,9 @@ resource "banyan_api_key" "example" {
 }
 
 resource "banyan_accesstier" "example" {
-  name         = "example"
-  address      = "*.example.mycompany.com"
-  api_key_id   = banyan_api_key.example.id
+  name       = "example"
+  address    = "*.example.mycompany.com"
+  api_key_id = banyan_api_key.example.id
 }
 ```
 
@@ -40,13 +40,13 @@ resource "banyan_accesstier" "example" {
 }
 
 resource "banyan_service_tunnel" "example" {
-  name        = "example-anyone-high"
-  description = "tunnel allowing anyone with a high trust level"
-  access_tier = banyan_accesstier.example.name
-  policy      = banyan_policy_infra.anyone-high.id
+  name         = "example-anyone-high"
+  description  = "tunnel allowing anyone with a high trust level"
+  access_tiers = [banyan_accesstier.example.name]
+  policy       = banyan_policy_tunnel.anyone-high.id
 }
 
-resource "banyan_policy_infra" "anyone-high" {
+resource "banyan_policy_tunnel" "anyone-high" {
   name        = "allow anyone"
   description = "${banyan_accesstier.example.name} allow"
   access {

@@ -63,7 +63,7 @@ func TestAccService_ssh(t *testing.T) {
 				Config: testAccService_ssh_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_ssh.example", &bnnService),
-					testAccCheckAgainstJson(t, testAccService_ssh_create_json(rName), &bnnService.ServiceID),
+					testAccCheckServiceAgainstJson(t, testAccService_ssh_create_json(rName), &bnnService.ServiceID),
 				),
 			},
 		},

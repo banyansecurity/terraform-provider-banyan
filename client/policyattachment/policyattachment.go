@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -61,7 +62,7 @@ func (p *PolicyAttachment) Get(attachedToID string, attachedToType string) (atta
 		return
 	}
 	if len(j) > 1 {
-		err = errors.New("got more than one policy attachment")
+		err = fmt.Errorf("got more than one policy attachment %s %s", path, responseData)
 		return
 	}
 	if len(j) == 0 {
@@ -122,6 +123,7 @@ func (p *PolicyAttachment) createServiceAttachment(policyID string, PolicyAttach
 }
 
 func (p *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBody) (createdAttachment GetBody, err error) {
+	log.Printf("[INFO] Creating policy attachment %v", PolicyAttachment)
 	if PolicyAttachment.AttachedToType == "service" {
 		return p.createServiceAttachment(policyID, PolicyAttachment)
 	}

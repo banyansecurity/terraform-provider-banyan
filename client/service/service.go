@@ -108,6 +108,7 @@ func (s *Service) Create(spec CreateService) (created GetServiceSpec, err error)
 		return
 	}
 	resp, err := s.restClient.Create(apiVersion, component, body, path)
+	log.Printf("[INFO] Created service %s", resp)
 	if err != nil {
 		return
 	}
@@ -123,6 +124,7 @@ func (s *Service) Create(spec CreateService) (created GetServiceSpec, err error)
 		return
 	}
 	j.Spec = createdService.Spec
+	log.Printf("[INFO] Created service %s", j.ServiceID)
 	return MapToGetServiceSpec(j), nil
 }
 

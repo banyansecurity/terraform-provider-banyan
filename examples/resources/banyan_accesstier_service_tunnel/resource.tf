@@ -12,13 +12,13 @@ resource "banyan_accesstier" "example" {
 }
 
 resource "banyan_service_tunnel" "example" {
-  name        = "example-anyone-high"
-  description = "tunnel allowing anyone with a high trust level"
-  access_tier = banyan_accesstier.example.name
-  policy      = banyan_policy_infra.anyone-high.id
+  name         = "example-anyone-high"
+  description  = "tunnel allowing anyone with a high trust level"
+  access_tiers = [banyan_accesstier.example.name]
+  policy       = banyan_policy_tunnel.anyone-high.id
 }
 
-resource "banyan_policy_infra" "anyone-high" {
+resource "banyan_policy_tunnel" "anyone-high" {
   name        = "allow anyone"
   description = "${banyan_accesstier.example.name} allow"
   access {
