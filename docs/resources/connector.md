@@ -31,15 +31,15 @@ resource "banyan_connector" "example" {
 
 ### Required
 
-- `api_key` (String) Name of a satellite scoped API key to be used for connector authentication
-- `domains` (Set of String) Specifies the domains that should resolve at a DNS server in your private network, ex: mycompany.local.
+- `api_key_id` (String) ID of the API key which is scoped to satellite
 - `name` (String) Name of the connector
 
 ### Optional
 
-- `access_tiers` (Set of String) Names of the access tiers the connector will use to establish a secure dial-out connection. Will be set automatically if omitted (Recommended).
+- `access_tiers` (Set of String) Name of the access tiers the connector will use to establish a secure dial-out connection. Will be set automatically if omitted.
 - `cidrs` (Set of String) Specifies the IPv4 address ranges of your private network in CIDR notation, ex: 192.168.1.0/24. Note that you can only specify private IP address ranges as defined in RFC-1918.
-- `keepalive` (Number) Keepalive value for the connector
+- `cluster` (String) Cluster / shield name in Banyan. If not provided then the cluster will be set automatically
+- `domains` (Set of String) Specifies the domains that should resolve at a DNS server in your private network, ex: mycompany.local.
 
 ### Read-Only
 
