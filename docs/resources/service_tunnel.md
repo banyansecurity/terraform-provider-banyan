@@ -48,13 +48,19 @@ resource "banyan_policy_infra" "anyone-high" {
 
 ### Required
 
-- `description` (String) Description of the service tunnel
 - `name` (String) Name of the service tunnel
 
 ### Optional
 
-- `access_tier` (String) Name of the access_tier which the service tunnel should be associated with
+- `access_tiers` (Set of String) Names of the access_tiers which the service tunnel should be associated with
+- `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
+- `connectors` (Set of String) Names of the connectors which the service tunnel should be associated with
+- `description` (String) Description of the service tunnel
 - `policy` (String) Policy ID to be attached to this service tunnel
+- `public_cidrs_exclude` (Set of String) Specifies public IP addresses in CIDR notation that should be excluded from the tunnel, ex: 8.8.12.0/24.
+- `public_cidrs_include` (Set of String) Specifies public IP addresses in CIDR notation that should be included in the tunnel, ex: 8.8.0.0/16.
+- `public_domains_exclude` (Set of String) Specifies the domains that should be that should be excluded from the tunnel, ex: zoom.us
+- `public_domains_include` (Set of String) Specifies the domains that should be that should be included in the tunnel, ex: cnn.com
 
 ### Read-Only
 
