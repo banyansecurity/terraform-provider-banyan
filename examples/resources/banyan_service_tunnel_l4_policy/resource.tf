@@ -26,8 +26,8 @@ resource "banyan_service_tunnel" "administrators" {
 }
 
 resource "banyan_policy_tunnel" "anyone-high" {
-  name        = "allow anyone"
-  description = "${banyan_accesstier.example.name} allow"
+  name        = "corporate-network-users"
+  description = "${banyan_accesstier.example.name} allow users"
   access {
     roles       = ["ANY"]
     trust_level = "High"
@@ -40,10 +40,15 @@ resource "banyan_policy_tunnel" "anyone-high" {
 }
 
 resource "banyan_policy_tunnel" "administrators" {
-  name        = "allow only administrators access to the entire network"
-  description = "${banyan_accesstier.example.name} allow"
+  name        = "corporate-network-admin"
+  description = "${banyan_accesstier.example.name} allow only administrators access to the entire network"
   access {
     roles       = ["Administrators"]
     trust_level = "High"
+    l4_access_allow {
+      cidrs     = ["*"]
+      protocols = ["ALL"]
+      ports     = ["*"]
+    }
   }
 }
