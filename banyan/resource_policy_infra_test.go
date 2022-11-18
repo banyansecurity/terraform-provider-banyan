@@ -19,9 +19,19 @@ func TestAccPolicy_infrastructure(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create the policy using terraform config and check that it exists
 			{
-				Config: testAccPolicy_infrastructure_create(rName),
+				Config: fmt.Sprintf(`
+					resource "banyan_policy_infra" "example" {
+							name        = "%s"
+							description = "some infrastructure policy description"
+							access {
+								roles       = ["ANY"]
+								trust_level = "High"
+							}
+						}
+					`, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingPolicy("banyan_policy_infra.example", &bnnPolicy),
+					testAccCheckPolicyAgainstJson(t, testAccPolicy_infrastructure_create_json(rName), &bnnPolicy.ID),
 				),
 			},
 		},
@@ -29,15 +39,41 @@ func TestAccPolicy_infrastructure(t *testing.T) {
 }
 
 // Returns terraform configuration for the policy
-func testAccPolicy_infrastructure_create(name string) string {
+func testAccPolicy_infrastructure_create_json(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_policy_infra" "example" {
-  name        = "%s"
-  description = "some infrastructure policy description"
-  access {
-    roles       = ["ANY"]
-    trust_level = "High"
-  }
+{
+    "kind": "BanyanPolicy",
+    "apiVersion": "rbac.banyanops.com/v1",
+    "metadata": {
+        "name": "%s",
+        "description": "some infrastructure policy description",
+        "tags": {
+            "template": "USER"
+        }
+    },
+    "type": "USER",
+    "spec": {
+        "access": [
+            {
+                "roles": [
+                    "ANY"
+                ],
+                "rules": {
+                    "l7_access": [],
+                    "conditions": {
+                        "trust_level": "High"
+                    }
+                }
+            }
+        ],
+        "exception": {
+            "src_addr": []
+        },
+        "options": {
+            "disable_tls_client_authentication": false,
+            "l7_protocol": ""
+        }
+    }
 }
 `, name)
 }

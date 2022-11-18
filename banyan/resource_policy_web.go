@@ -13,7 +13,7 @@ import (
 
 func resourcePolicyWeb() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The infrastructure policy resource is used to manage the lifecycle of policies which will be attached to services of the type \"banyan_service_web\". For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
+		Description:   "The web policy resource is used to manage the lifecycle of policies which will be attached to services of the type \"banyan_service_web\". For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
 		CreateContext: resourcePolicyWebCreate,
 		ReadContext:   resourcePolicyWebRead,
 		UpdateContext: resourcePolicyWebUpdate,
@@ -83,10 +83,8 @@ func resourcePolicyWeb() *schema.Resource {
 	}
 }
 
-func resourcePolicyWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-
-	policyToCreate := policy.CreatePolicy{
+func policyWebFromState(d *schema.ResourceData) (pol policy.Object) {
+	pol = policy.Object{
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanPolicy",
 		Metadata: policy.Metadata{
@@ -98,15 +96,22 @@ func resourcePolicyWebCreate(ctx context.Context, d *schema.ResourceData, m inte
 		},
 		Type: "USER",
 		Spec: policy.Spec{
-			Access:    expandPolicyWebAccess(d.Get("access").([]interface{})),
-			Exception: policy.Exception{},
+			Access: expandPolicyWebAccess(d.Get("access").([]interface{})),
+			Exception: policy.Exception{
+				SrcAddr: []string{},
+			},
 			Options: policy.Options{
 				DisableTLSClientAuthentication: true,
 				L7Protocol:                     "http",
 			},
 		},
 	}
-	createdPolicy, err := c.Policy.Create(policyToCreate)
+	return
+}
+
+func resourcePolicyWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	createdPolicy, err := c.Policy.Create(policyWebFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new web policy"))
 	}

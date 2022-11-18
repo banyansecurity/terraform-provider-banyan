@@ -6,11 +6,12 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pkg/errors"
 )
 
 func resourcePolicyInfra() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The infrastructure policy resource is used to manage the lifecycle of policies which will be attached to services of the type \"banyan_service_db\" \"banyan_service_k8s\" \"banyan_service_rdp\" \"banyan_service_ssh\" and \"banyan_service_tunnel\". For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
+		Description:   "The infrastructure policy resource is used to manage the lifecycle of policies which will be attached to services of the type \"banyan_service_db\" \"banyan_service_k8s\" \"banyan_service_rdp\" and \"banyan_service_ssh\" . For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
 		CreateContext: resourcePolicyInfraCreate,
 		ReadContext:   resourcePolicyInfraRead,
 		UpdateContext: resourcePolicyInfraUpdate,
@@ -59,9 +60,8 @@ func resourcePolicyInfra() *schema.Resource {
 	}
 }
 
-func resourcePolicyInfraCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	policyToCreate := policy.CreatePolicy{
+func policyInfraFromState(d *schema.ResourceData) (pol policy.Object) {
+	pol = policy.Object{
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanPolicy",
 		Metadata: policy.Metadata{
@@ -73,17 +73,24 @@ func resourcePolicyInfraCreate(ctx context.Context, d *schema.ResourceData, m in
 		},
 		Type: "USER",
 		Spec: policy.Spec{
-			Access:    expandPolicyInfraAccess(d.Get("access").([]interface{})),
-			Exception: policy.Exception{},
+			Access: expandPolicyInfraAccess(d.Get("access").([]interface{})),
+			Exception: policy.Exception{
+				SrcAddr: []string{},
+			},
 			Options: policy.Options{
 				DisableTLSClientAuthentication: false,
 				L7Protocol:                     "",
 			},
 		},
 	}
-	resp, err := c.Policy.Create(policyToCreate)
+	return
+}
+
+func resourcePolicyInfraCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	resp, err := c.Policy.Create(policyInfraFromState(d))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(errors.WithMessage(err, "couldn't create new infra policy"))
 	}
 	d.SetId(resp.ID)
 	diagnostics = resourcePolicyInfraRead(ctx, d, m)
@@ -146,6 +153,7 @@ func expandPolicyInfraAccess(m []interface{}) (access []policy.Access) {
 			Roles: convertSchemaSetToStringSlice(data["roles"].(*schema.Set)),
 		}
 		a.Rules.Conditions.TrustLevel = data["trust_level"].(string)
+		a.Rules.L7Access = []policy.L7Access{}
 		access = append(access, a)
 	}
 	return
