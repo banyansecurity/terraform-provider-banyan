@@ -3,6 +3,7 @@ package banyan
 import (
 	"context"
 	"fmt"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,60 +17,125 @@ func resourceServiceTunnel() *schema.Resource {
 		ReadContext:   resourceServiceTunnelRead,
 		UpdateContext: resourceServiceTunnelUpdate,
 		DeleteContext: resourceServiceTunnelDelete,
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the service tunnel",
-				ForceNew:    true,
-			},
-			"id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "ID of the service tunnel key in Banyan",
-				ForceNew:    true,
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Description of the service tunnel",
-			},
-			"access_tier": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Name of the access_tier which the service tunnel should be associated with",
-			},
-			"policy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Policy ID to be attached to this service tunnel",
-			},
-		},
+		Schema:        TunnelSchema(),
 	}
 }
 
-func tunFromState(d *schema.ResourceData, cluster string) (tun servicetunnel.Info) {
+func TunnelSchema() (s map[string]*schema.Schema) {
+	s = map[string]*schema.Schema{
+		"id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "ID of the service tunnel key in Banyan",
+			ForceNew:    true,
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the service tunnel",
+			ForceNew:    true,
+		},
+		"description": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Description of the service tunnel",
+		},
+		"access_tiers": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Names of the access_tiers which the service tunnel should be associated with; public CIDRs & Domains will use the first access_tier",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+			ConflictsWith: []string{"connectors"},
+		},
+		"connectors": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Names of the connectors which the service tunnel should be associated with",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+			ConflictsWith: []string{"access_tiers"},
+		},
+		"public_cidrs_include": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Specifies public IP addresses in CIDR notation that should be included in the tunnel, ex: 8.8.0.0/16.",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"public_cidrs_exclude": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Specifies public IP addresses in CIDR notation that should be excluded from the tunnel, ex: 8.8.12.0/24.",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"public_domains_include": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Specifies the domains that should be that should be included in the tunnel, ex: cnn.com",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"public_domains_exclude": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Specifies the domains that should be that should be excluded from the tunnel, ex: zoom.us",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service tunnel",
+		},
+		"cluster": {
+			Type:        schema.TypeString,
+			Description: "(Depreciated) Sets the cluster / shield for the service",
+			Computed:    true,
+			Optional:    true,
+			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+			ForceNew:    true,
+		},
+	}
+	return
+}
+
+func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
+	icon := ""
+	descriptionLink := ""
+
 	tun = servicetunnel.Info{
-		Kind:       "BanyanAccessTier",
+		Kind:       "BanyanServiceTunnel",
 		APIVersion: "rbac.banyanops.com/v1",
-		Type:       "attribute-based",
+		Type:       "origin",
 		Metadata: servicetunnel.Metadata{
 			Name:         d.Get("name").(string),
 			FriendlyName: d.Get("name").(string),
 			Description:  d.Get("description").(string),
+			Tags: servicetunnel.Tags{
+				Icon:            &icon,
+				DescriptionLink: &descriptionLink,
+			},
 		},
-		Spec: expandServiceTunnelSpec(d, cluster),
+		Spec: expandServiceTunnelSpec(d),
 	}
 	return
 }
 
 func resourceServiceTunnelCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	cluster, err := determineCluster(c, d)
+	err := setCluster(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	tun, err := c.ServiceTunnel.Create(tunFromState(d, cluster))
+	c := m.(*client.Holder)
+	tun, err := c.ServiceTunnel.Create(TunFromState(d))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -83,11 +149,7 @@ func resourceServiceTunnelCreate(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceServiceTunnelUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	cluster, err := determineCluster(c, d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	tun, err := c.ServiceTunnel.Update(d.Id(), tunFromState(d, cluster))
+	tun, err := c.ServiceTunnel.Update(d.Id(), TunFromState(d))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -147,6 +209,9 @@ func resourceServiceTunnelDelete(ctx context.Context, d *schema.ResourceData, m 
 			return diag.FromErr(err)
 		}
 		err = c.ServiceTunnel.DeletePolicy(d.Id(), policy.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	err := c.ServiceTunnel.Delete(d.Id())
 	if err != nil {
@@ -156,14 +221,61 @@ func resourceServiceTunnelDelete(ctx context.Context, d *schema.ResourceData, m 
 	return
 }
 
-func expandServiceTunnelSpec(d *schema.ResourceData, cluster string) (expanded servicetunnel.Spec) {
-	var peerAccessTiers []servicetunnel.PeerAccessTier
-	p := servicetunnel.PeerAccessTier{
-		Cluster:     cluster,
-		AccessTiers: []string{"", d.Get("access_tier").(string)},
+func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spec) {
+	ats := d.Get("access_tiers").([]interface{})
+	conns := convertSchemaSetToStringSlice(d.Get("connectors").(*schema.Set))
+	incl_cidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_include").(*schema.Set))
+	excl_cidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_exclude").(*schema.Set))
+	incl_domains := convertSchemaSetToStringSlice(d.Get("public_domains_include").(*schema.Set))
+	excl_domains := convertSchemaSetToStringSlice(d.Get("public_domains_exclude").(*schema.Set))
+
+	// 1st peer
+	var p1 servicetunnel.PeerAccessTier
+
+	// if access_tiers not set => global-edge, use ["*"]
+	if len(ats) == 0 {
+		p1 = servicetunnel.PeerAccessTier{
+			Cluster:     d.Get("cluster").(string),
+			AccessTiers: []string{"*"},
+			Connectors:  conns,
+		}
+	} else {
+		p1 = servicetunnel.PeerAccessTier{
+			Cluster:     d.Get("cluster").(string),
+			AccessTiers: []string{ats[0].(string)},
+			Connectors:  nil,
+		}
 	}
+
+	// 1st peer always gets public CIDR and Domain logic
+	if (incl_cidrs != nil) || (excl_cidrs != nil) || (incl_domains != nil) || (excl_domains != nil) {
+		p1.PublicCIDRs = &servicetunnel.PublicCIDRDomain{
+			Include: incl_cidrs,
+			Exclude: excl_cidrs,
+		}
+		p1.PublicDomains = &servicetunnel.PublicCIDRDomain{
+			Include: incl_domains,
+			Exclude: excl_domains,
+		}
+	}
+
+	var peerAccessTiers []servicetunnel.PeerAccessTier
+	peerAccessTiers = append(peerAccessTiers, p1)
+
+	// if multiple ATs, add individually to peerAccessTiers
+	if len(ats) > 1 {
+		for _, atSec := range ats[1:] {
+			pSec := servicetunnel.PeerAccessTier{
+				Cluster:     d.Get("cluster").(string),
+				AccessTiers: []string{atSec.(string)},
+			}
+			peerAccessTiers = append(peerAccessTiers, pSec)
+		}
+
+	}
+
 	expanded = servicetunnel.Spec{
-		PeerAccessTiers: append(peerAccessTiers, p),
+		PeerAccessTiers: peerAccessTiers,
 	}
 	return
 }
@@ -172,6 +284,36 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 	if len(tun.Spec.PeerAccessTiers) == 0 {
 		return
 	}
-	err = d.Set("access_tier", tun.Spec.PeerAccessTiers[0].AccessTiers[1])
+
+	// 1st peer
+	p1 := tun.Spec.PeerAccessTiers[0]
+
+	// if connectors set => global-edge
+	if len(p1.Connectors) > 0 {
+		d.Set("cluster", p1.Cluster)
+		d.Set("connectors", p1.Connectors)
+		d.Set("access_tiers", nil)
+	} else {
+		// 1st peer
+		d.Set("cluster", p1.Cluster)
+		d.Set("connectors", nil)
+		ats := p1.AccessTiers
+		// if multiple ATs, add later
+		if len(tun.Spec.PeerAccessTiers) > 1 {
+			for _, pSec := range tun.Spec.PeerAccessTiers[1:] {
+				atSec := pSec.AccessTiers
+				ats = append(ats, atSec...)
+			}
+		}
+		d.Set("access_tiers", ats)
+	}
+
+	if p1.PublicCIDRs != nil {
+		d.Set("public_cidrs_include", p1.PublicCIDRs.Include)
+		d.Set("public_cidrs_exclude", p1.PublicCIDRs.Exclude)
+		d.Set("public_domains_include", p1.PublicDomains.Include)
+		d.Set("public_domains_exclude", p1.PublicDomains.Exclude)
+	}
+
 	return
 }

@@ -3,11 +3,14 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
+	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -37,6 +40,14 @@ func AssertServiceSpecEqual(t *testing.T, got service.GetServiceSpec, want servi
 
 func AssertCreateServiceEqual(t *testing.T, got service.CreateService, want service.CreateService) {
 	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func AssertServiceTunnelEqual(t *testing.T, got servicetunnel.Info, want servicetunnel.Info) {
+	less := func(a, b string) bool { return a < b }
+
+	if diff := cmp.Diff(want, got, cmpopts.SortSlices(less)); diff != "" {
 		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
 	}
 }

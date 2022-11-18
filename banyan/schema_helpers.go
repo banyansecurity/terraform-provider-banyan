@@ -3,16 +3,17 @@ package banyan
 import (
 	"errors"
 	"fmt"
-	"github.com/banyansecurity/terraform-banyan-provider/client"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"math"
 	"net"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func convertInterfaceMapToStringMap(original map[string]interface{}) (newMap map[string]string) {
@@ -205,6 +206,11 @@ func buildHostTagSelector(d *schema.ResourceData) (hostTagSelector []map[string]
 // sets cluster to same as access_tier value if access_tier is set
 // sets to first cluster if the access_tier does not exist
 func setCluster(d *schema.ResourceData, m interface{}) (err error) {
+	_, clusterOk := d.GetOk("cluster")
+	if clusterOk {
+		return
+	}
+
 	c := m.(*client.Holder)
 	clusterName, err := determineCluster(c, d)
 	if err != nil {
@@ -215,18 +221,34 @@ func setCluster(d *schema.ResourceData, m interface{}) (err error) {
 }
 
 func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName string, err error) {
+	// registered services
 	_, connOk := d.GetOk("connector")
 	at, atOk := d.GetOk("access_tier")
+	// service tunnels
+	_, connsOk := d.GetOk("connectors")
+	ats, atsOk := d.GetOk("access_tiers")
+
+	// error if singular and plural are used
+	if (connOk && connsOk) || (atOk && atsOk) {
+		err = errors.New("cannot have both access_tier and access_tiers set or both connector and connectors set")
+		return
+	}
 
 	// error if both are set
-	if connOk && atOk {
+	if (connOk && atOk) || (connsOk && atsOk) {
 		err = errors.New("cannot have both access_tier and connector set")
+		return
 	}
 
 	// set to global-edge if connector is set
-	if connOk {
+	if connOk || connsOk {
 		clusterName = "global-edge"
 		return
+	}
+
+	// if multiple ats use the 1st one
+	if atsOk {
+		at = ats.([]interface{})[0].(string)
 	}
 
 	// otherwise determine which cluster to set based off of the access tier
