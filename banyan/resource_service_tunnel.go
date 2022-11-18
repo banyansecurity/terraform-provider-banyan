@@ -221,7 +221,7 @@ func resourceServiceTunnelDelete(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spec) {
-	ats := d.Get("access_tiers").([]interface{})
+	ats := convertSchemaSetToStringSlice(d.Get("access_tiers").(*schema.Set))
 	conns := convertSchemaSetToStringSlice(d.Get("connectors").(*schema.Set))
 	incl_cidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_include").(*schema.Set))
 	excl_cidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_exclude").(*schema.Set))
@@ -241,7 +241,7 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 	} else {
 		p1 = servicetunnel.PeerAccessTier{
 			Cluster:     d.Get("cluster").(string),
-			AccessTiers: []string{ats[0].(string)},
+			AccessTiers: []string{ats[0]},
 			Connectors:  nil,
 		}
 	}
@@ -266,7 +266,7 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 		for _, atSec := range ats[1:] {
 			pSec := servicetunnel.PeerAccessTier{
 				Cluster:     d.Get("cluster").(string),
-				AccessTiers: []string{atSec.(string)},
+				AccessTiers: []string{atSec},
 			}
 			peerAccessTiers = append(peerAccessTiers, pSec)
 		}
