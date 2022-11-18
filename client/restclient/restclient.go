@@ -271,7 +271,7 @@ func HandleResponse(response *http.Response, requestStr string) (responseData []
 		return
 	}
 	if response.StatusCode == 400 {
-		err = fmt.Errorf("400 bad request: %s", requestStr)
+		err = fmt.Errorf("%d bad request: %s \n Response: \n %s", response.StatusCode, requestStr, responseData)
 		return
 	}
 	if response.StatusCode == 404 {
@@ -285,7 +285,7 @@ func HandleResponse(response *http.Response, requestStr string) (responseData []
 		}
 		uerr := json.Unmarshal(responseData, &errResp)
 		if uerr == nil {
-			err = fmt.Errorf("received error code %d for request to %s with message: %s", response.StatusCode, requestStr, errResp.Message)
+			err = fmt.Errorf("Recieved error code %d: %s \n Response: \n %s", response.StatusCode, requestStr, responseData)
 		}
 		return
 	}
