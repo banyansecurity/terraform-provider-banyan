@@ -3,7 +3,6 @@ package banyan
 import (
 	"context"
 	"fmt"
-
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -222,26 +221,32 @@ func resourceServiceTunnelDelete(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spec) {
-	ats := convertSchemaSetToStringSlice(d.Get("access_tiers").(*schema.Set))
+	ats := d.Get("access_tiers").([]interface{})
 	conns := convertSchemaSetToStringSlice(d.Get("connectors").(*schema.Set))
 	incl_cidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_include").(*schema.Set))
 	excl_cidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_exclude").(*schema.Set))
 	incl_domains := convertSchemaSetToStringSlice(d.Get("public_domains_include").(*schema.Set))
 	excl_domains := convertSchemaSetToStringSlice(d.Get("public_domains_exclude").(*schema.Set))
 
+	// 1st peer
+	var p1 servicetunnel.PeerAccessTier
+
 	// if access_tiers not set => global-edge, use ["*"]
-	if ats == nil {
-		ats = []string{"*"}
+	if len(ats) == 0 {
+		p1 = servicetunnel.PeerAccessTier{
+			Cluster:     d.Get("cluster").(string),
+			AccessTiers: []string{"*"},
+			Connectors:  conns,
+		}
+	} else {
+		p1 = servicetunnel.PeerAccessTier{
+			Cluster:     d.Get("cluster").(string),
+			AccessTiers: []string{ats[0].(string)},
+			Connectors:  nil,
+		}
 	}
-	at := ats[0]
 
-	p1 := servicetunnel.PeerAccessTier{
-		Cluster:     d.Get("cluster").(string),
-		AccessTiers: []string{at},
-		Connectors:  conns,
-	}
-
-	// 1st peer AT gets public CIDR and Domain logic
+	// 1st peer always gets public CIDR and Domain logic
 	if (incl_cidrs != nil) || (excl_cidrs != nil) || (incl_domains != nil) || (excl_domains != nil) {
 		p1.PublicCIDRs = &servicetunnel.PublicCIDRDomain{
 			Include: incl_cidrs,
@@ -256,13 +261,16 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 	var peerAccessTiers []servicetunnel.PeerAccessTier
 	peerAccessTiers = append(peerAccessTiers, p1)
 
-	// if multiple ATs, add later
-	for _, atSec := range ats[1:] {
-		pSec := servicetunnel.PeerAccessTier{
-			Cluster:     d.Get("cluster").(string),
-			AccessTiers: []string{atSec},
+	// if multiple ATs, add individually to peerAccessTiers
+	if len(ats) > 1 {
+		for _, atSec := range ats[1:] {
+			pSec := servicetunnel.PeerAccessTier{
+				Cluster:     d.Get("cluster").(string),
+				AccessTiers: []string{atSec.(string)},
+			}
+			peerAccessTiers = append(peerAccessTiers, pSec)
 		}
-		peerAccessTiers = append(peerAccessTiers, pSec)
+
 	}
 
 	expanded = servicetunnel.Spec{
@@ -276,24 +284,35 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 		return
 	}
 
+	// 1st peer
 	p1 := tun.Spec.PeerAccessTiers[0]
-	ats := p1.AccessTiers
-	d.Set("cluster", p1.Cluster)
-	d.Set("connectors", p1.Connectors)
+
+	// if connectors set => global-edge
+	if len(p1.Connectors) > 0 {
+		d.Set("cluster", p1.Cluster)
+		d.Set("connectors", p1.Connectors)
+		d.Set("access_tiers", nil)
+	} else {
+		// 1st peer
+		d.Set("cluster", p1.Cluster)
+		d.Set("connectors", nil)
+		ats := p1.AccessTiers
+		// if multiple ATs, add later
+		if len(tun.Spec.PeerAccessTiers) > 1 {
+			for _, pSec := range tun.Spec.PeerAccessTiers[1:] {
+				atSec := pSec.AccessTiers
+				ats = append(ats, atSec...)
+			}
+		}
+		d.Set("access_tiers", ats)
+	}
+
 	if p1.PublicCIDRs != nil {
 		d.Set("public_cidrs_include", p1.PublicCIDRs.Include)
 		d.Set("public_cidrs_exclude", p1.PublicCIDRs.Exclude)
 		d.Set("public_domains_include", p1.PublicDomains.Include)
 		d.Set("public_domains_exclude", p1.PublicDomains.Exclude)
 	}
-
-	// if multiple ATs, add later
-	for _, pSec := range tun.Spec.PeerAccessTiers[1:] {
-		atSec := pSec.AccessTiers
-		ats = append(ats, atSec...)
-	}
-
-	d.Set("access_tiers", ats)
 
 	return
 }
