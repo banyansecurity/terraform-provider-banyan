@@ -89,9 +89,9 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 						api_key_id = banyan_api_key.example.id
 					}
 
-					resource "banyan_policy_infra" "example" {
+					resource "banyan_policy_tunnel" "example" {
 						name        = "%s"
-						description = "some infrastructure policy description"
+						description = "some tunnel policy description"
 						access {
 							roles       = ["ANY"]
 							trust_level = "High"
@@ -102,7 +102,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 						name              = "%s"
 						description       = "realdescription"
 						access_tiers      = [banyan_accesstier.example.name]
-                        policy            = banyan_policy_infra.example.id
+                        policy            = banyan_policy_tunnel.example.id
 					}
 					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -123,9 +123,9 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 						api_key_id = banyan_api_key.example.id
 					}
 
-					resource "banyan_policy_infra" "example" {
+					resource "banyan_policy_tunnel" "example" {
 						name        = "%s"
-						description = "some infrastructure policy description"
+						description = "some tunnel policy description"
 						access {
 							roles       = ["ANY"]
 							trust_level = "High"
@@ -136,7 +136,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 						name              = "%s"
 						description       = "realdescription update"
 						access_tiers      = [banyan_accesstier.example.name]
-                        policy            = banyan_policy_infra.example.id
+                        policy            = banyan_policy_tunnel.example.id
 					}
 					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(

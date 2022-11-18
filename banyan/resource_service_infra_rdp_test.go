@@ -20,7 +20,7 @@ func TestAccService_infra_rdp(t *testing.T) {
 				Config: testAccService_infra_rdp_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_infra_rdp.example", &bnnService),
-					testAccCheckAgainstJson(t, testAccService_infra_rdp_create_json(rName), &bnnService.ServiceID),
+					testAccCheckServiceAgainstJson(t, testAccService_infra_rdp_create_json(rName), &bnnService.ServiceID),
 				),
 			},
 		},

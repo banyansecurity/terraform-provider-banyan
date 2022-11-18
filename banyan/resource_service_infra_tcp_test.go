@@ -84,7 +84,7 @@ func TestAccService_tcp(t *testing.T) {
 				Config: testAccService_tcp_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_infra_tcp.example", &bnnService),
-					testAccCheckAgainstJson(t, testAccService_tcp_create_json(rName), &bnnService.ServiceID),
+					testAccCheckServiceAgainstJson(t, testAccService_tcp_create_json(rName), &bnnService.ServiceID),
 				),
 			},
 		},
