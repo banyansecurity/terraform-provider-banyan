@@ -2,12 +2,13 @@ package banyan
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 // Use the terraform plugin sdk testing framework for example testing connector lifecycle
@@ -77,9 +78,7 @@ resource "banyan_api_key" "example" {
 
 resource "banyan_connector" "example" {
   name              = "%s"
-  api_key = resource.banyan_api_key.example.id
-  access_tiers = ["example"]
-  domains = ["example.com"]
+  api_key_id 		= resource.banyan_api_key.example.id
 }
 `, name, name)
 }
@@ -95,7 +94,7 @@ resource "banyan_api_key" "example" {
 
 resource "banyan_connector" "example" {
   name              = "%s"
-  api_key = resource.banyan_api_key.example.id
+  api_key_id = resource.banyan_api_key.example.id
   access_tiers = ["global-edge"]
   cidrs = ["10.5.0.1/24"]
   domains = ["example.com"]

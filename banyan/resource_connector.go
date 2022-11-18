@@ -2,13 +2,14 @@ package banyan
 
 import (
 	"context"
+	"time"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
-	"time"
 )
 
 func resourceConnector() *schema.Resource {
@@ -29,16 +30,24 @@ func resourceConnector() *schema.Resource {
 				Required:    true,
 				Description: "Name of the connector",
 			},
-			"api_key": {
+			"api_key_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of a satellite scoped API key to be used for connector authentication",
+				Description: "ID of the API key which is scoped to satellite",
 			},
-			"keepalive": {
-				Type:        schema.TypeInt,
+			"cluster": {
+				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Keepalive value for the connector",
-				Default:     20,
+				Description: "Cluster / shield name in Banyan. If not provided then the cluster will be set automatically",
+				Default:     "global-edge",
+			},
+			"access_tiers": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Name of the access tiers the connector will use to establish a secure dial-out connection. Will be set automatically if omitted.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"cidrs": {
 				Type:        schema.TypeSet,
@@ -48,17 +57,9 @@ func resourceConnector() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"access_tiers": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Name of the access tier the connector will use to establish a secure dial-out connection. Will be set automatically if omitted.",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"domains": {
 				Type:        schema.TypeSet,
-				Required:    true,
+				Optional:    true,
 				Description: "Specifies the domains that should resolve at a DNS server in your private network, ex: mycompany.local.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -69,6 +70,11 @@ func resourceConnector() *schema.Resource {
 }
 
 func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
+	// if access_tiers not set, use ["*"]
+	ats := convertSchemaSetToStringSlice(d.Get("access_tiers").(*schema.Set))
+	if ats == nil {
+		ats = []string{"*"}
+	}
 	spec := satellite.Info{
 		Kind:       "BanyanConnector",
 		APIVersion: "rbac.banyanops.com/v1",
@@ -78,17 +84,15 @@ func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
 			DisplayName: d.Get("name").(string),
 		},
 		Spec: satellite.Spec{
-			APIKeyID:  d.Get("api_key").(string),
-			Keepalive: int64(d.Get("keepalive").(int)),
-			CIDRs:     convertSchemaSetToStringSlice(d.Get("cidrs").(*schema.Set)),
+			APIKeyID: d.Get("api_key_id").(string),
 			PeerAccessTiers: []satellite.PeerAccessTier{
 				{
-					Cluster:     "global-edge",
-					AccessTiers: []string{"access-tier"},
+					Cluster:     d.Get("cluster").(string),
+					AccessTiers: ats,
 				},
 			},
-			DisableSnat: false,
-			Domains:     convertSchemaSetToStringSlice(d.Get("domains").(*schema.Set)),
+			CIDRs:   convertSchemaSetToStringSlice(d.Get("cidrs").(*schema.Set)),
+			Domains: convertSchemaSetToStringSlice(d.Get("domains").(*schema.Set)),
 		},
 	}
 	return spec
@@ -112,19 +116,20 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interf
 		handleNotFoundError(d, err)
 		return
 	}
+	d.SetId(sat.ID)
 	err = d.Set("name", sat.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("id", sat.ID)
+	err = d.Set("api_key_id", sat.APIKeyID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("api_key", sat.APIKeyID)
+	err = d.Set("cidrs", sat.CIDRs)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("keepalive", sat.Keepalive)
+	err = d.Set("domains", sat.Domains)
 	if err != nil {
 		return diag.FromErr(err)
 	}
