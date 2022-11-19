@@ -21,8 +21,8 @@ type Object struct {
 	Kind       string `json:"kind"`
 	APIVersion string `json:"apiVersion"`
 	Type       string `json:"type"`
-	Metadata   `json:"Metadata"`
-	Spec       `json:"Spec"`
+	Metadata   `json:"metadata"`
+	Spec       `json:"spec"`
 }
 
 // Metadata represents the metadata stanza of an Object.
