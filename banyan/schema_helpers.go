@@ -66,7 +66,7 @@ func handleNotFoundError(d *schema.ResourceData, err error) (diagnostics diag.Di
 }
 
 func validateTrustLevel() func(val interface{}, key string) (warns []string, errs []error) {
-	return validation.StringInSlice([]string{"Low", "Medium", "High"}, false)
+	return validation.StringInSlice([]string{"", "Low", "Medium", "High"}, false)
 }
 
 func contains(valid []string, v string) bool {
