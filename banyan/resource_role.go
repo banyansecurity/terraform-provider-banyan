@@ -2,6 +2,7 @@ package banyan
 
 import (
 	"context"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -60,7 +61,7 @@ func resourceRole() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"service_accounts": {
+			"service_account": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Service accounts to be included in the role",
@@ -72,7 +73,7 @@ func resourceRole() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Computed:    true,
-				Description: "Name of the group (from your IdP) which will be included in the role",
+				Description: "Names of the groups (from your IdP) which will be included in the role",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -81,7 +82,7 @@ func resourceRole() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Computed:    true,
-				Description: "Email address for the user or group of users in the role",
+				Description: "Email addresses for the users in the role",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -138,7 +139,7 @@ func RoleFromState(d *schema.ResourceData) (r role.CreateRole) {
 			Image:           convertSchemaSetToStringSlice(d.Get("image").(*schema.Set)),
 			RepoTag:         convertSchemaSetToStringSlice(d.Get("repo_tag").(*schema.Set)),
 			LabelSelector:   []role.LabSel{},
-			ServiceAccts:    convertSchemaSetToStringSlice(d.Get("service_accounts").(*schema.Set)),
+			ServiceAccts:    convertSchemaSetToStringSlice(d.Get("service_account").(*schema.Set)),
 			UserGroup:       convertSchemaSetToStringSlice(d.Get("user_group").(*schema.Set)),
 			Email:           convertSchemaSetToStringSlice(d.Get("email").(*schema.Set)),
 			DeviceOwnership: convertSchemaSetToStringSlice(d.Get("device_ownership").(*schema.Set)),

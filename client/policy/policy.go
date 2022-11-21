@@ -2,11 +2,11 @@ package policy
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/pkg/errors"
 	"html"
 	"log"
 	"net/url"
+
+	"github.com/pkg/errors"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
@@ -45,11 +45,6 @@ func (p *policy) Create(policy Object) (created GetPolicy, err error) {
 	path := "api/v1/insert_security_policy"
 	body, err := json.Marshal(policy)
 	if err != nil {
-		return
-	}
-	existing, err := p.GetName(policy.Metadata.Name)
-	if existing.Name == policy.Metadata.Name {
-		err = fmt.Errorf("A existing policy was found with name %s (id=%s)", existing.Name, existing.ID)
 		return
 	}
 	resp, err := p.restClient.Create(apiVersion, component, body, path)
