@@ -105,6 +105,7 @@ func TestAccPolicy_web_l7(t *testing.T) {
 				Config: testAccPolicy_web_l7_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingPolicy("banyan_policy_web.example", &bnnPolicy),
+					testAccCheckPolicyAgainstJson(t, testAccPolicy_web_l7_create_json(rName), &bnnPolicy.ID),
 				),
 			},
 		},
@@ -149,8 +150,10 @@ resource "banyan_policy_web" "example" {
   access {
     roles       = ["Everyone"]
     trust_level = "High"
-    l7_resources = ["/admin"]
-    l7_actions   = ["READ"]
+    l7_access {
+      resources = ["/admin"]
+      actions   = ["READ"]
+    }
   }
 }
 `, name)
@@ -173,22 +176,21 @@ func testAccPolicy_web_l7_create_json(name string) string {
     "access": [
       {
         "roles": [
-          "mviux78efi",
-          "k3cv0yir0l"
+          "Everyone"
         ],
         "rules": {
           "l7_access": [
             {
               "resources": [
-                "*"
+                "/admin"
               ],
               "actions": [
-                "*"
+                "READ"
               ]
             }
           ],
           "conditions": {
-            "trust_level": "Medium"
+            "trust_level": "High"
           }
         }
       }
