@@ -53,17 +53,24 @@ func TestAccPolicy_tunnel_l4(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 					resource "banyan_policy_tunnel" "example" {
-						name        = "%s"
-						description = "some tunnel policy description"
-						access {
-							roles       = ["Everyone"]
-							trust_level = "Low"
-							l4_access_allow {
-								cidrs = ["10.10.10.0/24"]
-								protocols = ["UDP"]
-								ports = ["80"]
-							}
-						}
+					  name        = "%s"
+					  description = "some tunnel policy description"
+					  access {
+					    roles       = ["Everyone"]
+					    trust_level = "Low"
+					    l4_access {
+					      allow {
+					        cidrs = ["10.10.10.0/24"]
+					        protocols = ["UDP"]
+					        ports = ["80"]
+					      }
+					      deny {
+					        cidrs = ["10.10.11.0/24"]
+					        protocols = ["TCP"]
+					        ports = ["80"]
+					      }
+					    }
+					  }
 					}
 					`, rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -109,6 +116,19 @@ func testAccPolicy_tunnel_l4_create_json(name string) string {
                                 ],
                                 "protocols": [
                                     "UDP"
+                                ]
+                            }
+                        ],
+                        "deny": [
+                            {
+                                "cidrs": [
+                                    "10.10.11.0/24"
+                                ],
+                                "ports": [
+                                    "80"
+                                ],
+                                "protocols": [
+                                    "TCP"
                                 ]
                             }
                         ]
@@ -175,7 +195,20 @@ func testAccPolicy_tunnel_any_create_json(name string) string {
                         "trust_level": "High"
                     },
                     "l4_access": {
-                    }
+                        "allow": [
+                            {
+                                "cidrs": [
+                                    "*"
+                                ],
+                                "ports": [
+                                    "*"
+                                ],
+                                "protocols": [
+                                    "ALL"
+                                ]
+                            }
+                        ]
+					}
                 }
             }
         ]
