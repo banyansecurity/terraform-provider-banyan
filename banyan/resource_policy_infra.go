@@ -42,6 +42,7 @@ func resourcePolicyInfra() *schema.Resource {
 						"roles": {
 							Type:        schema.TypeSet,
 							Description: "Roles that all have the access rights given by rules",
+							MinItems:    1,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
