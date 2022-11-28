@@ -29,7 +29,7 @@ func TestSchemaServiceInfraK8s_k8s_conn(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, K8sSchema(), svc_k8s_conn)
 	svc_obj := K8sFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/k8s-conn.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_infra/k8s-conn.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal(json_spec, &ref_obj)
 

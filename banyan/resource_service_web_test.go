@@ -25,7 +25,7 @@ func TestSchemaServiceWeb_web_at(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_at)
 	svc_obj := WebFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/web-at.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_web/web-at.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -45,7 +45,7 @@ func TestSchemaServiceWeb_web_conn(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_conn)
 	svc_obj := WebFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/web-conn.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_web/web-conn.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -69,7 +69,7 @@ func TestSchemaServiceWeb_web_certs(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_certs)
 	svc_obj := WebFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/web-certs.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_web/web-certs.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
