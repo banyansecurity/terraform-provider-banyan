@@ -55,25 +55,34 @@ func resourcePolicyWeb() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validateTrustLevel(),
 						},
-						"l7_resources": {
-							Type: schema.TypeSet,
-							Description: `
-								Resources are a list of application level resources.
-								Each resource can have wildcard prefix or suffix, or both.
-								A resource can be prefixed with "!", meaning DENY.
-								Any DENY rule overrides any other rule that would allow the access.`,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"l7_actions": {
-							Type:        schema.TypeSet,
-							Description: "Actions are a list of application-level actions: \"CREATE\", \"READ\", \"UPDATE\", \"DELETE\", \"*\"",
+						"l7_access": {
+							Type:        schema.TypeList,
+							Description: "Indicates whether the end user device is allowed to use L7",
 							Optional:    true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{"CREATE", "READ", "UPDATE", "DELETE", "*"}, false),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resources": {
+										Type: schema.TypeSet,
+										Description: `
+											Resources are a list of application level resources.
+											Each resource can have wildcard prefix or suffix, or both.
+											A resource can be prefixed with "!", meaning DENY.
+											Any DENY rule overrides any other rule that would allow the access.`,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"actions": {
+										Type:        schema.TypeSet,
+										Description: "Actions are a list of application-level actions: \"CREATE\", \"READ\", \"UPDATE\", \"DELETE\", \"*\"",
+										Optional:    true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringInSlice([]string{"CREATE", "READ", "UPDATE", "DELETE", "*"}, false),
+										},
+									},
+								},
 							},
 						},
 					},
@@ -161,47 +170,64 @@ func expandPolicyWebAccess(m []interface{}) (access []policy.Access) {
 			Roles: convertSchemaSetToStringSlice(data["roles"].(*schema.Set)),
 		}
 		a.Rules.Conditions.TrustLevel = data["trust_level"].(string)
-		a.Rules.L7Access = expandPolicyWebL7Access(data)
+		a.Rules.L7Access = expandPolicyWebL7Access(data["l7_access"].([]interface{}))
 		access = append(access, a)
 	}
 	return
 }
 
-func expandPolicyWebL7Access(data map[string]interface{}) (l7Access []policy.L7Access) {
-	actions := convertSchemaSetToStringSlice(data["l7_actions"].(*schema.Set))
-	if actions == nil {
-		actions = []string{"*"}
+func expandPolicyWebL7Access(m []interface{}) (l7Access []policy.L7Access) {
+	if len(m) == 0 {
+		l7Access = append(l7Access, policy.L7Access{
+			Actions:   []string{"*"},
+			Resources: []string{"*"},
+		})
 	}
-	resources := convertSchemaSetToStringSlice(data["l7_resources"].(*schema.Set))
-	if resources == nil {
-		resources = []string{"*"}
+	for _, raw := range m {
+		data := raw.(map[string]interface{})
+		actions := convertSchemaSetToStringSlice(data["actions"].(*schema.Set))
+		if actions == nil {
+			actions = []string{"*"}
+		}
+		resources := convertSchemaSetToStringSlice(data["resources"].(*schema.Set))
+		if resources == nil {
+			resources = []string{"*"}
+		}
+		l7Access = append(l7Access, policy.L7Access{
+			Actions:   actions,
+			Resources: resources,
+		})
 	}
-	l7Access = append(l7Access, policy.L7Access{
-		Actions:   actions,
-		Resources: resources,
-	})
 	return
 }
 
 func flattenPolicyWebAccess(toFlatten []policy.Access) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
-	for idx, accessItem := range toFlatten {
+	for _, accessItem := range toFlatten {
 		ai := make(map[string]interface{})
 		ai["roles"] = accessItem.Roles
 		ai["trust_level"] = accessItem.Rules.Conditions.TrustLevel
+		ai["l7_access"] = flattenPolicyWebL7Access(accessItem.L7Access)
+		flattened = append(flattened, ai)
+	}
+	return
+}
 
-		l7Resources := accessItem.Rules.L7Access[0].Resources
-		if reflect.DeepEqual(l7Resources, []string{"*"}) {
-			l7Resources = nil
+func flattenPolicyWebL7Access(toFlatten []policy.L7Access) (flattened []interface{}) {
+	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+	for idx, l7access := range toFlatten {
+		l7 := make(map[string]interface{})
+		l7["resources"] = l7access.Resources
+		l7["actions"] = l7access.Actions
+		if reflect.DeepEqual(l7access, policy.L7Access{
+			Resources: []string{"*"},
+			Actions:   []string{"*"}}) {
+			flattened[idx] = nil
+			continue
 		}
-		ai["l7_resources"] = l7Resources
-
-		l7Actions := accessItem.Rules.L7Access[0].Actions
-		if reflect.DeepEqual(l7Actions, []string{"*"}) {
-			l7Actions = nil
-		}
-		ai["l7_actions"] = l7Actions
-		flattened[idx] = ai
+		flattened[idx] = l7
+	}
+	if len(flattened) == 1 && flattened[0] == nil {
+		return nil
 	}
 	return
 }
