@@ -1,6 +1,6 @@
 resource "banyan_api_key" "example" {
-  name        = "example"
-  description = "some connector description"
+  name        = "example-connector"
+  description = "example connector api key"
   scope       = "satellite"
 }
 

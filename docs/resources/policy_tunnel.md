@@ -18,7 +18,7 @@ resource "banyan_policy_tunnel" "example" {
   description = "some tunnel policy description"
   access {
     roles       = ["Everyone"]
-    trust_level = "Low"
+    trust_level = "High"
     l4_access {
       allow {
         cidrs     = ["10.10.10.0/24"]

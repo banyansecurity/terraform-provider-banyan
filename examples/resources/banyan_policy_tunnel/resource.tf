@@ -3,7 +3,7 @@ resource "banyan_policy_tunnel" "anyone-high" {
   description = "${banyan_accesstier.example.name} allow users"
   access {
     roles       = ["Everyone"]
-    trust_level = "Low"
+    trust_level = "High"
     l4_access {
       allow {
         cidrs     = ["10.10.10.0/24"]

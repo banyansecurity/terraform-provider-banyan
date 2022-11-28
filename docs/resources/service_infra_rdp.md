@@ -36,9 +36,12 @@ resource "banyan_service_infra_rdp" "example" {
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
+- `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
+- `client_banyanproxy_listen_port` (Number) Local listen port to be used by client proxy; if not specified, a random local port will be used
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
+- `description_link` (String) Link shown to the end user of the banyan app for this service
 - `http_connect` (Boolean) Indicates to use HTTP Connect request to derive the backend target address.
 - `policy` (String) Policy ID to be attached to this service
 - `port` (Number) The external-facing port for this service

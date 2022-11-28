@@ -10,17 +10,22 @@ resource "banyan_service_web" "example" {
 resource "banyan_policy_web" "example" {
   name        = "example"
   description = "some web policy description"
+
   access {
-    roles        = ["Admins"]
-    trust_level  = "High"
-    l7_resources = ["/admin"]
-    l7_actions   = ["READ"]
+    roles       = ["Administrators"]
+    trust_level = "High"
+    l7_access {
+      resources = ["/admin"]
+      actions   = ["READ"]
+    }
   }
 
   access {
-    roles        = ["ANY"]
-    trust_level  = "High"
-    l7_resources = ["/app"]
-    l7_actions   = ["READ"]
+    roles       = ["Everyone"]
+    trust_level = "High"
+    l7_access {
+      resources = ["/app"]
+      actions   = ["READ"]
+    }
   }
 }

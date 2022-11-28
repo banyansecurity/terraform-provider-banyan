@@ -45,6 +45,7 @@ resource "banyan_service_infra_k8s" "example" {
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
+- `description_link` (String) Link shown to the end user of the banyan app for this service
 - `policy` (String) Policy ID to be attached to this service
 - `port` (Number) The external-facing port for this service
 

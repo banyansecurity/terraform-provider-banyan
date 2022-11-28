@@ -12,8 +12,8 @@ The connector resource allows for configuration of the connector API object. We 
 ## Example Usage
 ```terraform
 resource "banyan_api_key" "example" {
-  name        = "example"
-  description = "some connector description"
+  name        = "example-connector"
+  description = "api key for example connector"
   scope       = "satellite"
 }
 
@@ -26,8 +26,8 @@ resource "banyan_connector" "example" {
 ## Example Connector with Service Tunnel
 ```terraform
 resource "banyan_api_key" "example" {
-  name        = "example"
-  description = "some connector description"
+  name        = "example-connector"
+  description = "example connector api key"
   scope       = "satellite"
 }
 
