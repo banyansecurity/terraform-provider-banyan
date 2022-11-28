@@ -35,16 +35,16 @@ func resourceServiceInfraRdpDepreciated() *schema.Resource {
 
 func RdpSchema() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-			Optional:    true,
-			Default:     false,
-		},
 		"policy": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Policy ID to be attached to this service",
+		},
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway",
+			Optional:    true,
+			Default:     false,
 		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
@@ -59,6 +59,12 @@ func RdpSchemaDepreciated() map[string]*schema.Schema {
 			Optional:    true,
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
+		},
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway",
+			Optional:    true,
+			Default:     false,
 		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
