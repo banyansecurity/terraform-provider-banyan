@@ -182,7 +182,7 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	port := strconv.Itoa(portInt)
 	icon := ""
 	serviceAppType := "K8S"
-	descriptionLink := ""
+	descriptionLink := d.Get("description_link").(string)
 	allowUserOverride := true
 	banyanProxyMode := "CHAIN"
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)

@@ -170,7 +170,7 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 	port := strconv.Itoa(portInt)
 	icon := ""
 	serviceAppType := "DATABASE"
-	descriptionLink := ""
+	descriptionLink := d.Get("description_link").(string)
 	allowUserOverride := true
 	banyanProxyMode := "TCP"
 	if d.Get("http_connect").(bool) {

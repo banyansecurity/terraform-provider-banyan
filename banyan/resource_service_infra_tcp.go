@@ -169,7 +169,7 @@ func expandTCPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	port := strconv.Itoa(portInt)
 	icon := ""
 	serviceAppType := "GENERIC"
-	descriptionLink := ""
+	descriptionLink := d.Get("description_link").(string)
 	allowUserOverride := true
 	banyanProxyMode := "TCP"
 	if d.Get("http_connect").(bool) {
