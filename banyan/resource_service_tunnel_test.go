@@ -22,7 +22,7 @@ func TestSchemaServiceTunnel_tunnel_at(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_at)
 	svc_obj := TunFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/tunnel-at.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_tunnel/tunnel-at.json")
 	var ref_obj servicetunnel.Info
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -39,7 +39,7 @@ func TestSchemaServiceTunnel_tunnel_conn(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_conn)
 	svc_obj := TunFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/tunnel-conn.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_tunnel/tunnel-conn.json")
 	var ref_obj servicetunnel.Info
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -58,7 +58,7 @@ func TestSchemaServiceTunnel_tunnel_public(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
 	svc_obj := TunFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/tunnel-public.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_tunnel/tunnel-public.json")
 	var ref_obj servicetunnel.Info
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 

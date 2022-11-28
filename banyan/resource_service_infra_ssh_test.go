@@ -25,7 +25,7 @@ func TestSchemaServiceInfraSsh_ssh_at(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, SshSchema(), svc_ssh_at)
 	svc_obj := SshFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/ssh-at.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_infra/ssh-at.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -45,7 +45,7 @@ func TestSchemaServiceInfraSsh_ssh_conn(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, SshSchema(), svc_ssh_conn)
 	svc_obj := SshFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/ssh-conn.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_infra/ssh-conn.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
