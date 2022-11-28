@@ -1,0 +1,36 @@
+{
+    "apiVersion": "rbac.banyanops.com/v1",
+    "kind": "BanyanRole",
+    "type": "origin",
+    "metadata":
+    {
+        "name": "AdminsCorpDevice",
+        "description": "[TF] Admins on corporate devices",
+        "tags":
+        {
+            "template": "USER"
+        }
+    },
+    "spec":
+    {
+        "container_fqdn": null,
+        "image": null,
+        "repo_tag": null,
+        "label_selector":
+        [],
+        "service_account": null,
+        "group":
+        [
+            "Admins"
+        ],
+        "email": null,
+        "device_ownership":
+        [
+            "Corporate Dedicated",
+            "Corporate Shared"
+        ],
+        "platform": null,
+        "known_device_only": false,
+        "mdm_present": false
+    }
+}

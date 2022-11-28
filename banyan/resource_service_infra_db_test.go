@@ -26,7 +26,7 @@ func TestSchemaServiceInfraDb_database_at(t *testing.T) {
 
 	d := schema.TestResourceDataRaw(t, DbSchema(), conn)
 	svc := DbFromState(d)
-	j, _ := ioutil.ReadFile("./specs/database-conn.json")
+	j, _ := ioutil.ReadFile("./specs/service_infra/database-conn.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal(j, &ref_obj)
 	AssertCreateServiceEqual(t, svc, ref_obj)

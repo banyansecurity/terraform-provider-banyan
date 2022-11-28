@@ -3,8 +3,10 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"testing"
+
+	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
+	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 
 	"github.com/stretchr/testify/assert"
 
@@ -47,6 +49,12 @@ func AssertServiceSpecEqual(t *testing.T, got service.GetServiceSpec, want servi
 func AssertPolicySpecEqual(t *testing.T, got policy.Object, want policy.Object) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func AssertCreateRoleEqual(t *testing.T, got role.CreateRole, want role.CreateRole) {
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("role.Spec{} mismatch (-want +got):\n%s", diff)
 	}
 }
 

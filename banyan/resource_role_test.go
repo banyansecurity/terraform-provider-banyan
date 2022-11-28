@@ -1,16 +1,53 @@
 package banyan
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
-// Use the terraform plugin sdk testing framework for acceptance testing role lifecycle
+func TestSchemaRole_known_device(t *testing.T) {
+	role_known_device := map[string]interface{}{
+		"name":              "UsersRegisteredDevice",
+		"description":       "[TF] Users on a device registered with Banyan",
+		"user_group":        []interface{}{"Users"},
+		"known_device_only": true,
+	}
+	d := schema.TestResourceDataRaw(t, RoleSchema(), role_known_device)
+	role_obj := RoleFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/role/known-device.json")
+	var ref_obj role.CreateRole
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertCreateRoleEqual(t, role_obj, ref_obj)
+}
+
+func TestSchemaRole_device_ownership(t *testing.T) {
+	role_device_ownership := map[string]interface{}{
+		"name":             "AdminsCorpDevice",
+		"description":      "[TF] Admins on corporate devices",
+		"user_group":       []interface{}{"Admins"},
+		"device_ownership": []interface{}{"Corporate Dedicated", "Corporate Shared"},
+	}
+	d := schema.TestResourceDataRaw(t, RoleSchema(), role_device_ownership)
+	role_obj := RoleFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/role/device-ownership.json")
+	var ref_obj role.CreateRole
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertCreateRoleEqual(t, role_obj, ref_obj)
+}
+
 func TestAccRole_basic(t *testing.T) {
 	var bnnRole role.GetRole
 

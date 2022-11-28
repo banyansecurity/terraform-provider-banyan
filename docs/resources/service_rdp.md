@@ -43,7 +43,7 @@ resource "banyan_service_rdp" "example" {
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
 - `description_link` (String) Link shown to the end user of the banyan app for this service
-- `http_connect` (Boolean) Indicates to use HTTP Connect request to derive the backend target address.
+- `http_connect` (Boolean) Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway
 - `policy` (String) Policy ID to be attached to this service
 - `port` (Number) The external-facing port for this service
 
