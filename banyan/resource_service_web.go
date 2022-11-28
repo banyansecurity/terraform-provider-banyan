@@ -43,7 +43,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 		},
 		"description_link": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Link shown to the end user of the banyan app for this service",
 		},
 		"access_tier": {
