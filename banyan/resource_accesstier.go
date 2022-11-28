@@ -43,7 +43,6 @@ func AccessTierSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Cluster / shield name in Banyan. If not provided then the cluster will be chosen automatically",
 			ForceNew:    true,
-			Default:     "",
 		},
 		"address": {
 			Type:        schema.TypeString,
