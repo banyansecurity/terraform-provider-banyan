@@ -18,107 +18,112 @@ func resourceRole() *schema.Resource {
 		ReadContext:   resourceRoleRead,
 		UpdateContext: resourceRoleUpdate,
 		DeleteContext: resourceRoleDelete,
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the role",
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Description of the role",
-			},
-			"id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "ID of the role in Banyan",
-			},
-			"container_fqdn": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "FQDN for the container",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"image": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "Image",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"repo_tag": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "Repo Tag",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"service_account": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Service accounts to be included in the role",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"user_group": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "Names of the groups (from your IdP) which will be included in the role",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"email": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "Email addresses for the users in the role",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"device_ownership": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "Device ownership specification for the role",
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"Corporate Dedicated", "Corporate Shared", "Employee Owned", "Other"}, false),
-				},
-			},
-			"platform": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "Platform type which is required by the role",
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"Windows", "macOS", "Linux", "iOS", "Android", "Unregistered"}, false),
-				},
-			},
-			"known_device_only": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enforces whether the role requires known devices only for access",
-			},
-			"mdm_present": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enforces whether the role requires an MDM to be present on the device",
+		Schema:        RoleSchema(),
+	}
+}
+
+func RoleSchema() (s map[string]*schema.Schema) {
+	s = map[string]*schema.Schema{
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the role",
+		},
+		"description": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Description of the role",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "ID of the role in Banyan",
+		},
+		"container_fqdn": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			Description: "FQDN for the container",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
 			},
 		},
+		"image": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			Description: "Image",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"repo_tag": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			Description: "Repo Tag",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"service_account": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Service accounts to be included in the role",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"user_group": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			Description: "Names of the groups (from your IdP) which will be included in the role",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"email": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			Description: "Email addresses for the users in the role",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"device_ownership": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			Description: "Device ownership specification for the role",
+			Elem: &schema.Schema{
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringInSlice([]string{"Corporate Dedicated", "Corporate Shared", "Employee Owned", "Other"}, false),
+			},
+		},
+		"platform": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			Description: "Platform type which is required by the role",
+			Elem: &schema.Schema{
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringInSlice([]string{"Windows", "macOS", "Linux", "iOS", "Android", "Unregistered"}, false),
+			},
+		},
+		"known_device_only": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enforces whether the role requires known devices only for access",
+		},
+		"mdm_present": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enforces whether the role requires an MDM to be present on the device",
+		},
 	}
+	return
 }
 
 func RoleFromState(d *schema.ResourceData) (r role.CreateRole) {
