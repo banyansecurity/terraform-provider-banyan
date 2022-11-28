@@ -124,7 +124,7 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	port := strconv.Itoa(portInt)
 	icon := ""
 	serviceAppType := "RDP"
-	descriptionLink := ""
+	descriptionLink := d.Get("description_link").(string)
 	allowUserOverride := true
 	banyanProxyMode := "TCP"
 	httpConnect, ok := d.GetOk("http_connect")

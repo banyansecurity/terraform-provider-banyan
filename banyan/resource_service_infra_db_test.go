@@ -56,6 +56,7 @@ func testAccService_database_create(name string) string {
 resource "banyan_service_db" "example" {
   name        = "%s"
   description = "some database service description"
+  description_link = "https://test.com"
   access_tier   = "us-west1"
   domain      = "%s.us-west.mycompany.com"
   backend_domain = "example-db.internal"
@@ -95,7 +96,7 @@ func testAccService_database_create_json(name string) string {
             "banyanproxy_mode": "TCP",
             "app_listen_port": "0",
             "allow_user_override": true,
-            "description_link": "",
+            "description_link": "https://test.com",
             "include_domains": []
         }
     },

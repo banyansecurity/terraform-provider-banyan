@@ -195,7 +195,7 @@ func expandSSHMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	port := strconv.Itoa(portInt)
 	icon := ""
 	serviceAppType := "SSH"
-	descriptionLink := ""
+	descriptionLink := d.Get("description_link").(string)
 	sshServiceType := d.Get("client_ssh_auth").(string)
 	sshHostDirective := d.Get("client_ssh_host_directive").(string)
 	writeSSHConfig := true

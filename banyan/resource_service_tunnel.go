@@ -39,6 +39,11 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "Description of the service tunnel",
 		},
+		"description_link": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Link shown to the end user of the banyan app for this service",
+		},
 		"access_tiers": {
 			Type:        schema.TypeSet,
 			Optional:    true,
@@ -108,7 +113,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 
 func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
 	icon := ""
-	descriptionLink := ""
+	descriptionLink := d.Get("description_link").(string)
 
 	tun = servicetunnel.Info{
 		Kind:       "BanyanServiceTunnel",

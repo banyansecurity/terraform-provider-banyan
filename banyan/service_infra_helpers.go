@@ -32,6 +32,11 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Description of the service",
 	},
+	"description_link": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Link shown to the end user of the banyan app for this service",
+	},
 	"access_tier": {
 		Type:          schema.TypeString,
 		Optional:      true,
