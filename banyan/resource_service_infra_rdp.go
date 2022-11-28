@@ -35,6 +35,12 @@ func resourceServiceInfraRdpDepreciated() *schema.Resource {
 
 func RdpSchema() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
+			Optional:    true,
+			Default:     false,
+		},
 		"policy": {
 			Type:        schema.TypeString,
 			Optional:    true,
