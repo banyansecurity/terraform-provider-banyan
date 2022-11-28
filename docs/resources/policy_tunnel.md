@@ -13,16 +13,23 @@ The tunnel policy resource is used to manage the lifecycle of policies which wil
 ## Example Usage
 
 ```terraform
-resource "banyan_policy_tunnel" "anyone-high" {
-  name        = "corporate-network-users"
-  description = "allow users with high trust to port 443 in subnet 10.10.1.0/24"
+resource "banyan_policy_tunnel" "example" {
+  name        = "example"
+  description = "some tunnel policy description"
   access {
-    roles       = ["ANY"]
-    trust_level = "High"
-    l4_access_allow {
-      cidrs     = ["10.10.1.0/24"]
-      protocols = ["TCP"]
-      ports     = ["443"]
+    roles       = ["Everyone"]
+    trust_level = "Low"
+    l4_access {
+      allow {
+        cidrs     = ["10.10.10.0/24"]
+        protocols = ["TCP"]
+        ports     = ["443"]
+      }
+      deny {
+        cidrs     = ["10.10.10.0/24"]
+        protocols = ["TCP"]
+        ports     = ["80"]
+      }
     }
   }
 }
@@ -51,11 +58,18 @@ Required:
 
 Optional:
 
-- `l4_access_allow` (Block List) Roles that all have the access rights given by rules (see [below for nested schema](#nestedblock--access--l4_access_allow))
-- `l4_access_deny` (Block List) Roles that all have the access rights given by rules (see [below for nested schema](#nestedblock--access--l4_access_deny))
+- `l4_access` (Block List, Max: 1) L4 access rules (see [below for nested schema](#nestedblock--access--l4_access))
 
-<a id="nestedblock--access--l4_access_allow"></a>
-### Nested Schema for `access.l4_access_allow`
+<a id="nestedblock--access--l4_access"></a>
+### Nested Schema for `access.l4_access`
+
+Optional:
+
+- `allow` (Block List) Roles that all have the access rights given by rules (see [below for nested schema](#nestedblock--access--l4_access--allow))
+- `deny` (Block List) Roles that all have the access rights given by rules (see [below for nested schema](#nestedblock--access--l4_access--deny))
+
+<a id="nestedblock--access--l4_access--allow"></a>
+### Nested Schema for `access.l4_access.allow`
 
 Optional:
 
@@ -64,8 +78,8 @@ Optional:
 - `protocols` (Set of String) Allowed protocols through the service tunnel
 
 
-<a id="nestedblock--access--l4_access_deny"></a>
-### Nested Schema for `access.l4_access_deny`
+<a id="nestedblock--access--l4_access--deny"></a>
+### Nested Schema for `access.l4_access.deny`
 
 Optional:
 
