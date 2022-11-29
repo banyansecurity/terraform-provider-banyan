@@ -62,7 +62,7 @@ func dataSourceOidcSettings() *schema.Resource {
 }
 
 func dataSourceOidcSettingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*client.ClientHolder)
+	client := m.(*client.Holder)
 	oidcSettings, err := client.Admin.OidcSettings.Get()
 	if err != nil {
 		diagnostics = diag.FromErr(err)

@@ -1,0 +1,26 @@
+name: pull_request
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+jobs:
+  pull_request:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Unshallow
+        run: git fetch --prune --unshallow
+      -
+        name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+      -
+        name: Test
+        run: go test ./banyan/... -v
+        env:
+          TF_ACC: true
+          BANYAN_API_KEY: ${{ secrets.BANYAN_API_KEY }}
+          BANYAN_HOST: https://net.banyanops.com

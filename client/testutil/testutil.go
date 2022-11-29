@@ -1,20 +1,16 @@
 package testutil
 
 import (
+	"log"
 	"os"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
-	"github.com/joho/godotenv"
 )
 
-func GetClientHolderForTest() (newClient *client.ClientHolder, err error) {
-	err = godotenv.Load("../../.env")
+func GetClientHolderForTest() (newClient *client.Holder, err error) {
+	newClient, err = client.NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_TOKEN"))
 	if err != nil {
-		return
+		log.Fatal("Could not create the test client")
 	}
-
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	newClient, err = client.NewClientHolder(testhost, testRefreshToken)
 	return
 }

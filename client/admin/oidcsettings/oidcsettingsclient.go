@@ -9,13 +9,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-type OidcSettingsClienter interface {
+type Client interface {
 	Get() (Spec, error)
 }
 
-func Client(restClient *restclient.RestClient) OidcSettingsClienter {
-	newClient := OidcSettings{restClient: restClient}
-	return &newClient
+func NewClient(restClient *restclient.Client) Client {
+	c := Admin{restClient: restClient}
+	return &c
 }
 
 // OidcSettings are the settings that are used for for OIDC clients
@@ -30,17 +30,20 @@ type Spec struct {
 	OpenidConfigurationEndpoint string `json:"openid_configuration_endpoint"`
 }
 
-type OidcSettings struct {
-	restClient *restclient.RestClient
+type Admin struct {
+	restClient *restclient.Client
 }
 
-func (this *OidcSettings) Get() (oidcSettings Spec, err error) {
+func (a Admin) Get() (oidcSettings Spec, err error) {
 	path := "api/v1/oidc_settings"
 
-	request, err := this.restClient.Get(path)
+	request, err := a.restClient.Get(path)
 
 	// initiate request for response
-	response, err := this.restClient.Do(request)
+	response, err := a.restClient.Do(request)
+	if err != nil {
+		return
+	}
 
 	// // code here to error handle
 	if err != nil {

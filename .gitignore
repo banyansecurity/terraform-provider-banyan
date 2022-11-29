@@ -2,7 +2,7 @@
 # IDEs #
 ########
 .idea
-
+.DS_Store
 
 terraform-provider-banyan
 .terraform

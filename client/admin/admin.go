@@ -6,14 +6,13 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 )
 
-type Admin struct {
-	OidcSettings oidcsettings.OidcSettingsClienter
+type Client struct {
+	OidcSettings oidcsettings.Client
 	OrgIdpConfig orgidpconfig.OrgIdpConfigClienter
 }
 
-func NewClient(restClient *restclient.RestClient) (admin *Admin) {
-	oidcSettingsClient := oidcsettings.Client(restClient)
-	admin = &Admin{}
+func NewClient(restClient *restclient.Client) (admin Client) {
+	oidcSettingsClient := oidcsettings.NewClient(restClient)
 	admin.OidcSettings = oidcSettingsClient
 	admin.OrgIdpConfig = orgidpconfig.Client(restClient)
 	return

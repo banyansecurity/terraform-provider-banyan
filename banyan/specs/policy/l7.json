@@ -1,0 +1,99 @@
+{
+    "kind": "BanyanPolicy",
+    "apiVersion": "rbac.banyanops.com/v1",
+    "type": "USER",
+    "metadata": {
+        "name": "Wordpress w API Controls",
+        "description": "[TF] Different levels of access based on user+device attributes & trust",
+        "tags": {
+            "template": "USER"
+        }
+    },
+    "spec": {
+        "options": {
+            "disable_tls_client_authentication": true,
+            "l7_protocol": "http"
+        },
+        "access": [
+            {
+                "roles": [
+                    "Contractors",
+                    "ServiceAccounts"
+                ],
+                "rules": {
+                    "l7_access": [
+                        {
+                            "resources": [
+                                "!/wp-admin*",
+                                "!/wp-login*"
+                            ],
+                            "actions": [
+                                "*"
+                            ]
+                        },
+                        {
+                            "resources": [
+                                "*"
+                            ],
+                            "actions": [
+                                "*"
+                            ]
+                        }
+                    ],
+                    "conditions": {}
+                }
+            },
+            {
+                "roles": [
+                    "UsersRegisteredDevice"
+                ],
+                "rules": {
+                    "l7_access": [
+                        {
+                            "resources": [
+                                "!/wp-admin*"
+                            ],
+                            "actions": [
+                                "*"
+                            ]
+                        },
+                        {
+                            "resources": [
+                                "*"
+                            ],
+                            "actions": [
+                                "*"
+                            ]
+                        }
+                    ],
+                    "conditions": {
+                        "trust_level": "Low"
+                    }
+                }
+            },
+            {
+                "roles": [
+                    "AdminsCorpDevice"
+                ],
+                "rules": {
+                    "l7_access": [
+                        {
+                            "resources": [
+                                "*"
+                            ],
+                            "actions": [
+                                "*"
+                            ]
+                        }
+                    ],
+                    "conditions": {
+                        "trust_level": "High"
+                    }
+                }
+            }
+        ],
+        "exception": {
+            "src_addr": []
+        }
+    }
+}

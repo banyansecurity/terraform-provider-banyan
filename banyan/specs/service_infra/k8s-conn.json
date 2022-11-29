@@ -1,0 +1,122 @@
+{
+    "kind": "BanyanService",
+    "apiVersion": "rbac.banyanops.com/v1",
+    "type": "origin",
+    "metadata": {
+        "name": "k8s-conn",
+        "description": "pybanyan k8s-conn",
+        "cluster": "managed-cl-edge1",
+        "tags": {
+            "template": "TCP_USER",
+            "user_facing": "true",
+            "protocol": "tcp",
+            "domain": "test-k8s-conn.tdupnsan.getbnn.com",
+            "port": "8443",
+            "icon": "",
+            "service_app_type": "K8S",
+            "banyanproxy_mode": "CHAIN",
+            "app_listen_port": "9199",
+            "allow_user_override": true,
+            "kube_cluster_name": "eks-hero",
+            "kube_ca_key": "AAAA1234",
+            "description_link": ""
+        }
+    },
+    "spec": {
+        "attributes": {
+            "tls_sni": [
+                "test-k8s-conn.tdupnsan.getbnn.com"
+            ],
+            "frontend_addresses": [
+                {
+                    "cidr": "",
+                    "port": "8443"
+                }
+            ],
+            "host_tag_selector": [
+                {
+                    "com.banyanops.hosttag.site_name": "*"
+                }
+            ],
+            "disable_private_dns": false
+        },
+        "backend": {
+            "target": {
+                "name": "",
+                "port": "",
+                "tls": false,
+                "tls_insecure": false,
+                "client_certificate": false
+            },
+            "dns_overrides": {
+                "test-k8s-conn.tdupnsan.getbnn.com": "myoidcproxy.amazonaws.com"
+            },
+            "whitelist": [],
+            "allow_patterns": [
+                {
+                    "hostnames": [
+                        "test-k8s-conn.tdupnsan.getbnn.com"
+                    ]
+                }
+            ],
+            "http_connect": true,
+            "connector_name": "test-connector"
+        },
+        "cert_settings": {
+            "dns_names": [
+                "test-k8s-conn.tdupnsan.getbnn.com"
+            ],
+            "custom_tls_cert": {
+                "enabled": false,
+                "cert_file": "",
+                "key_file": ""
+            },
+            "letsencrypt": false
+        },
+        "http_settings": {
+            "enabled": false,
+            "oidc_settings": {
+                "enabled": false,
+                "service_domain_name": "",
+                "post_auth_redirect_path": "",
+                "api_path": "",
+                "trust_callbacks": null,
+                "suppress_device_trust_verification": false
+            },
+            "http_health_check": {
+                "enabled": false,
+                "addresses": null,
+                "method": "",
+                "path": "",
+                "user_agent": "",
+                "from_address": [],
+                "https": false
+            },
+            "http_redirect": {
+                "enabled": false,
+                "addresses": null,
+                "from_address": null,
+                "url": "",
+                "status_code": 0
+            },
+            "exempted_paths": {
+                "enabled": false,
+                "patterns": [
+                    {
+                        "hosts": [
+                            {
+                                "origin_header": [],
+                                "target": []
+                            }
+                        ],
+                        "methods": [],
+                        "paths": [],
+                        "mandatory_headers": []
+                    }
+                ]
+            },
+            "headers": {}
+        },
+        "client_cidrs": []
+    }
+}

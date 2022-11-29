@@ -1,0 +1,28 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExample -}}
+## Example Usage
+{{ tffile "examples/resources/banyan_service_tunnel/resource.tf" }}
+
+## Example Service Tunnel with L4 Policy
+{{ tffile "examples/resources/banyan_service_tunnel_l4_policy/resource.tf" }}
+In this example an access tier is configured to tunnel `10.10.0.0/16`. A service tunnel is configured to utilize this access tier, and a policy is attached which only allows users with a `High` trust level access to services running on port 443 in the subnet `10.10.1.0/24`. An additional service tunnel and policy allows administrators access to the entire network behind the tunnel.
+
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+{{ if .HasImport -}}
+
+## Import
+Import is supported using the following syntax:
+{{ printf "{{codefile \"shell\" %q}}" .ImportFile }}
+{{- end }}

@@ -1,0 +1,91 @@
+{
+    "kind": "BanyanPolicy",
+    "apiVersion": "rbac.banyanops.com/v1",
+    "type": "USER",
+    "metadata": {
+        "name": "Datacenter w L4 Controls",
+        "description": "[TF] Restrict ordinary users to filesharing and Windows servers",
+        "tags": {
+            "template": "USER"
+        }
+    },
+    "spec": {
+        "options": {
+            "disable_tls_client_authentication": false,
+            "l7_protocol": ""
+        },
+        "access": [
+            {
+                "roles": [
+                    "UsersRegisteredDevice"
+                ],
+                "rules": {
+                    "l7_access": null,
+                    "l4_access": {
+                        "allow": [
+                            {
+                                "cidrs": [
+                                    "10.138.0.14/32",
+                                    "10.138.0.11/32",
+                                    "10.10.0.0/16"
+                                ],
+                                "protocols": [
+                                    "ALL"
+                                ],
+                                "ports": [
+                                    "*"
+                                ]
+                            }
+                        ],
+                        "deny": [
+                            {
+                                "cidrs": [
+                                    "10.10.1.0/24",
+                                    "10.10.2.0/24"
+                                ],
+                                "protocols": [
+                                    "TCP"
+                                ],
+                                "ports": [
+                                    "22"
+                                ]
+                            }
+                        ]                        
+                    },
+                    "conditions": {
+                        "trust_level": "Low"
+                    }
+                }
+            },
+            {
+                "roles": [
+                    "AdminsCorpDevice"
+                ],
+                "rules": {
+                    "l7_access": null,
+                    "l4_access": {
+                        "allow": [
+                            {
+                                "cidrs": [
+                                    "*"
+                                ],
+                                "protocols": [
+                                    "ALL"
+                                ],
+                                "ports": [
+                                    "*"
+                                ]
+                            }
+                        ]
+                    },
+                    "conditions": {
+                        "trust_level": "High"
+                    }
+                }
+            }
+        ],
+        "exception": {
+            "src_addr": null
+        }
+    }
+}
