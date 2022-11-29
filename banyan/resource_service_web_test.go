@@ -157,8 +157,17 @@ func TestAccService_optional_web(t *testing.T) {
 						backend_port     = 4321
 						backend_tls      = true
 						backend_tls_insecure = true
+                        policy           = banyan_policy_web.example.id 
 					}
-					`, rName, rName, rName),
+					resource "banyan_policy_web" "example" {
+						name        = "%s"
+						description = "some infra policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_web.example", &bnnService),
 				),
@@ -174,8 +183,17 @@ func TestAccService_optional_web(t *testing.T) {
 						backend_domain   = "%s.internal"
 						backend_port     = 4322
 						backend_tls      = false
+                        policy           = banyan_policy_web.example.id 
 					}
-					`, rName, rName, rName),
+					resource "banyan_policy_web" "example" {
+						name        = "%s"
+						description = "some infra policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_web.example", &bnnService),
 				),

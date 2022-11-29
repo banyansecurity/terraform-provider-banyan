@@ -36,6 +36,7 @@ resource "banyan_service_infra_tcp" "example" {
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
+- `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
 - `client_banyanproxy_allowed_domains` (Set of String) Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity
 - `client_banyanproxy_listen_port` (Number) Local listen port to be used by client proxy; if not specified, a random local port will be used
@@ -43,8 +44,9 @@ resource "banyan_service_infra_tcp" "example" {
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
 - `description_link` (String) Link shown to the end user of the banyan app for this service
+- `end_user_override` (Boolean) Allow the end user to override the backend_port for this service
 - `http_connect` (Boolean) Indicates to use HTTP Connect request to derive the backend target address.
-- `policy` (String) Policy ID to be attached to this service
+- `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `port` (Number) The external-facing port for this service
 
 ### Read-Only

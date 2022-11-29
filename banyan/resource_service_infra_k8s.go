@@ -29,7 +29,7 @@ func resourceServiceInfraK8sDepreciated() *schema.Resource {
 		UpdateContext:      resourceServiceInfraK8sUpdate,
 		DeleteContext:      resourceServiceDelete,
 		Schema:             K8sSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_k8s",
+		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_k8s",
 	}
 }
 
@@ -52,8 +52,14 @@ func K8sSchema() map[string]*schema.Schema {
 		},
 		"policy": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			Description: "Policy ID to be attached to this service",
+		},
+		"end_user_override": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Allow the end user to override the backend_port for this service",
 		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
@@ -83,6 +89,17 @@ func K8sSchemaDepreciated() map[string]*schema.Schema {
 			Optional:    true,
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
+		},
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
+		"end_user_override": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Allow the end user to override the backend_port for this service",
 		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
@@ -119,6 +136,10 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	err = d.Set("client_kube_ca_key", svc.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("end_user_override", svc.CreateServiceSpec.Metadata.Tags.AllowUserOverride)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -175,15 +196,15 @@ func K8sFromState(d *schema.ResourceData) (svc service.CreateService) {
 
 func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
-	userFacing := "true"
+	userFacing := strconv.FormatBool(d.Get("available_in_app").(bool))
 	protocol := "tcp"
 	domain := d.Get("domain").(string)
 	portInt := d.Get("port").(int)
 	port := strconv.Itoa(portInt)
-	icon := ""
+	icon := d.Get("icon").(string)
 	serviceAppType := "K8S"
 	descriptionLink := d.Get("description_link").(string)
-	allowUserOverride := true
+	allowUserOverride := d.Get("end_user_override").(bool)
 	banyanProxyMode := "CHAIN"
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alpInt)

@@ -8,13 +8,26 @@ description: |-
 
 # banyan_policy_tunnel (Resource)
 
-The tunnel policy resource is used to manage the lifecycle of policies which will be attached to services of the type "banyan_service_tunnel". For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)
+The tunnel policy resource is used to manage the lifecycle of policies which will be attached to services of the type `banyan_service_tunnel`. For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)
 
 ## Example Usage
 
 ```terraform
 resource "banyan_policy_tunnel" "example" {
-  name        = "example"
+  name        = "corporate-network-users"
+  description = "some tunnel policy description"
+  access {
+    roles       = ["Everyone"]
+    trust_level = "High"
+  }
+}
+```
+
+## Example Usage with Layer 4 Access Policy
+
+```terraform
+resource "banyan_policy_tunnel" "example" {
+  name        = "corporate-network-users"
   description = "some tunnel policy description"
   access {
     roles       = ["Everyone"]
@@ -24,11 +37,6 @@ resource "banyan_policy_tunnel" "example" {
         cidrs     = ["10.10.10.0/24"]
         protocols = ["TCP"]
         ports     = ["443"]
-      }
-      deny {
-        cidrs     = ["10.10.10.0/24"]
-        protocols = ["TCP"]
-        ports     = ["80"]
       }
     }
   }
@@ -75,7 +83,7 @@ Optional:
 
 - `cidrs` (Set of String) Allowed CIDRs through the service tunnel
 - `ports` (Set of String) Allowed ports through the service tunnel
-- `protocols` (Set of String) Allowed protocols through the service tunnel
+- `protocols` (Set of String) Allowed protocols through the service tunnel. Set to "TCP", "UDP", "ICMP", or "ALL"
 
 
 <a id="nestedblock--access--l4_access--deny"></a>
@@ -85,6 +93,6 @@ Optional:
 
 - `cidrs` (Set of String) Denied CIDRs through the service tunnel
 - `ports` (Set of String) Denied ports through the service tunnel
-- `protocols` (Set of String) Denied protocols through the service tunnel
+- `protocols` (Set of String) Denied protocols through the service tunnel. Set to "TCP", "UDP", "ICMP", or "ALL"
 
 

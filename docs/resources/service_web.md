@@ -31,10 +31,12 @@ resource "banyan_service_web" "example" {
 - `backend_domain` (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using http_connect
 - `domain` (String) The external-facing network address for this service; ex. website.example.com
 - `name` (String) Name of the service; use lowercase alphanumeric characters or "-"
+- `policy` (String) Policy ID to be attached to this service
 
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
+- `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_port` (Number) The internal port where this service is hosted. Default is 443
 - `backend_tls` (Boolean) Indicates whether the connection to the backend server uses TLS
 - `backend_tls_insecure` (Boolean) Indicates the connection to the backend should not validate the backend server TLS certificate
@@ -42,8 +44,8 @@ resource "banyan_service_web" "example" {
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
 - `description_link` (String) Link shown to the end user of the banyan app for this service
+- `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `letsencrypt` (Boolean) Use a Public CA-issued server certificate instead of a Private CA-issued one
-- `policy` (String) Policy ID to be attached to this service
 - `port` (Number) The external-facing port for this service
 
 ### Read-Only

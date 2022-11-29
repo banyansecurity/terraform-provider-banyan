@@ -1,3 +1,16 @@
+terraform {
+  required_providers {
+    banyan = {
+      source  = "github.com/banyansecurity/banyan"
+      version = ">=0.9.1"
+    }
+  }
+}
+
+provider "banyan" {
+  api_key = "igKuZugo6yH3_ig04qE8mYEeqDcSi-5s_uQr9Td0zsI"
+}
+
 resource "banyan_api_key" "example" {
   name        = "example api key"
   description = "example api key"
@@ -29,12 +42,14 @@ resource "banyan_policy_tunnel" "anyone-high" {
   name        = "corporate-network-users"
   description = "${banyan_accesstier.example.name} allow users"
   access {
-    roles       = ["ANY"]
+    roles       = ["Everyone"]
     trust_level = "High"
-    l4_access_allow {
-      cidrs     = ["10.10.1.0/24"]
-      protocols = ["TCP"]
-      ports     = ["443"]
+    l4_access {
+      allow {
+        cidrs     = ["10.10.10.0/24"]
+        protocols = ["TCP"]
+        ports     = ["443"]
+      }
     }
   }
 }
@@ -43,12 +58,14 @@ resource "banyan_policy_tunnel" "administrators" {
   name        = "corporate-network-admin"
   description = "${banyan_accesstier.example.name} allow only administrators access to the entire network"
   access {
-    roles       = ["Administrators"]
+    roles       = ["Everyone"]
     trust_level = "High"
-    l4_access_allow {
-      cidrs     = ["*"]
-      protocols = ["ALL"]
-      ports     = ["*"]
+    l4_access {
+      allow {
+        cidrs     = ["10.10.10.0/24"]
+        protocols = ["TCP"]
+        ports     = ["443"]
+      }
     }
   }
 }

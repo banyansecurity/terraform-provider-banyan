@@ -8,7 +8,7 @@ description: |-
 
 # banyan_policy_web (Resource)
 
-The web policy resource is used to manage the lifecycle of policies which will be attached to services of the type "banyan_service_web". For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)
+The web policy resource is used to manage the lifecycle of policies which will be attached to services of the type `banyan_service_web`. For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)
 
 ## Example Usage
 
@@ -23,7 +23,7 @@ resource "banyan_policy_web" "example" {
 }
 ```
 
-## Example Web Policy with L7 Access
+## Example Web Policy with Layer 7 Access Policy
 ```terraform
 resource "banyan_service_web" "example" {
   name           = "example-web"
@@ -90,8 +90,8 @@ Optional:
 
 - `actions` (Set of String) Actions are a list of application-level actions: "CREATE", "READ", "UPDATE", "DELETE", "*"
 - `resources` (Set of String) Resources are a list of application level resources.
-											Each resource can have wildcard prefix or suffix, or both.
-											A resource can be prefixed with "!", meaning DENY.
-											Any DENY rule overrides any other rule that would allow the access.
+										Each resource can have wildcard prefix or suffix, or both.
+										A resource can be prefixed with "!", meaning DENY.
+										Any DENY rule overrides any other rule that would allow the access.
 
 

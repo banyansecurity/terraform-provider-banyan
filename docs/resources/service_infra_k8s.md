@@ -38,6 +38,7 @@ resource "banyan_service_infra_k8s" "example" {
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
+- `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
 - `client_banyanproxy_listen_port` (Number) Local listen port to be used by client proxy; if not specified, a random local port will be used
 - `client_kube_ca_key` (String) CA Public Key generated during Kube-OIDC-Proxy deployment
@@ -46,7 +47,8 @@ resource "banyan_service_infra_k8s" "example" {
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
 - `description_link` (String) Link shown to the end user of the banyan app for this service
-- `policy` (String) Policy ID to be attached to this service
+- `end_user_override` (Boolean) Allow the end user to override the backend_port for this service
+- `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `port` (Number) The external-facing port for this service
 
 ### Read-Only

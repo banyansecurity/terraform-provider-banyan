@@ -31,7 +31,7 @@ func resourceServiceInfraSshDepreciated() *schema.Resource {
 		UpdateContext:      resourceServiceInfraSshUpdate,
 		DeleteContext:      resourceServiceDelete,
 		Schema:             SshSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_ssh",
+		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_ssh",
 	}
 }
 
@@ -64,7 +64,7 @@ func SshSchema() map[string]*schema.Schema {
 		},
 		"policy": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			Description: "Policy ID to be attached to this service",
 		},
 	}
@@ -73,6 +73,11 @@ func SshSchema() map[string]*schema.Schema {
 
 func SshSchemaDepreciated() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
 		"client_ssh_auth": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -188,12 +193,12 @@ func SshFromState(d *schema.ResourceData) (svc service.CreateService) {
 
 func expandSSHMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
-	userFacing := "true"
+	userFacing := strconv.FormatBool(d.Get("available_in_app").(bool))
 	protocol := "tcp"
 	domain := d.Get("domain").(string)
 	portInt := d.Get("port").(int)
 	port := strconv.Itoa(portInt)
-	icon := ""
+	icon := d.Get("icon").(string)
 	serviceAppType := "SSH"
 	descriptionLink := d.Get("description_link").(string)
 	sshServiceType := d.Get("client_ssh_auth").(string)
