@@ -85,7 +85,7 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 											},
 											"protocols": {
 												Type:        schema.TypeSet,
-												Description: "Allowed protocols through the service tunnel",
+												Description: "Allowed protocols through the service tunnel. Set to \"TCP\", \"UDP\", \"ICMP\", or \"ALL\"",
 												Optional:    true,
 												Elem: &schema.Schema{
 													Type:         schema.TypeString,
@@ -119,7 +119,7 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 											},
 											"protocols": {
 												Type:        schema.TypeSet,
-												Description: "Denied protocols through the service tunnel",
+												Description: "Denied protocols through the service tunnel. Set to \"TCP\", \"UDP\", \"ICMP\", or \"ALL\"",
 												Optional:    true,
 												Elem: &schema.Schema{
 													Type:         schema.TypeString,
