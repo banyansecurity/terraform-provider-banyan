@@ -31,7 +31,7 @@ func resourceServiceInfraSshDepreciated() *schema.Resource {
 		UpdateContext:      resourceServiceInfraSshUpdate,
 		DeleteContext:      resourceServiceDelete,
 		Schema:             SshSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_ssh",
+		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_ssh",
 	}
 }
 

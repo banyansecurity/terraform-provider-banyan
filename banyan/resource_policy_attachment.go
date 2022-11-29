@@ -19,7 +19,7 @@ func resourcePolicyAttachment() *schema.Resource {
 		ReadContext:        resourcePolicyAttachmentRead,
 		UpdateContext:      resourcePolicyAttachmentUpdate,
 		DeleteContext:      resourcePolicyAttachmentDelete,
-		DeprecationMessage: "This resource is depreciated and will be removed from the provider in the 1.0 release. Please utilize the \"policy\" parameter of the respective service resource",
+		DeprecationMessage: "This resource is depreciated and will be removed from the provider in a future release. Please utilize the \"policy\" parameter of the respective service resource",
 		Schema: map[string]*schema.Schema{
 			"policy_id": {
 				Type:        schema.TypeString,

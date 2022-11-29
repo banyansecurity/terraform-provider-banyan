@@ -30,7 +30,7 @@ func resourceServiceInfraTcpDepreciated() *schema.Resource {
 		UpdateContext:      resourceServiceInfraTcpUpdate,
 		DeleteContext:      resourceServiceDelete,
 		Schema:             TcpSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_tcp",
+		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_tcp",
 	}
 }
 

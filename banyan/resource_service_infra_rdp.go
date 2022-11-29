@@ -29,7 +29,7 @@ func resourceServiceInfraRdpDepreciated() *schema.Resource {
 		UpdateContext:      resourceServiceInfraRdpUpdate,
 		DeleteContext:      resourceServiceDelete,
 		Schema:             RdpSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in the 1.0 release. Please migrate this resource to banyan_service_rdp",
+		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_rdp",
 	}
 }
 

@@ -24,7 +24,7 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "(Deprecated) A Banyan refresh token. Configure api_key instead",
-				Deprecated:  "Configure api_key instead. This attribute will be removed\n   in the 1.0 release of the provider.",
+				Deprecated:  "Configure api_key instead. This attribute will be removed\n   in a future release of the provider.",
 			},
 			"api_key": {
 				Type:        schema.TypeString,
@@ -37,7 +37,7 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Description: "(Deprecated) A Banyan refresh token, Configure api_key instead",
 				DefaultFunc: schema.EnvDefaultFunc("BANYAN_REFRESH_TOKEN", nil),
-				Deprecated:  "Configure api_key instead. This attribute will be removed\n   in the 1.0 release of the provider.",
+				Deprecated:  "Configure api_key instead. This attribute will be removed\n   in a future release of the provider.",
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
