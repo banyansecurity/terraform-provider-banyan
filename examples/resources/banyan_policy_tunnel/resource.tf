@@ -10,11 +10,6 @@ resource "banyan_policy_tunnel" "anyone-high" {
         protocols = ["TCP"]
         ports     = ["443"]
       }
-      deny {
-        cidrs     = ["10.10.10.0/24"]
-        protocols = ["TCP"]
-        ports     = ["80"]
-      }
     }
   }
 }
