@@ -8,7 +8,7 @@ For more information visit the [Banyan website](https://www.banyansecurity.io/) 
 Update Notes
 -----------
 
-As the provider approaches a 1.0 release, some resources add attributes have been simplified and abstracted away. This refactor includes new resources as well as resource schemas which resemble the 1.0 release as much as possible.
+For the 1.0 release, some resources add attributes have been simplified and abstracted away. This refactor includes new resources as well as resource schemas which resemble the 1.0 release as much as possible.
 
 After feedback and usage of the provider it was determined to consolidate and simplify naming and parameters for some resources.
 
@@ -28,17 +28,16 @@ Be sure to check out the new accesstier2 modules for your cloud provider on the 
 View this release in the [Terraform Registry](https://registry.terraform.io/providers/banyansecurity/banyan/1.0)
 
 ## What's Changed
-* major refactor of the provider and client providing much cleaner and simpler code
-* added support for service tunnel
-* accesstier2 support
-* connector improvements
-* documentation and examples improvements
-* better resource lifecycle management
-* acceptance testing against the Banyan API
-* various additional resources and attributes to align with the latest Banyan features
+* Major refactor of the provider and client providing much cleaner and simpler code
+* Added support for service tunnel
+* Accesstier2 support
+* Connector improvements
+* Documentation and examples improvements
+* Vetter resource lifecycle management
+* Acceptance testing against the Banyan API
+* Various additional resources and attributes to align with the latest Banyan features
 * New resource `bayan_policy_tunnel` for use with `banyan_service_tunnel`
-* Hotfixes and docs updates for 0.9.1
-
+* Hotfixes and docs updates for 0.9.X versions
 
 
 Maintainers
