@@ -8,7 +8,7 @@ description: |-
 
 # banyan_policy_tunnel (Resource)
 
-The tunnel policy resource is used to manage the lifecycle of policies which will be attached to services of the type "banyan_service_tunnel". For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)
+The tunnel policy resource is used to manage the lifecycle of policies which will be attached to services of the type `banyan_service_tunnel`. For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)
 
 ## Example Usage
 
