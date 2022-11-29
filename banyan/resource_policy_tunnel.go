@@ -2,13 +2,14 @@ package banyan
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 func resourcePolicyTunnel() *schema.Resource {
@@ -18,115 +19,119 @@ func resourcePolicyTunnel() *schema.Resource {
 		ReadContext:   resourcePolicyTunnelRead,
 		UpdateContext: resourcePolicyTunnelUpdate,
 		DeleteContext: resourcePolicyTunnelDelete,
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the policy",
-			},
-			"id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "ID of the policy in Banyan",
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Description of the policy",
-			},
-			"access": {
-				Type:        schema.TypeList,
-				MinItems:    1,
-				Required:    true,
-				Description: "Access describes the access rights for a set of roles",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"roles": {
-							Type:        schema.TypeSet,
-							Description: "Roles that all have the access rights given by rules",
-							MinItems:    1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-							Required: true,
+		Schema:        PolicyTunnelSchema(),
+	}
+}
+
+func PolicyTunnelSchema() (s map[string]*schema.Schema) {
+	s = map[string]*schema.Schema{
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the policy",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "ID of the policy in Banyan",
+		},
+		"description": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Description of the policy",
+		},
+		"access": {
+			Type:        schema.TypeList,
+			MinItems:    1,
+			Required:    true,
+			Description: "Access describes the access rights for a set of roles",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"roles": {
+						Type:        schema.TypeSet,
+						Description: "Roles that all have the access rights given by rules",
+						MinItems:    1,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
 						},
-						"trust_level": {
-							Type:         schema.TypeString,
-							Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\", or \"\"",
-							Required:     true,
-							ValidateFunc: validateTrustLevel(),
-						},
-						"l4_access": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Description: "L4 access rules",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allow": {
-										Type:        schema.TypeList,
-										Description: "Roles that all have the access rights given by rules",
-										Optional:    true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cidrs": {
-													Type:        schema.TypeSet,
-													Description: "Allowed CIDRs through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+						Required: true,
+					},
+					"trust_level": {
+						Type:         schema.TypeString,
+						Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\", or \"\"",
+						Required:     true,
+						ValidateFunc: validateTrustLevel(),
+					},
+					"l4_access": {
+						Type:        schema.TypeList,
+						MaxItems:    1,
+						Optional:    true,
+						Description: "L4 access rules",
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"allow": {
+									Type:        schema.TypeList,
+									Description: "Roles that all have the access rights given by rules",
+									Optional:    true,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"cidrs": {
+												Type:        schema.TypeSet,
+												Description: "Allowed CIDRs through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
 												},
-												"protocols": {
-													Type:        schema.TypeSet,
-													Description: "Allowed protocols through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ALL"}, false),
-													},
+											},
+											"protocols": {
+												Type:        schema.TypeSet,
+												Description: "Allowed protocols through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type:         schema.TypeString,
+													ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ALL"}, false),
 												},
-												"ports": {
-													Type:        schema.TypeSet,
-													Description: "Allowed ports through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+											},
+											"ports": {
+												Type:        schema.TypeSet,
+												Description: "Allowed ports through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
 												},
 											},
 										},
 									},
-									"deny": {
-										Type:        schema.TypeList,
-										Description: "Roles that all have the access rights given by rules",
-										Optional:    true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cidrs": {
-													Type:        schema.TypeSet,
-													Description: "Denied CIDRs through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+								},
+								"deny": {
+									Type:        schema.TypeList,
+									Description: "Roles that all have the access rights given by rules",
+									Optional:    true,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"cidrs": {
+												Type:        schema.TypeSet,
+												Description: "Denied CIDRs through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
 												},
-												"protocols": {
-													Type:        schema.TypeSet,
-													Description: "Denied protocols through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ALL"}, false),
-													},
+											},
+											"protocols": {
+												Type:        schema.TypeSet,
+												Description: "Denied protocols through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type:         schema.TypeString,
+													ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ALL"}, false),
 												},
-												"ports": {
-													Type:        schema.TypeSet,
-													Description: "Denied ports through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+											},
+											"ports": {
+												Type:        schema.TypeSet,
+												Description: "Denied ports through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
 												},
 											},
 										},
@@ -139,6 +144,7 @@ func resourcePolicyTunnel() *schema.Resource {
 			},
 		},
 	}
+	return
 }
 
 func policyTunnelFromState(d *schema.ResourceData) (pol policy.Object) {
@@ -164,6 +170,13 @@ func policyTunnelFromState(d *schema.ResourceData) (pol policy.Object) {
 
 func resourcePolicyTunnelCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
+
+	// 	ValidateFunc is not supported on lists or sets, so use this method instead
+	err := invalidL4AccessRules(d)
+	if err != nil {
+		return diag.FromErr(errors.WithMessage(err, "invalid l4_access block"))
+	}
+
 	createdPolicy, err := c.Policy.Create(policyTunnelFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new tunnel policy"))
@@ -205,6 +218,27 @@ func resourcePolicyTunnelRead(ctx context.Context, d *schema.ResourceData, m int
 func resourcePolicyTunnelDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	diagnostics = resourcePolicyInfraDelete(ctx, d, m)
 	return
+}
+
+func invalidL4AccessRules(d *schema.ResourceData) error {
+	allow_all := []policy.L4Rule{{CIDRs: []string{"*"}, Protocols: []string{"ALL"}, Ports: []string{"*"}}}
+
+	m := d.Get("access").([]interface{})
+	for _, raw := range m {
+		data := raw.(map[string]interface{})
+		l4_access := data["l4_access"].([]interface{})
+		if len(l4_access) == 0 || l4_access[0] == nil {
+			continue
+		}
+		l4_rules := l4_access[0].(map[string]interface{})
+		allow_rule := expandL4Rules(l4_rules["allow"].([]interface{}))
+		deny_rule := expandL4Rules(l4_rules["deny"].([]interface{}))
+		if reflect.DeepEqual(allow_rule, allow_all) && deny_rule == nil {
+			return errors.New("redundant l4_access block with allow_all rules; remove l4_access block entirely")
+		}
+	}
+
+	return nil
 }
 
 func expandPolicyTunnelAccess(m []interface{}) (access []policy.Access) {
@@ -252,8 +286,17 @@ func expandL4Rules(m interface{}) (l4Rules []policy.L4Rule) {
 	for _, r := range m.([]interface{}) {
 		rule := r.(map[string]interface{})
 		cidrs := convertSchemaSetToStringSlice(rule["cidrs"].(*schema.Set))
+		if cidrs == nil {
+			cidrs = []string{"*"}
+		}
 		protocols := convertSchemaSetToStringSlice(rule["protocols"].(*schema.Set))
+		if protocols == nil {
+			protocols = []string{"ALL"}
+		}
 		ports := convertSchemaSetToStringSlice(rule["ports"].(*schema.Set))
+		if ports == nil {
+			ports = []string{"*"}
+		}
 		l4Rules = append(l4Rules, policy.L4Rule{
 			CIDRs:     cidrs,
 			Protocols: protocols,
