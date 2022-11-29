@@ -90,8 +90,8 @@ Optional:
 
 - `actions` (Set of String) Actions are a list of application-level actions: "CREATE", "READ", "UPDATE", "DELETE", "*"
 - `resources` (Set of String) Resources are a list of application level resources.
-											Each resource can have wildcard prefix or suffix, or both.
-											A resource can be prefixed with "!", meaning DENY.
-											Any DENY rule overrides any other rule that would allow the access.
+										Each resource can have wildcard prefix or suffix, or both.
+										A resource can be prefixed with "!", meaning DENY.
+										Any DENY rule overrides any other rule that would allow the access.
 
 

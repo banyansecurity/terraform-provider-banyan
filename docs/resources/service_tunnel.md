@@ -74,12 +74,14 @@ resource "banyan_policy_tunnel" "anyone-high" {
   name        = "corporate-network-users"
   description = "${banyan_accesstier.example.name} allow users"
   access {
-    roles       = ["ANY"]
+    roles       = ["Everyone"]
     trust_level = "High"
-    l4_access_allow {
-      cidrs     = ["10.10.1.0/24"]
-      protocols = ["TCP"]
-      ports     = ["443"]
+    l4_access {
+      allow {
+        cidrs     = ["10.10.10.0/24"]
+        protocols = ["TCP"]
+        ports     = ["443"]
+      }
     }
   }
 }
@@ -88,12 +90,14 @@ resource "banyan_policy_tunnel" "administrators" {
   name        = "corporate-network-admin"
   description = "${banyan_accesstier.example.name} allow only administrators access to the entire network"
   access {
-    roles       = ["Administrators"]
+    roles       = ["Everyone"]
     trust_level = "High"
-    l4_access_allow {
-      cidrs     = ["*"]
-      protocols = ["ALL"]
-      ports     = ["*"]
+    l4_access {
+      allow {
+        cidrs     = ["10.10.10.0/24"]
+        protocols = ["TCP"]
+        ports     = ["443"]
+      }
     }
   }
 }
@@ -106,6 +110,7 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 ### Required
 
 - `name` (String) Name of the service tunnel
+- `policy` (String) Policy ID to be attached to this service tunnel
 
 ### Optional
 
@@ -113,7 +118,7 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connectors` (Set of String) Names of the connectors which the service tunnel should be associated with
 - `description` (String) Description of the service tunnel
-- `policy` (String) Policy ID to be attached to this service tunnel
+- `description_link` (String) Link shown to the end user of the banyan app for this service
 - `public_cidrs_exclude` (Set of String) Specifies public IP addresses in CIDR notation that should be excluded from the tunnel, ex: 8.8.12.0/24.
 - `public_cidrs_include` (Set of String) Specifies public IP addresses in CIDR notation that should be included in the tunnel, ex: 8.8.0.0/16.
 - `public_domains_exclude` (Set of String) Specifies the domains that should be that should be excluded from the tunnel, ex: zoom.us
