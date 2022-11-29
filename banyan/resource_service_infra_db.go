@@ -55,6 +55,12 @@ func DbSchema() map[string]*schema.Schema {
 			Required:    true,
 			Description: "Policy ID to be attached to this service",
 		},
+		"end_user_override": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Allow the end user to override the backend_port for this service",
+		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
@@ -82,6 +88,12 @@ func DbSchemaDepreciated() map[string]*schema.Schema {
 			Optional:    true,
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
+		},
+		"end_user_override": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Allow the end user to override the backend_port for this service",
 		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
@@ -112,6 +124,10 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 		return diag.FromErr(err)
 	}
 	err = d.Set(fmt.Sprintf("http_connect"), svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("end_user_override", svc.CreateServiceSpec.Metadata.Tags.AllowUserOverride)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -163,15 +179,15 @@ func DbFromState(d *schema.ResourceData) (svc service.CreateService) {
 
 func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
-	userFacing := "true"
+	userFacing := strconv.FormatBool(d.Get("available_in_app").(bool))
 	protocol := "tcp"
 	domain := d.Get("domain").(string)
 	portInt := d.Get("port").(int)
 	port := strconv.Itoa(portInt)
-	icon := ""
+	icon := d.Get("icon").(string)
 	serviceAppType := "DATABASE"
 	descriptionLink := d.Get("description_link").(string)
-	allowUserOverride := true
+	allowUserOverride := d.Get("end_user_override").(bool)
 	banyanProxyMode := "TCP"
 	if d.Get("http_connect").(bool) {
 		banyanProxyMode = "CHAIN"

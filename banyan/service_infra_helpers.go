@@ -80,6 +80,18 @@ var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
 		Description:  "Local listen port to be used by client proxy; if not specified, a random local port will be used",
 		ValidateFunc: validatePort(),
 	},
+	"available_in_app": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: "Whether this service is available in the app for users with permission to access this service",
+	},
+	"icon": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Default:     "",
+		Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
+	},
 }
 
 func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -89,6 +101,10 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	err = d.Set("description", svc.Description)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("description_link", svc.CreateServiceSpec.Metadata.Tags.DescriptionLink)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -138,6 +154,18 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 		if err != nil {
 			return diag.FromErr(err)
 		}
+	}
+	err = d.Set("icon", svc.CreateServiceSpec.Metadata.Tags.Icon)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	availableInApp, err := strconv.ParseBool(*svc.CreateServiceSpec.Metadata.Tags.UserFacing)
+	if err != nil {
+		diag.FromErr(err)
+	}
+	err = d.Set("available_in_app", availableInApp)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	// set policy for service

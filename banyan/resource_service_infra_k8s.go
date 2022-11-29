@@ -55,6 +55,12 @@ func K8sSchema() map[string]*schema.Schema {
 			Required:    true,
 			Description: "Policy ID to be attached to this service",
 		},
+		"end_user_override": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Allow the end user to override the backend_port for this service",
+		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
@@ -83,6 +89,12 @@ func K8sSchemaDepreciated() map[string]*schema.Schema {
 			Optional:    true,
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
+		},
+		"end_user_override": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Allow the end user to override the backend_port for this service",
 		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
@@ -119,6 +131,10 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	err = d.Set("client_kube_ca_key", svc.CreateServiceSpec.Metadata.Tags.KubeCaKey)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("end_user_override", svc.CreateServiceSpec.Metadata.Tags.AllowUserOverride)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -175,15 +191,15 @@ func K8sFromState(d *schema.ResourceData) (svc service.CreateService) {
 
 func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
-	userFacing := "true"
+	userFacing := strconv.FormatBool(d.Get("available_in_app").(bool))
 	protocol := "tcp"
 	domain := d.Get("domain").(string)
 	portInt := d.Get("port").(int)
 	port := strconv.Itoa(portInt)
-	icon := ""
+	icon := d.Get("icon").(string)
 	serviceAppType := "K8S"
 	descriptionLink := d.Get("description_link").(string)
-	allowUserOverride := true
+	allowUserOverride := d.Get("end_user_override").(bool)
 	banyanProxyMode := "CHAIN"
 	alpInt := d.Get("client_banyanproxy_listen_port").(int)
 	appListenPort := strconv.Itoa(alpInt)

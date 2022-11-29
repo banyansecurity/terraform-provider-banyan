@@ -188,12 +188,12 @@ func SshFromState(d *schema.ResourceData) (svc service.CreateService) {
 
 func expandSSHMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
-	userFacing := "true"
+	userFacing := strconv.FormatBool(d.Get("available_in_app").(bool))
 	protocol := "tcp"
 	domain := d.Get("domain").(string)
 	portInt := d.Get("port").(int)
 	port := strconv.Itoa(portInt)
-	icon := ""
+	icon := d.Get("icon").(string)
 	serviceAppType := "SSH"
 	descriptionLink := d.Get("description_link").(string)
 	sshServiceType := d.Get("client_ssh_auth").(string)

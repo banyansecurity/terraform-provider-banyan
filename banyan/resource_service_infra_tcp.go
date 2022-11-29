@@ -58,7 +58,8 @@ func TcpSchema() map[string]*schema.Schema {
 		"end_user_override": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Description: "Policy ID to be attached to this service",
+			Default:     false,
+			Description: "Allow the end user to override the backend_port for this service",
 		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
@@ -88,6 +89,12 @@ func TcpSchemaDepreciated() map[string]*schema.Schema {
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
 		},
+		"end_user_override": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Allow the end user to override the backend_port for this service",
+		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
@@ -114,6 +121,10 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 		return
 	}
 	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("end_user_override", svc.CreateServiceSpec.Metadata.Tags.AllowUserOverride)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -167,15 +178,15 @@ func TcpFromState(d *schema.ResourceData) (svc service.CreateService) {
 
 func expandTCPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
-	userFacing := "true"
+	userFacing := strconv.FormatBool(d.Get("available_in_app").(bool))
 	protocol := "tcp"
 	domain := d.Get("domain").(string)
 	portInt := d.Get("port").(int)
 	port := strconv.Itoa(portInt)
-	icon := ""
+	icon := d.Get("icon").(string)
 	serviceAppType := "GENERIC"
 	descriptionLink := d.Get("description_link").(string)
-	allowUserOverride := true
+	allowUserOverride := d.Get("end_user_override").(bool)
 	banyanProxyMode := "TCP"
 	if d.Get("http_connect").(bool) {
 		banyanProxyMode = "CHAIN"

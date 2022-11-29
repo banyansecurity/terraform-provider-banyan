@@ -113,6 +113,18 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
 		},
+		"available_in_app": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Whether this service is available in the app for users with permission to access this service",
+		},
+		"icon": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
+		},
 	}
 	return
 }
@@ -170,12 +182,12 @@ func WebFromState(d *schema.ResourceData) (svc service.CreateService) {
 
 func expandWebMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "WEB_USER"
-	userFacing := "true"
+	userFacing := strconv.FormatBool(d.Get("available_in_app").(bool))
 	protocol := "https"
 	domain := d.Get("domain").(string)
 	portInt := d.Get("port").(int)
 	port := strconv.Itoa(portInt)
-	icon := ""
+	icon := d.Get("icon").(string)
 	serviceAppType := "WEB"
 	descriptionLink := d.Get("description_link").(string)
 
