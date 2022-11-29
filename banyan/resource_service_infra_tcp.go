@@ -89,6 +89,11 @@ func TcpSchemaDepreciated() map[string]*schema.Schema {
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
 		},
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
 		"end_user_override": {
 			Type:        schema.TypeBool,
 			Optional:    true,

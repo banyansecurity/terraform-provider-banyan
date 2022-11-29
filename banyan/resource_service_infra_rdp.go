@@ -58,6 +58,11 @@ func RdpSchema() map[string]*schema.Schema {
 
 func RdpSchemaDepreciated() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
 		"cluster": {
 			Type:        schema.TypeString,
 			Description: "(Depreciated) Sets the cluster / shield for the service",

@@ -95,6 +95,11 @@ func DbSchemaDepreciated() map[string]*schema.Schema {
 			Default:     true,
 			Description: "Allow the end user to override the backend_port for this service",
 		},
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
 	}
 	return combineSchema(s, resourceServiceInfraCommonSchema)
 }

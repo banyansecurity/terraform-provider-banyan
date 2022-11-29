@@ -73,6 +73,11 @@ func SshSchema() map[string]*schema.Schema {
 
 func SshSchemaDepreciated() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
 		"client_ssh_auth": {
 			Type:         schema.TypeString,
 			Optional:     true,
