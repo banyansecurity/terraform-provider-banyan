@@ -23,7 +23,7 @@ resource "banyan_policy_web" "example" {
 }
 ```
 
-## Example Web Policy with L7 Access
+## Example Web Policy with Layer 7 Access Policy
 ```terraform
 resource "banyan_service_web" "example" {
   name           = "example-web"

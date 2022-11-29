@@ -23,7 +23,7 @@ resource "banyan_policy_tunnel" "example" {
 }
 ```
 
-## Example Usage with Layer 4 Policy
+## Example Usage with Layer 4 Access Policy
 
 ```terraform
 resource "banyan_policy_tunnel" "example" {
