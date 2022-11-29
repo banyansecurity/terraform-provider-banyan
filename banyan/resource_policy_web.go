@@ -127,6 +127,13 @@ func policyWebFromState(d *schema.ResourceData) (pol policy.Object) {
 
 func resourcePolicyWebCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
+
+	// 	ValidateFunc is not supported on lists or sets, so use this method instead
+	err := invalidL7AccessRules(d)
+	if err != nil {
+		return diag.FromErr(errors.WithMessage(err, "invalid l7_access block"))
+	}
+
 	createdPolicy, err := c.Policy.Create(policyWebFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new web policy"))
@@ -168,6 +175,28 @@ func resourcePolicyWebRead(ctx context.Context, d *schema.ResourceData, m interf
 func resourcePolicyWebDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	diagnostics = resourcePolicyInfraDelete(ctx, d, m)
 	return
+}
+
+func invalidL7AccessRules(d *schema.ResourceData) error {
+	allow_all := policy.L7Access{Resources: []string{"*"}, Actions: []string{"*"}}
+
+	m := d.Get("access").([]interface{})
+	for _, raw := range m {
+		data := raw.(map[string]interface{})
+		l7_access := data["l7_access"].([]interface{})
+		if len(l7_access) == 0 || l7_access[0] == nil || len(l7_access) != 1 {
+			continue
+		}
+		l7_rules := l7_access[0].(map[string]interface{})
+		actions := convertSchemaSetToStringSlice(l7_rules["actions"].(*schema.Set))
+		resources := convertSchemaSetToStringSlice(l7_rules["resources"].(*schema.Set))
+		allow_l7 := policy.L7Access{Resources: resources, Actions: actions}
+		if reflect.DeepEqual(allow_l7, allow_all) {
+			return errors.New("redundant l7_access block with allow_all rules; remove l7_access block entirely")
+		}
+	}
+
+	return nil
 }
 
 func expandPolicyWebAccess(m []interface{}) (access []policy.Access) {

@@ -170,6 +170,13 @@ func policyTunnelFromState(d *schema.ResourceData) (pol policy.Object) {
 
 func resourcePolicyTunnelCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
+
+	// 	ValidateFunc is not supported on lists or sets, so use this method instead
+	err := invalidL4AccessRules(d)
+	if err != nil {
+		return diag.FromErr(errors.WithMessage(err, "invalid l4_access block"))
+	}
+
 	createdPolicy, err := c.Policy.Create(policyTunnelFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new tunnel policy"))
@@ -211,6 +218,27 @@ func resourcePolicyTunnelRead(ctx context.Context, d *schema.ResourceData, m int
 func resourcePolicyTunnelDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	diagnostics = resourcePolicyInfraDelete(ctx, d, m)
 	return
+}
+
+func invalidL4AccessRules(d *schema.ResourceData) error {
+	allow_all := []policy.L4Rule{{CIDRs: []string{"*"}, Protocols: []string{"ALL"}, Ports: []string{"*"}}}
+
+	m := d.Get("access").([]interface{})
+	for _, raw := range m {
+		data := raw.(map[string]interface{})
+		l4_access := data["l4_access"].([]interface{})
+		if len(l4_access) == 0 || l4_access[0] == nil {
+			continue
+		}
+		l4_rules := l4_access[0].(map[string]interface{})
+		allow_rule := expandL4Rules(l4_rules["allow"].([]interface{}))
+		deny_rule := expandL4Rules(l4_rules["deny"].([]interface{}))
+		if reflect.DeepEqual(allow_rule, allow_all) && deny_rule == nil {
+			return errors.New("redundant l4_access block with allow_all rules; remove l4_access block entirely")
+		}
+	}
+
+	return nil
 }
 
 func expandPolicyTunnelAccess(m []interface{}) (access []policy.Access) {
@@ -258,8 +286,17 @@ func expandL4Rules(m interface{}) (l4Rules []policy.L4Rule) {
 	for _, r := range m.([]interface{}) {
 		rule := r.(map[string]interface{})
 		cidrs := convertSchemaSetToStringSlice(rule["cidrs"].(*schema.Set))
+		if cidrs == nil {
+			cidrs = []string{"*"}
+		}
 		protocols := convertSchemaSetToStringSlice(rule["protocols"].(*schema.Set))
+		if protocols == nil {
+			protocols = []string{"ALL"}
+		}
 		ports := convertSchemaSetToStringSlice(rule["ports"].(*schema.Set))
+		if ports == nil {
+			ports = []string{"*"}
+		}
 		l4Rules = append(l4Rules, policy.L4Rule{
 			CIDRs:     cidrs,
 			Protocols: protocols,
