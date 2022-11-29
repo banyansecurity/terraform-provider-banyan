@@ -64,7 +64,7 @@ func SshSchema() map[string]*schema.Schema {
 		},
 		"policy": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			Description: "Policy ID to be attached to this service",
 		},
 	}

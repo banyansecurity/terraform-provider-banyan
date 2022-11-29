@@ -96,7 +96,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 		},
 		"policy": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			Description: "Policy ID to be attached to this service tunnel",
 		},
 		"cluster": {
@@ -113,7 +113,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 
 func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
 	icon := ""
-	descriptionLink := d.Get("description_link").(string)
+	descriptionLink := ""
 
 	tun = servicetunnel.Info{
 		Kind:       "BanyanServiceTunnel",

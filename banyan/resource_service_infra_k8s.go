@@ -52,7 +52,7 @@ func K8sSchema() map[string]*schema.Schema {
 		},
 		"policy": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			Description: "Policy ID to be attached to this service",
 		},
 	}
