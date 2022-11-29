@@ -33,10 +33,12 @@ resource "banyan_service_ssh" "example" {
 - `backend_port` (Number) The internal port where this service is hosted; set to 0 if using http_connect
 - `domain` (String) The external-facing network address for this service; ex. website.example.com
 - `name` (String) Name of the service; use lowercase alphanumeric characters or "-"
+- `policy` (String) Policy ID to be attached to this service
 
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
+- `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
 - `client_banyanproxy_listen_port` (Number) Local listen port to be used by client proxy; if not specified, a random local port will be used
 - `client_ssh_auth` (String) Specifies which certificates - TRUSTCERT | SSHCERT | BOTH - should be used when the user connects to this service; default: TRUSTCERT
@@ -45,8 +47,9 @@ resource "banyan_service_ssh" "example" {
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
 - `description_link` (String) Link shown to the end user of the banyan app for this service
+- `end_user_override` (Boolean) Allow the end user to override the backend_port for this service
 - `http_connect` (Boolean) Indicates to use HTTP Connect request to derive the backend target address.
-- `policy` (String) Policy ID to be attached to this service
+- `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `port` (Number) The external-facing port for this service
 
 ### Read-Only
