@@ -47,13 +47,17 @@ func AssertServiceSpecEqual(t *testing.T, got service.GetServiceSpec, want servi
 }
 
 func AssertPolicySpecEqual(t *testing.T, got policy.Object, want policy.Object) {
-	if diff := cmp.Diff(want, got); diff != "" {
+	less := func(a, b string) bool { return a < b }
+
+	if diff := cmp.Diff(want, got, cmpopts.SortSlices(less)); diff != "" {
 		t.Errorf("service.Spec{} mismatch (-want +got):\n%s", diff)
 	}
 }
 
 func AssertCreateRoleEqual(t *testing.T, got role.CreateRole, want role.CreateRole) {
-	if diff := cmp.Diff(want, got); diff != "" {
+	less := func(a, b string) bool { return a < b }
+
+	if diff := cmp.Diff(want, got, cmpopts.SortSlices(less)); diff != "" {
 		t.Errorf("role.Spec{} mismatch (-want +got):\n%s", diff)
 	}
 }

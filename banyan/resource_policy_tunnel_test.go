@@ -1,14 +1,61 @@
 package banyan
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"testing"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Use the Terraform plugin SDK testing framework for acceptance testing banyan policy lifecycle.
+func TestSchemaPolicyTunnel_l4(t *testing.T) {
+	access1 := map[string]interface{}{
+		"roles":       []interface{}{"UsersRegisteredDevice"},
+		"trust_level": "Low",
+		"l4_access": []interface{}{
+			map[string]interface{}{
+				"allow": []interface{}{
+					map[string]interface{}{
+						"cidrs":     []interface{}{"10.138.0.14/32", "10.138.0.11/32", "10.10.0.0/16"},
+						"protocols": []interface{}{"ALL"},
+						"ports":     []interface{}{"*"},
+					},
+				},
+				"deny": []interface{}{
+					map[string]interface{}{
+						"cidrs":     []interface{}{"10.10.1.0/24", "10.10.2.0/24"},
+						"protocols": []interface{}{"TCP"},
+						"ports":     []interface{}{"22"},
+					},
+				},
+			},
+		},
+	}
+
+	access2 := map[string]interface{}{
+		"roles":       []interface{}{"AdminsCorpDevice"},
+		"trust_level": "High",
+	}
+
+	policy_l4 := map[string]interface{}{
+		"name":        "Datacenter w L4 Controls",
+		"description": "[TF] Restrict ordinary users to filesharing and Windows servers",
+		"access":      []interface{}{access1, access2},
+	}
+	d := schema.TestResourceDataRaw(t, PolicyTunnelSchema(), policy_l4)
+	policy_obj := policyTunnelFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/policy/l4.json")
+	var ref_obj policy.Object
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertPolicySpecEqual(t, policy_obj, ref_obj)
+}
+
 func TestAccPolicy_tunnel_basic(t *testing.T) {
 	var bnnPolicy policy.GetPolicy
 

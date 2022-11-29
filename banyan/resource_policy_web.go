@@ -2,13 +2,14 @@ package banyan
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 func resourcePolicyWeb() *schema.Resource {
@@ -18,70 +19,74 @@ func resourcePolicyWeb() *schema.Resource {
 		ReadContext:   resourcePolicyWebRead,
 		UpdateContext: resourcePolicyWebUpdate,
 		DeleteContext: resourcePolicyWebDelete,
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the policy",
-			},
-			"id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "ID of the policy in Banyan",
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Description of the policy",
-			},
-			"access": {
-				Type:        schema.TypeList,
-				MinItems:    1,
-				Required:    true,
-				Description: "Access describes the access rights for a set of roles",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"roles": {
-							Type:        schema.TypeSet,
-							Description: "Roles that all have the access rights given by rules",
-							MinItems:    1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-							Required: true,
+		Schema:        PolicyWebSchema(),
+	}
+}
+
+func PolicyWebSchema() (s map[string]*schema.Schema) {
+	s = map[string]*schema.Schema{
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the policy",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "ID of the policy in Banyan",
+		},
+		"description": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Description of the policy",
+		},
+		"access": {
+			Type:        schema.TypeList,
+			MinItems:    1,
+			Required:    true,
+			Description: "Access describes the access rights for a set of roles",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"roles": {
+						Type:        schema.TypeSet,
+						Description: "Roles that all have the access rights given by rules",
+						MinItems:    1,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
 						},
-						"trust_level": {
-							Type:         schema.TypeString,
-							Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\", or \"\"",
-							Required:     true,
-							ValidateFunc: validateTrustLevel(),
-						},
-						"l7_access": {
-							Type:        schema.TypeList,
-							Description: "Indicates whether the end user device is allowed to use L7",
-							Optional:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resources": {
-										Type: schema.TypeSet,
-										Description: `
-											Resources are a list of application level resources.
-											Each resource can have wildcard prefix or suffix, or both.
-											A resource can be prefixed with "!", meaning DENY.
-											Any DENY rule overrides any other rule that would allow the access.`,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
+						Required: true,
+					},
+					"trust_level": {
+						Type:         schema.TypeString,
+						Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\", or \"\"",
+						Required:     true,
+						ValidateFunc: validateTrustLevel(),
+					},
+					"l7_access": {
+						Type:        schema.TypeList,
+						Description: "Indicates whether the end user device is allowed to use L7",
+						Optional:    true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"resources": {
+									Type: schema.TypeSet,
+									Description: `
+										Resources are a list of application level resources.
+										Each resource can have wildcard prefix or suffix, or both.
+										A resource can be prefixed with "!", meaning DENY.
+										Any DENY rule overrides any other rule that would allow the access.`,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
 									},
-									"actions": {
-										Type:        schema.TypeSet,
-										Description: "Actions are a list of application-level actions: \"CREATE\", \"READ\", \"UPDATE\", \"DELETE\", \"*\"",
-										Optional:    true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringInSlice([]string{"CREATE", "READ", "UPDATE", "DELETE", "*"}, false),
-										},
+								},
+								"actions": {
+									Type:        schema.TypeSet,
+									Description: "Actions are a list of application-level actions: \"CREATE\", \"READ\", \"UPDATE\", \"DELETE\", \"*\"",
+									Optional:    true,
+									Elem: &schema.Schema{
+										Type:         schema.TypeString,
+										ValidateFunc: validation.StringInSlice([]string{"CREATE", "READ", "UPDATE", "DELETE", "*"}, false),
 									},
 								},
 							},
@@ -91,6 +96,7 @@ func resourcePolicyWeb() *schema.Resource {
 			},
 		},
 	}
+	return
 }
 
 func policyWebFromState(d *schema.ResourceData) (pol policy.Object) {
@@ -214,17 +220,40 @@ func flattenPolicyWebAccess(toFlatten []policy.Access) (flattened []interface{})
 }
 
 func flattenPolicyWebL7Access(toFlatten []policy.L7Access) (flattened []interface{}) {
+	omitted := []policy.L7Access{{Resources: []string{"*"}, Actions: []string{"*"}}}
+	if reflect.DeepEqual(omitted, toFlatten) {
+		// will set these value to nil in the state but leave in API
+		/*
+			L7 DENY rules are written in "!" format and require the "resources: *, actions: *" at the end
+
+			"l7_access": [
+				{
+					"resources": [
+						"!/wp-admin*"
+					],
+					"actions": [
+						"*"
+					]
+				},
+				{
+					"resources": [
+						"*"
+					],
+					"actions": [
+						"*"
+					]
+				}
+			],
+		*/
+
+		return
+	}
+
 	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
 	for idx, l7access := range toFlatten {
 		l7 := make(map[string]interface{})
 		l7["resources"] = l7access.Resources
 		l7["actions"] = l7access.Actions
-		if reflect.DeepEqual(l7access, policy.L7Access{
-			Resources: []string{"*"},
-			Actions:   []string{"*"}}) {
-			flattened[idx] = nil
-			continue
-		}
 		flattened[idx] = l7
 	}
 	if len(flattened) == 1 && flattened[0] == nil {

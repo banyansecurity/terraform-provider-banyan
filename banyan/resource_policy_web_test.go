@@ -1,16 +1,71 @@
 package banyan
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
-// Use the Terraform plugin SDK testing framework for acceptance testing banyan policy lifecycle.
+func TestSchemaPolicyWeb_l7(t *testing.T) {
+
+	access1 := map[string]interface{}{
+		"roles":       []interface{}{"Contractors", "ServiceAccounts"},
+		"trust_level": "",
+		"l7_access": []interface{}{
+			map[string]interface{}{
+				"resources": []interface{}{"!/wp-admin*", "!/wp-login*"},
+				"actions":   []interface{}{"*"},
+			},
+			map[string]interface{}{
+				"resources": []interface{}{"*"},
+				"actions":   []interface{}{"*"},
+			},
+		},
+	}
+
+	access2 := map[string]interface{}{
+		"roles":       []interface{}{"UsersRegisteredDevice"},
+		"trust_level": "Low",
+		"l7_access": []interface{}{
+			map[string]interface{}{
+				"resources": []interface{}{"!/wp-admin*"},
+				"actions":   []interface{}{"*"},
+			},
+			map[string]interface{}{
+				"resources": []interface{}{"*"},
+				"actions":   []interface{}{"*"},
+			},
+		},
+	}
+
+	access3 := map[string]interface{}{
+		"roles":       []interface{}{"AdminsCorpDevice"},
+		"trust_level": "High",
+	}
+
+	policy_l7 := map[string]interface{}{
+		"name":        "Wordpress w API Controls",
+		"description": "[TF] Different levels of access based on user+device attributes & trust",
+		"access":      []interface{}{access1, access2, access3},
+	}
+	d := schema.TestResourceDataRaw(t, PolicyWebSchema(), policy_l7)
+	policy_obj := policyWebFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/policy/l7.json")
+	var ref_obj policy.Object
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertPolicySpecEqual(t, policy_obj, ref_obj)
+}
+
 func TestAccPolicy_web_basic(t *testing.T) {
 	var bnnPolicy policy.GetPolicy
 

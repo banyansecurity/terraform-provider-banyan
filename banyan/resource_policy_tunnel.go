@@ -2,13 +2,14 @@ package banyan
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 func resourcePolicyTunnel() *schema.Resource {
@@ -18,115 +19,119 @@ func resourcePolicyTunnel() *schema.Resource {
 		ReadContext:   resourcePolicyTunnelRead,
 		UpdateContext: resourcePolicyTunnelUpdate,
 		DeleteContext: resourcePolicyTunnelDelete,
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the policy",
-			},
-			"id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "ID of the policy in Banyan",
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Description of the policy",
-			},
-			"access": {
-				Type:        schema.TypeList,
-				MinItems:    1,
-				Required:    true,
-				Description: "Access describes the access rights for a set of roles",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"roles": {
-							Type:        schema.TypeSet,
-							Description: "Roles that all have the access rights given by rules",
-							MinItems:    1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-							Required: true,
+		Schema:        PolicyTunnelSchema(),
+	}
+}
+
+func PolicyTunnelSchema() (s map[string]*schema.Schema) {
+	s = map[string]*schema.Schema{
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the policy",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "ID of the policy in Banyan",
+		},
+		"description": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Description of the policy",
+		},
+		"access": {
+			Type:        schema.TypeList,
+			MinItems:    1,
+			Required:    true,
+			Description: "Access describes the access rights for a set of roles",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"roles": {
+						Type:        schema.TypeSet,
+						Description: "Roles that all have the access rights given by rules",
+						MinItems:    1,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
 						},
-						"trust_level": {
-							Type:         schema.TypeString,
-							Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\", or \"\"",
-							Required:     true,
-							ValidateFunc: validateTrustLevel(),
-						},
-						"l4_access": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Description: "L4 access rules",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allow": {
-										Type:        schema.TypeList,
-										Description: "Roles that all have the access rights given by rules",
-										Optional:    true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cidrs": {
-													Type:        schema.TypeSet,
-													Description: "Allowed CIDRs through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+						Required: true,
+					},
+					"trust_level": {
+						Type:         schema.TypeString,
+						Description:  "The trust level of the end user device, must be one of: \"High\", \"Medium\", \"Low\", or \"\"",
+						Required:     true,
+						ValidateFunc: validateTrustLevel(),
+					},
+					"l4_access": {
+						Type:        schema.TypeList,
+						MaxItems:    1,
+						Optional:    true,
+						Description: "L4 access rules",
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"allow": {
+									Type:        schema.TypeList,
+									Description: "Roles that all have the access rights given by rules",
+									Optional:    true,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"cidrs": {
+												Type:        schema.TypeSet,
+												Description: "Allowed CIDRs through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
 												},
-												"protocols": {
-													Type:        schema.TypeSet,
-													Description: "Allowed protocols through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ALL"}, false),
-													},
+											},
+											"protocols": {
+												Type:        schema.TypeSet,
+												Description: "Allowed protocols through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type:         schema.TypeString,
+													ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ALL"}, false),
 												},
-												"ports": {
-													Type:        schema.TypeSet,
-													Description: "Allowed ports through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+											},
+											"ports": {
+												Type:        schema.TypeSet,
+												Description: "Allowed ports through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
 												},
 											},
 										},
 									},
-									"deny": {
-										Type:        schema.TypeList,
-										Description: "Roles that all have the access rights given by rules",
-										Optional:    true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cidrs": {
-													Type:        schema.TypeSet,
-													Description: "Denied CIDRs through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+								},
+								"deny": {
+									Type:        schema.TypeList,
+									Description: "Roles that all have the access rights given by rules",
+									Optional:    true,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"cidrs": {
+												Type:        schema.TypeSet,
+												Description: "Denied CIDRs through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
 												},
-												"protocols": {
-													Type:        schema.TypeSet,
-													Description: "Denied protocols through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ALL"}, false),
-													},
+											},
+											"protocols": {
+												Type:        schema.TypeSet,
+												Description: "Denied protocols through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type:         schema.TypeString,
+													ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ALL"}, false),
 												},
-												"ports": {
-													Type:        schema.TypeSet,
-													Description: "Denied ports through the service tunnel",
-													Optional:    true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+											},
+											"ports": {
+												Type:        schema.TypeSet,
+												Description: "Denied ports through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
 												},
 											},
 										},
@@ -139,6 +144,7 @@ func resourcePolicyTunnel() *schema.Resource {
 			},
 		},
 	}
+	return
 }
 
 func policyTunnelFromState(d *schema.ResourceData) (pol policy.Object) {
