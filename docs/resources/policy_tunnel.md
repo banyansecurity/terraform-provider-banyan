@@ -14,7 +14,7 @@ The tunnel policy resource is used to manage the lifecycle of policies which wil
 
 ```terraform
 resource "banyan_policy_tunnel" "example" {
-  name        = "example"
+  name        = "corporate-network-users"
   description = "some tunnel policy description"
   access {
     roles       = ["Everyone"]
@@ -26,9 +26,9 @@ resource "banyan_policy_tunnel" "example" {
 ## Example Usage with Layer 4 Policy
 
 ```terraform
-resource "banyan_policy_tunnel" "anyone-high" {
+resource "banyan_policy_tunnel" "example" {
   name        = "corporate-network-users"
-  description = "${banyan_accesstier.example.name} allow users"
+  description = "some tunnel policy description"
   access {
     roles       = ["Everyone"]
     trust_level = "High"
