@@ -23,9 +23,9 @@ Most notable are the service and policy resources.
 
 The corresponding command center release brings with it new changes to the access tier which are reflected in this release of the terraform provider
 
-Be sure to check out the new accesstier2 modules for your cloud provider on the [Terraform Registry](https://registry.terraform.io/providers/banyansecurity/banyan/0.9.2)
+Be sure to check out the new accesstier2 modules for your cloud provider on the [Terraform Registry](https://registry.terraform.io/providers/banyansecurity/banyan/1.0)
 
-View this release in the [Terraform Registry](https://registry.terraform.io/providers/banyansecurity/banyan/0.9.2)
+View this release in the [Terraform Registry](https://registry.terraform.io/providers/banyansecurity/banyan/1.0)
 
 ## What's Changed
 * major refactor of the provider and client providing much cleaner and simpler code
