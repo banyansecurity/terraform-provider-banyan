@@ -7,7 +7,7 @@ type PolicyAttachmentInfo struct {
 	ServiceTunnelID string `json:"service_tunnel_id"`
 	AttachedBy      string `json:"attached_by"`
 	AttachedAt      int64  `json:"Attached_at"`
-	Enabled         bool   `json:"enabled"` //true/false: true => Enforced; false => Permissive mode
+	// BROKEN Enabled         bool   `json:"enabled"` //true/false: true => Enforced; false => Permissive mode
 }
 
 type PolicyAttachmentPost struct {
