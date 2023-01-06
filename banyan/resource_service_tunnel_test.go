@@ -336,3 +336,93 @@ func TestAccServiceTunnel_change_policy(t *testing.T) {
 		},
 	})
 }
+
+func TestAccServiceTunnel_change_policy(t *testing.T) {
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// Creates the servicetunnel with the given terraform configuration and asserts that the servicetunnel is created
+			{
+				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.example.com"
+						api_key_id = banyan_api_key.example.id
+					}
+
+					resource "banyan_policy_tunnel" "example" {
+						name        = "%s"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+
+					resource "banyan_service_tunnel" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						access_tiers      = [banyan_accesstier.example.name]
+                        policy            = banyan_policy_tunnel.example.id
+					}
+					`, rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_service_tunnel.example", "name", rName),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.example.com"
+						api_key_id = banyan_api_key.example.id
+					}
+
+					resource "banyan_policy_tunnel" "example" {
+						name        = "%s"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+
+					resource "banyan_policy_tunnel" "new" {
+						name        = "%s-new"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "Low"
+						}
+					}
+
+					resource "banyan_service_tunnel" "example" {
+						name              = "%s"
+						description       = "some description"
+						access_tiers      = [banyan_accesstier.example.name]
+                        policy            = banyan_policy_tunnel.new.id
+					}
+					`, rName, rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_service_tunnel.example", "name", rName),
+				),
+			},
+		},
+	})
+}
