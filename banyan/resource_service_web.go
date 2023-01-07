@@ -151,6 +151,14 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		return
 	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
+	err = d.Set("backend_tls", svc.CreateServiceSpec.Spec.Target.TLS)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("backend_tls_insecure", svc.CreateServiceSpec.Spec.Target.TLS)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 
