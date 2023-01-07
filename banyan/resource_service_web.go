@@ -20,6 +20,9 @@ func resourceServiceWeb() *schema.Resource {
 		UpdateContext: resourceServiceWebUpdate,
 		DeleteContext: resourceServiceDelete,
 		Schema:        WebSchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
