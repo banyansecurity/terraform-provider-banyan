@@ -77,7 +77,6 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:        schema.TypeBool,
 			Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
 			Optional:    true,
-			Default:     false,
 		},
 		"backend_domain": {
 			Type:        schema.TypeString,
@@ -95,13 +94,11 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:        schema.TypeBool,
 			Description: "Indicates whether the connection to the backend server uses TLS",
 			Optional:    true,
-			Default:     false,
 		},
 		"backend_tls_insecure": {
 			Type:        schema.TypeBool,
 			Description: "Indicates the connection to the backend should not validate the backend server TLS certificate",
 			Optional:    true,
-			Default:     false,
 		},
 		"policy": {
 			Type:        schema.TypeString,
