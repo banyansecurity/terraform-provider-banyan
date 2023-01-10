@@ -110,6 +110,11 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "banyan_service_tunnel.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: fmt.Sprintf(`
 					resource "banyan_api_key" "example" {
 						name              = "%s"
@@ -142,6 +147,11 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("banyan_service_tunnel.example", "name", rName),
 				),
+			},
+			{
+				ResourceName:      "banyan_service_tunnel.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
