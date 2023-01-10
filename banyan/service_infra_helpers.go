@@ -138,14 +138,17 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.Target.Name)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	bpInt, _ := strconv.Atoi(svc.CreateServiceSpec.Spec.Backend.Target.Port)
-	err = d.Set("backend_port", bpInt)
-	if err != nil {
-		return diag.FromErr(err)
+	// TODO: refactor after service API refactor -- allows us to reuse this function for more services
+	if svc.CreateServiceSpec.Spec.Backend.HTTPConnect == false {
+		err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.Target.Name)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		bpInt, _ := strconv.Atoi(svc.CreateServiceSpec.Spec.Backend.Target.Port)
+		err = d.Set("backend_port", bpInt)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if svc.CreateServiceSpec.Metadata.Tags.AppListenPort != nil {
 		clientPortVal := *svc.CreateServiceSpec.Metadata.Tags.AppListenPort

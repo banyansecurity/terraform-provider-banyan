@@ -44,29 +44,27 @@ func TestAccService_k8s(t *testing.T) {
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccService_k8s_create(rName),
+				Config: fmt.Sprintf(`
+					resource "banyan_service_k8s" "example" {
+					  name        = "%s-k8s"
+					  description = "some k8s service description"
+					  access_tier = "us-west1"
+					  domain      = "%s-k8s.corp.com"
+					  backend_dns_override_for_domain = "%s-k8s.service"
+					  client_kube_cluster_name = "k8s-cluster"
+					  client_kube_ca_key = "k8scAk3yH3re"
+					  client_banyanproxy_listen_port = "9119"
+					}
+					`, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_k8s.example", &bnnService),
+					testAccCheckExistingService("banyan_service_k8s.example", &bnnService),
 				),
+			},
+			{
+				ResourceName:      "banyan_service_k8s.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
-}
-
-// Returns terraform configuration for a typical k8s service
-func testAccService_k8s_create(name string) string {
-	return fmt.Sprintf(`
-resource "banyan_service_infra_k8s" "example" {
-  name        = "%s-k8s"
-  description = "some k8s service description"
-  access_tier = "us-west1"
-  domain      = "%s-k8s.corp.com"
-  backend_domain      = "%s-k8s.internal"
-  backend_port = 6443
-  backend_dns_override_for_domain = "%s-k8s.service"
-  client_kube_cluster_name = "k8s-cluster"
-  client_kube_ca_key = "k8scAk3yH3re"
-  client_banyanproxy_listen_port = "9119"
-}
-`, name, name, name, name)
 }

@@ -46,6 +46,11 @@ func TestAccService_database(t *testing.T) {
 					testAccCheckServiceAgainstJson(t, testAccService_database_create_json(rName), &bnnService.ServiceID),
 				),
 			},
+			{
+				ResourceName:      "banyan_service_db.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

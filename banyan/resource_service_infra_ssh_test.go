@@ -66,6 +66,11 @@ func TestAccService_ssh(t *testing.T) {
 					testAccCheckServiceAgainstJson(t, testAccService_ssh_create_json(rName), &bnnService.ServiceID),
 				),
 			},
+			{
+				ResourceName:      "banyan_service_ssh.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
