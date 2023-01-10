@@ -37,6 +37,11 @@ func TestAccAccessTier_required(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "banyan_accesstier.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: fmt.Sprintf(`
 					resource "banyan_api_key" "example" {
 						name              = "%s"
@@ -52,6 +57,11 @@ func TestAccAccessTier_required(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
+			},
+			{
+				ResourceName:      "banyan_accesstier.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -92,6 +102,11 @@ func TestAccAccessTier_optional(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "banyan_accesstier.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: fmt.Sprintf(`
 					resource "banyan_api_key" "example" {
 						name              = "%s"
@@ -116,6 +131,11 @@ func TestAccAccessTier_optional(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessTierExists("banyan_accesstier.example", &r),
 				),
+			},
+			{
+				ResourceName:      "banyan_accesstier.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
