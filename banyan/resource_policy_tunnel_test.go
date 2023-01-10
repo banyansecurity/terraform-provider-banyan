@@ -125,6 +125,11 @@ func TestAccPolicy_tunnel_l4(t *testing.T) {
 					testAccCheckPolicyAgainstJson(t, testAccPolicy_tunnel_l4_create_json(rName), &bnnPolicy.ID),
 				),
 			},
+			{
+				ResourceName:      "banyan_policy_tunnel.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -213,6 +218,11 @@ func TestAccPolicy_tunnel_any(t *testing.T) {
 					testAccCheckExistingPolicy("banyan_policy_tunnel.example", &bnnPolicy),
 					testAccCheckPolicyAgainstJson(t, testAccPolicy_tunnel_any_create_json(rName), &bnnPolicy.ID),
 				),
+			},
+			{
+				ResourceName:      "banyan_policy_tunnel.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
