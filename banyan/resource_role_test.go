@@ -66,6 +66,11 @@ func TestAccRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPtr("banyan_role.acceptance", "id", &bnnRole.ID),
 				),
 			},
+			{
+				ResourceName:      "banyan_role.acceptance",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -88,6 +93,11 @@ func TestAccRole_complex(t *testing.T) {
 					resource.TestCheckResourceAttrPtr("banyan_role.acceptance", "id", &bnnRole.ID),
 				),
 			},
+			{
+				ResourceName:      "banyan_role.acceptance",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			// Updates the same role with a different configuration and asserts that the same role was updated correctly
 			{
 				Config: testAccRole_complex_update(rName),
@@ -96,6 +106,11 @@ func TestAccRole_complex(t *testing.T) {
 					testAccCheckRoleGroupsUpdated(t, &bnnRole, []string{"group1", "group2"}),
 					resource.TestCheckResourceAttrPtr("banyan_role.acceptance", "id", &bnnRole.ID),
 				),
+			},
+			{
+				ResourceName:      "banyan_role.acceptance",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
