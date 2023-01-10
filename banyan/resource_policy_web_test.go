@@ -94,6 +94,11 @@ func TestAccPolicy_web_basic(t *testing.T) {
 					testAccCheckPolicyAgainstJson(t, testAccPolicy_web_basic_create_json(rName), &bnnPolicy.ID),
 				),
 			},
+			{
+				ResourceName:      "banyan_policy_web.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -162,6 +167,11 @@ func TestAccPolicy_web_l7(t *testing.T) {
 					testAccCheckExistingPolicy("banyan_policy_web.example", &bnnPolicy),
 					testAccCheckPolicyAgainstJson(t, testAccPolicy_web_l7_create_json(rName), &bnnPolicy.ID),
 				),
+			},
+			{
+				ResourceName:      "banyan_policy_web.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
