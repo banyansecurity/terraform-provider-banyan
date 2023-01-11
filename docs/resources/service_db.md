@@ -41,7 +41,7 @@ resource "banyan_service_db" "example" {
 - `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
 - `client_banyanproxy_allowed_domains` (Set of String) Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity
-- `client_banyanproxy_listen_port` (Number) Local listen port to be used by client proxy; if not specified, a random local port will be used
+- `client_banyanproxy_listen_port` (Number) Sets the listen port of the service for the end user Banyan app
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
