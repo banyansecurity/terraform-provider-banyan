@@ -110,6 +110,11 @@ func TcpSchema() map[string]*schema.Schema {
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
 		},
+		"backend_dns_override_for_domain": {
+			Type:        schema.TypeString,
+			Description: "Override DNS for service domain name with this value",
+			Optional:    true,
+		},
 		"client_banyanproxy_listen_port": {
 			Type:         schema.TypeInt,
 			Description:  "Sets the listen port of the service for the end user Banyan app",
@@ -160,6 +165,12 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 		handleNotFoundError(d, err)
 		return
 	}
+	domain := *svc.CreateServiceSpec.Metadata.Tags.Domain
+	override := svc.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	err = d.Set("backend_dns_override_for_domain", override)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
 	if err != nil {
 		return diag.FromErr(err)
@@ -197,7 +208,52 @@ func TcpFromState(d *schema.ResourceData) (svc service.CreateService) {
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
 		Type:       "origin",
-		Spec:       expandInfraServiceSpec(d),
+		Spec:       expandTcpServiceSpec(d),
+	}
+	return
+}
+
+func expandTcpServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	attributes, err := expandInfraAttributes(d)
+	if err != nil {
+		return
+	}
+	spec = service.Spec{
+		Attributes:   attributes,
+		Backend:      expandTcpBackend(d),
+		CertSettings: expandInfraCertSettings(d),
+		HTTPSettings: expandInfraHTTPSettings(d),
+		ClientCIDRs:  []service.ClientCIDRs{},
+	}
+	return
+}
+
+func expandTcpBackend(d *schema.ResourceData) (backend service.Backend) {
+	var allowPatterns []service.BackendAllowPattern
+	domain := d.Get("domain").(string)
+	// build DNSOverrides
+	DNSOverrides := map[string]string{}
+	backendOverride, ok := d.GetOk("backend_dns_override_for_domain")
+	if ok {
+		DNSOverrides = map[string]string{
+			domain: backendOverride.(string),
+		}
+	}
+	httpConnect := false
+	_, ok = d.GetOk("http_connect")
+	if ok {
+		httpConnect = d.Get("http_connect").(bool)
+	}
+	if httpConnect {
+		allowPatterns = []service.BackendAllowPattern{{}}
+	}
+	backend = service.Backend{
+		Target:        expandInfraTarget(d, httpConnect),
+		DNSOverrides:  DNSOverrides,
+		HTTPConnect:   httpConnect,
+		ConnectorName: d.Get("connector").(string),
+		AllowPatterns: allowPatterns,
+		Whitelist:     []string{}, // deprecated
 	}
 	return
 }
