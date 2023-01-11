@@ -24,8 +24,7 @@ type Client struct {
 const defaultHostUrl = "https://net.banyanops.com"
 
 // New creates a new client that will let the user interact with the REST API server.
-// As part of this it exchanges the given refreshtoken or api key
-func New(hostUrl string, refreshToken string, apiToken string) (client *Client, err error) {
+func New(hostUrl string, apiKey string) (client *Client, err error) {
 	clientHostUrl := defaultHostUrl
 	if hostUrl != "" {
 		clientHostUrl = hostUrl
@@ -35,27 +34,8 @@ func New(hostUrl string, refreshToken string, apiToken string) (client *Client, 
 		clientHostUrl = hostUrl + "/"
 	}
 
-	var accessToken string
-	if refreshToken != "" {
-		client = &Client{
-			accessToken: "",
-			hostUrl:     clientHostUrl,
-			httpClient:  &http.Client{Timeout: 10 * time.Second},
-		}
-
-		accessToken, err = client.exhangeRefreshTokenForAccessToken(clientHostUrl, refreshToken)
-		if err != nil {
-			errors.Wrapf(err, "Issue exchanging refreshToken for accessToken")
-			return
-		}
-	}
-
-	if apiToken != "" {
-		accessToken = apiToken
-	}
-
 	client = &Client{
-		accessToken: accessToken,
+		accessToken: apiKey,
 		hostUrl:     clientHostUrl,
 		httpClient:  &http.Client{Timeout: 10 * time.Second},
 	}
