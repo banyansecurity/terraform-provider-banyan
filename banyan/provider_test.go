@@ -23,7 +23,7 @@ func init() {
 }
 
 func NewAccClient() (c *client.Holder) {
-	c, err := client.NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_KEY"))
+	c, err := client.NewClientHolder(os.Getenv("BANYAN_HOST"), os.Getenv("BANYAN_API_KEY"))
 	if err != nil {
 		log.Fatal("Could not create the test client")
 	}

@@ -24,18 +24,6 @@ func resourceServiceInfraRdp() *schema.Resource {
 	}
 }
 
-func resourceServiceInfraRdpDepreciated() *schema.Resource {
-	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize `banyan_service_rdp` instead",
-		CreateContext:      resourceServiceInfraRdpCreate,
-		ReadContext:        resourceServiceInfraRdpReadDepreciated,
-		UpdateContext:      resourceServiceInfraRdpUpdate,
-		DeleteContext:      resourceServiceDelete,
-		Schema:             RdpSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_rdp",
-	}
-}
-
 func RdpSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"id": {
@@ -142,37 +130,6 @@ func RdpSchema() map[string]*schema.Schema {
 	}
 }
 
-func RdpSchemaDepreciated() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"policy": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Policy ID to be attached to this service",
-		},
-		"cluster": {
-			Type:        schema.TypeString,
-			Description: "(Depreciated) Sets the cluster / shield for the service",
-			Computed:    true,
-			Optional:    true,
-			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
-			ForceNew:    true,
-		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway",
-			Optional:    true,
-			Default:     false,
-		},
-		"end_user_override": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "Allow the end user to override the backend_port for this service",
-		},
-	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
-}
-
 func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	err := setCluster(d, m)
 	if err != nil {
@@ -202,19 +159,6 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	return resourceServiceInfraCommonRead(svc, d, m)
-}
-
-func resourceServiceInfraRdpReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	svc, err := c.Service.Get(d.Id())
-	if err != nil {
-		handleNotFoundError(d, err)
-		return
-	}
-	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	// trick to allow this key to stay in the schema
-	err = d.Set("policy", nil)
-	return
 }
 
 func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
