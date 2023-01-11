@@ -20,6 +20,9 @@ func resourcePolicyTunnel() *schema.Resource {
 		UpdateContext: resourcePolicyTunnelUpdate,
 		DeleteContext: resourcePolicyTunnelDelete,
 		Schema:        PolicyTunnelSchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 

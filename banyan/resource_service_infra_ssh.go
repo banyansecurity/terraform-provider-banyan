@@ -20,6 +20,9 @@ func resourceServiceInfraSsh() *schema.Resource {
 		UpdateContext: resourceServiceInfraSshUpdate,
 		DeleteContext: resourceServiceDelete,
 		Schema:        SshSchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -37,6 +40,89 @@ func resourceServiceInfraSshDepreciated() *schema.Resource {
 
 func SshSchema() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"id": {
+			Type:        schema.TypeString,
+			Description: "Id of the service in Banyan",
+			Computed:    true,
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
+			ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+		},
+		"description": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Description of the service",
+		},
+		"description_link": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Link shown to the end user of the banyan app for this service",
+		},
+		"access_tier": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the access_tier which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"connector"},
+		},
+		"connector": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the connector which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"access_tier"},
+		},
+		"domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The external-facing network address for this service; ex. website.example.com",
+		},
+		"backend_domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
+		},
+		"backend_port": {
+			Type:         schema.TypeInt,
+			Required:     true,
+			Description:  "The internal port where this service is hosted; set to 0 if using http_connect",
+			ValidateFunc: validatePort(),
+		},
+		"port": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Description:  "The external-facing port for this service",
+			Default:      8443,
+			ValidateFunc: validatePort(),
+		},
+		"available_in_app": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Whether this service is available in the app for users with permission to access this service",
+		},
+		"icon": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
+		},
+		"policy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Policy ID to be attached to this service",
+		},
+		"cluster": {
+			Type:        schema.TypeString,
+			Description: "(Depreciated) Sets the cluster / shield for the service",
+			Computed:    true,
+			Optional:    true,
+			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+			ForceNew:    true,
+		},
 		"client_ssh_auth": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -51,10 +137,10 @@ func SshSchema() map[string]*schema.Schema {
 			Default:     "",
 		},
 		"client_banyanproxy_listen_port": {
-			Type:        schema.TypeInt,
-			Description: "For SSH, banyanproxy uses stdin instead of a local port",
-			Computed:    true,
-			Default:     nil,
+			Type:         schema.TypeInt,
+			Description:  "For SSH, banyanproxy uses stdin instead of a local port",
+			Optional:     true,
+			ValidateFunc: validatePort(),
 		},
 		"http_connect": {
 			Type:        schema.TypeBool,
@@ -62,13 +148,8 @@ func SshSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     false,
 		},
-		"policy": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Policy ID to be attached to this service",
-		},
 	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
+	return s
 }
 
 func SshSchemaDepreciated() map[string]*schema.Schema {
@@ -94,8 +175,6 @@ func SshSchemaDepreciated() map[string]*schema.Schema {
 		"client_banyanproxy_listen_port": {
 			Type:        schema.TypeInt,
 			Description: "For SSH, banyanproxy uses stdin instead of a local port",
-			Computed:    true,
-			Default:     nil,
 		},
 		"http_connect": {
 			Type:        schema.TypeBool,
@@ -141,6 +220,10 @@ func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	err = d.Set("client_ssh_host_directive", svc.CreateServiceSpec.Metadata.Tags.SSHHostDirective)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}

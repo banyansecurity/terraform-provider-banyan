@@ -17,6 +17,9 @@ func resourceServiceTunnel() *schema.Resource {
 		UpdateContext: resourceServiceTunnelUpdate,
 		DeleteContext: resourceServiceTunnelDelete,
 		Schema:        TunnelSchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -200,7 +203,11 @@ func resourceServiceTunnelRead(ctx context.Context, d *schema.ResourceData, m in
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
+	policy, err := c.ServiceTunnel.GetPolicy(tun.ID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.Set("policy", policy.PolicyID)
 	return
 }
 

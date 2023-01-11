@@ -83,9 +83,14 @@ func TestAccService_tcp(t *testing.T) {
 			{
 				Config: testAccService_tcp_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_tcp.example", &bnnService),
+					testAccCheckExistingService("banyan_service_tcp.example", &bnnService),
 					testAccCheckServiceAgainstJson(t, testAccService_tcp_create_json(rName), &bnnService.ServiceID),
 				),
+			},
+			{
+				ResourceName:      "banyan_service_tcp.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -108,7 +113,7 @@ resource "banyan_service_infra_tcp" "example" {
 
 func testAccService_tcp_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_infra_tcp" "example" {
+resource "banyan_service_tcp" "example" {
   name        = "%s-tcp"
   description = "some tcp service description"
   access_tier   = "us-west1"

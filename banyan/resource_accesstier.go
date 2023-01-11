@@ -21,6 +21,9 @@ func resourceAccessTier() *schema.Resource {
 		UpdateContext: resourceAccessTierUpdate,
 		DeleteContext: resourceAccessTierDelete,
 		Schema:        AccessTierSchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 

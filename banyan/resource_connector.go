@@ -19,6 +19,9 @@ func resourceConnector() *schema.Resource {
 		ReadContext:   resourceConnectorRead,
 		UpdateContext: resourceConnectorUpdate,
 		DeleteContext: resourceConnectorDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeString,
@@ -130,6 +133,10 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 	err = d.Set("domains", sat.Domains)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("cluster", "global-edge")
 	if err != nil {
 		return diag.FromErr(err)
 	}

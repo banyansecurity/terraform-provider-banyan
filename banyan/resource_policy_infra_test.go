@@ -34,6 +34,11 @@ func TestAccPolicy_infrastructure(t *testing.T) {
 					testAccCheckPolicyAgainstJson(t, testAccPolicy_infrastructure_create_json(rName), &bnnPolicy.ID),
 				),
 			},
+			{
+				ResourceName:      "banyan_policy_infra.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

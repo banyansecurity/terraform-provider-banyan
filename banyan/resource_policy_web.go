@@ -20,6 +20,9 @@ func resourcePolicyWeb() *schema.Resource {
 		UpdateContext: resourcePolicyWebUpdate,
 		DeleteContext: resourcePolicyWebDelete,
 		Schema:        PolicyWebSchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 

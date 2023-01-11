@@ -16,6 +16,9 @@ func resourcePolicyInfra() *schema.Resource {
 		ReadContext:   resourcePolicyInfraRead,
 		UpdateContext: resourcePolicyInfraUpdate,
 		DeleteContext: resourcePolicyInfraDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
