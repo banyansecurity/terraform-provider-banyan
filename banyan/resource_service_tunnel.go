@@ -206,22 +206,36 @@ func resourceServiceTunnelRead(ctx context.Context, d *schema.ResourceData, m in
 
 func resourceServiceTunnelDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	policy, ok := d.GetOk("policy")
-	if ok {
-		err := c.PolicyAttachment.Delete(policy.(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		err = c.ServiceTunnel.DeletePolicy(d.Id(), policy.(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
+	err := resourceServiceTunnelDetachPolicy(d, c)
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	err := c.ServiceTunnel.Delete(d.Id())
+	err = c.ServiceTunnel.Delete(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")
+	return
+}
+
+func resourceServiceTunnelDetachPolicy(d *schema.ResourceData, c *client.Holder) (err error) {
+	_, ok := d.GetOk("policy")
+	if !ok {
+		return nil
+	}
+	attachedPolicy, err := c.ServiceTunnel.GetPolicy(d.Id())
+	if err != nil {
+		return err
+	}
+	err = c.ServiceTunnel.DeletePolicy(d.Id(), attachedPolicy.PolicyID)
+	if err != nil {
+		return
+	}
+	// This may not be necessary after policy refactor
+	err = c.PolicyAttachment.Delete(attachedPolicy.PolicyID)
+	if err != nil {
+		return
+	}
 	return
 }
 
