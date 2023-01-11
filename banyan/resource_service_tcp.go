@@ -220,7 +220,7 @@ func expandTcpServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	}
 	spec = service.Spec{
 		Attributes:   attributes,
-		Backend:      expandTcpBackend(d),
+		Backend:      expandInfraBackend(d),
 		CertSettings: expandInfraCertSettings(d),
 		HTTPSettings: expandInfraHTTPSettings(d),
 		ClientCIDRs:  []service.ClientCIDRs{},
@@ -228,7 +228,7 @@ func expandTcpServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	return
 }
 
-func expandTcpBackend(d *schema.ResourceData) (backend service.Backend) {
+func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
 	var allowPatterns []service.BackendAllowPattern
 	domain := d.Get("domain").(string)
 	// build DNSOverrides

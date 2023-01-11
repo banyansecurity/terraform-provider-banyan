@@ -124,6 +124,11 @@ func SshSchema() map[string]*schema.Schema {
 			Description: "Creates an entry in the SSH config file using the Host keyword. Wildcards are supported such as \"192.168.*.?\"; default: <service name>",
 			Default:     "",
 		},
+		"backend_dns_override_for_domain": {
+			Type:        schema.TypeString,
+			Description: "Override DNS for service domain name with this value",
+			Optional:    true,
+		},
 		"client_banyanproxy_listen_port": {
 			Type:         schema.TypeInt,
 			Description:  "For SSH, banyanproxy uses stdin instead of a local port",

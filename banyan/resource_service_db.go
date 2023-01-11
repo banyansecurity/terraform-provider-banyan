@@ -105,6 +105,11 @@ func DbSchema() map[string]*schema.Schema {
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
 		},
+		"backend_dns_override_for_domain": {
+			Type:        schema.TypeString,
+			Description: "Override DNS for service domain name with this value",
+			Optional:    true,
+		},
 		"client_banyanproxy_listen_port": {
 			Type:         schema.TypeInt,
 			Description:  "Sets the listen port of the service for the end user Banyan app",
