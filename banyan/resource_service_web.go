@@ -102,7 +102,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 		},
 		"policy": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Policy ID to be attached to this service",
 		},
 		"cluster": {
