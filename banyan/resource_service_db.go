@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceServiceInfraDb() *schema.Resource {
+func resourceServiceDb() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource used for lifecycle management of database services. For more information on database services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/databases/)",
 		CreateContext: resourceServiceInfraDbCreate,

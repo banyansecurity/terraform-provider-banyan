@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceServiceInfraK8s() *schema.Resource {
+func resourceServiceK8s() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource used for lifecycle management of kubernetes services. For more information on kubernetes services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/k8s-api/)",
 		CreateContext: resourceServiceInfraK8sCreate,

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceServiceInfraRdp() *schema.Resource {
+func resourceServiceRdp() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource used for lifecycle management of microsoft remote desktop services. For more information on microsoft remote desktop services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/rdp-servers/)",
 		CreateContext: resourceServiceInfraRdpCreate,

@@ -12,7 +12,7 @@ import (
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
-func resourceServiceInfraSsh() *schema.Resource {
+func resourceServiceSsh() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource used for lifecycle management of SSH services. For more information on SSH services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/ssh-servers/)",
 		CreateContext: resourceServiceInfraSshCreate,

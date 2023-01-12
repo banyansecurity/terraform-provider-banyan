@@ -11,7 +11,7 @@ import (
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
-func resourceServiceInfraTcp() *schema.Resource {
+func resourceServiceTcp() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource used for lifecycle management of generic TCP services. For more information on generic TCP services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/tcp-services/)",
 		CreateContext: resourceServiceInfraTcpCreate,
