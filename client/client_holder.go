@@ -30,8 +30,8 @@ type Holder struct {
 }
 
 // NewClientHolder returns a new client which is used to perform operations on all Banyan resources.
-func NewClientHolder(hostUrl string, refreshToken string, apiToken string) (client *Holder, err error) {
-	restClient, err := restclient.New(hostUrl, refreshToken, apiToken)
+func NewClientHolder(hostUrl string, apiKey string) (client *Holder, err error) {
+	restClient, err := restclient.New(hostUrl, apiKey)
 	if err != nil {
 		log.Fatalf("could not create client %s", err)
 	}

@@ -223,27 +223,6 @@ func expandInfraFrontendAddresses(d *schema.ResourceData) (frontendAddresses []s
 	return
 }
 
-func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
-	var allowPatterns []service.BackendAllowPattern
-	httpConnect := false
-	_, ok := d.GetOk("http_connect")
-	if ok {
-		httpConnect = d.Get("http_connect").(bool)
-	}
-	if httpConnect {
-		allowPatterns = []service.BackendAllowPattern{{}}
-	}
-	backend = service.Backend{
-		Target:        expandInfraTarget(d, httpConnect),
-		HTTPConnect:   httpConnect,
-		ConnectorName: d.Get("connector").(string),
-		DNSOverrides:  map[string]string{},
-		AllowPatterns: allowPatterns,
-		Whitelist:     []string{}, // deprecated
-	}
-	return
-}
-
 func expandInfraTarget(d *schema.ResourceData, httpConnect bool) (target service.Target) {
 	// if http_connect, need to set Name to "" and Port to ""
 	name := d.Get("backend_domain").(string)

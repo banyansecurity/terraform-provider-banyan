@@ -61,7 +61,7 @@ resource "banyan_policy_tunnel" "example" {
 
 Required:
 
-- `roles` (Set of String) Roles that all have the access rights given by rules
+- `roles` (Set of String) Role names to include 
 - `trust_level` (String) The trust level of the end user device, must be one of: "High", "Medium", "Low", or ""
 
 Optional:
@@ -73,8 +73,8 @@ Optional:
 
 Optional:
 
-- `allow` (Block List) Roles that all have the access rights given by rules (see [below for nested schema](#nestedblock--access--l4_access--allow))
-- `deny` (Block List) Roles that all have the access rights given by rules (see [below for nested schema](#nestedblock--access--l4_access--deny))
+- `allow` (Block List) Role names to include  (see [below for nested schema](#nestedblock--access--l4_access--allow))
+- `deny` (Block List) Role names to include  (see [below for nested schema](#nestedblock--access--l4_access--deny))
 
 <a id="nestedblock--access--l4_access--allow"></a>
 ### Nested Schema for `access.l4_access.allow`

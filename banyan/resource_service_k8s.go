@@ -24,18 +24,6 @@ func resourceServiceInfraK8s() *schema.Resource {
 	}
 }
 
-func resourceServiceInfraK8sDepreciated() *schema.Resource {
-	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of kubernetes services. Please utilize `banyan_service_k8s` instead",
-		CreateContext:      resourceServiceInfraK8sCreate,
-		ReadContext:        resourceServiceInfraK8sReadDepreciated,
-		UpdateContext:      resourceServiceInfraK8sUpdate,
-		DeleteContext:      resourceServiceDelete,
-		Schema:             K8sSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_k8s",
-	}
-}
-
 func K8sSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"id": {
@@ -140,46 +128,6 @@ func K8sSchema() map[string]*schema.Schema {
 	}
 }
 
-func K8sSchemaDepreciated() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"backend_dns_override_for_domain": {
-			Type:        schema.TypeString,
-			Description: "Override DNS for service domain name with this value",
-			Optional:    true,
-		},
-		"client_kube_cluster_name": {
-			Type:        schema.TypeString,
-			Description: "Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters",
-			Optional:    true,
-		},
-		"client_kube_ca_key": {
-			Type:        schema.TypeString,
-			Description: "CA Public Key generated during Kube-OIDC-Proxy deployment",
-			Optional:    true,
-		},
-		"cluster": {
-			Type:        schema.TypeString,
-			Description: "(Depreciated) Sets the cluster / shield for the service",
-			Computed:    true,
-			Optional:    true,
-			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
-			ForceNew:    true,
-		},
-		"policy": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Policy ID to be attached to this service",
-		},
-		"end_user_override": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "Allow the end user to override the backend_port for this service",
-		},
-	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
-}
-
 func resourceServiceInfraK8sCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	err := setCluster(d, m)
 	if err != nil {
@@ -219,33 +167,6 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	return resourceServiceInfraCommonRead(svc, d, m)
-}
-
-func resourceServiceInfraK8sReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	svc, err := c.Service.Get(d.Id())
-	if err != nil {
-		handleNotFoundError(d, err)
-		return
-	}
-	domain := *svc.CreateServiceSpec.Metadata.Tags.Domain
-	override := svc.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
-	err = d.Set("backend_dns_override_for_domain", override)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("client_kube_cluster_name", svc.CreateServiceSpec.Metadata.Tags.KubeClusterName)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("client_kube_ca_key", svc.CreateServiceSpec.Metadata.Tags.KubeCaKey)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	// trick to allow this key to stay in the schema
-	err = d.Set("policy", nil)
-	return
 }
 
 func resourceServiceInfraK8sUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {

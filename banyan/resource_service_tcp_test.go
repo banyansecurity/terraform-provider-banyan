@@ -56,23 +56,6 @@ func TestSchemaServiceInfraTcp_tcp_conn(t *testing.T) {
 	AssertCreateServiceEqual(t, svc_obj, ref_obj)
 }
 
-func TestAccService_tcp_depr(t *testing.T) {
-	var bnnService service.GetServiceSpec
-	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccService_tcp_depr_create(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_tcp.example", &bnnService),
-				),
-			},
-		},
-	})
-}
-
 func TestAccService_tcp(t *testing.T) {
 	var bnnService service.GetServiceSpec
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -94,21 +77,6 @@ func TestAccService_tcp(t *testing.T) {
 			},
 		},
 	})
-}
-
-// Returns terraform configuration for a typical k8s service
-func testAccService_tcp_depr_create(name string) string {
-	return fmt.Sprintf(`
-resource "banyan_service_infra_tcp" "example" {
-  name        = "%s-tcp"
-  description = "some tcp service description"
-  access_tier   = "us-west1"
-  domain      = "%s-tcp.corp.com"
-  backend_domain = "%s-tcp.internal"
-  backend_port = 5673
-  client_banyanproxy_listen_port = 5673
-}
-`, name, name, name)
 }
 
 func testAccService_tcp_create(name string) string {

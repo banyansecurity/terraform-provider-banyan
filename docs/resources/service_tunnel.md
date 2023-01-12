@@ -7,7 +7,7 @@ description: |-
 
 # banyan_service_tunnel (Resource)
 
-Resource used for lifecycle management of service tunnels. In order to properly function this resource must be utilized with the banyan_accesstier resource or [banyan_accesstier2 terraform registry modules](https://registry.terraform.io/modules/banyansecurity/banyan-accesstier2). Please see the example below and in the terraform modules for the respective cloud provider. For more information on service tunnels see the documentation https://docs.banyansecurity.io/docs/feature-guides/service-tunnels/
+Resource used for lifecycle management of service tunnels. In order to properly function this resource must be utilized with the banyan_accesstier resource or banyan_accesstier2 terraform registry modules. Please see the example below and in the terraform modules for the respective cloud provider. For more information on service tunnels see the documentation https://docs.banyansecurity.io/docs/feature-guides/service-tunnels/
 
 ## Example Usage
 ```terraform
@@ -28,10 +28,10 @@ resource "banyan_service_tunnel" "example" {
   name         = "example-anyone-high"
   description  = "tunnel allowing anyone with a high trust level"
   access_tiers = [banyan_accesstier.example.name]
-  policy       = banyan_policy_infra.anyone-high.id
+  policy       = banyan_policy_tunnel.anyone-high.id
 }
 
-resource "banyan_policy_infra" "anyone-high" {
+resource "banyan_policy_tunnel" "anyone-high" {
   name        = "allow anyone"
   description = "${banyan_accesstier.example.name} allow"
   access {

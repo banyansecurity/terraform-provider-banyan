@@ -25,18 +25,6 @@ func resourceServiceInfraTcp() *schema.Resource {
 	}
 }
 
-func resourceServiceInfraTcpDepreciated() *schema.Resource {
-	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of generic TCP services. Please utilize `banyan_service_tcp` instead",
-		CreateContext:      resourceServiceInfraTcpCreate,
-		ReadContext:        resourceServiceInfraTcpReadDepreciated,
-		UpdateContext:      resourceServiceInfraTcpUpdate,
-		DeleteContext:      resourceServiceDelete,
-		Schema:             TcpSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_tcp",
-	}
-}
-
 func TcpSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"id": {
@@ -122,6 +110,11 @@ func TcpSchema() map[string]*schema.Schema {
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
 		},
+		"backend_dns_override_for_domain": {
+			Type:        schema.TypeString,
+			Description: "Override DNS for service domain name with this value",
+			Optional:    true,
+		},
 		"client_banyanproxy_listen_port": {
 			Type:         schema.TypeInt,
 			Description:  "Sets the listen port of the service for the end user Banyan app",
@@ -151,45 +144,6 @@ func TcpSchema() map[string]*schema.Schema {
 	}
 }
 
-func TcpSchemaDepreciated() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"client_banyanproxy_allowed_domains": {
-			Type:        schema.TypeSet,
-			Description: "Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity",
-			Optional:    true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-			Optional:    true,
-			Default:     false,
-		},
-		"cluster": {
-			Type:        schema.TypeString,
-			Description: "(Depreciated) Sets the cluster / shield for the service",
-			Computed:    true,
-			Optional:    true,
-			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
-			ForceNew:    true,
-		},
-		"policy": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Policy ID to be attached to this service",
-		},
-		"end_user_override": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Allow the end user to override the backend_port for this service",
-		},
-	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
-}
-
 func resourceServiceInfraTcpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	err := setCluster(d, m)
 	if err != nil {
@@ -211,6 +165,12 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 		handleNotFoundError(d, err)
 		return
 	}
+	domain := *svc.CreateServiceSpec.Metadata.Tags.Domain
+	override := svc.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	err = d.Set("backend_dns_override_for_domain", override)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
 	if err != nil {
 		return diag.FromErr(err)
@@ -224,24 +184,6 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	return
-}
-
-func resourceServiceInfraTcpReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	id := d.Id()
-	svc, err := c.Service.Get(id)
-	if err != nil {
-		handleNotFoundError(d, err)
-		return
-	}
-	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	// trick to allow this key to stay in the schema
-	err = d.Set("policy", nil)
 	return
 }
 
@@ -266,7 +208,52 @@ func TcpFromState(d *schema.ResourceData) (svc service.CreateService) {
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
 		Type:       "origin",
-		Spec:       expandInfraServiceSpec(d),
+		Spec:       expandTcpServiceSpec(d),
+	}
+	return
+}
+
+func expandTcpServiceSpec(d *schema.ResourceData) (spec service.Spec) {
+	attributes, err := expandInfraAttributes(d)
+	if err != nil {
+		return
+	}
+	spec = service.Spec{
+		Attributes:   attributes,
+		Backend:      expandInfraBackend(d),
+		CertSettings: expandInfraCertSettings(d),
+		HTTPSettings: expandInfraHTTPSettings(d),
+		ClientCIDRs:  []service.ClientCIDRs{},
+	}
+	return
+}
+
+func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
+	var allowPatterns []service.BackendAllowPattern
+	domain := d.Get("domain").(string)
+	// build DNSOverrides
+	DNSOverrides := map[string]string{}
+	backendOverride, ok := d.GetOk("backend_dns_override_for_domain")
+	if ok {
+		DNSOverrides = map[string]string{
+			domain: backendOverride.(string),
+		}
+	}
+	httpConnect := false
+	_, ok = d.GetOk("http_connect")
+	if ok {
+		httpConnect = d.Get("http_connect").(bool)
+	}
+	if httpConnect {
+		allowPatterns = []service.BackendAllowPattern{{}}
+	}
+	backend = service.Backend{
+		Target:        expandInfraTarget(d, httpConnect),
+		DNSOverrides:  DNSOverrides,
+		HTTPConnect:   httpConnect,
+		ConnectorName: d.Get("connector").(string),
+		AllowPatterns: allowPatterns,
+		Whitelist:     []string{}, // deprecated
 	}
 	return
 }

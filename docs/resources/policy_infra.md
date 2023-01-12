@@ -41,7 +41,7 @@ resource "banyan_policy_infra" "example" {
 
 Required:
 
-- `roles` (Set of String) Roles that all have the access rights given by rules
+- `roles` (Set of String) Role names to include 
 - `trust_level` (String) The trust level of the end user device, must be one of: "High", "Medium", "Low", or ""
 
 

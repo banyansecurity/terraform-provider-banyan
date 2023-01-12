@@ -8,36 +8,26 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceServiceInfraRdp() *schema.Resource {
+// Schema for the service resource. For more information on Banyan services, see the documentation
+func resourceServiceInfraSsh() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Resource used for lifecycle management of microsoft remote desktop services. For more information on microsoft remote desktop services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/rdp-servers/)",
-		CreateContext: resourceServiceInfraRdpCreate,
-		ReadContext:   resourceServiceInfraRdpRead,
-		UpdateContext: resourceServiceInfraRdpUpdate,
+		Description:   "Resource used for lifecycle management of SSH services. For more information on SSH services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/ssh-servers/)",
+		CreateContext: resourceServiceInfraSshCreate,
+		ReadContext:   resourceServiceInfraSshRead,
+		UpdateContext: resourceServiceInfraSshUpdate,
 		DeleteContext: resourceServiceDelete,
-		Schema:        RdpSchema(),
+		Schema:        SshSchema(),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func resourceServiceInfraRdpDepreciated() *schema.Resource {
-	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize `banyan_service_rdp` instead",
-		CreateContext:      resourceServiceInfraRdpCreate,
-		ReadContext:        resourceServiceInfraRdpReadDepreciated,
-		UpdateContext:      resourceServiceInfraRdpUpdate,
-		DeleteContext:      resourceServiceDelete,
-		Schema:             RdpSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_rdp",
-	}
-}
-
-func RdpSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
+func SshSchema() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
 		"id": {
 			Type:        schema.TypeString,
 			Description: "Id of the service in Banyan",
@@ -121,114 +111,89 @@ func RdpSchema() map[string]*schema.Schema {
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
 		},
+		"client_ssh_auth": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Specifies which certificates - TRUSTCERT | SSHCERT | BOTH - should be used when the user connects to this service; default: TRUSTCERT",
+			ValidateFunc: validation.StringInSlice([]string{"TRUSTCERT", "SSHCERT", "BOTH"}, false),
+			Default:      "TRUSTCERT",
+		},
+		"client_ssh_host_directive": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Creates an entry in the SSH config file using the Host keyword. Wildcards are supported such as \"192.168.*.?\"; default: <service name>",
+			Default:     "",
+		},
+		"backend_dns_override_for_domain": {
+			Type:        schema.TypeString,
+			Description: "Override DNS for service domain name with this value",
+			Optional:    true,
+		},
 		"client_banyanproxy_listen_port": {
 			Type:         schema.TypeInt,
-			Description:  "Sets the listen port of the service for the end user Banyan app",
+			Description:  "For SSH, banyanproxy uses stdin instead of a local port",
 			Optional:     true,
 			ValidateFunc: validatePort(),
 		},
 		"http_connect": {
 			Type:        schema.TypeBool,
-			Description: "Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway",
+			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
 			Optional:    true,
 			Default:     false,
 		},
-		"end_user_override": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "Allow the end user to override the backend_port for this service",
-		},
 	}
+	return s
 }
 
-func RdpSchemaDepreciated() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"policy": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Policy ID to be attached to this service",
-		},
-		"cluster": {
-			Type:        schema.TypeString,
-			Description: "(Depreciated) Sets the cluster / shield for the service",
-			Computed:    true,
-			Optional:    true,
-			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
-			ForceNew:    true,
-		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway",
-			Optional:    true,
-			Default:     false,
-		},
-		"end_user_override": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "Allow the end user to override the backend_port for this service",
-		},
-	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
-}
-
-func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraSshCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	err := setCluster(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	svc := RdpFromState(d)
+	svc := SshFromState(d)
 	diagnostics = resourceServiceCreate(svc, d, m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-	return resourceServiceInfraRdpRead(ctx, d, m)
+	return resourceServiceInfraSshRead(ctx, d, m)
 }
 
-func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	svc, err := c.Service.Get(d.Id())
+	id := d.Id()
+	svc, err := c.Service.Get(id)
 	if err != nil {
 		handleNotFoundError(d, err)
 		return
 	}
-	err = d.Set("end_user_override", svc.CreateServiceSpec.Metadata.Tags.AllowUserOverride)
+	err = d.Set("client_ssh_auth", svc.CreateServiceSpec.Metadata.Tags.SSHServiceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.HTTPConnect)
+	err = d.Set("client_ssh_host_directive", svc.CreateServiceSpec.Metadata.Tags.SSHHostDirective)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	return resourceServiceInfraCommonRead(svc, d, m)
-}
-
-func resourceServiceInfraRdpReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	svc, err := c.Service.Get(d.Id())
+	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
 	if err != nil {
-		handleNotFoundError(d, err)
-		return
+		return diag.FromErr(err)
 	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	// trick to allow this key to stay in the schema
-	err = d.Set("policy", nil)
 	return
 }
 
-func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	svc := RdpFromState(d)
+func resourceServiceInfraSshUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	svc := SshFromState(d)
 	return resourceServiceUpdate(svc, d, m)
 }
 
-func RdpFromState(d *schema.ResourceData) (svc service.CreateService) {
+func SshFromState(d *schema.ResourceData) (svc service.CreateService) {
 	svc = service.CreateService{
 		Metadata: service.Metadata{
 			Name:        d.Get("name").(string),
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
-			Tags:        expandRDPMetatdataTags(d),
+			Tags:        expandSSHMetatdataTags(d),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
@@ -238,7 +203,7 @@ func RdpFromState(d *schema.ResourceData) (svc service.CreateService) {
 	return
 }
 
-func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
+func expandSSHMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) {
 	template := "TCP_USER"
 	userFacing := strconv.FormatBool(d.Get("available_in_app").(bool))
 	protocol := "tcp"
@@ -246,30 +211,26 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	portInt := d.Get("port").(int)
 	port := strconv.Itoa(portInt)
 	icon := d.Get("icon").(string)
-	serviceAppType := "RDP"
+	serviceAppType := "SSH"
 	descriptionLink := d.Get("description_link").(string)
-	allowUserOverride := d.Get("end_user_override").(bool)
-	banyanProxyMode := "TCP"
-	httpConnect, ok := d.GetOk("http_connect")
-	if ok {
-		if httpConnect.(bool) {
-			banyanProxyMode = "RDPGATEWAY"
-		}
-	}
-	alpInt := d.Get("client_banyanproxy_listen_port").(int)
-	appListenPort := strconv.Itoa(alpInt)
+	sshServiceType := d.Get("client_ssh_auth").(string)
+	sshHostDirective := d.Get("client_ssh_host_directive").(string)
+	writeSSHConfig := true
+	sshChainMode := d.Get("http_connect").(bool)
+
 	metadatatags = service.Tags{
-		Template:          &template,
-		UserFacing:        &userFacing,
-		Protocol:          &protocol,
-		Domain:            &domain,
-		Port:              &port,
-		Icon:              &icon,
-		ServiceAppType:    &serviceAppType,
-		BanyanProxyMode:   &banyanProxyMode,
-		AppListenPort:     &appListenPort,
-		AllowUserOverride: &allowUserOverride,
-		DescriptionLink:   &descriptionLink,
+		Template:         &template,
+		UserFacing:       &userFacing,
+		Protocol:         &protocol,
+		Domain:           &domain,
+		Port:             &port,
+		Icon:             &icon,
+		ServiceAppType:   &serviceAppType,
+		DescriptionLink:  &descriptionLink,
+		SSHServiceType:   &sshServiceType,
+		WriteSSHConfig:   &writeSSHConfig,
+		SSHChainMode:     &sshChainMode,
+		SSHHostDirective: &sshHostDirective,
 	}
 	return
 }
