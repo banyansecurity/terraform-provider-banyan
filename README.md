@@ -5,39 +5,23 @@ The Banyan Terraform Provider contains resources used to automate zero trust net
 
 For more information visit the [Banyan website](https://www.banyansecurity.io/) or the [Banyan documentation](https://docs.banyansecurity.io/docs/)
 
+## Important Note about API key scope
+`ServiceAuthor` and `PolicyAuthor` limit the API key permissions to `services` and `policies` respectively. These narrowed API key scopes can be used to delegate service and policy management to teams or CI systems.
+
+An `Admin` scope API key will have permission to create, modify, or destroy any resource which is available in terraform. An `Admin` scope
+API key is *required* in order to manage an access tier, connector, or service tunnel.
+
+`access_tier` and `connector` API key scopes are required by the *launch configuration* of access tiers and connectors. Terraform is able to provision `access_tier` and `connector` API keys which are used by access tier and connector instances. The  [access tier](https://registry.terraform.io/modules/banyansecurity/banyan-accesstier2) and [connector](https://registry.terraformio/modules/banyansecurity/banyan-connector) terraform modules use these API key scopes to launch access tier and connector instances.
+
 Update Notes
 -----------
 
-For the 1.0.0 release, some resources add attributes have been simplified and abstracted away. This refactor includes new resources as well as resource schemas which resemble the 1.0.0 release as much as possible.
-
-After feedback and usage of the provider it was determined to consolidate and simplify naming and parameters for some resources.
-
-Most notable are the service and policy resources.
-* The `banyan_service` resources now have a `policy` attribute which replaces the `banyan_policy_attachment` resource
-* The `banyan_service` resources no longer require a `cluster` attribute. This value will be determined automatically by the `access_tier` or `connector` attribute
-* The cluster parameter is no longer needed for any resources and should only be set for backwards compatibility (i.e. upgrading pre 0.9.0 terraform code)
-* The `banyan_service` resources no longer requires a `cluster` attribute. This value will be determined by the `access_tier` or `connector` attribut
-* `banyan_policy_attachment` has been depreciated. This now exists as the `policy` attribute for the service resourcee
-*  The `banyan_service_infra` resources have been depreciated and renamed. It is safe to modify existing terraform code to utilize the new shorted name, and to add the id of the policy to attach to the `policy` attribute. see the upgraded resources examples. This would effectively recreate the services with the new format and remove the services and policy attachments created in the old format.
-* `banyan_policy_attachment` has been depreciated. This now exists as the `policy` attribute for the service resource
-
-The corresponding command center release brings with it new changes to the access tier which are reflected in this release of the terraform provider
-
-Be sure to check out the new accesstier2 modules for your cloud provider on the [Terraform Registry](https://registry.terraform.io/providers/banyansecurity/banyan/1.0.0)
-
-View this release in the [Terraform Registry](https://registry.terraform.io/providers/banyansecurity/banyan/1.0.0)
-
-## What's Changed
-* Major refactor of the provider and client providing much cleaner and simpler code
-* Added support for service tunnel
-* Accesstier2 support
-* Connector improvements
-* Documentation and examples improvements
-* Vetter resource lifecycle management
-* Acceptance testing against the Banyan API
-* Various additional resources and attributes to align with the latest Banyan features
-* New resource `bayan_policy_tunnel` for use with `banyan_service_tunnel`
-* Hotfixes and docs updates for 0.9.X versions
+* `policy` is no longer a required attribute of any service type.
+* all services containing `banyan_service_infra_` in the name were depreciated in v1.0.0. They have been removed from the provider in this release and were replaces by the current service resources.
+* `banyan_policy_attachment` was deprecated in v1.0.0 and has been removed from the provider in this release. The new service resources support inline policy attachment.
+* `banyan_service_k8s` now has `http_connect` always enabled and this parameter is no longer configurable, matching the UI.
+* various bug fixes and improvements
+* updated documentation and examples
 
 
 Maintainers
