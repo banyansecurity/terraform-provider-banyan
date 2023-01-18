@@ -16,6 +16,9 @@ func resourcePolicyInfra() *schema.Resource {
 		ReadContext:   resourcePolicyInfraRead,
 		UpdateContext: resourcePolicyInfraUpdate,
 		DeleteContext: resourcePolicyInfraDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -41,7 +44,7 @@ func resourcePolicyInfra() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"roles": {
 							Type:        schema.TypeSet,
-							Description: "Roles that all have the access rights given by rules",
+							Description: "Role names to include ",
 							MinItems:    1,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,

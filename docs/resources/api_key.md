@@ -10,6 +10,14 @@ description: |-
 
 The API key resource manages the lifecycle of API keys. API keys are used to provide authentication inside various permissions scopes. For more information on API keys see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/command-center/api-keys/)
 
+## Important Note about API key scope
+`ServiceAuthor` and `PolicyAuthor` limit the API key permissions to `services` and `policies` respectively. These narrowed API key scopes can be used to delegate service and policy management to teams or CI systems.
+
+An `Admin` scope API key will have permission to create, modify, or destroy any resource which is available in terraform. An `Admin` scope
+API key is *required* in order to manage an access tier, connector, or service tunnel.
+
+`access_tier` and `connector` API key scopes are required by the *launch configuration* of access tiers and connectors. Terraform is able to provision `access_tier` and `connector` API keys which are used by access tier and connector instances. The  [access tier](https://registry.terraform.io/modules/banyansecurity/banyan-accesstier2) and [connector](https://registry.terraformio/modules/banyansecurity/banyan-connector) terraform modules use these API key scopes to launch access tier and connector instances.
+
 ## Example Usage
 
 ```terraform

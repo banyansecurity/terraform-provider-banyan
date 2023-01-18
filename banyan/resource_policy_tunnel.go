@@ -20,6 +20,9 @@ func resourcePolicyTunnel() *schema.Resource {
 		UpdateContext: resourcePolicyTunnelUpdate,
 		DeleteContext: resourcePolicyTunnelDelete,
 		Schema:        PolicyTunnelSchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -49,7 +52,7 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 				Schema: map[string]*schema.Schema{
 					"roles": {
 						Type:        schema.TypeSet,
-						Description: "Roles that all have the access rights given by rules",
+						Description: "Role names to include ",
 						MinItems:    1,
 						Elem: &schema.Schema{
 							Type: schema.TypeString,
@@ -71,7 +74,8 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 							Schema: map[string]*schema.Schema{
 								"allow": {
 									Type:        schema.TypeList,
-									Description: "Roles that all have the access rights given by rules",
+									Description: "Role names to include ",
+									MaxItems:    1,
 									Optional:    true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
@@ -105,7 +109,8 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 								},
 								"deny": {
 									Type:        schema.TypeList,
-									Description: "Roles that all have the access rights given by rules",
+									Description: "Role names to include ",
+									MaxItems:    1,
 									Optional:    true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{

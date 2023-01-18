@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"html"
+	"log"
 )
 
 const apiVersion = "api/v2"
@@ -29,6 +30,7 @@ type Client interface {
 	Delete(id string) (err error)
 	AttachPolicy(id string, post PolicyAttachmentPost) (created PolicyAttachmentInfo, err error)
 	DeletePolicy(tunID string, policyID string) (err error)
+	GetPolicy(id string) (policy PolicyAttachmentInfo, err error)
 }
 
 func (a *ServiceTunnel) Get(id string) (spec ServiceTunnelInfo, err error) {
@@ -91,13 +93,19 @@ func (a *ServiceTunnel) Delete(id string) (err error) {
 	return
 }
 
+// GetPolicy returns the policy attached to the service tunnel
 func (a *ServiceTunnel) GetPolicy(id string) (policy PolicyAttachmentInfo, err error) {
 	path := fmt.Sprintf("%s/%s/%s/security_policy", apiVersion, component, id)
+	var j PolicyResponse
 	resp, err := a.restClient.Read(apiVersion, component, id, path)
+	if err != nil {
+		return policy, nil
+	}
+	err = json.Unmarshal(resp, &j)
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(resp, &policy)
+	policy = j.Data
 	return
 }
 
@@ -109,6 +117,12 @@ func (a *ServiceTunnel) AttachPolicy(id string, post PolicyAttachmentPost) (crea
 	if err != nil {
 		return
 	}
+	// remove if there is a policy currently attached
+	currentAttached, err := a.GetPolicy(id)
+	if currentAttached.PolicyID != "" {
+		log.Printf("[INFO] Detaching previously attached policy from service tunnel")
+		a.DeletePolicy(id, currentAttached.PolicyID)
+	}
 	path := fmt.Sprintf("%s/%s/%s/security_policy", apiVersion, component, id)
 	resp, err := a.restClient.Create(apiVersion, component, body, path)
 	if err != nil {
@@ -116,6 +130,9 @@ func (a *ServiceTunnel) AttachPolicy(id string, post PolicyAttachmentPost) (crea
 	}
 	var j PolicyResponse
 	err = json.Unmarshal(resp, &j)
+	if err != nil {
+		return
+	}
 	created = j.Data
 	return
 }

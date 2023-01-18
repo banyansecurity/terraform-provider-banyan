@@ -30,6 +30,11 @@ func TestAccConnector_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPtr("banyan_connector.example", "id", &bnnConnector.ID),
 				),
 			},
+			{
+				ResourceName:      "banyan_connector.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -80,6 +85,11 @@ func TestAccConnector_tunnel(t *testing.T) {
 					resource.TestCheckResourceAttr("banyan_connector.example", "name", rName),
 					resource.TestCheckResourceAttrPtr("banyan_connector.example", "id", &bnnConnector.ID),
 				),
+			},
+			{
+				ResourceName:      "banyan_connector.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

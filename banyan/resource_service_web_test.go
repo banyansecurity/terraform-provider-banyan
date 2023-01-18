@@ -133,6 +133,11 @@ func TestAccService_required_web(t *testing.T) {
 					testAccCheckServiceAgainstJson(t, testAccService_basic_web_update_json(rName), &bnnService.ServiceID),
 				),
 			},
+			{
+				ResourceName:      "banyan_service_web.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -171,6 +176,11 @@ func TestAccService_optional_web(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_web.example", &bnnService),
 				),
+			},
+			{
+				ResourceName:      "banyan_service_web.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: fmt.Sprintf(`

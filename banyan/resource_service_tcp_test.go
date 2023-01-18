@@ -12,27 +12,51 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestSchemaServiceInfraDb_database_at(t *testing.T) {
-	conn := map[string]interface{}{
-		"name":                           "database-conn",
-		"description":                    "pybanyan database-conn",
-		"cluster":                        "managed-cl-edge1",
-		"connector":                      "test-connector",
-		"domain":                         "test-database-conn.tdupnsan.getbnn.com",
-		"backend_domain":                 "10.10.1.123",
-		"backend_port":                   3306,
-		"client_banyanproxy_listen_port": 9299,
+func TestSchemaServiceInfraTcp_tcp_at(t *testing.T) {
+	svc_tcp_at := map[string]interface{}{
+		"name":                           "tcp-at",
+		"description":                    "pybanyan tcp-at",
+		"cluster":                        "cluster1",
+		"access_tier":                    "gcp-wg",
+		"domain":                         "test-tcp-at.bar.com",
+		"allow_user_override":            true,
+		"backend_domain":                 "10.10.1.6",
+		"backend_port":                   6006,
+		"client_banyanproxy_listen_port": 9119,
 	}
+	d := schema.TestResourceDataRaw(t, TcpSchema(), svc_tcp_at)
+	svc_obj := TcpFromState(d)
 
-	d := schema.TestResourceDataRaw(t, DbSchema(), conn)
-	svc := DbFromState(d)
-	j, _ := ioutil.ReadFile("./specs/service_infra/database-conn.json")
+	json_spec, _ := ioutil.ReadFile("./specs/service_infra/tcp-at.json")
 	var ref_obj service.CreateService
-	_ = json.Unmarshal(j, &ref_obj)
-	AssertCreateServiceEqual(t, svc, ref_obj)
+	_ = json.Unmarshal(json_spec, &ref_obj)
+
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
 }
 
-func TestAccService_database(t *testing.T) {
+func TestSchemaServiceInfraTcp_tcp_conn(t *testing.T) {
+	svc_tcp_conn := map[string]interface{}{
+		"name":                           "tcp-conn",
+		"description":                    "pybanyan tcp-conn",
+		"cluster":                        "managed-cl-edge1",
+		"connector":                      "test-connector",
+		"domain":                         "test-tcp-conn.tdupnsan.getbnn.com",
+		"backend_domain":                 "10.10.1.100",
+		"backend_port":                   5000,
+		"client_banyanproxy_listen_port": 9118,
+		"allow_user_override":            true,
+	}
+	d := schema.TestResourceDataRaw(t, TcpSchema(), svc_tcp_conn)
+	svc_obj := TcpFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/service_infra/tcp-conn.json")
+	var ref_obj service.CreateService
+	_ = json.Unmarshal(json_spec, &ref_obj)
+
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+}
+
+func TestAccService_tcp(t *testing.T) {
 	var bnnService service.GetServiceSpec
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
@@ -40,70 +64,63 @@ func TestAccService_database(t *testing.T) {
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccService_database_create(rName),
+				Config: testAccService_tcp_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_db.example", &bnnService),
-					testAccCheckServiceAgainstJson(t, testAccService_database_create_json(rName), &bnnService.ServiceID),
+					testAccCheckExistingService("banyan_service_tcp.example", &bnnService),
+					testAccCheckServiceAgainstJson(t, testAccService_tcp_create_json(rName), &bnnService.ServiceID),
 				),
+			},
+			{
+				ResourceName:      "banyan_service_tcp.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-// Returns terraform configuration for a typical database service
-func testAccService_database_create(name string) string {
+func testAccService_tcp_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_db" "example" {
-  name        = "%s"
-  description = "some database service description"
-  description_link = "https://test.com"
+resource "banyan_service_tcp" "example" {
+  name        = "%s-tcp"
+  description = "some tcp service description"
   access_tier   = "us-west1"
-  domain      = "%s.us-west.mycompany.com"
-  backend_domain = "example-db.internal"
-  backend_port = 3306
-  policy = banyan_policy_infra.example.id
-}
-
-resource "banyan_policy_infra" "example" {
-  name        = "%s-pol"
-  description = "some infrastructure policy description"
-  access {
-    roles       = ["ANY"]
-    trust_level = "High"
-  }
+  domain      = "%s-tcp.corp.com"
+  backend_domain = "%s-tcp.internal"
+  backend_port = 5673
 }
 `, name, name, name)
 }
 
-func testAccService_database_create_json(name string) string {
+func testAccService_tcp_create_json(name string) string {
 	return fmt.Sprintf(`
 {
     "kind": "BanyanService",
     "apiVersion": "rbac.banyanops.com/v1",
     "type": "origin",
     "metadata": {
-        "name": "%s",
-        "description": "some database service description",
+        "name": "%s-tcp",
+        "description": "some tcp service description",
         "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
             "protocol": "tcp",
-            "domain": "%s.us-west.mycompany.com",
+            "domain": "%s-tcp.corp.com",
             "port": "8443",
             "icon": "",
-            "service_app_type": "DATABASE",
+            "service_app_type": "GENERIC",
             "banyanproxy_mode": "TCP",
             "app_listen_port": "0",
             "allow_user_override": true,
-            "description_link": "https://test.com",
-            "include_domains": []
+            "description_link": "",
+   			"include_domains": []
         }
     },
     "spec": {
         "attributes": {
             "tls_sni": [
-                "%s.us-west.mycompany.com"
+                "%s-tcp.corp.com"
             ],
             "frontend_addresses": [
                 {
@@ -120,20 +137,19 @@ func testAccService_database_create_json(name string) string {
         },
         "backend": {
             "target": {
-                "name": "example-db.internal",
-                "port": "3306",
+                "name": "%s-tcp.internal",
+                "port": "5673",
                 "tls": false,
                 "tls_insecure": false,
                 "client_certificate": false
             },
             "dns_overrides": {},
-            "whitelist": [], 
-            "http_connect": false,
+            "whitelist": [],
             "connector_name": ""
         },
         "cert_settings": {
             "dns_names": [
-                "%s.us-west.mycompany.com"
+                "%s-tcp.corp.com"
             ],
             "custom_tls_cert": {
                 "enabled": false,
@@ -182,13 +198,12 @@ func testAccService_database_create_json(name string) string {
                         "paths": [],
                         "mandatory_headers": []
                     }
-                ]
+                ]                
             },
             "headers": {}
-        },        
+        },
         "client_cidrs": []
     }
 }
-
-`, name, name, name, name)
+`, name, name, name, name, name)
 }

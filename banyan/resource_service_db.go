@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceServiceInfraDb() *schema.Resource {
+func resourceServiceDb() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource used for lifecycle management of database services. For more information on database services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/databases/)",
 		CreateContext: resourceServiceInfraDbCreate,
@@ -19,23 +19,103 @@ func resourceServiceInfraDb() *schema.Resource {
 		UpdateContext: resourceServiceInfraDbUpdate,
 		DeleteContext: resourceServiceDelete,
 		Schema:        DbSchema(),
-	}
-}
-
-func resourceServiceInfraDbDepreciated() *schema.Resource {
-	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of database services. Please utilize `banyan_service_db` instead",
-		CreateContext:      resourceServiceInfraDbCreate,
-		ReadContext:        resourceServiceInfraDbReadDepreciated,
-		UpdateContext:      resourceServiceInfraDbUpdate,
-		DeleteContext:      resourceServiceDelete,
-		Schema:             DbSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_db",
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
 func DbSchema() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
+	return map[string]*schema.Schema{
+		"id": {
+			Type:        schema.TypeString,
+			Description: "Id of the service in Banyan",
+			Computed:    true,
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
+			ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
+		},
+		"description": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Description of the service",
+		},
+		"description_link": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Link shown to the end user of the banyan app for this service",
+		},
+		"access_tier": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the access_tier which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"connector"},
+		},
+		"connector": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the connector which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"access_tier"},
+		},
+		"domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The external-facing network address for this service; ex. website.example.com",
+		},
+		"port": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Description:  "The external-facing port for this service",
+			Default:      8443,
+			ValidateFunc: validatePort(),
+		},
+		"backend_domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
+		},
+		"backend_port": {
+			Type:         schema.TypeInt,
+			Required:     true,
+			Description:  "The internal port where this service is hosted; set to 0 if using http_connect",
+			ValidateFunc: validatePort(),
+		},
+		"available_in_app": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Whether this service is available in the app for users with permission to access this service",
+		},
+		"icon": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
+		},
+		"cluster": {
+			Type:        schema.TypeString,
+			Description: "(Depreciated) Sets the cluster / shield for the service",
+			Computed:    true,
+			Optional:    true,
+			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
+			ForceNew:    true,
+		},
+		"backend_dns_override_for_domain": {
+			Type:        schema.TypeString,
+			Description: "Override DNS for service domain name with this value",
+			Optional:    true,
+		},
+		"client_banyanproxy_listen_port": {
+			Type:         schema.TypeInt,
+			Description:  "Sets the listen port of the service for the end user Banyan app",
+			Optional:     true,
+			ValidateFunc: validatePort(),
+		},
 		"client_banyanproxy_allowed_domains": {
 			Type:        schema.TypeSet,
 			Description: "Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity",
@@ -62,46 +142,6 @@ func DbSchema() map[string]*schema.Schema {
 			Description: "Allow the end user to override the backend_port for this service",
 		},
 	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
-}
-
-func DbSchemaDepreciated() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"client_banyanproxy_allowed_domains": {
-			Type:        schema.TypeSet,
-			Description: "Restrict which domains can be proxied through the banyanproxy; only used with Client Specified connectivity",
-			Optional:    true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
-			Optional:    true,
-			Default:     false,
-		},
-		"cluster": {
-			Type:        schema.TypeString,
-			Description: "(Depreciated) Sets the cluster / shield for the service",
-			Computed:    true,
-			Optional:    true,
-			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
-			ForceNew:    true,
-		},
-		"end_user_override": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "Allow the end user to override the backend_port for this service",
-		},
-		"policy": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Policy ID to be attached to this service",
-		},
-	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
 
 func resourceServiceInfraDbCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -137,27 +177,6 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 		return diag.FromErr(err)
 	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	return
-}
-
-func resourceServiceInfraDbReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	svc, err := c.Service.Get(d.Id())
-	if err != nil {
-		handleNotFoundError(d, err)
-		return
-	}
-	err = d.Set("client_banyanproxy_allowed_domains", svc.CreateServiceSpec.Metadata.Tags.IncludeDomains)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set(fmt.Sprintf("http_connect"), svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	// trick to allow this key to stay in the schema
-	err = d.Set("policy", nil)
 	return
 }
 

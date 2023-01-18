@@ -20,6 +20,9 @@ func resourcePolicyWeb() *schema.Resource {
 		UpdateContext: resourcePolicyWebUpdate,
 		DeleteContext: resourcePolicyWebDelete,
 		Schema:        PolicyWebSchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -49,7 +52,7 @@ func PolicyWebSchema() (s map[string]*schema.Schema) {
 				Schema: map[string]*schema.Schema{
 					"roles": {
 						Type:        schema.TypeSet,
-						Description: "Roles that all have the access rights given by rules",
+						Description: "Role names to include ",
 						MinItems:    1,
 						Elem: &schema.Schema{
 							Type: schema.TypeString,

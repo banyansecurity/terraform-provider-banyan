@@ -60,7 +60,7 @@ type Options struct {
 
 // Access describes the access rights for a set of roles.
 type Access struct {
-	// Roles is a list of roles that all have the access rights given by Rules.
+	// Roles is a list of Role names to include .
 	Roles []string `json:"roles"`
 	// Rules lists the access rights given to principals/subjects that have any of the corresponding Roles.
 	Rules `json:"rules"`

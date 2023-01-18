@@ -20,6 +20,9 @@ func resourceServiceWeb() *schema.Resource {
 		UpdateContext: resourceServiceWebUpdate,
 		DeleteContext: resourceServiceDelete,
 		Schema:        WebSchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -74,7 +77,6 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:        schema.TypeBool,
 			Description: "Use a Public CA-issued server certificate instead of a Private CA-issued one",
 			Optional:    true,
-			Default:     false,
 		},
 		"backend_domain": {
 			Type:        schema.TypeString,
@@ -92,17 +94,15 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:        schema.TypeBool,
 			Description: "Indicates whether the connection to the backend server uses TLS",
 			Optional:    true,
-			Default:     false,
 		},
 		"backend_tls_insecure": {
 			Type:        schema.TypeBool,
 			Description: "Indicates the connection to the backend should not validate the backend server TLS certificate",
 			Optional:    true,
-			Default:     false,
 		},
 		"policy": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Policy ID to be attached to this service",
 		},
 		"cluster": {
@@ -151,6 +151,14 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		return
 	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
+	err = d.Set("backend_tls", svc.CreateServiceSpec.Spec.Target.TLS)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("backend_tls_insecure", svc.CreateServiceSpec.Spec.Target.TLS)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 

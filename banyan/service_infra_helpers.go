@@ -138,14 +138,17 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.Target.Name)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	bpInt, _ := strconv.Atoi(svc.CreateServiceSpec.Spec.Backend.Target.Port)
-	err = d.Set("backend_port", bpInt)
-	if err != nil {
-		return diag.FromErr(err)
+	// TODO: refactor after service API refactor -- allows us to reuse this function for more services
+	if svc.CreateServiceSpec.Spec.Backend.HTTPConnect == false {
+		err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.Target.Name)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		bpInt, _ := strconv.Atoi(svc.CreateServiceSpec.Spec.Backend.Target.Port)
+		err = d.Set("backend_port", bpInt)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if svc.CreateServiceSpec.Metadata.Tags.AppListenPort != nil {
 		clientPortVal := *svc.CreateServiceSpec.Metadata.Tags.AppListenPort
@@ -216,27 +219,6 @@ func expandInfraFrontendAddresses(d *schema.ResourceData) (frontendAddresses []s
 			CIDR: "",
 			Port: strconv.Itoa(d.Get("port").(int)),
 		},
-	}
-	return
-}
-
-func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
-	var allowPatterns []service.BackendAllowPattern
-	httpConnect := false
-	_, ok := d.GetOk("http_connect")
-	if ok {
-		httpConnect = d.Get("http_connect").(bool)
-	}
-	if httpConnect {
-		allowPatterns = []service.BackendAllowPattern{{}}
-	}
-	backend = service.Backend{
-		Target:        expandInfraTarget(d, httpConnect),
-		HTTPConnect:   httpConnect,
-		ConnectorName: d.Get("connector").(string),
-		DNSOverrides:  map[string]string{},
-		AllowPatterns: allowPatterns,
-		Whitelist:     []string{}, // deprecated
 	}
 	return
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceServiceInfraRdp() *schema.Resource {
+func resourceServiceRdp() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource used for lifecycle management of microsoft remote desktop services. For more information on microsoft remote desktop services see the [documentation](https://docs.banyansecurity.io/docs/feature-guides/infrastructure/rdp-servers/)",
 		CreateContext: resourceServiceInfraRdpCreate,
@@ -18,46 +18,84 @@ func resourceServiceInfraRdp() *schema.Resource {
 		UpdateContext: resourceServiceInfraRdpUpdate,
 		DeleteContext: resourceServiceDelete,
 		Schema:        RdpSchema(),
-	}
-}
-
-func resourceServiceInfraRdpDepreciated() *schema.Resource {
-	return &schema.Resource{
-		Description:        "(Depreciated) Resource used for lifecycle management of microsoft remote desktop services. Please utilize `banyan_service_rdp` instead",
-		CreateContext:      resourceServiceInfraRdpCreate,
-		ReadContext:        resourceServiceInfraRdpReadDepreciated,
-		UpdateContext:      resourceServiceInfraRdpUpdate,
-		DeleteContext:      resourceServiceDelete,
-		Schema:             RdpSchemaDepreciated(),
-		DeprecationMessage: "This resource has been renamed and will be depreciated from the provider in a future release. Please migrate this resource to banyan_service_rdp",
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
 func RdpSchema() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"policy": {
+	return map[string]*schema.Schema{
+		"id": {
+			Type:        schema.TypeString,
+			Description: "Id of the service in Banyan",
+			Computed:    true,
+		},
+		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Policy ID to be attached to this service",
+			Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
+			ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
 		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway",
+		"description": {
+			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     false,
+			Description: "Description of the service",
 		},
-		"end_user_override": {
+		"description_link": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Link shown to the end user of the banyan app for this service",
+		},
+		"access_tier": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the access_tier which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"connector"},
+		},
+		"connector": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Description:   "Name of the connector which will proxy requests to your service backend",
+			Default:       "",
+			ConflictsWith: []string{"access_tier"},
+		},
+		"domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The external-facing network address for this service; ex. website.example.com",
+		},
+		"backend_domain": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
+		},
+		"backend_port": {
+			Type:         schema.TypeInt,
+			Required:     true,
+			Description:  "The internal port where this service is hosted; set to 0 if using http_connect",
+			ValidateFunc: validatePort(),
+		},
+		"port": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Description:  "The external-facing port for this service",
+			Default:      8443,
+			ValidateFunc: validatePort(),
+		},
+		"available_in_app": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
-			Description: "Allow the end user to override the backend_port for this service",
+			Description: "Whether this service is available in the app for users with permission to access this service",
 		},
-	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
-}
-
-func RdpSchemaDepreciated() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
+		"icon": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
+		},
 		"policy": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -71,6 +109,17 @@ func RdpSchemaDepreciated() map[string]*schema.Schema {
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
 		},
+		"backend_dns_override_for_domain": {
+			Type:        schema.TypeString,
+			Description: "Override DNS for service domain name with this value",
+			Optional:    true,
+		},
+		"client_banyanproxy_listen_port": {
+			Type:         schema.TypeInt,
+			Description:  "Sets the listen port of the service for the end user Banyan app",
+			Optional:     true,
+			ValidateFunc: validatePort(),
+		},
 		"http_connect": {
 			Type:        schema.TypeBool,
 			Description: "Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway",
@@ -84,7 +133,6 @@ func RdpSchemaDepreciated() map[string]*schema.Schema {
 			Description: "Allow the end user to override the backend_port for this service",
 		},
 	}
-	return combineSchema(s, resourceServiceInfraCommonSchema)
 }
 
 func resourceServiceInfraRdpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -111,20 +159,11 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	return resourceServiceInfraCommonRead(svc, d, m)
-}
-
-func resourceServiceInfraRdpReadDepreciated(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	svc, err := c.Service.Get(d.Id())
+	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.HTTPConnect)
 	if err != nil {
-		handleNotFoundError(d, err)
-		return
+		return diag.FromErr(err)
 	}
-	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	// trick to allow this key to stay in the schema
-	err = d.Set("policy", nil)
-	return
+	return resourceServiceInfraCommonRead(svc, d, m)
 }
 
 func resourceServiceInfraRdpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {

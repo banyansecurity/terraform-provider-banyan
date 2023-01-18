@@ -12,51 +12,50 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestSchemaServiceInfraTcp_tcp_at(t *testing.T) {
-	svc_tcp_at := map[string]interface{}{
-		"name":                           "tcp-at",
-		"description":                    "pybanyan tcp-at",
-		"cluster":                        "cluster1",
-		"access_tier":                    "gcp-wg",
-		"domain":                         "test-tcp-at.bar.com",
-		"allow_user_override":            true,
-		"backend_domain":                 "10.10.1.6",
-		"backend_port":                   6006,
-		"client_banyanproxy_listen_port": 9119,
-	}
-	d := schema.TestResourceDataRaw(t, TcpSchema(), svc_tcp_at)
-	svc_obj := TcpFromState(d)
-
-	json_spec, _ := ioutil.ReadFile("./specs/service_infra/tcp-at.json")
-	var ref_obj service.CreateService
-	_ = json.Unmarshal(json_spec, &ref_obj)
-
-	AssertCreateServiceEqual(t, svc_obj, ref_obj)
-}
-
-func TestSchemaServiceInfraTcp_tcp_conn(t *testing.T) {
-	svc_tcp_conn := map[string]interface{}{
-		"name":                           "tcp-conn",
-		"description":                    "pybanyan tcp-conn",
+func TestSchemaServiceInfraRdp_rdp_conn(t *testing.T) {
+	svc_rdp_conn := map[string]interface{}{
+		"name":                           "rdp-conn",
+		"description":                    "pybanyan rdp-conn",
 		"cluster":                        "managed-cl-edge1",
 		"connector":                      "test-connector",
-		"domain":                         "test-tcp-conn.tdupnsan.getbnn.com",
-		"backend_domain":                 "10.10.1.100",
-		"backend_port":                   5000,
-		"client_banyanproxy_listen_port": 9118,
-		"allow_user_override":            true,
+		"domain":                         "test-rdp-conn.tdupnsan.getbnn.com",
+		"backend_domain":                 "10.10.2.1",
+		"backend_port":                   3309,
+		"client_banyanproxy_listen_port": 9109,
 	}
-	d := schema.TestResourceDataRaw(t, TcpSchema(), svc_tcp_conn)
-	svc_obj := TcpFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_infra/tcp-conn.json")
+	d := schema.TestResourceDataRaw(t, RdpSchema(), svc_rdp_conn)
+	svc_obj := RdpFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/service_infra/rdp-conn.json")
 	var ref_obj service.CreateService
-	_ = json.Unmarshal(json_spec, &ref_obj)
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
 	AssertCreateServiceEqual(t, svc_obj, ref_obj)
 }
 
-func TestAccService_tcp_depr(t *testing.T) {
+func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
+	svc_rdp_collection := map[string]interface{}{
+		"name":                           "rdp-collection",
+		"description":                    "pybanyan rdp-collection",
+		"cluster":                        "managed-cl-edge1",
+		"connector":                      "test-connector",
+		"domain":                         "test-rdp-collection.tdupnsan.getbnn.com",
+		"http_connect":                   true,
+		"client_banyanproxy_listen_port": 9108,
+	}
+
+	d := schema.TestResourceDataRaw(t, RdpSchema(), svc_rdp_collection)
+	svc_obj := RdpFromState(d)
+
+	json_spec, _ := ioutil.ReadFile("./specs/service_infra/rdp-collection.json")
+	var ref_obj service.CreateService
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+}
+
+func TestAccService_infra_rdp(t *testing.T) {
 	var bnnService service.GetServiceSpec
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
@@ -64,90 +63,63 @@ func TestAccService_tcp_depr(t *testing.T) {
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccService_tcp_depr_create(rName),
+				Config: testAccService_infra_rdp_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_tcp.example", &bnnService),
+					testAccCheckExistingService("banyan_service_rdp.example", &bnnService),
+					testAccCheckServiceAgainstJson(t, testAccService_infra_rdp_create_json(rName), &bnnService.ServiceID),
 				),
 			},
-		},
-	})
-}
-
-func TestAccService_tcp(t *testing.T) {
-	var bnnService service.GetServiceSpec
-	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
-		Steps: []resource.TestStep{
 			{
-				Config: testAccService_tcp_create(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_tcp.example", &bnnService),
-					testAccCheckServiceAgainstJson(t, testAccService_tcp_create_json(rName), &bnnService.ServiceID),
-				),
+				ResourceName:      "banyan_service_rdp.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-// Returns terraform configuration for a typical k8s service
-func testAccService_tcp_depr_create(name string) string {
+// Returns terraform configuration for a typical rdp service
+func testAccService_infra_rdp_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_infra_tcp" "example" {
-  name        = "%s-tcp"
-  description = "some tcp service description"
-  access_tier   = "us-west1"
-  domain      = "%s-tcp.corp.com"
-  backend_domain = "%s-tcp.internal"
-  backend_port = 5673
-  client_banyanproxy_listen_port = 5673
+resource "banyan_service_rdp" "example" {
+  name           = "%s-rdp"
+  description    = "some RDP service description"
+  access_tier    = "us-west1"
+  domain         = "%s-rdp.corp.com"
+  backend_domain = "%s-rdp.internal"
+  backend_port   = 3389
 }
 `, name, name, name)
 }
 
-func testAccService_tcp_create(name string) string {
-	return fmt.Sprintf(`
-resource "banyan_service_infra_tcp" "example" {
-  name        = "%s-tcp"
-  description = "some tcp service description"
-  access_tier   = "us-west1"
-  domain      = "%s-tcp.corp.com"
-  backend_domain = "%s-tcp.internal"
-  backend_port = 5673
-}
-`, name, name, name)
-}
-
-func testAccService_tcp_create_json(name string) string {
+func testAccService_infra_rdp_create_json(name string) string {
 	return fmt.Sprintf(`
 {
     "kind": "BanyanService",
     "apiVersion": "rbac.banyanops.com/v1",
     "type": "origin",
     "metadata": {
-        "name": "%s-tcp",
-        "description": "some tcp service description",
+        "name": "%s-rdp",
+        "description": "some RDP service description",
         "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
             "protocol": "tcp",
-            "domain": "%s-tcp.corp.com",
+            "domain": "%s-rdp.corp.com",
             "port": "8443",
             "icon": "",
-            "service_app_type": "GENERIC",
+            "service_app_type": "RDP",
             "banyanproxy_mode": "TCP",
             "app_listen_port": "0",
             "allow_user_override": true,
-            "description_link": "",
-   			"include_domains": []
+            "description_link": ""
         }
     },
     "spec": {
         "attributes": {
             "tls_sni": [
-                "%s-tcp.corp.com"
+                "%s-rdp.corp.com"
             ],
             "frontend_addresses": [
                 {
@@ -164,8 +136,8 @@ func testAccService_tcp_create_json(name string) string {
         },
         "backend": {
             "target": {
-                "name": "%s-tcp.internal",
-                "port": "5673",
+                "name": "%s-rdp.internal",
+                "port": "3389",
                 "tls": false,
                 "tls_insecure": false,
                 "client_certificate": false
@@ -176,7 +148,7 @@ func testAccService_tcp_create_json(name string) string {
         },
         "cert_settings": {
             "dns_names": [
-                "%s-tcp.corp.com"
+                "%s-rdp.corp.com"
             ],
             "custom_tls_cert": {
                 "enabled": false,
@@ -225,10 +197,10 @@ func testAccService_tcp_create_json(name string) string {
                         "paths": [],
                         "mandatory_headers": []
                     }
-                ]                
+                ]
             },
             "headers": {}
-        },
+        },        
         "client_cidrs": []
     }
 }

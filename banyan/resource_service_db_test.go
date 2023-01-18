@@ -12,50 +12,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestSchemaServiceInfraRdp_rdp_conn(t *testing.T) {
-	svc_rdp_conn := map[string]interface{}{
-		"name":                           "rdp-conn",
-		"description":                    "pybanyan rdp-conn",
+func TestSchemaServiceInfraDb_database_at(t *testing.T) {
+	conn := map[string]interface{}{
+		"name":                           "database-conn",
+		"description":                    "pybanyan database-conn",
 		"cluster":                        "managed-cl-edge1",
 		"connector":                      "test-connector",
-		"domain":                         "test-rdp-conn.tdupnsan.getbnn.com",
-		"backend_domain":                 "10.10.2.1",
-		"backend_port":                   3309,
-		"client_banyanproxy_listen_port": 9109,
+		"domain":                         "test-database-conn.tdupnsan.getbnn.com",
+		"backend_domain":                 "10.10.1.123",
+		"backend_port":                   3306,
+		"client_banyanproxy_listen_port": 9299,
 	}
 
-	d := schema.TestResourceDataRaw(t, RdpSchema(), svc_rdp_conn)
-	svc_obj := RdpFromState(d)
-
-	json_spec, _ := ioutil.ReadFile("./specs/service_infra/rdp-conn.json")
+	d := schema.TestResourceDataRaw(t, DbSchema(), conn)
+	svc := DbFromState(d)
+	j, _ := ioutil.ReadFile("./specs/service_infra/database-conn.json")
 	var ref_obj service.CreateService
-	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
-
-	AssertCreateServiceEqual(t, svc_obj, ref_obj)
+	_ = json.Unmarshal(j, &ref_obj)
+	AssertCreateServiceEqual(t, svc, ref_obj)
 }
 
-func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
-	svc_rdp_collection := map[string]interface{}{
-		"name":                           "rdp-collection",
-		"description":                    "pybanyan rdp-collection",
-		"cluster":                        "managed-cl-edge1",
-		"connector":                      "test-connector",
-		"domain":                         "test-rdp-collection.tdupnsan.getbnn.com",
-		"http_connect":                   true,
-		"client_banyanproxy_listen_port": 9108,
-	}
-
-	d := schema.TestResourceDataRaw(t, RdpSchema(), svc_rdp_collection)
-	svc_obj := RdpFromState(d)
-
-	json_spec, _ := ioutil.ReadFile("./specs/service_infra/rdp-collection.json")
-	var ref_obj service.CreateService
-	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
-
-	AssertCreateServiceEqual(t, svc_obj, ref_obj)
-}
-
-func TestAccService_infra_rdp(t *testing.T) {
+func TestAccService_database(t *testing.T) {
 	var bnnService service.GetServiceSpec
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
@@ -63,58 +40,75 @@ func TestAccService_infra_rdp(t *testing.T) {
 		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccService_infra_rdp_create(rName),
+				Config: testAccService_database_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExistingService("banyan_service_infra_rdp.example", &bnnService),
-					testAccCheckServiceAgainstJson(t, testAccService_infra_rdp_create_json(rName), &bnnService.ServiceID),
+					testAccCheckExistingService("banyan_service_db.example", &bnnService),
+					testAccCheckServiceAgainstJson(t, testAccService_database_create_json(rName), &bnnService.ServiceID),
 				),
+			},
+			{
+				ResourceName:      "banyan_service_db.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-// Returns terraform configuration for a typical rdp service
-func testAccService_infra_rdp_create(name string) string {
+// Returns terraform configuration for a typical database service
+func testAccService_database_create(name string) string {
 	return fmt.Sprintf(`
-resource "banyan_service_infra_rdp" "example" {
-  name           = "%s-rdp"
-  description    = "some RDP service description"
-  access_tier    = "us-west1"
-  domain         = "%s-rdp.corp.com"
-  backend_domain = "%s-rdp.internal"
-  backend_port   = 3389
+resource "banyan_service_db" "example" {
+  name        = "%s"
+  description = "some database service description"
+  description_link = "https://test.com"
+  access_tier   = "us-west1"
+  domain      = "%s.us-west.mycompany.com"
+  backend_domain = "example-db.internal"
+  backend_port = 3306
+  policy = banyan_policy_infra.example.id
+}
+
+resource "banyan_policy_infra" "example" {
+  name        = "%s-pol"
+  description = "some infrastructure policy description"
+  access {
+    roles       = ["ANY"]
+    trust_level = "High"
+  }
 }
 `, name, name, name)
 }
 
-func testAccService_infra_rdp_create_json(name string) string {
+func testAccService_database_create_json(name string) string {
 	return fmt.Sprintf(`
 {
     "kind": "BanyanService",
     "apiVersion": "rbac.banyanops.com/v1",
     "type": "origin",
     "metadata": {
-        "name": "%s-rdp",
-        "description": "some RDP service description",
+        "name": "%s",
+        "description": "some database service description",
         "cluster": "cluster1",
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",
             "protocol": "tcp",
-            "domain": "%s-rdp.corp.com",
+            "domain": "%s.us-west.mycompany.com",
             "port": "8443",
             "icon": "",
-            "service_app_type": "RDP",
+            "service_app_type": "DATABASE",
             "banyanproxy_mode": "TCP",
             "app_listen_port": "0",
             "allow_user_override": true,
-            "description_link": ""
+            "description_link": "https://test.com",
+            "include_domains": []
         }
     },
     "spec": {
         "attributes": {
             "tls_sni": [
-                "%s-rdp.corp.com"
+                "%s.us-west.mycompany.com"
             ],
             "frontend_addresses": [
                 {
@@ -131,19 +125,20 @@ func testAccService_infra_rdp_create_json(name string) string {
         },
         "backend": {
             "target": {
-                "name": "%s-rdp.internal",
-                "port": "3389",
+                "name": "example-db.internal",
+                "port": "3306",
                 "tls": false,
                 "tls_insecure": false,
                 "client_certificate": false
             },
             "dns_overrides": {},
-            "whitelist": [],
+            "whitelist": [], 
+            "http_connect": false,
             "connector_name": ""
         },
         "cert_settings": {
             "dns_names": [
-                "%s-rdp.corp.com"
+                "%s.us-west.mycompany.com"
             ],
             "custom_tls_cert": {
                 "enabled": false,
@@ -199,5 +194,6 @@ func testAccService_infra_rdp_create_json(name string) string {
         "client_cidrs": []
     }
 }
-`, name, name, name, name, name)
+
+`, name, name, name, name)
 }

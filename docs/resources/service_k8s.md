@@ -31,25 +31,24 @@ resource "banyan_service_infra_k8s" "example" {
 
 ### Required
 
-- `backend_domain` (String) The internal network address where this service is hosted; ex. 192.168.1.2; set to "" if using http_connect
-- `backend_port` (Number) The internal port where this service is hosted; set to 0 if using http_connect
 - `domain` (String) The external-facing network address for this service; ex. website.example.com
 - `name` (String) Name of the service; use lowercase alphanumeric characters or "-"
-- `policy` (String) Policy ID to be attached to this service
 
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
 - `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
-- `client_banyanproxy_listen_port` (Number) Local listen port to be used by client proxy; if not specified, a random local port will be used
+- `client_banyanproxy_listen_port` (Number) Sets the listen port of the service for the end user Banyan app
 - `client_kube_ca_key` (String) CA Public Key generated during Kube-OIDC-Proxy deployment
 - `client_kube_cluster_name` (String) Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
 - `description_link` (String) Link shown to the end user of the banyan app for this service
+- `end_user_override` (Boolean) Allow the end user to override the backend_port for this service
 - `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
+- `policy` (String) Policy ID to be attached to this service
 - `port` (Number) The external-facing port for this service
 
 ### Read-Only
