@@ -16,7 +16,7 @@ The API key resource manages the lifecycle of API keys. API keys are used to pro
 An `Admin` scope API key will have permission to create, modify, or destroy any resource which is available in terraform. An `Admin` scope
 API key is *required* in order to manage an access tier, connector, or service tunnel.
 
-`access_tier` and `connector` API key scopes are required by the *launch configuration* of access tiers and connectors. Terraform is able to provision `access_tier` and `connector` API keys which are used by access tier and connector instances. The  [access tier](https://registry.terraform.io/modules/banyansecurity/banyan-accesstier2) and [connector](https://registry.terraformio/modules/banyansecurity/banyan-connector) terraform modules use these API key scopes to launch access tier and connector instances.
+`access_tier` and `connector` API key scopes are required by the *launch configuration* of access tiers and connectors. Terraform is able to provision `access_tier` and `connector` API keys which are used by access tier and connector instances. The  [access tier](https://registry.terraform.io/modules/banyansecurity/banyan-accesstier2) and [connector](https://registry.terraformio/modules/banyansecurity/banyan-connector) Terraform modules use these API key scopes to launch access tier and connector instances.
 
 ## Example Usage
 
