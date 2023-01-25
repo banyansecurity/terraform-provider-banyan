@@ -16,6 +16,7 @@ API key is *required* in order to manage an access tier, connector, or service t
 Update Notes
 -----------
 
+* all resources (except API keys) can now be imported using Terraform. Please see the [Terraform import documentation](https://developer.hashicorp.com/terraform/cli/import)
 * `policy` is no longer a required attribute of any service type.
 * all services containing `banyan_service_infra_` in the name were depreciated in v1.0.0. They have been removed from the provider in this release and were replaces by the current service resources.
 * `banyan_policy_attachment` was deprecated in v1.0.0 and has been removed from the provider in this release. The new service resources support inline policy attachment.
