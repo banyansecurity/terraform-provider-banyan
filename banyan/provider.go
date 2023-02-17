@@ -22,7 +22,7 @@ func Provider() *schema.Provider {
 			},
 			"api_key": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "An admin scoped API key",
 				DefaultFunc: schema.EnvDefaultFunc("BANYAN_API_KEY", nil),
 			},
