@@ -2,6 +2,7 @@ package policy
 
 import (
 	"encoding/json"
+	"fmt"
 	"html"
 	"log"
 	"net/url"
@@ -36,12 +37,28 @@ type Client interface {
 }
 
 func (p *policy) Get(id string) (spec GetPolicy, err error) {
-	spec, err = p.GetQuery("PolicyID", id)
-	return
+	specs, err := p.GetQuery([]KeyValue{
+		{Key: "policyID", Value: id},
+	})
+	if err != nil {
+		return spec, err
+	}
+	if len(specs) > 1 {
+		err = errors.New(fmt.Sprintf("more than one policy found with id %s", id))
+		return
+	}
+	return specs[0], nil
 }
 
 func (p *policy) Create(policy Object) (created GetPolicy, err error) {
 	log.Printf("[INFO] Creating policy %s", policy.Name)
+	existing, err := p.GetQuery([]KeyValue{
+		{Key: "policyName", Value: policy.Name},
+	})
+	if len(existing) > 0 {
+		err = errors.New(fmt.Sprintf("policy with name %s already exists", policy.Name))
+		return
+	}
 	path := "api/v1/insert_security_policy"
 	body, err := json.Marshal(policy)
 	if err != nil {
@@ -89,14 +106,16 @@ func (p *policy) Delete(id string) (err error) {
 	return
 }
 
-func (p *policy) GetQuery(key string, value string) (spec GetPolicy, err error) {
+func (p *policy) GetQuery(kvs []KeyValue) (uSpecs []GetPolicy, err error) {
 	path := "api/v1/security_policies"
 	myUrl, err := url.Parse(path)
 	if err != nil {
 		return
 	}
 	query := myUrl.Query()
-	query.Set(key, value)
+	for _, kv := range kvs {
+		query.Add(kv.Key, kv.Value)
+	}
 	resp, err := p.restClient.ReadQuery(component, query, path)
 	if err != nil {
 		return
@@ -110,30 +129,42 @@ func (p *policy) GetQuery(key string, value string) (spec GetPolicy, err error) 
 		err = errors.New("did not get policy")
 		return
 	}
-	if len(j) > 1 {
-		err = errors.New("got more than one policy")
-		return
-	}
-	htmlString := html.UnescapeString(j[0].Spec)
-	err = json.Unmarshal([]byte(htmlString), &j[0].UnmarshalledPolicy)
-	if err != nil {
-		return
-	}
-	spec = j[0]
+	uSpecs, err = unmarshalPolicySpecs(j)
 	return
 }
 
-// Need to add new API query parameters
-func (p *policy) GetName(name string) (spec GetPolicy, err error) {
-	specs, err := p.GetAll(name)
-	if err != nil {
-		return
+// helper function to escape html strings in policy specs
+func unmarshalPolicySpecs(specs []GetPolicy) (uSpecs []GetPolicy, err error) {
+	for i, s := range specs {
+		htmlString := html.UnescapeString(s.Spec)
+		err = json.Unmarshal([]byte(htmlString), &s.UnmarshalledPolicy)
+		if err != nil {
+			err = fmt.Errorf("failed to unmarshal policy spec at position %v:\n %#v", i, s)
+			return
+		}
+		uSpecs = append(uSpecs, s)
 	}
-	spec, err = findByName(name, specs)
 	return
 }
 
-func (p *policy) GetAll(name string) (specs []GetPolicy, err error) {
+func (p *policy) GetNameType(name string, sType string) (spec GetPolicy, err error) {
+	specs, err := p.GetQuery([]KeyValue{
+		{Key: "serviceType", Value: sType},
+		{Key: "policyName", Value: name},
+	})
+	if err != nil {
+		return
+	}
+	if len(specs) == 0 {
+		err = errors.New("did not get policy")
+	}
+	if len(specs) > 1 {
+		err = errors.New("multiple policies found")
+	}
+	return
+}
+
+func (p *policy) GetAll() (specs []GetPolicy, err error) {
 	path := "api/v1/security_policies"
 	myUrl, err := url.Parse(path)
 	if err != nil {
@@ -145,14 +176,5 @@ func (p *policy) GetAll(name string) (specs []GetPolicy, err error) {
 		return
 	}
 	err = json.Unmarshal(resp, &specs)
-	return
-}
-
-func findByName(name string, specs []GetPolicy) (spec GetPolicy, err error) {
-	for _, s := range specs {
-		if s.Name == name {
-			return s, nil
-		}
-	}
 	return
 }
