@@ -23,7 +23,7 @@ func TestSchemaPolicyTunnel_l4(t *testing.T) {
 						"cidrs":     []interface{}{"10.138.0.14/32", "10.138.0.11/32", "10.10.0.0/16"},
 						"protocols": []interface{}{"ALL"},
 						"ports":     []interface{}{"*"},
-						"fqdns":     []interface{}{"www.example.com"},
+						"fqdns":     []interface{}{},
 					},
 				},
 				"deny": []interface{}{
@@ -31,7 +31,7 @@ func TestSchemaPolicyTunnel_l4(t *testing.T) {
 						"cidrs":     []interface{}{"10.10.1.0/24", "10.10.2.0/24"},
 						"protocols": []interface{}{"TCP"},
 						"ports":     []interface{}{"22"},
-						"fqdns":     []interface{}{"www.deny.com"},
+						"fqdns":     []interface{}{},
 					},
 				},
 			},
@@ -112,11 +112,13 @@ func TestAccPolicy_tunnel_l4(t *testing.T) {
 					        cidrs = ["10.10.10.0/24"]
 					        protocols = ["UDP"]
 					        ports = ["80"]
+                            fqdns = ["www.example.com"]
 					      }
 					      deny {
 					        cidrs = ["10.10.11.0/24"]
 					        protocols = ["TCP"]
 					        ports = ["80"]
+							fqdns = ["www.deny.com"]
 					      }
 					    }
 					  }
@@ -170,7 +172,10 @@ func testAccPolicy_tunnel_l4_create_json(name string) string {
                                 ],
                                 "protocols": [
                                     "UDP"
-                                ]
+                                ],
+ 								"fqdns": [
+									"www.example.com"	
+								]
                             }
                         ],
                         "deny": [
@@ -183,7 +188,10 @@ func testAccPolicy_tunnel_l4_create_json(name string) string {
                                 ],
                                 "protocols": [
                                     "TCP"
-                                ]
+                                ],
+ 								"fqdns": [
+									"www.deny.com"	
+								]
                             }
                         ]
                     }
@@ -265,9 +273,6 @@ func testAccPolicy_tunnel_any_create_json(name string) string {
                                 "protocols": [
                                     "ALL"
                                 ]
-								"fqdns": [
-									"www.example.com"
-								]
                             }
                         ]
 					}

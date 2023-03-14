@@ -8,7 +8,7 @@ import (
 )
 
 func GetClientHolderForTest() (newClient *client.Holder, err error) {
-	newClient, err = client.NewClientHolder(os.Getenv("BANYAN_HOST"), "", os.Getenv("BANYAN_API_TOKEN"))
+	newClient, err = client.NewClientHolder(os.Getenv("BANYAN_HOST"), os.Getenv("BANYAN_KEY"))
 	if err != nil {
 		log.Fatal("Could not create the test client")
 	}

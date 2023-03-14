@@ -318,10 +318,13 @@ func expandL4Rules(m interface{}) (l4Rules []policy.L4Rule) {
 		if ports == nil {
 			ports = []string{"*"}
 		}
+		fqdns := convertSchemaSetToStringSlice(rule["fqdns"].(*schema.Set))
+
 		l4Rules = append(l4Rules, policy.L4Rule{
 			CIDRs:     cidrs,
 			Protocols: protocols,
 			Ports:     ports,
+			FQDNs:     fqdns,
 		})
 	}
 	return
@@ -358,6 +361,7 @@ func flattenL4Rules(l4Rules []policy.L4Rule) (flattened []interface{}) {
 			"cidrs":     rule.CIDRs,
 			"protocols": rule.Protocols,
 			"ports":     rule.Ports,
+			"fqdns":     rule.FQDNs,
 		})
 	}
 	return
