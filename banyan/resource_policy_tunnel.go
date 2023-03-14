@@ -104,6 +104,14 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 													Type: schema.TypeString,
 												},
 											},
+											"fqdns": {
+												Type:        schema.TypeSet,
+												Description: "Allowed FQDNs through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
+												},
+											},
 										},
 									},
 								},
@@ -134,6 +142,14 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 											"ports": {
 												Type:        schema.TypeSet,
 												Description: "Denied ports through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
+												},
+											},
+											"fqdns": {
+												Type:        schema.TypeSet,
+												Description: "Allowed FQDNs through the service tunnel",
 												Optional:    true,
 												Elem: &schema.Schema{
 													Type: schema.TypeString,

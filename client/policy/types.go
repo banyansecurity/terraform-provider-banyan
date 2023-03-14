@@ -109,6 +109,7 @@ type L4Rule struct {
 	CIDRs     []string `json:"cidrs,omitempty"`
 	Protocols []string `json:"protocols,omitempty"`
 	Ports     []string `json:"ports,omitempty"`
+	FQDNs     []string `json:"fqdns,omitempty"`
 }
 
 // Exception describes exceptional cases that bypass regular policy enforcement.
