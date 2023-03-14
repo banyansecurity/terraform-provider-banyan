@@ -23,4 +23,4 @@ jobs:
         env:
           TF_ACC: true
           BANYAN_API_KEY: ${{ secrets.BANYAN_API_KEY }}
-          BANYAN_HOST: https://net.banyanops.com
+          BANYAN_HOST: ${{ secrets.BANYAN_HOST }}
