@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+	"log"
+	"strings"
 )
 
 func resourcePolicyInfra() *schema.Resource {
@@ -138,13 +140,15 @@ func resourcePolicyInfraDelete(ctx context.Context, d *schema.ResourceData, m in
 	}
 	err = c.Policy.Detach(c.PolicyAttachment, resp.ID)
 	if err != nil {
-		diagnostics = diag.FromErr(err)
 		return
 	}
 	err = c.Policy.Delete(resp.ID)
 	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
+		if strings.Contains(err.Error(), "doesn't exist in org") {
+			log.Printf("[WARN] Removing policy %s from state because it no longer exists", resp.ID)
+		} else {
+			return diag.FromErr(err)
+		}
 	}
 	d.SetId("")
 	return

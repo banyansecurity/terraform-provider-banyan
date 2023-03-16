@@ -16,6 +16,11 @@ const (
 	ProtocolHTTP   = "HTTP"
 )
 
+type KeyValue struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 // Object represents the specification of a service populated by json.Unmarshal.
 type Object struct {
 	Kind       string `json:"kind"`
