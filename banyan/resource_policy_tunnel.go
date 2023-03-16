@@ -104,6 +104,14 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 													Type: schema.TypeString,
 												},
 											},
+											"fqdns": {
+												Type:        schema.TypeSet,
+												Description: "Allowed FQDNs through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
+												},
+											},
 										},
 									},
 								},
@@ -134,6 +142,14 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 											"ports": {
 												Type:        schema.TypeSet,
 												Description: "Denied ports through the service tunnel",
+												Optional:    true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
+												},
+											},
+											"fqdns": {
+												Type:        schema.TypeSet,
+												Description: "Allowed FQDNs through the service tunnel",
 												Optional:    true,
 												Elem: &schema.Schema{
 													Type: schema.TypeString,
@@ -302,10 +318,12 @@ func expandL4Rules(m interface{}) (l4Rules []policy.L4Rule) {
 		if ports == nil {
 			ports = []string{"*"}
 		}
+		fqdns := convertSchemaSetToStringSlice(rule["fqdns"].(*schema.Set))
 		l4Rules = append(l4Rules, policy.L4Rule{
 			CIDRs:     cidrs,
 			Protocols: protocols,
 			Ports:     ports,
+			FQDNs:     fqdns,
 		})
 	}
 	return
@@ -342,6 +360,7 @@ func flattenL4Rules(l4Rules []policy.L4Rule) (flattened []interface{}) {
 			"cidrs":     rule.CIDRs,
 			"protocols": rule.Protocols,
 			"ports":     rule.Ports,
+			"fqdns":     rule.FQDNs,
 		})
 	}
 	return
