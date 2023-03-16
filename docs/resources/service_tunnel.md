@@ -2,12 +2,12 @@
 page_title: "banyan_service_tunnel Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  Resource used for lifecycle management of service tunnels. In order to properly function this resource must be utilized with the banyanaccesstier resource or banyanaccesstier2 terraform registry modules. Please see the example below and in the terraform modules for the respective cloud provider. For more information on service tunnels see the documentation https://docs.banyansecurity.io/docs/feature-guides/service-tunnels/
+  Resource used for lifecycle management of service tunnels. In order to properly function this resource must be utilized with the banyanaccesstier resource or banyanaccesstier2 Terraform registry modules. Please see the example below and in the Terraform modules for the respective cloud provider. For more information on service tunnels see the documentation https://docs.banyansecurity.io/docs/feature-guides/service-tunnels/
 ---
 
 # banyan_service_tunnel (Resource)
 
-Resource used for lifecycle management of service tunnels. In order to properly function this resource must be utilized with the banyan_accesstier resource or banyan_accesstier2 terraform registry modules. Please see the example below and in the terraform modules for the respective cloud provider. For more information on service tunnels see the documentation https://docs.banyansecurity.io/docs/feature-guides/service-tunnels/
+Resource used for lifecycle management of service tunnels. In order to properly function this resource must be utilized with the banyan_accesstier resource or banyan_accesstier2 Terraform registry modules. Please see the example below and in the Terraform modules for the respective cloud provider. For more information on service tunnels see the documentation https://docs.banyansecurity.io/docs/feature-guides/service-tunnels/
 
 ## Example Usage
 ```terraform
