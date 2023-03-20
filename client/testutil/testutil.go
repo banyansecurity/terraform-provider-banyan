@@ -1,24 +1,12 @@
 package testutil
 
 import (
-	"log"
-	"net/url"
-	"os"
-
 	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"log"
 )
 
 func GetClientHolderForTest() (newClient *client.Holder, err error) {
-	envUrl, err := url.Parse(client.GetBanyanHostUrl())
-	if err != nil {
-		log.Println(err)
-		log.Fatal("Could not create the test client")
-		return
-	}
-	if envUrl.Scheme != "https" {
-		envUrl.Scheme = "https"
-	}
-	newClient, err = client.NewClientHolder(envUrl.String(), os.Getenv("BANYAN_API_TOKEN"))
+	newClient, err = client.NewClientHolder(client.GetBanyanHostUrl(), client.GetApiKey())
 	if err != nil {
 		log.Fatal("Could not create the test client")
 	}
