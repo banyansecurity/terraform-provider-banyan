@@ -9,7 +9,7 @@ import (
 )
 
 func GetClientHolderForTest() (newClient *client.Holder, err error) {
-	envUrl, err := url.Parse(os.Getenv("BANYAN_HOST"))
+	envUrl, err := url.Parse(client.GetBanyanHostUrl())
 	if err != nil {
 		log.Println(err)
 		log.Fatal("Could not create the test client")
