@@ -67,6 +67,12 @@ func AccessTierSchema() map[string]*schema.Schema {
 			Required:    true,
 			Description: "ID of the API key which is scoped to access tier",
 		},
+		"tunnel_enable_dns": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Enable DNS for Service Tunnels (needed to work properly with both private and public targets)",
+		},
 		"tunnel_connector_port": {
 			Type:         schema.TypeInt,
 			Optional:     true,
@@ -450,10 +456,9 @@ func expandTunnelConfigSatellite(d *schema.ResourceData) (expanded *accesstier.A
 }
 
 func expandTunnelConfigEndUser(d *schema.ResourceData) (expanded *accesstier.AccessTierTunnelInfoPost) {
-	_, ok := d.GetOk("tunnel_private_domains")
 	e := accesstier.AccessTierTunnelInfoPost{
 		UDPPortNumber: 51820,
-		DNSEnabled:    ok,
+		DNSEnabled:    d.Get("tunnel_enable_dns").(bool),
 		CIDRs:         convertSchemaSetToStringSlice(d.Get("tunnel_cidrs").(*schema.Set)),
 		Domains:       convertSchemaSetToStringSlice(d.Get("tunnel_private_domains").(*schema.Set)),
 	}
@@ -710,6 +715,10 @@ func flattenTunnelConfigEndUser(d *schema.ResourceData, at *accesstier.AccessTie
 		return
 	}
 	err = d.Set("tunnel_cidrs", at.TunnelEnduser.CIDRs)
+	if err != nil {
+		return
+	}
+	err = d.Set("tunnel_enable_dns", at.TunnelEnduser.DNSEnabled)
 	if err != nil {
 		return
 	}
