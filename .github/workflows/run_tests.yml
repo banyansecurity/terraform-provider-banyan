@@ -1,9 +1,11 @@
-name: pull_request
+name: run_tests
+
 on:
-  pull_request:
-    types: [push, force-push, opened, edited, synchronize, reopened]
+  push:
+    branches: [ "dev" ]
+
 jobs:
-  pull_request:
+  run_tests:
     runs-on: ubuntu-latest
     steps:
       -

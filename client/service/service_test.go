@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -10,32 +9,32 @@ import (
 )
 
 func Test_GetNonexistentService(t *testing.T) {
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
+	testhost := client.GetBanyanHostUrl()
+	apiKey := client.GetApiKey()
+	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
-	svc, err := client.Service.Get("hah")
+	svc, err := myClient.Service.Get("hah")
 	assert.NoError(t, err, "expected no error here")
 	assert.Equal(t, service.GetServiceSpec{}, svc, "expected to get service x")
 }
 
 func Test_GetExistingService(t *testing.T) {
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
+	testhost := client.GetBanyanHostUrl()
+	apiKey := client.GetApiKey()
+	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
-	svc, err := client.Service.Get("testservice.us-west.bnn")
+	svc, err := myClient.Service.Get("testservice.us-west.bnn")
 	assert.NoError(t, err, "expected no error here")
 	assert.NotEqual(t, service.GetServiceSpec{}, svc, "expected to get service x")
 }
 
 func Test_CreateService(t *testing.T) {
 	somestring := "test"
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
+	testhost := client.GetBanyanHostUrl()
+	apiKey := client.GetApiKey()
+	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
-	svc, err := client.Service.Create(service.CreateService{
+	svc, err := myClient.Service.Create(service.CreateService{
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanService",
 		Metadata: service.Metadata{
@@ -108,11 +107,11 @@ func Test_CreateService(t *testing.T) {
 
 func Test_CreateService2(t *testing.T) {
 	somestring := "test"
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
+	testhost := client.GetBanyanHostUrl()
+	apiKey := client.GetApiKey()
+	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
-	svc, err := client.Service.Create(service.CreateService{
+	svc, err := myClient.Service.Create(service.CreateService{
 		APIVersion: "rbac.banyanops.com/v1",
 		Kind:       "BanyanService",
 		Metadata: service.Metadata{
@@ -184,10 +183,10 @@ func Test_CreateService2(t *testing.T) {
 }
 
 func Test_delete(t *testing.T) {
-	testhost := os.Getenv("BANYAN_HOST")
-	testRefreshToken := os.Getenv("BANYAN_REFRESH_TOKEN")
-	client, err := client.NewClientHolder(testhost, testRefreshToken, "")
+	testhost := client.GetBanyanHostUrl()
+	apiKey := client.GetApiKey()
+	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
-	err = client.Service.Delete("terraformtest.dev05-banyan.bnn")
+	err = myClient.Service.Delete("terraformtest.dev05-banyan.bnn")
 	assert.NoError(t, err)
 }

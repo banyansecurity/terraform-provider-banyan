@@ -12,9 +12,9 @@ func Test_GetNonexistentService(t *testing.T) {
 	emptyPolicy := policy.GetPolicy{}
 	client, err := testutil.GetClientHolderForTest()
 	assert.NoError(t, err, "Expected to not get an error here")
-	policy, err := client.Policy.Get("heh")
+	myPolicy, err := client.Policy.Get("heh")
 	assert.NoError(t, err, "expected no error here")
-	assert.Equal(t, emptyPolicy, policy, "expected to get service x")
+	assert.Equal(t, emptyPolicy, myPolicy, "expected to get service x")
 }
 
 func Test_GetExistingPolicy(t *testing.T) {
@@ -22,7 +22,7 @@ func Test_GetExistingPolicy(t *testing.T) {
 	assert.NoError(t, err, "Expected to not get an error here")
 	emptyPolicy := policy.GetPolicy{}
 	emptyPolicy.CreatedBy = "me"
-	policy, err := client.Policy.Get("9ddf21be-2db3-42f6-aa77-2d1a61931278")
+	myPolicy, err := client.Policy.Get("9ddf21be-2db3-42f6-aa77-2d1a61931278")
 	assert.NoError(t, err, "expected no error here")
-	assert.NotEqual(t, emptyPolicy, policy, "expected to get service x")
+	assert.NotEqual(t, emptyPolicy, myPolicy, "expected to get service x")
 }
