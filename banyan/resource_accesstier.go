@@ -3,14 +3,15 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"time"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"reflect"
-	"time"
 )
 
 func resourceAccessTier() *schema.Resource {
@@ -650,7 +651,7 @@ func flattenEventParameters(d *schema.ResourceData, atLocalConfig accesstier.Acc
 }
 
 func flattenWebServices(d *schema.ResourceData, atLocalConfig accesstier.AccessTierLocalConfig) (err error) {
-	if isNil(atLocalConfig.LoggingParameters) {
+	if isNil(atLocalConfig.HostedWebServiceParameters) {
 		return
 	}
 	err = d.Set("enable_hsts", atLocalConfig.HostedWebServiceParameters.DisableHSTS)
