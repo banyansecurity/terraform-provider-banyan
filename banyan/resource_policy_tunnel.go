@@ -307,9 +307,12 @@ func expandL4Rules(m interface{}) (l4Rules []policy.L4Rule) {
 	for _, r := range m.([]interface{}) {
 		rule := r.(map[string]interface{})
 		cidrs := convertSchemaSetToStringSlice(rule["cidrs"].(*schema.Set))
-		if cidrs == nil {
+		fqdns := convertSchemaSetToStringSlice(rule["fqdns"].(*schema.Set))
+
+		if fqdns == nil && cidrs == nil {
 			cidrs = []string{"*"}
 		}
+
 		protocols := convertSchemaSetToStringSlice(rule["protocols"].(*schema.Set))
 		if protocols == nil {
 			protocols = []string{"ALL"}
@@ -318,7 +321,7 @@ func expandL4Rules(m interface{}) (l4Rules []policy.L4Rule) {
 		if ports == nil {
 			ports = []string{"*"}
 		}
-		fqdns := convertSchemaSetToStringSlice(rule["fqdns"].(*schema.Set))
+
 		l4Rules = append(l4Rules, policy.L4Rule{
 			CIDRs:     cidrs,
 			Protocols: protocols,
