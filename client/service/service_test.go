@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"github.com/banyansecurity/terraform-banyan-provider/client/testenv"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -9,8 +10,8 @@ import (
 )
 
 func Test_GetNonexistentService(t *testing.T) {
-	testhost := client.GetBanyanHostUrl()
-	apiKey := client.GetApiKey()
+	testhost := testenv.GetBanyanHostUrl()
+	apiKey := testenv.GetApiKey()
 	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
 	svc, err := myClient.Service.Get("hah")
@@ -19,8 +20,8 @@ func Test_GetNonexistentService(t *testing.T) {
 }
 
 func Test_GetExistingService(t *testing.T) {
-	testhost := client.GetBanyanHostUrl()
-	apiKey := client.GetApiKey()
+	testhost := testenv.GetBanyanHostUrl()
+	apiKey := testenv.GetApiKey()
 	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
 	svc, err := myClient.Service.Get("testservice.us-west.bnn")
@@ -30,8 +31,8 @@ func Test_GetExistingService(t *testing.T) {
 
 func Test_CreateService(t *testing.T) {
 	somestring := "test"
-	testhost := client.GetBanyanHostUrl()
-	apiKey := client.GetApiKey()
+	testhost := testenv.GetBanyanHostUrl()
+	apiKey := testenv.GetApiKey()
 	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
 	svc, err := myClient.Service.Create(service.CreateService{
@@ -107,8 +108,8 @@ func Test_CreateService(t *testing.T) {
 
 func Test_CreateService2(t *testing.T) {
 	somestring := "test"
-	testhost := client.GetBanyanHostUrl()
-	apiKey := client.GetApiKey()
+	testhost := testenv.GetBanyanHostUrl()
+	apiKey := testenv.GetApiKey()
 	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
 	svc, err := myClient.Service.Create(service.CreateService{
@@ -183,8 +184,8 @@ func Test_CreateService2(t *testing.T) {
 }
 
 func Test_delete(t *testing.T) {
-	testhost := client.GetBanyanHostUrl()
-	apiKey := client.GetApiKey()
+	testhost := testenv.GetBanyanHostUrl()
+	apiKey := testenv.GetApiKey()
 	myClient, err := client.NewClientHolder(testhost, apiKey)
 	assert.NoError(t, err, "Expected to not get an error here")
 	err = myClient.Service.Delete("terraformtest.dev05-banyan.bnn")

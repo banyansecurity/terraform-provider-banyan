@@ -3,7 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -27,7 +27,7 @@ func TestSchemaServiceInfraRdp_rdp_conn(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, RdpSchema(), svc_rdp_conn)
 	svc_obj := RdpFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_infra/rdp-conn.json")
+	json_spec, _ := os.ReadFile("./specs/service_infra/rdp-conn.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -48,7 +48,7 @@ func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, RdpSchema(), svc_rdp_collection)
 	svc_obj := RdpFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_infra/rdp-collection.json")
+	json_spec, _ := os.ReadFile("./specs/service_infra/rdp-collection.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -60,7 +60,7 @@ func TestAccService_infra_rdp(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		CheckDestroy: testAccCheckServiceDestroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccService_infra_rdp_create(rName),

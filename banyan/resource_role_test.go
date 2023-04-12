@@ -3,7 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
@@ -24,7 +24,7 @@ func TestSchemaRole_known_device(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, RoleSchema(), role_known_device)
 	role_obj := RoleFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/role/known-device.json")
+	json_spec, _ := os.ReadFile("./specs/role/known-device.json")
 	var ref_obj role.CreateRole
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -41,7 +41,7 @@ func TestSchemaRole_device_ownership(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, RoleSchema(), role_device_ownership)
 	role_obj := RoleFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/role/device-ownership.json")
+	json_spec, _ := os.ReadFile("./specs/role/device-ownership.json")
 	var ref_obj role.CreateRole
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 

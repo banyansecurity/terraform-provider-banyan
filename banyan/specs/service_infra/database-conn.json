@@ -19,7 +19,8 @@
             "allow_user_override": true,
             "description_link": "",
             "include_domains": []
-        }
+        },
+        "autorun": true
     },
     "spec": {
         "attributes": {

@@ -2,7 +2,6 @@ package banyan
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -47,6 +46,11 @@ func DbSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Link shown to the end user of the banyan app for this service",
+		},
+		"autorun": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Autorun for the service, if set true service would autorun on the app",
 		},
 		"access_tier": {
 			Type:          schema.TypeString,
@@ -168,7 +172,7 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set(fmt.Sprintf("http_connect"), svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -192,6 +196,7 @@ func DbFromState(d *schema.ResourceData) (svc service.CreateService) {
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
 			Tags:        expandDatabaseMetatdataTags(d),
+			Autorun:     extractAutorun(d),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",

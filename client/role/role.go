@@ -70,6 +70,9 @@ func (r *Role) Get(id string) (role GetRole, err error) {
 	query := myUrl.Query()
 	query.Set("RoleID", id)
 	resp, err := r.restClient.ReadQuery(component, query, path)
+	if err != nil {
+		return
+	}
 	var j []GetRole
 	err = json.Unmarshal(resp, &j)
 	if err != nil {
@@ -100,6 +103,9 @@ func (r *Role) Create(role CreateRole) (created GetRole, err error) {
 		return
 	}
 	resp, err := r.restClient.Create(apiVersion, component, body, path)
+	if err != nil {
+		return
+	}
 	err = json.Unmarshal(resp, &created)
 	if err != nil {
 		return

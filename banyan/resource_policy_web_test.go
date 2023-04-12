@@ -3,7 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
@@ -59,7 +59,7 @@ func TestSchemaPolicyWeb_l7(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, PolicyWebSchema(), policy_l7)
 	policy_obj := policyWebFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/policy/l7.json")
+	json_spec, _ := os.ReadFile("./specs/policy/l7.json")
 	var ref_obj policy.Object
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 

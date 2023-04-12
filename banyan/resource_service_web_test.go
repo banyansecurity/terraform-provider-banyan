@@ -3,7 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -25,7 +25,7 @@ func TestSchemaServiceWeb_web_at(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_at)
 	svc_obj := WebFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_web/web-at.json")
+	json_spec, _ := os.ReadFile("./specs/service_web/web-at.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -45,7 +45,7 @@ func TestSchemaServiceWeb_web_conn(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_conn)
 	svc_obj := WebFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_web/web-conn.json")
+	json_spec, _ := os.ReadFile("./specs/service_web/web-conn.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -69,7 +69,7 @@ func TestSchemaServiceWeb_web_certs(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, WebSchema(), svc_web_certs)
 	svc_obj := WebFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_web/web-certs.json")
+	json_spec, _ := os.ReadFile("./specs/service_web/web-certs.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -82,7 +82,7 @@ func TestAccService_required_web(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		CheckDestroy: testAccCheckServiceDestroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			// Create the service using terraform config and check that it exists
 			{
@@ -148,7 +148,7 @@ func TestAccService_optional_web(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		CheckDestroy: testAccCheckServiceDestroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`

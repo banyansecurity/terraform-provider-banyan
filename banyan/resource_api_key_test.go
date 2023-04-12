@@ -2,11 +2,8 @@ package banyan
 
 import (
 	"fmt"
-	"github.com/banyansecurity/terraform-banyan-provider/client/apikey"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -49,36 +46,6 @@ func TestAccApiKey_update(t *testing.T) {
 			},
 		},
 	})
-}
-
-// Checks that the resource with the name resourceName exists and returns the apikey object from the Banyan API
-func testAccCheckExistingApiKey(resourceName string, bnnApiKey *apikey.Data) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found %q", rs)
-		}
-		resp, err := testAccClient.ApiKey.Get(bnnApiKey.ID)
-		if err != nil {
-			return err
-		}
-		if resp.ID != rs.Primary.ID {
-			return fmt.Errorf("expected resource id %q got %q instead", resp.ID, rs.Primary.ID)
-		}
-		*bnnApiKey = resp
-		return nil
-	}
-}
-
-// Uses the API to check that the apikey was destroyed
-func testAccCheckApiKeyDestroy(t *testing.T, name *string) resource.TestCheckFunc {
-	emptyApiKey := apikey.Data{}
-	return func(s *terraform.State) error {
-		r, err := testAccClient.ApiKey.Get(*name)
-		assert.Equal(t, r, emptyApiKey)
-		return err
-	}
 }
 
 // Returns terraform configuration for the apikey. Takes in custom name.

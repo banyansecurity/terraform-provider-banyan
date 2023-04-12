@@ -3,7 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -25,7 +25,7 @@ func TestSchemaServiceInfraSsh_ssh_at(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, SshSchema(), svc_ssh_at)
 	svc_obj := SshFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_infra/ssh-at.json")
+	json_spec, _ := os.ReadFile("./specs/service_infra/ssh-at.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -45,7 +45,7 @@ func TestSchemaServiceInfraSsh_ssh_conn(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, SshSchema(), svc_ssh_conn)
 	svc_obj := SshFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_infra/ssh-conn.json")
+	json_spec, _ := os.ReadFile("./specs/service_infra/ssh-conn.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -57,7 +57,7 @@ func TestAccService_ssh(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		CheckDestroy: testAccCheckServiceDestroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccService_ssh_create(rName),

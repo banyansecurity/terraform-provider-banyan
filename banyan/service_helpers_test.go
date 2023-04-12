@@ -19,7 +19,7 @@ import (
 )
 
 // Returns service from JSON string
-func ReadJSONServiceSpec(jsonSpec string) (err error, svc service.GetServiceSpec) {
+func ReadJSONServiceSpec(jsonSpec string) (svc service.GetServiceSpec, err error) {
 	var createdServiceJson service.GetServicesJson
 	err = json.Unmarshal([]byte(jsonSpec), &createdServiceJson)
 	if err != nil {
@@ -32,12 +32,12 @@ func ReadJSONServiceSpec(jsonSpec string) (err error, svc service.GetServiceSpec
 	}
 	createdServiceJson.CreateServiceSpec = createdSpec
 	svc = service.MapToGetServiceSpec(createdServiceJson)
-	return
+	return svc, err
 }
 
-func ReadJSONPolicySpec(jsonSpec string) (err error, pol policy.Object) {
+func ReadJSONPolicySpec(jsonSpec string) (pol policy.Object, err error) {
 	err = json.Unmarshal([]byte(jsonSpec), &pol)
-	return
+	return pol, err
 }
 
 func AssertServiceSpecEqual(t *testing.T, got service.GetServiceSpec, want service.GetServiceSpec) {
@@ -83,7 +83,7 @@ func testAccCheckServiceAgainstJson(t *testing.T, j string, id *string) resource
 		if err != nil {
 			return err
 		}
-		err, want := ReadJSONServiceSpec(j)
+		want, err := ReadJSONServiceSpec(j)
 		if err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ func testAccCheckPolicyAgainstJson(t *testing.T, j string, id *string) resource.
 		if err != nil {
 			return err
 		}
-		err, want := ReadJSONPolicySpec(j)
+		want, err := ReadJSONPolicySpec(j)
 		if err != nil {
 			return err
 		}
@@ -128,17 +128,9 @@ func testAccCheckExistingService(resourceName string, bnnService *service.GetSer
 }
 
 // Asserts using the API that the Spec.Backend.ConnectorName for the service was updated
-func testAccCheckServiceConnectorNameUpdated(bnnService *service.GetServiceSpec, connectorName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if connectorName != bnnService.CreateServiceSpec.Spec.Backend.ConnectorName {
-			return fmt.Errorf("incorrect connector_name, expected %s, got: %s", connectorName, bnnService.CreateServiceSpec.Spec.Backend.ConnectorName)
-		}
-		return nil
-	}
-}
 
 // Uses the API to check that the service was destroyed
-func testAccCheckService_destroy(t *testing.T, id *string) resource.TestCheckFunc {
+func testAccCheckServiceDestroy(t *testing.T, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r, _ := testAccClient.AccessTier.Get(*id)
 		assert.Equal(t, r.ID, "")

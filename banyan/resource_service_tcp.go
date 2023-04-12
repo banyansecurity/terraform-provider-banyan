@@ -48,6 +48,11 @@ func TcpSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Link shown to the end user of the banyan app for this service",
 		},
+		"autorun": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Autorun for the service, if set true service would autorun on the app",
+		},
 		"access_tier": {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -204,6 +209,7 @@ func TcpFromState(d *schema.ResourceData) (svc service.CreateService) {
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
 			Tags:        expandTCPMetatdataTags(d),
+			Autorun:     extractAutorun(d),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",

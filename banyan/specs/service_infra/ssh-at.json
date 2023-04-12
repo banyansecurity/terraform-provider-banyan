@@ -19,7 +19,8 @@
             "ssh_chain_mode": true,
             "ssh_host_directive": "10.10.1.*",
             "description_link": ""
-        }
+        },
+        "autorun": false
     },
     "spec": {
         "attributes": {

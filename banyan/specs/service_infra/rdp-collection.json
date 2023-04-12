@@ -18,7 +18,8 @@
             "app_listen_port": "9108",
             "allow_user_override": true,
             "description_link": ""
-        }
+        },
+        "autorun": false
     },
     "spec": {
         "attributes": {

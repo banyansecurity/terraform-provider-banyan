@@ -20,7 +20,8 @@
             "kube_cluster_name": "eks-hero",
             "kube_ca_key": "AAAA1234",
             "description_link": ""
-        }
+        },
+        "autorun": false
     },
     "spec": {
         "attributes": {

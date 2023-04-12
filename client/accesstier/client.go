@@ -101,14 +101,26 @@ func (a *AccessTier) Update(id string, spec AccessTierPost) (updated AccessTierI
 		},
 		Spec: spec,
 	})
+	if err != nil {
+		return
+	}
 	resp, err := a.restClient.Update(apiVersion, component, id, body, "")
+	if err != nil {
+		return
+	}
 	var j ATResponse
 	err = json.Unmarshal(resp, &j)
+	if err != nil {
+		return
+	}
 	return j.Data, nil
 }
 
 func (a *AccessTier) Delete(id string) (err error) {
-	deleteNetagents(a, id)
+	err = deleteNetagents(a, id)
+	if err != nil {
+		return err
+	}
 	err = a.restClient.Delete(apiVersion, component, id, "")
 	return
 }
@@ -157,8 +169,17 @@ func (a *AccessTier) UpdateLocalConfig(id string, spec AccessTierLocalConfig) (u
 		Type:       "attribute-based",
 		Spec:       spec,
 	})
+	if err != nil {
+		return
+	}
 	resp, err := a.restClient.Update(apiVersion, component, id, body, path)
+	if err != nil {
+		return
+	}
 	var j ATLcResponse
 	err = json.Unmarshal(resp, &j)
+	if err != nil {
+		return
+	}
 	return j.Data, nil
 }

@@ -68,6 +68,7 @@ type Metadata struct {
 	FriendlyName string `json:"friendly_name,omitempty"`
 	Description  string `json:"description,omitempty"`
 	Tags         Tags   `json:"tags"`
+	Autorun      bool   `json:"autorun"`
 }
 
 // Tags represents the metadata tags

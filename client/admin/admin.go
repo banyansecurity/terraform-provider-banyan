@@ -8,7 +8,7 @@ import (
 
 type Client struct {
 	OidcSettings oidcsettings.Client
-	OrgIdpConfig orgidpconfig.OrgIdpConfigClienter
+	OrgIdpConfig orgidpconfig.Clienter
 }
 
 func NewClient(restClient *restclient.Client) (admin Client) {

@@ -2,6 +2,7 @@ package banyan
 
 import (
 	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"github.com/banyansecurity/terraform-banyan-provider/client/testenv"
 	"log"
 	"testing"
 
@@ -22,7 +23,7 @@ func init() {
 }
 
 func NewAccClient() (c *client.Holder) {
-	c, err := client.NewClientHolder(client.GetBanyanHostUrl(), client.GetApiKey())
+	c, err := client.NewClientHolder(testenv.GetBanyanHostUrl(), testenv.GetApiKey())
 	if err != nil {
 		log.Fatal("Could not create the test client")
 	}
@@ -40,10 +41,10 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck() {
-	if err := client.GetApiKey(); err == "" {
+	if err := testenv.GetApiKey(); err == "" {
 		log.Fatal("BANYAN_API_KEY must be set for acceptance tests")
 	}
-	if err := client.GetBanyanHostUrl(); err == "" {
+	if err := testenv.GetBanyanHostUrl(); err == "" {
 		log.Fatal("BANYAN_HOST must be set for acceptance tests")
 	}
 }

@@ -1,14 +1,14 @@
 package accesstier
 
 import (
-	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+	"github.com/banyansecurity/terraform-banyan-provider/client/testenv"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func GetClientForTest() (accessTierClient *AccessTier) {
-	restClient, err := restclient.New(client.GetBanyanHostUrl(), client.GetApiKey())
+	restClient, err := restclient.New(testenv.GetBanyanHostUrl(), testenv.GetApiKey())
 	if err != nil {
 		return
 	}
