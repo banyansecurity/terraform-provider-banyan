@@ -281,7 +281,7 @@ func flattenPolicyWebL7Access(toFlatten []policy.L7Access) (flattened []interfac
 		return
 	}
 
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+	flattened = make([]interface{}, len(toFlatten))
 	for idx, l7access := range toFlatten {
 		l7 := make(map[string]interface{})
 		l7["resources"] = l7access.Resources

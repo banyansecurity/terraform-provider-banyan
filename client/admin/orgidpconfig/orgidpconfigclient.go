@@ -4,24 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"strings"
 
-	restclient "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 
 	"github.com/pkg/errors"
 )
 
-// OrgIdpConfigClienter only supports OIDC currently
-type OrgIdpConfigClienter interface {
+// Clienter only supports OIDC currently
+type Clienter interface {
 	Get() (Spec, error)
 	CreateOrUpdate(Spec) error
 	// TBD if this is necessary since it's tough to delete org wide things like this. I guess we can just use creat or update to set values to essentially empty values...
 	// Delete() error
 }
 
-func Client(restClient *restclient.Client) OrgIdpConfigClienter {
+func Client(restClient *restclient.Client) Clienter {
 	newClient := OrgIdpConfig{restClient: restClient}
 	return &newClient
 }
@@ -36,7 +36,7 @@ type orgIdpConfigJson struct {
 	IdpConfig   string `json:"IDPConfig"`
 }
 
-// Business domain representation of the rest query
+// Spec Business domain representation of the rest query
 type Spec struct {
 	IdpName     string
 	IdpProtocol string
@@ -50,14 +50,16 @@ type IdpConfig struct {
 	ClientSecret string `json:"ClientSecret"`
 }
 
-// GetOrfIdpConfig returns back the configuration for an organizations IdP
-func (this *OrgIdpConfig) Get() (orgIdpConfig Spec, err error) {
+// Get GetOrfIdpConfig returns back the configuration for an organizations IdP
+func (c *OrgIdpConfig) Get() (orgIdpConfig Spec, err error) {
 	path := "api/v1/user_org_details"
 
-	request, err := this.restClient.Get(path)
-
+	request, err := c.restClient.Get(path)
+	if err != nil {
+		return
+	}
 	// initiate request for response
-	response, err := this.restClient.Do(request)
+	response, err := c.restClient.Do(request)
 	if err != nil {
 		return
 	}
@@ -67,7 +69,7 @@ func (this *OrgIdpConfig) Get() (orgIdpConfig Spec, err error) {
 	}
 
 	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return
 	}
@@ -89,17 +91,23 @@ func (this *OrgIdpConfig) Get() (orgIdpConfig Spec, err error) {
 	return
 }
 
-// CreateUpdateOrgIdpConfig creates or updates the org's IdP
-func (this *OrgIdpConfig) CreateOrUpdate(orgIdpConfig Spec) (err error) {
+// CreateOrUpdate CreateUpdateOrgIdpConfig creates or updates the orgs IdP
+func (c *OrgIdpConfig) CreateOrUpdate(orgIdpConfig Spec) (err error) {
 	path := "api/v1/update_org"
 
 	body, err := mapToFormEncodedOrgIdpConfigBody(orgIdpConfig)
+	if err != nil {
+		return
+	}
 
-	request, err := this.restClient.NewRequest("POST", path, strings.NewReader(body))
+	request, err := c.restClient.NewRequest("POST", path, strings.NewReader(body))
+	if err != nil {
+		return
+	}
 
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	response, err := this.restClient.Do(request)
+	response, err := c.restClient.Do(request)
 	if err != nil {
 		return
 	}

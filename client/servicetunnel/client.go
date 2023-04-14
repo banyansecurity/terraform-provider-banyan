@@ -112,6 +112,7 @@ func (a *ServiceTunnel) GetPolicy(id string) (policy PolicyAttachmentInfo, err e
 func (a *ServiceTunnel) AttachPolicy(id string, post PolicyAttachmentPost) (created PolicyAttachmentInfo, err error) {
 	if id == "" {
 		err = fmt.Errorf("need service tunnel id to attach a policy")
+		return PolicyAttachmentInfo{}, err
 	}
 	body, err := json.Marshal(post)
 	if err != nil {
@@ -119,9 +120,15 @@ func (a *ServiceTunnel) AttachPolicy(id string, post PolicyAttachmentPost) (crea
 	}
 	// remove if there is a policy currently attached
 	currentAttached, err := a.GetPolicy(id)
+	if err != nil {
+		return
+	}
 	if currentAttached.PolicyID != "" {
 		log.Printf("[INFO] Detaching previously attached policy from service tunnel")
-		a.DeletePolicy(id, currentAttached.PolicyID)
+		err = a.DeletePolicy(id, currentAttached.PolicyID)
+		if err != nil {
+			return PolicyAttachmentInfo{}, err
+		}
 	}
 	path := fmt.Sprintf("%s/%s/%s/security_policy", apiVersion, component, id)
 	resp, err := a.restClient.Create(apiVersion, component, body, path)

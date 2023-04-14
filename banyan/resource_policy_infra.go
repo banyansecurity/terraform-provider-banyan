@@ -164,7 +164,7 @@ func expandPolicyInfraAccess(m []interface{}) (access []policy.Access) {
 }
 
 func flattenPolicyInfraAccess(toFlatten []policy.Access) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+	flattened = make([]interface{}, len(toFlatten))
 	for idx, accessItem := range toFlatten {
 		ai := make(map[string]interface{})
 		ai["roles"] = accessItem.Roles

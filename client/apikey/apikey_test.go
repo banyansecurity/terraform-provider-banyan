@@ -51,6 +51,9 @@ func Test_Delete(t *testing.T) {
 	client, err := testutil.GetClientHolderForTest()
 	assert.NoError(t, err, "Expected to not get an error here")
 	data, err := client.ApiKey.Get(want.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = client.ApiKey.Delete(data.Name)
 	if err != nil {
 		t.Fatal(err)

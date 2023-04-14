@@ -47,6 +47,11 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "Link shown to the end user of the banyan app for this service",
 		},
+		"autorun": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Autorun for the service, if set true service would autorun on the app",
+		},
 		"access_tiers": {
 			Type:        schema.TypeSet,
 			Optional:    true,
@@ -130,12 +135,12 @@ func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
 				Icon:            &icon,
 				DescriptionLink: &descriptionLink,
 			},
+			Autorun: extractAutorun(d),
 		},
 		Spec: expandServiceTunnelSpec(d),
 	}
 	return
 }
-
 func resourceServiceTunnelCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	err := setCluster(d, m)
 	if err != nil {

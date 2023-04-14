@@ -9,17 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type oidcSettings struct {
-	IssuerUrl                   string `json:"issuer_url"`
-	AuthorizationEndpoint       string `json:"authorization_endpoint"`
-	TokenEndpoint               string `json:"token_endpoint"`
-	JwksEndpoint                string `json:"jwks_endpoint"`
-	RedirectUrl                 string `json:"redirect_url"`
-	Scope                       string `json:"scope"`
-	UserinfoEndpoint            string `json:"userinfo_endpoint"`
-	OpenidConfigurationEndpoint string `json:"openid_configuration_endpoint"`
-}
-
 // data source to retrieve information for oidc settings
 func dataSourceOidcSettings() *schema.Resource {
 	return &schema.Resource{

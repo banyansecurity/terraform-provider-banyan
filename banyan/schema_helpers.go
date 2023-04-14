@@ -16,39 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func convertInterfaceMapToStringMap(original map[string]interface{}) (newMap map[string]string) {
-	newMap = make(map[string]string)
-	for key, value := range original {
-		stringifiedValue := value.(string)
-		newMap[key] = stringifiedValue
-	}
-	return
-}
-
-func convertEmptyInterfaceToStringMap(original interface{}) (stringMap map[string]string) {
-	semiStringMap := original.(map[string]interface{})
-	stringMap = convertInterfaceMapToStringMap(semiStringMap)
-	return
-}
-
-func convertSliceInterfaceToSliceStringMap(original []interface{}) (sliceStringMap []map[string]string) {
-	for _, v := range original {
-		stringMap := convertEmptyInterfaceToStringMap(v.(interface{}))
-		sliceStringMap = append(sliceStringMap, stringMap)
-	}
-	return
-}
-
 func convertSchemaSetToStringSlice(original *schema.Set) (stringSlice []string) {
 	for _, v := range original.List() {
 		stringSlice = append(stringSlice, v.(string))
-	}
-	return
-}
-
-func convertSchemaSetToIntSlice(original *schema.Set) (stringSlice []int) {
-	for _, v := range original.List() {
-		stringSlice = append(stringSlice, v.(int))
 	}
 	return
 }
@@ -93,7 +63,7 @@ func validatePort() func(val interface{}, key string) (warns []string, errs []er
 }
 
 func typeSwitchPort(val interface{}) (v int, err error) {
-	switch val.(type) {
+	switch typeval := val.(type) {
 	case int:
 		v = val.(int)
 	case string:
@@ -102,7 +72,7 @@ func typeSwitchPort(val interface{}) (v int, err error) {
 			err = fmt.Errorf("port %q could not be converted to an int", val)
 		}
 	default:
-		err = fmt.Errorf("could not validate port %q unsupported type", val)
+		err = fmt.Errorf("could not validate port %q unsupported type %q", val, typeval)
 	}
 	return
 }
@@ -123,7 +93,7 @@ func validateCIDR() func(val interface{}, key string) (warns []string, errs []er
 
 func removeDuplicateStr(strSlice []string) []string {
 	allKeys := make(map[string]bool)
-	list := []string{}
+	var list []string
 	for _, item := range strSlice {
 		if _, value := allKeys[item]; !value {
 			allKeys[item] = true
@@ -257,7 +227,7 @@ func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName str
 	// otherwise determine which cluster to set based off of the access tier
 	atDetails, err := c.AccessTier.GetName(at.(string))
 	if err != nil {
-		err = fmt.Errorf("accesstier %s not found", at.(string))
+		_ = fmt.Errorf("accesstier %s not found", at.(string))
 		clusterName, err = getFirstCluster(c)
 		return
 	}

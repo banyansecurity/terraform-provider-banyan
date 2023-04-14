@@ -3,7 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -16,6 +16,7 @@ func TestSchemaServiceInfraDb_database_at(t *testing.T) {
 	conn := map[string]interface{}{
 		"name":                           "database-conn",
 		"description":                    "pybanyan database-conn",
+		"autorun":                        true,
 		"cluster":                        "managed-cl-edge1",
 		"connector":                      "test-connector",
 		"domain":                         "test-database-conn.tdupnsan.getbnn.com",
@@ -26,7 +27,7 @@ func TestSchemaServiceInfraDb_database_at(t *testing.T) {
 
 	d := schema.TestResourceDataRaw(t, DbSchema(), conn)
 	svc := DbFromState(d)
-	j, _ := ioutil.ReadFile("./specs/service_infra/database-conn.json")
+	j, _ := os.ReadFile("./specs/service_infra/database-conn.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal(j, &ref_obj)
 	AssertCreateServiceEqual(t, svc, ref_obj)
@@ -37,7 +38,7 @@ func TestAccService_database(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckService_destroy(t, &bnnService.ServiceID),
+		CheckDestroy: testAccCheckServiceDestroy(t, &bnnService.ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccService_database_create(rName),
@@ -67,6 +68,7 @@ resource "banyan_service_db" "example" {
   backend_domain = "example-db.internal"
   backend_port = 3306
   policy = banyan_policy_infra.example.id
+  autorun = true
 }
 
 resource "banyan_policy_infra" "example" {
@@ -90,6 +92,7 @@ func testAccService_database_create_json(name string) string {
         "name": "%s",
         "description": "some database service description",
         "cluster": "cluster1",
+		"autorun": true,
         "tags": {
             "template": "TCP_USER",
             "user_facing": "true",

@@ -52,6 +52,9 @@ func (p *policy) Create(policy Object) (created GetPolicy, err error) {
 		return
 	}
 	err = json.Unmarshal(resp, &created)
+	if err != nil {
+		return
+	}
 	specString := html.UnescapeString(created.Spec)
 	err = json.Unmarshal([]byte(specString), &created.UnmarshalledPolicy)
 	return
@@ -64,6 +67,9 @@ func (p *policy) Update(id string, policy Object) (updated GetPolicy, err error)
 		return
 	}
 	resp, err := p.restClient.Update(apiVersion, component, id, body, "")
+	if err != nil {
+		return
+	}
 	var j GetPolicy
 	err = json.Unmarshal(resp, &j)
 	return
@@ -123,7 +129,7 @@ func (p *policy) GetQuery(key string, value string) (spec GetPolicy, err error) 
 	return
 }
 
-// Need to add new API query parameters
+// GetName Need to add new API query parameters
 func (p *policy) GetName(name string) (spec GetPolicy, err error) {
 	specs, err := p.GetAll(name)
 	if err != nil {

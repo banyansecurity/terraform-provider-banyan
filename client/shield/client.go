@@ -2,7 +2,6 @@ package shield
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"log"
 	"net/url"
@@ -41,7 +40,7 @@ type Client interface {
 
 func (s *Shield) GetAll() (shields []string, err error) {
 	log.Printf("getting shields")
-	path := fmt.Sprintf("api/v2/shield_config")
+	path := "api/v2/shield_config"
 	myUrl, err := url.Parse(path)
 	if err != nil {
 		return

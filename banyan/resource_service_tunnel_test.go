@@ -3,7 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
@@ -16,13 +16,14 @@ func TestSchemaServiceTunnel_tunnel_at(t *testing.T) {
 	svc_tunnel_at := map[string]interface{}{
 		"name":         "tunnel-at",
 		"description":  "describe tunnel-at",
+		"autorun":      true,
 		"cluster":      "cluster1",
 		"access_tiers": []interface{}{"gcp-tdnovpn-v1", "gcp-tdnovpn-v2"},
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_at)
 	svc_obj := TunFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_tunnel/tunnel-at.json")
+	json_spec, _ := os.ReadFile("./specs/service_tunnel/tunnel-at.json")
 	var ref_obj servicetunnel.Info
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -39,7 +40,7 @@ func TestSchemaServiceTunnel_tunnel_conn(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_conn)
 	svc_obj := TunFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_tunnel/tunnel-conn.json")
+	json_spec, _ := os.ReadFile("./specs/service_tunnel/tunnel-conn.json")
 	var ref_obj servicetunnel.Info
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 
@@ -58,7 +59,7 @@ func TestSchemaServiceTunnel_tunnel_public(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
 	svc_obj := TunFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/service_tunnel/tunnel-public.json")
+	json_spec, _ := os.ReadFile("./specs/service_tunnel/tunnel-public.json")
 	var ref_obj servicetunnel.Info
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 

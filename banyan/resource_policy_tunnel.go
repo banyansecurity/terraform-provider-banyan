@@ -333,7 +333,7 @@ func expandL4Rules(m interface{}) (l4Rules []policy.L4Rule) {
 }
 
 func flattenPolicyTunnelAccess(toFlatten []policy.Access) (flattened []interface{}) {
-	flattened = make([]interface{}, len(toFlatten), len(toFlatten))
+	flattened = make([]interface{}, len(toFlatten))
 	for idx, accessItem := range toFlatten {
 		ai := make(map[string]interface{})
 		ai["roles"] = accessItem.Roles

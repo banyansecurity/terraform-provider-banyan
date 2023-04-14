@@ -15,85 +15,6 @@ import (
 // are used to abstract away complexity from the end user by populating the service struct using
 // the minimum required variables
 
-var resourceServiceInfraCommonSchema = map[string]*schema.Schema{
-	"id": {
-		Type:        schema.TypeString,
-		Description: "Id of the service in Banyan",
-		Computed:    true,
-	},
-	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Name of the service; use lowercase alphanumeric characters or \"-\"",
-		ForceNew:    true, //this is part of the id, meaning if you change the cluster name it will create a new service instead of updating it
-	},
-	"description": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Description of the service",
-	},
-	"description_link": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Link shown to the end user of the banyan app for this service",
-	},
-	"access_tier": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		Description:   "Name of the access_tier which will proxy requests to your service backend",
-		Default:       "",
-		ConflictsWith: []string{"connector"},
-	},
-	"connector": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		Description:   "Name of the connector which will proxy requests to your service backend",
-		Default:       "",
-		ConflictsWith: []string{"access_tier"},
-	},
-	"domain": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The external-facing network address for this service; ex. website.example.com",
-	},
-	"backend_domain": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The internal network address where this service is hosted; ex. 192.168.1.2; set to \"\" if using http_connect",
-	},
-	"backend_port": {
-		Type:         schema.TypeInt,
-		Required:     true,
-		Description:  "The internal port where this service is hosted; set to 0 if using http_connect",
-		ValidateFunc: validatePort(),
-	},
-	"port": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Description:  "The external-facing port for this service",
-		Default:      8443,
-		ValidateFunc: validatePort(),
-	},
-	"client_banyanproxy_listen_port": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Description:  "Local listen port to be used by client proxy; if not specified, a random local port will be used",
-		ValidateFunc: validatePort(),
-	},
-	"available_in_app": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     true,
-		Description: "Whether this service is available in the app for users with permission to access this service",
-	},
-	"icon": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Default:     "",
-		Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
-	},
-}
-
 func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
 	err := d.Set("name", svc.ServiceName)
@@ -112,6 +33,12 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return
+	}
+	if svc.CreateServiceSpec.Metadata.Autorun {
+		err = d.Set("autorun", svc.CreateServiceSpec.Metadata.Autorun)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	hostTagSelector := svc.CreateServiceSpec.Spec.Attributes.HostTagSelector[0]
 	siteName := hostTagSelector["com.banyanops.hosttag.site_name"]
@@ -139,7 +66,7 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	// TODO: refactor after service API refactor -- allows us to reuse this function for more services
-	if svc.CreateServiceSpec.Spec.Backend.HTTPConnect == false {
+	if !svc.CreateServiceSpec.Spec.Backend.HTTPConnect {
 		err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.Target.Name)
 		if err != nil {
 			return diag.FromErr(err)
@@ -308,4 +235,12 @@ func expandInfraHTTPHealthCheck() (httpHealthCheck service.HTTPHealthCheck) {
 		HTTPS:       false,
 	}
 	return
+}
+
+func extractAutorun(d *schema.ResourceData) bool {
+	autorun, exists := d.GetOk("autorun")
+	if exists {
+		return autorun.(bool)
+	}
+	return false
 }

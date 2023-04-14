@@ -28,6 +28,9 @@ type Client interface {
 
 func (s *Satellite) Get(id string) (satellite SatelliteTunnelConfig, err error) {
 	resp, err := s.restClient.Read(apiVersion, component, id, "")
+	if err != nil {
+		return
+	}
 	var j SatelliteTunnelResponse
 	err = json.Unmarshal(resp, &j)
 	satellite = j.Data
@@ -40,6 +43,9 @@ func (s *Satellite) Create(satellite Info) (created SatelliteTunnelConfig, err e
 		return
 	}
 	resp, err := s.restClient.Create(apiVersion, component, body, "")
+	if err != nil {
+		return
+	}
 	var j SatelliteTunnelResponse
 	err = json.Unmarshal(resp, &j)
 	created = j.Data
@@ -52,6 +58,9 @@ func (s *Satellite) Update(id string, satellite Info) (updated SatelliteTunnelCo
 		return
 	}
 	resp, err := s.restClient.Update(apiVersion, component, id, body, "")
+	if err != nil {
+		return
+	}
 	var j SatelliteTunnelResponse
 	err = json.Unmarshal(resp, &j)
 	updated = j.Data

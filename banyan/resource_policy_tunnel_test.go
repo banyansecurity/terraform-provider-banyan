@@ -3,7 +3,7 @@ package banyan
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
@@ -51,7 +51,7 @@ func TestSchemaPolicyTunnel_l4(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, PolicyTunnelSchema(), policy_l4)
 	policy_obj := policyTunnelFromState(d)
 
-	json_spec, _ := ioutil.ReadFile("./specs/policy/l4.json")
+	json_spec, _ := os.ReadFile("./specs/policy/l4.json")
 	var ref_obj policy.Object
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
 

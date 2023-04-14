@@ -1,4 +1,4 @@
-package client
+package testenv
 
 import (
 	"log"
@@ -17,7 +17,6 @@ func GetBanyanHostUrl() string {
 	}
 	return envUrl.String()
 }
-
 func GetApiKey() string {
 	apiKey := os.Getenv("BANYAN_API_KEY")
 	if apiKey == "" {

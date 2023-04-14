@@ -11,7 +11,7 @@ type Info struct {
 	Spec       `json:"spec"`
 }
 
-// Parameters represents the parameters stanza of a role.Info.
+// Metadata Parameters represents the parameters stanza of a role.Info.
 type Metadata struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -48,44 +48,11 @@ type RepoTagList []string
 // which containers can take on which roles.
 type Records struct {
 	sync.RWMutex
-	// dirty flag indicates if records have changed since last dumped
-	dirty bool
-	// serviceAccounter, if not nil, looks up service account info for containers
-	serviceAccounter ServiceAccounter
-
-	// roleInfoFromRoleName: key=role name, val=role infoID
-	roleInfoFromRoleName map[string]infoID
-	// rolesFromContainerID: key=containerID val=list of role names
-	rolesFromContainerID map[string][]string
-	// containerIDsFromRoleName: key=role name, val=list of containerIDs
-	containerIDsFromRoleName map[string][]string
-	// rolesFromServiceAccount: key=service account, val: map(key=role, val=true)
-	rolesFromServiceAccount map[string]map[string]bool
-	// serviceAccountFromRoles: key=role, val: map(key=service account, val=true)
-	serviceAccountsFromRole map[string]map[string]bool
 }
 
 // ServiceAccounter is any type that implements the ServiceAccount() method.
 type ServiceAccounter interface {
 	ServiceAccount(containerID string) string
-}
-
-type infoID struct {
-	Info
-	ID      string
-	Version int
-}
-
-// NewRecords creates a new Records.
-func NewRecords() (r *Records) {
-	r = &Records{
-		rolesFromContainerID:     make(map[string][]string),
-		containerIDsFromRoleName: make(map[string][]string),
-		roleInfoFromRoleName:     make(map[string]infoID),
-		rolesFromServiceAccount:  make(map[string]map[string]bool),
-		serviceAccountsFromRole:  make(map[string]map[string]bool),
-	}
-	return r
 }
 
 // Diff is returned by Records.CheckNonExistentRoles() and is used to report a new set of roles (could be empty) for a container.
