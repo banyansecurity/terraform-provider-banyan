@@ -13,16 +13,19 @@ API key is *required* in order to manage an access tier, connector, or service t
 
 `access_tier` and `connector` API key scopes are required by the *launch configuration* of access tiers and connectors. Terraform is able to provision `access_tier` and `connector` API keys which are used by access tier and connector instances. The  [access tier](https://registry.terraform.io/modules/banyansecurity/banyan-accesstier2) and [connector](https://registry.terraformio/modules/banyansecurity/banyan-connector) terraform modules use these API key scopes to launch access tier and connector instances.
 
+## Important Note about terraform Import
+You must use "terraform import" with care. If you import a resource that uses attributes not supported in the Banyan Terrafrom provider as yet, those attributes will get overwritten and you will encounter unexpected behavior.
+
 Update Notes
 -----------
 
-* all resources (except API keys) can now be imported using Terraform. Please see the [Terraform import documentation](https://developer.hashicorp.com/terraform/cli/import)
 * `policy` is no longer a required attribute of any service type.
 * all services containing `banyan_service_infra_` in the name were depreciated in v1.0.0. They have been removed from the provider in this release and were replaces by the current service resources.
 * `banyan_policy_attachment` was deprecated in v1.0.0 and has been removed from the provider in this release. The new service resources support inline policy attachment.
 * `banyan_service_k8s` now has `http_connect` always enabled and this parameter is no longer configurable, matching the UI.
 * various bug fixes and improvements
 * updated documentation and examples
+
 
 
 Maintainers
