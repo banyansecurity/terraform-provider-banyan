@@ -16,7 +16,7 @@ jobs:
         run: git fetch --prune --unshallow
       -
         name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: 1.18
       -
@@ -26,3 +26,8 @@ jobs:
           TF_ACC: true
           BANYAN_API_KEY: ${{ secrets.BANYAN_API_KEY }}
           BANYAN_HOST: ${{ secrets.BANYAN_HOST }}
+      -
+        name: Static Check
+        uses: dominikh/staticcheck-action@v1.3.0
+        with:
+          version: "2022.1.3"
