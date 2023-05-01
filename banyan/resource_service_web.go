@@ -151,11 +151,11 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		return
 	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
-	err = d.Set("backend_tls", svc.CreateServiceSpec.Spec.Target.TLS)
+	err = d.Set("backend_tls", svc.CreateServiceSpec.Spec.BackendTarget.TLS)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_tls_insecure", svc.CreateServiceSpec.Spec.Target.TLS)
+	err = d.Set("backend_tls_insecure", svc.CreateServiceSpec.Spec.BackendTarget.TLS)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -252,16 +252,16 @@ func expandWebFrontendAddresses(d *schema.ResourceData) (frontendAddresses []ser
 
 func expandWebBackend(d *schema.ResourceData) (backend service.Backend) {
 	backend = service.Backend{
-		Target:        expandWebTarget(d),
-		ConnectorName: d.Get("connector").(string),
-		DNSOverrides:  map[string]string{},
-		Whitelist:     []string{},
+		BackendTarget:       expandWebTarget(d),
+		ConnectorName:       d.Get("connector").(string),
+		BackendDNSOverrides: map[string]string{},
+		BackendWhitelist:    []string{},
 	}
 	return
 }
 
-func expandWebTarget(d *schema.ResourceData) (target service.Target) {
-	return service.Target{
+func expandWebTarget(d *schema.ResourceData) (target service.BackendTarget) {
+	return service.BackendTarget{
 		Name:        d.Get("backend_domain").(string),
 		Port:        strconv.Itoa(d.Get("backend_port").(int)),
 		TLS:         d.Get("backend_tls").(bool),

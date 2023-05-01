@@ -71,6 +71,8 @@ type Tags struct {
 	KubeCaKey         *string   `json:"kube_ca_key,omitempty" toml:"kube_ca_key,omitempty"`
 	DescriptionLink   *string   `json:"description_link,omitempty" toml:"description_link,omitempty"`
 	IncludeDomains    *[]string `json:"include_domains,omitempty" toml:"include_domains,omitempty"`
+
+	RegisteredDomainID *string `json:"registered_domain_id,omitempty" toml:"registered_domain_id,omitempty"`
 }
 
 // Spec represents the attributes stanza of an Info.
@@ -88,17 +90,9 @@ type Attributes struct {
 	FrontendAddresses []FrontendAddress   `json:"frontend_addresses" toml:"frontend_addresses"`
 	HostTagSelector   []map[string]string `json:"host_tag_selector" toml:"host_tag_selector"`
 	// deprecated: Addresses
-	Addresses []string `json:"addresses,omitempty" toml:"addresses"`
+	Addresses         []string `json:"addresses,omitempty" toml:"addresses"`
+	DisablePrivateDns bool     `json:"disable_private_dns"`
 }
-
-type BackendOLD struct {
-	IPv4        string `json:"ipv4" toml:"ipv4"`
-	Port        string `json:"port" toml:"port"`
-	TLS         bool   `json:"tls" toml:"tls"`
-	TLSInsecure bool   `json:"tls_insecure" toml:"tls_insecure"`
-	TLSSNI      string `json:"tls_sni" toml:"tls_sni"`
-}
-
 type FrontendAddress struct {
 	CIDR string `json:"cidr" toml:"cidr"`
 	Port string `json:"port" toml:"port"`
@@ -117,6 +111,8 @@ type HTTPSettings struct {
 	HTTPRedirect    `json:"http_redirect" toml:"http_redirect"`
 	ExemptedPaths   `json:"exempted_paths" toml:"exempted_paths"`
 
+	*CustomTrustCookie `json:"custom_trust_cookie,omitempty" toml:"custom_trust_cookie"`
+
 	// Headers is a list of HTTP headers to add to every request sent to the Backend;
 	// the key of the map is the header name, and the value is the header value you want.
 	// The header value may be constructed using Go template syntax, such as {{.Email}}
@@ -125,6 +121,12 @@ type HTTPSettings struct {
 	TokenLoc *TokenLocation    `json:"token_loc,omitempty" toml:"token_loc"`
 }
 
+type CustomTrustCookie struct {
+	// SameSite: "", "default", "lax", "none", "strict"
+	SameSite string `json:"same_site,omitempty"`
+	// Path: override the default path of "/"
+	Path string `json:"path,omitempty"`
+}
 type TokenLocation struct {
 	QueryParam          string `json:"query_param,omitempty"`
 	AuthorizationHeader bool   `json:"authorization_header,omitempty"`
@@ -241,14 +243,67 @@ type HostTag struct {
 }
 
 type Backend struct {
-	AllowPatterns []BackendAllowPattern `json:"allow_patterns,omitempty"`
-	DNSOverrides  map[string]string     `json:"dns_overrides"`
-	ConnectorName string                `json:"connector_name"`
-	HTTPConnect   bool                  `json:"http_connect"`
-	Target        Target                `json:"target"`
-	Whitelist     []string              `json:"whitelist"`
+	// BackendTarget specifies the backend workload instance's address or name, ports, and TLS properties.
+	BackendTarget `json:"target"`
+	// BackendDNSOverrides is an optional section that specifies name-to-address or name-to-name mappings.
+	// Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address".
+	// Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2"
+	// Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
+	//          name-to-name    ->    "exposed.service.com" : "internal.myservice.com"
+	BackendDNSOverrides map[string]string `json:"dns_overrides"`
+	// BackendWhitelist is an optional section that indicates the whitelisted/allowed names for
+	// the backend workload instance. If this field is populated, then the backend name must
+	// match at least one entry in this field list to establish connection with the backend service.
+	// The names in this list are allowed to start with the wildcard character "*" to match more
+	// than one backend name. This field is used for non-http-connect cases with backend names/FQDNs.
+	// For httpConnect usecases where more advanced backend defining patterns are required,
+	// plz use BackendAllowPatterns.
+	BackendWhitelist []string `json:"whitelist"`
+	// BackendAllowPatterns is an optional section defines the patterns for the backend workload
+	// instance. If BackendWhitelist/BackendAllowPatterns are both not populated, then all backend
+	// address/name/port are allowed. This field is effective only when BackendWhitelist is not populated.
+	// If the BackendAllowPatterns is not populated, then the backend must match at least one entry
+	// in this list to establish connection with the backend service.  This could be used
+	// for both httpConnect and non-httpConnect cases.  In non-httpConnect cases only backend
+	// hostnames are effective and other fields are ignored.
+	BackendAllowPatterns []BackendAllowPattern `json:"allow_patterns,omitempty"`
+	// HttpConnect is an optional setting that indicates to use HTTP Connect request to derive
+	// the backend target address.
+	HttpConnect bool `json:"http_connect,omitempty"`
+	// ConnectorName indicates that the backend target is in the given connector's private network.
+	ConnectorName string `json:"connector_name"`
 }
 
+type BackendTarget struct {
+	// NameDelimiter is an optional string used to separate the initial component of
+	// the frontend domain name into multiple parts, e.g., if name delimiter is "--" and
+	// the frontend domain name is "abc--def.example.com", then the resulting parts are
+	// "abc", "def", "example", and "com". These parts can be used in the backend target
+	// name, e.g., "{{index .Parts 0}}.{{index .Parts 1}}.ec2.internal" (which would
+	// get instantiated as "abc.def.ec2.internal").
+	NameDelimiter string `json:"name_delimiter,omitempty" toml:"name_delimiter,omitempty"`
+	// Name specifies the name of the backend workload instance.
+	// If it is the empty string, then netagent will use the destination
+	// IP address of the incoming frontend connection as the workload
+	// instance's address.
+	// If non-empty, Name can be a plain string, or a Go template string containing
+	// "{{ .Name }}" and/or "{{ .Domain }}" for extracting portions
+	// of the client SNI. For example, if SNI is "www.example.com",
+	// the "{{ .Name }}" corresponds to "www" and the "{{ .Domain }}"
+	// corresponds to "example.com".
+	// As a concrete example, "{{ .Name }}-internal.{{ .Domain }}"
+	// maps to "www-internal.example.com" for client SNI "www.example.com".
+	Name string `json:"name"`
+	// Port specifies the backend server's TCP port number.
+	Port string `json:"port"`
+	// TLS indicates whether the connection to the backend server uses TLS.
+	TLS bool `json:"tls"`
+	// TLSInsecure indicates whether the backend TLS connection does not validate the server's TLS certificate
+	TLSInsecure bool `json:"tls_insecure"`
+	// ClientCertificate indicates whether to provide netagent's client TLS certificate to the server if
+	// the server asks for it in the TLS handshake.
+	ClientCertificate bool `json:"client_certificate"`
+}
 type BackendAllowPattern struct {
 	// Allowed hostnames my include a leading and/or trailing wildcard character "*"
 	// to match multiple hostnames
@@ -271,21 +326,40 @@ type PortRange struct {
 	Min int `json:"min"`
 	Max int `json:"max"`
 }
-
-type Target struct {
-	Name              string `json:"name"`
-	Port              string `json:"port"` //number
-	TLS               bool   `json:"tls"`
-	TLSInsecure       bool   `json:"tls_insecure"`
-	ClientCertificate bool   `json:"client_certificate"`
-}
-
 type CreateService struct {
 	Kind       string   `json:"kind"`
 	APIVersion string   `json:"apiVersion"`
 	Type       string   `json:"type"`
 	Metadata   Metadata `json:"metadata"`
 	Spec       Spec     `json:"spec"`
+}
+
+type RegisteredServiceInfo struct {
+	ServiceID        string // FullyQualified Service Name
+	ServiceName      string
+	FriendlyName     string
+	ClusterName      string
+	ServiceType      string
+	ServiceDiscovery string
+	ServiceVersion   int // monotonically incrementing on every update
+	Description      string
+	CreatedBy        string
+	CreatedAt        int64
+	LastUpdatedBy    string
+	LastUpdatedAt    int64
+	DeletedBy        string
+	DeletedAt        int64
+	External         string
+	OIDCEnabled      string
+	OIDCClientSpec   string // jsonified version of OIDCClientSpec
+	ServiceSpec      string
+	UserFacing       string
+	Protocol         string
+	Domain           string
+	Port             uint
+	Enabled          string
+	IsDefault        bool
+	OrgID            string
 }
 
 type GetServicesJson struct {

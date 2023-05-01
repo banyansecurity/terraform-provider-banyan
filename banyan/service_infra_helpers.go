@@ -66,12 +66,12 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	// TODO: refactor after service API refactor -- allows us to reuse this function for more services
-	if !svc.CreateServiceSpec.Spec.Backend.HTTPConnect {
-		err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.Target.Name)
+	if !svc.CreateServiceSpec.Spec.Backend.HttpConnect {
+		err = d.Set("backend_domain", svc.CreateServiceSpec.Spec.Backend.BackendTarget.Name)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		bpInt, _ := strconv.Atoi(svc.CreateServiceSpec.Spec.Backend.Target.Port)
+		bpInt, _ := strconv.Atoi(svc.CreateServiceSpec.Spec.Backend.BackendTarget.Port)
 		err = d.Set("backend_port", bpInt)
 		if err != nil {
 			return diag.FromErr(err)
@@ -150,7 +150,7 @@ func expandInfraFrontendAddresses(d *schema.ResourceData) (frontendAddresses []s
 	return
 }
 
-func expandInfraTarget(d *schema.ResourceData, httpConnect bool) (target service.Target) {
+func expandInfraTarget(d *schema.ResourceData, httpConnect bool) (target service.BackendTarget) {
 	// if http_connect, need to set Name to "" and Port to ""
 	name := d.Get("backend_domain").(string)
 	port := strconv.Itoa(d.Get("backend_port").(int))
@@ -158,7 +158,7 @@ func expandInfraTarget(d *schema.ResourceData, httpConnect bool) (target service
 		name = ""
 		port = ""
 	}
-	return service.Target{
+	return service.BackendTarget{
 		Name:              name,
 		Port:              port,
 		TLS:               false,

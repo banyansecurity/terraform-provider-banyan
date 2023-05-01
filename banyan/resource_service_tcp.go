@@ -171,7 +171,7 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 		return
 	}
 	domain := *svc.CreateServiceSpec.Metadata.Tags.Domain
-	override := svc.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	override := svc.CreateServiceSpec.Spec.Backend.BackendDNSOverrides[domain]
 	err = d.Set("backend_dns_override_for_domain", override)
 	if err != nil {
 		return diag.FromErr(err)
@@ -184,7 +184,7 @@ func resourceServiceInfraTcpRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.HTTPConnect)
+	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.HttpConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -254,12 +254,12 @@ func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
 		allowPatterns = []service.BackendAllowPattern{{}}
 	}
 	backend = service.Backend{
-		Target:        expandInfraTarget(d, httpConnect),
-		DNSOverrides:  DNSOverrides,
-		HTTPConnect:   httpConnect,
-		ConnectorName: d.Get("connector").(string),
-		AllowPatterns: allowPatterns,
-		Whitelist:     []string{}, // deprecated
+		BackendTarget:        expandInfraTarget(d, httpConnect),
+		BackendDNSOverrides:  DNSOverrides,
+		HttpConnect:          httpConnect,
+		ConnectorName:        d.Get("connector").(string),
+		BackendAllowPatterns: allowPatterns,
+		BackendWhitelist:     []string{}, // deprecated
 	}
 	return
 }
