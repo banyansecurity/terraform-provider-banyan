@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"github.com/pkg/errors"
-	"io/ioutil"
+	"io"
 	"net/url"
 )
 
@@ -100,7 +100,7 @@ func getAll(k *ApiKey) (responseJSON Response, err error) {
 		err = errors.Errorf("unsuccessful, got status code %q with response: %+v for request to %s", response.Status, response.Request, path)
 		return
 	}
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return
 	}
