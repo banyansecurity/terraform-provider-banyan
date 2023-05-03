@@ -3,10 +3,9 @@ package oidcsettings
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-
-	restclient "github.com/banyansecurity/terraform-banyan-provider/client/restclient"
+	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"github.com/pkg/errors"
+	"io"
 )
 
 type Client interface {
@@ -18,7 +17,7 @@ func NewClient(restClient *restclient.Client) Client {
 	return &c
 }
 
-// OidcSettings are the settings that are used for for OIDC clients
+// Spec OidcSettings are the settings that are used for OIDC clients
 type Spec struct {
 	IssuerUrl                   string `json:"issuer_url"`
 	AuthorizationEndpoint       string `json:"authorization_endpoint"`
@@ -37,7 +36,7 @@ type Admin struct {
 func (a Admin) Get() (oidcSettings Spec, err error) {
 	path := "api/v1/oidc_settings"
 
-	request, err := a.restClient.Get(path)
+	request, _ := a.restClient.Get(path)
 
 	// initiate request for response
 	response, err := a.restClient.Do(request)
@@ -56,7 +55,7 @@ func (a Admin) Get() (oidcSettings Spec, err error) {
 	}
 
 	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		err = errors.WithStack(err)
 		return

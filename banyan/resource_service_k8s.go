@@ -154,7 +154,7 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 		return
 	}
 	domain := *svc.CreateServiceSpec.Metadata.Tags.Domain
-	override := svc.CreateServiceSpec.Spec.Backend.DNSOverrides[domain]
+	override := svc.CreateServiceSpec.Spec.Backend.BackendDNSOverrides[domain]
 	err = d.Set("backend_dns_override_for_domain", override)
 	if err != nil {
 		return diag.FromErr(err)
@@ -279,22 +279,22 @@ func expandK8sBackend(d *schema.ResourceData) (backend service.Backend) {
 		},
 	}
 	backend = service.Backend{
-		Target: expandK8sTarget(d),
+		BackendTarget: expandK8sTarget(d),
 		// required for k8s services
-		HTTPConnect:   true,
+		HttpConnect:   true,
 		ConnectorName: d.Get("connector").(string),
-		DNSOverrides: map[string]string{
+		BackendDNSOverrides: map[string]string{
 			domain: backendOverride,
 		},
-		AllowPatterns: allowPatterns,
-		Whitelist:     []string{}, // deprecated
+		BackendAllowPatterns: allowPatterns,
+		BackendWhitelist:     []string{}, // deprecated
 	}
 	return
 }
 
-func expandK8sTarget(d *schema.ResourceData) (target service.Target) {
+func expandK8sTarget(d *schema.ResourceData) (target service.BackendTarget) {
 	// if http_connect, need to set Name to "" and Port to ""
-	return service.Target{
+	return service.BackendTarget{
 		Name:              "",
 		Port:              "",
 		TLS:               false,

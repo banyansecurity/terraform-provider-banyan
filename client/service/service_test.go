@@ -71,8 +71,8 @@ func Test_CreateService(t *testing.T) {
 			Backend: service.Backend{
 				// AllowPatterns: ,
 				// DNSOverrides: ,
-				HTTPConnect: false,
-				Target: service.Target{
+				HttpConnect: false,
+				BackendTarget: service.BackendTarget{
 					ClientCertificate: false,
 					Name:              "backend.domain",
 					Port:              "9999",
@@ -148,8 +148,8 @@ func Test_CreateService2(t *testing.T) {
 			Backend: service.Backend{
 				// AllowPatterns: ,
 				// DNSOverrides: ,
-				HTTPConnect: false,
-				Target: service.Target{
+				HttpConnect: false,
+				BackendTarget: service.BackendTarget{
 					ClientCertificate: false,
 					Name:              "backend.domain",
 					Port:              "5555",

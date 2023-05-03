@@ -172,7 +172,7 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.Backend.HTTPConnect)
+	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.Backend.HttpConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}
