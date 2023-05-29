@@ -66,6 +66,12 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Required:    true,
 			Description: "The external-facing network address for this service; ex. website.example.com",
 		},
+		"suppress_device_trust_verification": {
+			Type:        schema.TypeBool,
+			Description: "If device trust verification is suppressed, mobile devices will not be able to pass the device trust check.",
+			Optional:    true,
+			Default:     false,
+		},
 		"port": {
 			Type:         schema.TypeInt,
 			Optional:     true,
@@ -124,6 +130,134 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Default:     "",
 			Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
+		},
+		"disable_private_dns": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Private DNS override is used to resolve this service's domain name when a service tunnel is enabled.",
+		},
+		"custom_http_headers": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"dns_overrides": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"whitelist": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"service_account_access": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"authorization_header": {
+						Type:     schema.TypeBool,
+						Optional: true,
+						Default:  false,
+					},
+					"query_parameter": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Default:  "",
+					},
+					"custom_header": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Default:  "",
+					},
+				},
+			},
+		},
+		"custom_tls_cert": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"key_file": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Default:  "",
+					},
+					"cert_file": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Default:  "",
+					},
+				},
+			},
+		},
+		"exemptions": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"legacy_paths": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"paths": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"origin_header": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"source_cidrs": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"mandatory_headers": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"http_methods": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"target_domain": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
 		},
 	}
 	return
@@ -236,6 +370,7 @@ func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes,
 		TLSSNI:            []string{d.Get("domain").(string)},
 		FrontendAddresses: expandWebFrontendAddresses(d),
 		HostTagSelector:   hostTagSelector,
+		DisablePrivateDns: d.Get("disable_private_dns").(bool),
 	}
 	return
 }
@@ -254,10 +389,35 @@ func expandWebBackend(d *schema.ResourceData) (backend service.Backend) {
 	backend = service.Backend{
 		BackendTarget:       expandWebTarget(d),
 		ConnectorName:       d.Get("connector").(string),
-		BackendDNSOverrides: map[string]string{},
-		BackendWhitelist:    []string{},
+		BackendDNSOverrides: expandBackendDNSOverrides(d),
+		BackendWhitelist:    expandBackendWhitelist(d),
+		HttpConnect:         false,
 	}
 	return
+}
+
+func expandBackendWhitelist(d *schema.ResourceData) []string {
+	itemsRaw := d.Get("whitelist").([]interface{})
+	items := make([]string, len(itemsRaw))
+	for i, raw := range itemsRaw {
+		items[i] = raw.(string)
+	}
+	return items
+}
+
+func expandBackendDNSOverrides(d *schema.ResourceData) map[string]string {
+	dnsOverrides := make(map[string]string)
+	v, ok := d.GetOk("dns_overrides")
+
+	if !ok || len(v.(map[string]interface{})) <= 0 {
+		return dnsOverrides
+	}
+
+	for eachKey, eachValue := range v.(map[string]interface{}) {
+		dnsOverrides[eachKey] = eachValue.(string)
+	}
+	return dnsOverrides
+
 }
 
 func expandWebTarget(d *schema.ResourceData) (target service.BackendTarget) {
@@ -271,10 +431,33 @@ func expandWebTarget(d *schema.ResourceData) (target service.BackendTarget) {
 
 func expandWebCertSettings(d *schema.ResourceData) (certSettings service.CertSettings) {
 	certSettings = service.CertSettings{
-		DNSNames:    []string{d.Get("domain").(string)},
-		Letsencrypt: d.Get("letsencrypt").(bool),
+		DNSNames:      []string{d.Get("domain").(string)},
+		Letsencrypt:   d.Get("letsencrypt").(bool),
+		CustomTLSCert: expandCustomTLSCert(d),
 	}
 	return
+}
+
+func expandCustomTLSCert(d *schema.ResourceData) service.CustomTLSCert {
+	v, ok := d.GetOk("custom_tls_cert")
+	if !ok {
+		return service.CustomTLSCert{
+			Enabled:  false,
+			CertFile: "",
+			KeyFile:  "",
+		}
+	}
+	certFile := ""
+	keyFile := ""
+	ctc := v.(*schema.Set).List()
+	certFile, _ = ctc[0].(map[string]interface{})["cert_file"].(string)
+	keyFile, _ = ctc[0].(map[string]interface{})["key_file"].(string)
+
+	return service.CustomTLSCert{
+		Enabled:  true,
+		CertFile: certFile,
+		KeyFile:  keyFile,
+	}
 }
 
 func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSettings) {
@@ -282,27 +465,120 @@ func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSet
 		Enabled:         true,
 		OIDCSettings:    expandWebOIDCSettings(d),
 		ExemptedPaths:   expandWebExemptedPaths(d),
-		Headers:         map[string]string{},
+		Headers:         expandCustomHttpHeaders(d),
 		HTTPHealthCheck: expandWebHTTPHealthCheck(),
+		TokenLoc:        expandWebTokenLoc(d),
 	}
 	return
+}
+
+func expandWebTokenLoc(d *schema.ResourceData) *service.TokenLocation {
+	v, ok := d.GetOk("service_account_access")
+	if !ok {
+		return nil
+	}
+	tc := v.(*schema.Set).List()
+	authorizationHeader := tc[0].(map[string]interface{})["authorization_header"].(bool)
+	customHeader := tc[0].(map[string]interface{})["custom_header"].(string)
+	queryParameter := tc[0].(map[string]interface{})["query_parameter"].(string)
+
+	return &service.TokenLocation{
+		QueryParam:          queryParameter,
+		AuthorizationHeader: authorizationHeader,
+		CustomHeader:        customHeader,
+	}
+}
+
+func expandCustomHttpHeaders(d *schema.ResourceData) map[string]string {
+	customHttpHeaders := map[string]string{}
+	v, ok := d.GetOk("custom_http_headers")
+
+	if !ok || len(v.(map[string]interface{})) <= 0 {
+		return customHttpHeaders
+	}
+	for eachKey, eachValue := range v.(map[string]interface{}) {
+		customHttpHeaders[eachKey] = eachValue.(string)
+	}
+	return customHttpHeaders
 }
 
 func expandWebOIDCSettings(d *schema.ResourceData) (oidcSettings service.OIDCSettings) {
 	oidcSettings = service.OIDCSettings{
-		Enabled:           true,
-		ServiceDomainName: fmt.Sprintf("https://%s", d.Get("domain").(string)),
+		Enabled:                         true,
+		ServiceDomainName:               fmt.Sprintf("https://%s", d.Get("domain").(string)),
+		APIPath:                         "",
+		PostAuthRedirectPath:            "",
+		SuppressDeviceTrustVerification: d.Get("suppress_device_trust_verification").(bool),
 	}
 	return
 }
 
-func expandWebExemptedPaths(d *schema.ResourceData) (exemptedPaths service.ExemptedPaths) {
-	exemptedPaths = service.ExemptedPaths{
-		Enabled: false,
+func expandWebExemptedPaths(d *schema.ResourceData) service.ExemptedPaths {
+	exemptedPaths, ok := d.GetOk("exemptions")
+	if !ok {
+		return service.ExemptedPaths{
+			Enabled: false,
+		}
 	}
-	return
+
+	paths, err := getStringListFromPatternsPath(exemptedPaths.(*schema.Set), "legacy_paths")
+	if err != nil {
+		diag.Errorf("Unable to read paths from exempted_paths")
+
+	}
+
+	patterns, err := expandExemptedPathPatterns(exemptedPaths.(*schema.Set))
+	if err != nil {
+		diag.Errorf("Unable to read patterns from exempted_paths")
+	}
+
+	return service.ExemptedPaths{
+		Enabled:  true,
+		Paths:    paths,
+		Patterns: patterns,
+	}
 }
 
+func expandExemptedPathPatterns(exemptedPaths *schema.Set) (patterns []service.Pattern, err error) {
+	paths, err := getStringListFromPatternsPath(exemptedPaths, "paths")
+	if err != nil {
+		return
+	}
+	targetDomains, err := getStringListFromPatternsPath(exemptedPaths, "target_domain")
+	if err != nil {
+		return
+	}
+	httpMethods, err := getStringListFromPatternsPath(exemptedPaths, "http_methods")
+	if err != nil {
+		return
+	}
+	mandatoryHeaders, err := getStringListFromPatternsPath(exemptedPaths, "mandatory_headers")
+	if err != nil {
+		return
+	}
+	sourceCIDRs, err := getStringListFromPatternsPath(exemptedPaths, "source_cidrs")
+	if err != nil {
+		return
+	}
+	originHeaders, err := getStringListFromPatternsPath(exemptedPaths, "origin_header")
+	if err != nil {
+		return
+	}
+	hosts := service.Host{
+		OriginHeader: originHeaders,
+		Target:       targetDomains,
+	}
+	pattern := service.Pattern{
+		Template:         "CORS",
+		SourceCIDRs:      sourceCIDRs,
+		Hosts:            []service.Host{hosts},
+		Methods:          httpMethods,
+		Paths:            paths,
+		MandatoryHeaders: mandatoryHeaders,
+	}
+	patterns = []service.Pattern{pattern}
+	return
+}
 func expandWebHTTPHealthCheck() (httpHealthCheck service.HTTPHealthCheck) {
 	httpHealthCheck = service.HTTPHealthCheck{
 		Enabled:     false,

@@ -162,7 +162,35 @@ func TestAccService_optional_web(t *testing.T) {
 						backend_port     = 4321
 						backend_tls      = true
 						backend_tls_insecure = true
-                        policy           = banyan_policy_web.example.id 
+                        policy           = banyan_policy_web.example.id
+						service_account_access {
+							authorization_header = true
+                            custom_header = "X-CUSTOM-HEADER"
+							query_parameter = "myparameter"
+						}
+						custom_tls_cert {
+							key_file = "/test/mykeyfile.key"
+							cert_file = "/test/mycertfile.cert"
+						}
+                        custom_http_headers = {
+							"CustomHeader1" = "ToBackend1"
+							"CustomHeader2" = "ToBackend2"
+						}
+ 						dns_overrides = {
+							"dnsoverides.com" = "mylocaldnsoverides.com"
+							"dnsoverides1.com" = "mylocaldnsoverides1.com"
+							"dnsoverides2.com" = "mylocaldnsoverides2.com"
+                        }
+						exemptions {
+							legacy_paths = ["/legacypath1","/legacypath2"]
+							paths = ["/paths1","/paths2"]
+							target_domain = ["https://targetdomain1:443","https://targetdomain2:443"]
+							http_methods = ["GET","POST"]
+							mandatory_headers = ["X-MANDATORY-1","X-MANDATORY-2"]
+							source_cidrs =  ["10.0.0.1/32","10.0.0.2/32"]
+							origin_header = ["https://myorigin1.com:443","https://myorigin2.com:443"]
+						}
+						whitelist = ["10.0.0.0/24","10.1.0.0/24"]
 					}
 					resource "banyan_policy_web" "example" {
 						name        = "%s"
@@ -193,7 +221,35 @@ func TestAccService_optional_web(t *testing.T) {
 						backend_domain   = "%s.internal"
 						backend_port     = 4322
 						backend_tls      = false
-                        policy           = banyan_policy_web.example.id 
+                        policy           = banyan_policy_web.example.id
+						service_account_access {
+							authorization_header = true
+                            custom_header = "X-CUSTOM-HEADER"
+							query_parameter = "myparameter"
+						}
+						custom_tls_cert {
+							key_file = "/test/mykeyfile.key"
+							cert_file = "/test/mycertfile.cert"
+						}
+                        custom_http_headers = {
+							"CustomHeader1" = "ToBackend1"
+							"CustomHeader2" = "ToBackend2"
+						}
+ 						dns_overrides = {
+							"dnsoverides.com" = "mylocaldnsoverides.com"
+							"dnsoverides1.com" = "mylocaldnsoverides1.com"
+							"dnsoverides2.com" = "mylocaldnsoverides2.com"
+                        }
+						exemptions {
+							legacy_paths = ["/legacypath1","/legacypath2"]
+							paths = ["/paths1","/paths2"]
+							target_domain = ["https://targetdomain1:443","https://targetdomain2:443"]
+							http_methods = ["GET","POST"]
+							mandatory_headers = ["X-MANDATORY-1","X-MANDATORY-2"]
+							source_cidrs =  ["10.0.0.1/32","10.0.0.2/32"]
+							origin_header = ["https://myorigin1.com:443","https://myorigin2.com:443"]
+						}
+						whitelist = ["10.0.0.0/24","10.1.0.0/24"]
 					}
 					resource "banyan_policy_web" "example" {
 						name        = "%s"

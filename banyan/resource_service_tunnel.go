@@ -135,7 +135,7 @@ func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
 				Icon:            &icon,
 				DescriptionLink: &descriptionLink,
 			},
-			Autorun: extractAutorun(d),
+			Autorun: expandAutorun(d),
 		},
 		Spec: expandServiceTunnelSpec(d),
 	}

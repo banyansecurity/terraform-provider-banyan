@@ -186,7 +186,7 @@ func K8sFromState(d *schema.ResourceData) (svc service.CreateService) {
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
 			Tags:        expandK8sMetatdataTags(d),
-			Autorun:     extractAutorun(d),
+			Autorun:     expandAutorun(d),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",

@@ -23,6 +23,22 @@ func convertSchemaSetToStringSlice(original *schema.Set) (stringSlice []string) 
 	return
 }
 
+func getStringListFromPatternsPath(exemptedPaths *schema.Set, key string) (values []string, err error) {
+	if exemptedPaths.Len() < 1 {
+		return values, nil
+	}
+	legacyPathRaw := exemptedPaths.List()[0]
+	lp := legacyPathRaw.(map[string]interface{})[key]
+
+	if len(lp.([]interface{})) < 1 {
+		return values, nil
+	}
+	for _, v := range lp.([]interface{}) {
+		values = append(values, v.(string))
+	}
+	return
+}
+
 // Adds a warning to the diagnostics if the resource is not found and sets the id to "" which deletes it from the schema
 func handleNotFoundError(d *schema.ResourceData, err error) (diagnostics diag.Diagnostics) {
 	if strings.Contains(err.Error(), "not found") {
