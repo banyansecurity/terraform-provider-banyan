@@ -40,6 +40,24 @@ resource "banyan_policy_tunnel" "example" {
       }
     }
   }
+  access {
+    roles       = ["Corporate"]
+    trust_level = "Medium"
+    l4_access {
+      allow {
+        cidrs     = ["10.10.10.0/24"]
+        protocols = ["TCP"]
+        ports     = ["443"]
+        fqdns = ["www.allowthisfqdn.com"]
+      }
+      deny {
+        cidrs = ["10.1.1.0/24"]
+        protocols = ["UDP","ICMP"]
+        ports = ["8081","8082"]
+        fqdns = ["www.denythisfqdn.com"]
+      }
+    }
+  }
 }
 ```
 
@@ -84,7 +102,7 @@ Optional:
 - `cidrs` (Set of String) Allowed CIDRs through the service tunnel
 - `ports` (Set of String) Allowed ports through the service tunnel
 - `protocols` (Set of String) Allowed protocols through the service tunnel. Set to "TCP", "UDP", "ICMP", or "ALL"
-
+- `fqdns` (Set of String) Allowed Fully Qualified Domain names through the service tunnel.
 
 <a id="nestedblock--access--l4_access--deny"></a>
 ### Nested Schema for `access.l4_access.deny`
@@ -94,5 +112,6 @@ Optional:
 - `cidrs` (Set of String) Denied CIDRs through the service tunnel
 - `ports` (Set of String) Denied ports through the service tunnel
 - `protocols` (Set of String) Denied protocols through the service tunnel. Set to "TCP", "UDP", "ICMP", or "ALL"
+- `fqdns` (Set of String) Denied Fully Qualified Domain names through the service tunnel.
 
 

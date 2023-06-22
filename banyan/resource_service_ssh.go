@@ -103,6 +103,12 @@ func SshSchema() map[string]*schema.Schema {
 			Default:     "",
 			Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
 		},
+		"disable_private_dns": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Private DNS override is used to resolve this service's domain name when a service tunnel is enabled.",
+		},
 		"policy": {
 			Type:        schema.TypeString,
 			Optional:    true,

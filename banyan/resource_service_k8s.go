@@ -90,6 +90,12 @@ func K8sSchema() map[string]*schema.Schema {
 			Default:     "",
 			Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
 		},
+		"disable_private_dns": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Private DNS override is used to resolve this service's domain name when a service tunnel is enabled.",
+		},
 		"cluster": {
 			Type:        schema.TypeString,
 			Description: "(Depreciated) Sets the cluster / shield for the service",
