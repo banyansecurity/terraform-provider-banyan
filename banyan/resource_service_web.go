@@ -293,6 +293,40 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	err = d.Set("custom_http_headers", svc.CreateServiceSpec.Spec.Headers)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("dns_overrides", svc.CreateServiceSpec.Spec.BackendDNSOverrides)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("whitelist", svc.CreateServiceSpec.Spec.Backend.BackendWhitelist)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	exemptions, err := flattenExemptions(svc.CreateServiceSpec.Spec.HTTPSettings.ExemptedPaths)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("exemptions", exemptions)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if len(svc.CreateServiceSpec.Spec.ClientCIDRs) > 0 {
+		return diag.Errorf("Client CIDRs are deprecated cannot import if it is set.")
+	}
+	customTlsCert := flattenCustomTLSCert(svc.CreateServiceSpec.Spec.CustomTLSCert)
+	if len(customTlsCert) != 0 {
+		err = d.Set("custom_tls_cert", customTlsCert)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	err = d.Set("service_account_access", flattenServiceAccountAccess(svc.CreateServiceSpec.Spec.TokenLoc))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 

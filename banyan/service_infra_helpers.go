@@ -90,14 +90,6 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	availableInApp, err := strconv.ParseBool(*svc.CreateServiceSpec.Metadata.Tags.UserFacing)
-	if err != nil {
-		diag.FromErr(err)
-	}
-	err = d.Set("available_in_app", availableInApp)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	err = d.Set("disable_private_dns", svc.CreateServiceSpec.Spec.DisablePrivateDns)
 	if err != nil {
 		return diag.FromErr(err)
@@ -106,35 +98,11 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("custom_http_headers", svc.CreateServiceSpec.Spec.Headers)
+	availableInApp, err := strconv.ParseBool(*svc.CreateServiceSpec.Metadata.Tags.UserFacing)
 	if err != nil {
-		return diag.FromErr(err)
+		diag.FromErr(err)
 	}
-	err = d.Set("dns_overrides", svc.CreateServiceSpec.Spec.BackendDNSOverrides)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("whitelist", svc.CreateServiceSpec.Spec.Backend.BackendWhitelist)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	exemptions, err := flattenExemptions(svc.CreateServiceSpec.Spec.HTTPSettings.ExemptedPaths)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("exemptions", exemptions)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if len(svc.CreateServiceSpec.Spec.ClientCIDRs) > 0 {
-		return diag.Errorf("Client CIDRs are deprecated cannot import if it is set.")
-	}
-	err = d.Set("custom_tls_cert", flattenCustomTLSCert(svc.CreateServiceSpec.Spec.CustomTLSCert))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = d.Set("service_account_access", flattenServiceAcountAccess(*svc.CreateServiceSpec.Spec.TokenLoc))
+	err = d.Set("available_in_app", availableInApp)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -190,13 +158,19 @@ func flattenExemptions(paths service.ExemptedPaths) (flattened []interface{}, er
 	return
 }
 func flattenCustomTLSCert(cert service.CustomTLSCert) (flattened []interface{}) {
+	if !cert.Enabled {
+		return
+	}
 	ctc := make(map[string]interface{})
 	ctc["key_file"] = cert.KeyFile
 	ctc["cert_file"] = cert.CertFile
 	flattened = append(flattened, ctc)
 	return
 }
-func flattenServiceAcountAccess(tokenLocation service.TokenLocation) (flattened []interface{}) {
+func flattenServiceAccountAccess(tokenLocation *service.TokenLocation) (flattened []interface{}) {
+	if tokenLocation == nil {
+		return
+	}
 	tl := make(map[string]interface{})
 	tl["authorization_header"] = tokenLocation.AuthorizationHeader
 	tl["custom_header"] = tokenLocation.CustomHeader

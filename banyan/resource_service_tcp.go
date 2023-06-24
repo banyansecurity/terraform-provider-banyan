@@ -72,6 +72,12 @@ func TcpSchema() map[string]*schema.Schema {
 			Required:    true,
 			Description: "The external-facing network address for this service; ex. website.example.com",
 		},
+		"suppress_device_trust_verification": {
+			Type:        schema.TypeBool,
+			Description: "If device trust verification is suppressed, mobile devices will not be able to pass the device trust check.",
+			Optional:    true,
+			Default:     false,
+		},
 		"backend_domain": {
 			Type:        schema.TypeString,
 			Required:    true,
