@@ -68,7 +68,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 		},
 		"suppress_device_trust_verification": {
 			Type:        schema.TypeBool,
-			Description: "If device trust verification is suppressed, mobile devices will not be able to pass the device trust check.",
+			Description: "Disabling/Suppressing Device Trust Verification will bypass the Device Verification and proceed to the Unregistered Devices check.",
 			Optional:    true,
 			Default:     false,
 		},
@@ -443,7 +443,7 @@ func expandBackendDNSOverrides(d *schema.ResourceData) map[string]string {
 	dnsOverrides := make(map[string]string)
 	v, ok := d.GetOk("dns_overrides")
 
-	if !ok || len(v.(map[string]interface{})) <= 0 {
+	if !ok || len(v.(map[string]interface{})) == 0 {
 		return dnsOverrides
 	}
 
@@ -527,7 +527,7 @@ func expandCustomHttpHeaders(d *schema.ResourceData) map[string]string {
 	customHttpHeaders := map[string]string{}
 	v, ok := d.GetOk("custom_http_headers")
 
-	if !ok || len(v.(map[string]interface{})) <= 0 {
+	if !ok || len(v.(map[string]interface{})) == 0 {
 		return customHttpHeaders
 	}
 	for eachKey, eachValue := range v.(map[string]interface{}) {

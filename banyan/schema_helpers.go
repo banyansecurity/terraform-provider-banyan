@@ -24,13 +24,13 @@ func convertSchemaSetToStringSlice(original *schema.Set) (stringSlice []string) 
 }
 
 func getStringListFromPatternsPath(exemptedPaths *schema.Set, key string) (values []string, err error) {
-	if exemptedPaths.Len() < 1 {
+	if exemptedPaths.Len() == 0 {
 		return values, nil
 	}
 	legacyPathRaw := exemptedPaths.List()[0]
 	lp := legacyPathRaw.(map[string]interface{})[key]
 
-	if len(lp.([]interface{})) < 1 {
+	if len(lp.([]interface{})) == 0 {
 		return values, nil
 	}
 	for _, v := range lp.([]interface{}) {
