@@ -212,7 +212,10 @@ func resourceServiceTunnelRead(ctx context.Context, d *schema.ResourceData, m in
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.Set("policy", policy.PolicyID)
+	err = d.Set("policy", policy.PolicyID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 
@@ -254,10 +257,10 @@ func resourceServiceTunnelDetachPolicy(d *schema.ResourceData, c *client.Holder)
 func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spec) {
 	ats := convertSchemaSetToStringSlice(d.Get("access_tiers").(*schema.Set))
 	conns := convertSchemaSetToStringSlice(d.Get("connectors").(*schema.Set))
-	incl_cidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_include").(*schema.Set))
-	excl_cidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_exclude").(*schema.Set))
-	incl_domains := convertSchemaSetToStringSlice(d.Get("public_domains_include").(*schema.Set))
-	excl_domains := convertSchemaSetToStringSlice(d.Get("public_domains_exclude").(*schema.Set))
+	inclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_include").(*schema.Set))
+	exclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_exclude").(*schema.Set))
+	inclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_include").(*schema.Set))
+	exclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_exclude").(*schema.Set))
 
 	// 1st peer
 	var p1 servicetunnel.PeerAccessTier
@@ -278,14 +281,14 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 	}
 
 	// 1st peer always gets public CIDR and Domain logic
-	if (incl_cidrs != nil) || (excl_cidrs != nil) || (incl_domains != nil) || (excl_domains != nil) {
+	if (inclCidrs != nil) || (exclCidrs != nil) || (inclDomains != nil) || (exclDomains != nil) {
 		p1.PublicCIDRs = &servicetunnel.PublicCIDRDomain{
-			Include: incl_cidrs,
-			Exclude: excl_cidrs,
+			Include: inclCidrs,
+			Exclude: exclCidrs,
 		}
 		p1.PublicDomains = &servicetunnel.PublicCIDRDomain{
-			Include: incl_domains,
-			Exclude: excl_domains,
+			Include: inclDomains,
+			Exclude: exclDomains,
 		}
 	}
 
@@ -320,13 +323,28 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 
 	// if connectors set => global-edge
 	if len(p1.Connectors) > 0 {
-		d.Set("cluster", p1.Cluster)
-		d.Set("connectors", p1.Connectors)
-		d.Set("access_tiers", nil)
+		err = d.Set("cluster", p1.Cluster)
+		if err != nil {
+			return err
+		}
+		err = d.Set("connectors", p1.Connectors)
+		if err != nil {
+			return err
+		}
+		err = d.Set("access_tiers", nil)
+		if err != nil {
+			return err
+		}
 	} else {
 		// 1st peer
-		d.Set("cluster", p1.Cluster)
-		d.Set("connectors", nil)
+		err = d.Set("cluster", p1.Cluster)
+		if err != nil {
+			return err
+		}
+		err = d.Set("connectors", nil)
+		if err != nil {
+			return err
+		}
 		ats := p1.AccessTiers
 		// if multiple ATs, add later
 		if len(tun.Spec.PeerAccessTiers) > 1 {
@@ -335,14 +353,29 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 				ats = append(ats, atSec...)
 			}
 		}
-		d.Set("access_tiers", ats)
+		err = d.Set("access_tiers", ats)
+		if err != nil {
+			return err
+		}
 	}
 
 	if p1.PublicCIDRs != nil {
-		d.Set("public_cidrs_include", p1.PublicCIDRs.Include)
-		d.Set("public_cidrs_exclude", p1.PublicCIDRs.Exclude)
-		d.Set("public_domains_include", p1.PublicDomains.Include)
-		d.Set("public_domains_exclude", p1.PublicDomains.Exclude)
+		err = d.Set("public_cidrs_include", p1.PublicCIDRs.Include)
+		if err != nil {
+			return err
+		}
+		err = d.Set("public_cidrs_exclude", p1.PublicCIDRs.Exclude)
+		if err != nil {
+			return err
+		}
+		err = d.Set("public_domains_include", p1.PublicDomains.Include)
+		if err != nil {
+			return err
+		}
+		err = d.Set("public_domains_exclude", p1.PublicDomains.Exclude)
+		if err != nil {
+			return err
+		}
 	}
 
 	return

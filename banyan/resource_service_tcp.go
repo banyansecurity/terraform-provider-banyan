@@ -74,7 +74,7 @@ func TcpSchema() map[string]*schema.Schema {
 		},
 		"suppress_device_trust_verification": {
 			Type:        schema.TypeBool,
-			Description: "If device trust verification is suppressed, mobile devices will not be able to pass the device trust check.",
+			Description: "Disabling/Suppressing Device Trust Verification will bypass the Device Verification and proceed to the Unregistered Devices check.",
 			Optional:    true,
 			Default:     false,
 		},

@@ -75,7 +75,6 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 								"allow": {
 									Type:        schema.TypeList,
 									Description: "Role names to include ",
-									MaxItems:    1,
 									Optional:    true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
@@ -118,7 +117,6 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 								"deny": {
 									Type:        schema.TypeList,
 									Description: "Role names to include ",
-									MaxItems:    1,
 									Optional:    true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
@@ -242,19 +240,19 @@ func resourcePolicyTunnelDelete(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func invalidL4AccessRules(d *schema.ResourceData) error {
-	allow_all := []policy.L4Rule{{CIDRs: []string{"*"}, Protocols: []string{"ALL"}, Ports: []string{"*"}}}
+	allowAll := []policy.L4Rule{{CIDRs: []string{"*"}, Protocols: []string{"ALL"}, Ports: []string{"*"}}}
 
 	m := d.Get("access").([]interface{})
 	for _, raw := range m {
 		data := raw.(map[string]interface{})
-		l4_access := data["l4_access"].([]interface{})
-		if len(l4_access) == 0 || l4_access[0] == nil {
+		l4Access := data["l4_access"].([]interface{})
+		if len(l4Access) == 0 || l4Access[0] == nil {
 			continue
 		}
-		l4_rules := l4_access[0].(map[string]interface{})
-		allow_rule := expandL4Rules(l4_rules["allow"].([]interface{}))
-		deny_rule := expandL4Rules(l4_rules["deny"].([]interface{}))
-		if reflect.DeepEqual(allow_rule, allow_all) && deny_rule == nil {
+		l4Rules := l4Access[0].(map[string]interface{})
+		allowRule := expandL4Rules(l4Rules["allow"].([]interface{}))
+		denyRule := expandL4Rules(l4Rules["deny"].([]interface{}))
+		if reflect.DeepEqual(allowRule, allowAll) && denyRule == nil {
 			return errors.New("redundant l4_access block with allow_all rules; remove l4_access block entirely")
 		}
 	}

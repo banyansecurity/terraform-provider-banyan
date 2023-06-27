@@ -181,20 +181,20 @@ func resourcePolicyWebDelete(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func invalidL7AccessRules(d *schema.ResourceData) error {
-	allow_all := policy.L7Access{Resources: []string{"*"}, Actions: []string{"*"}}
+	allowAll := policy.L7Access{Resources: []string{"*"}, Actions: []string{"*"}}
 
 	m := d.Get("access").([]interface{})
 	for _, raw := range m {
 		data := raw.(map[string]interface{})
-		l7_access := data["l7_access"].([]interface{})
-		if len(l7_access) == 0 || l7_access[0] == nil || len(l7_access) != 1 {
+		l7Access := data["l7_access"].([]interface{})
+		if len(l7Access) == 0 || l7Access[0] == nil || len(l7Access) != 1 {
 			continue
 		}
-		l7_rules := l7_access[0].(map[string]interface{})
-		actions := convertSchemaSetToStringSlice(l7_rules["actions"].(*schema.Set))
-		resources := convertSchemaSetToStringSlice(l7_rules["resources"].(*schema.Set))
-		allow_l7 := policy.L7Access{Resources: resources, Actions: actions}
-		if reflect.DeepEqual(allow_l7, allow_all) {
+		l7Rules := l7Access[0].(map[string]interface{})
+		actions := convertSchemaSetToStringSlice(l7Rules["actions"].(*schema.Set))
+		resources := convertSchemaSetToStringSlice(l7Rules["resources"].(*schema.Set))
+		allowL7 := policy.L7Access{Resources: resources, Actions: actions}
+		if reflect.DeepEqual(allowL7, allowAll) {
 			return errors.New("redundant l7_access block with allow_all rules; remove l7_access block entirely")
 		}
 	}
