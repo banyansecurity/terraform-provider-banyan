@@ -66,6 +66,12 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Required:    true,
 			Description: "The external-facing network address for this service; ex. website.example.com",
 		},
+		"suppress_device_trust_verification": {
+			Type:        schema.TypeBool,
+			Description: "suppress_device_trust_verification disables Device Trust Verification for a service if set to true",
+			Optional:    true,
+			Default:     false,
+		},
 		"port": {
 			Type:         schema.TypeInt,
 			Optional:     true,
@@ -125,6 +131,137 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Default:     "",
 			Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
 		},
+		"disable_private_dns": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn off Private DNS Override i.e. disable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.",
+		},
+		"custom_http_headers": {
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Description: "Custom HTTP headers if set would be sent to backend, As an example this can be used to set authentication headers to authenticate user agent with backend server",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"dns_overrides": {
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Description: "dns_overrides is an optional section that specifies name-to-address or name-to-name mappings. Name-to-address mapping could be used instead of DNS lookup. Format is \"FQDN: ip_address\". Name-to-name mapping could be used to override one FQDN with the other. Format is \"FQDN1: FQDN2\" Example: name-to-address -> \"internal.myservice.com\" : \"10.23.0.1\"\n name-to-name    ->    \"exposed.service.com\" : \"internal.myservice.com\"",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"whitelist": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "whitelist is an optional section that indicates the allowed names for the backend workload instance. If this field is populated, then the backend name must match at least one entry in this field list to establish connection with the backend service.The names in this list are allowed to start with the wildcard character \"*\" to match more than one backend name. This field is used generally with http_connect=false. For all http_connect=true cases, or where more advanced backend defining patterns are required, use allow_patterns.",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"service_account_access": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"authorization_header": {
+						Type:     schema.TypeBool,
+						Optional: true,
+						Default:  false,
+					},
+					"query_parameter": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Default:  "",
+					},
+					"custom_header": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Default:  "",
+					},
+				},
+			},
+		},
+		"custom_tls_cert": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"key_file": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Default:  "",
+					},
+					"cert_file": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Default:  "",
+					},
+				},
+			},
+		},
+		"exemptions": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"legacy_paths": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"paths": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"origin_header": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"source_cidrs": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"mandatory_headers": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"http_methods": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"target_domain": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
+		},
 	}
 	return
 }
@@ -156,6 +293,40 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 	err = d.Set("backend_tls_insecure", svc.CreateServiceSpec.Spec.BackendTarget.TLS)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("custom_http_headers", svc.CreateServiceSpec.Spec.Headers)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("dns_overrides", svc.CreateServiceSpec.Spec.BackendDNSOverrides)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("whitelist", svc.CreateServiceSpec.Spec.Backend.BackendWhitelist)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	exemptions, err := flattenExemptions(svc.CreateServiceSpec.Spec.HTTPSettings.ExemptedPaths)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("exemptions", exemptions)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if len(svc.CreateServiceSpec.Spec.ClientCIDRs) > 0 {
+		return diag.Errorf("Client CIDRs are deprecated cannot import if it is set.")
+	}
+	customTlsCert := flattenCustomTLSCert(svc.CreateServiceSpec.Spec.CustomTLSCert)
+	if len(customTlsCert) != 0 {
+		err = d.Set("custom_tls_cert", customTlsCert)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	err = d.Set("service_account_access", flattenServiceAccountAccess(svc.CreateServiceSpec.Spec.TokenLoc))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -236,6 +407,7 @@ func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes,
 		TLSSNI:            []string{d.Get("domain").(string)},
 		FrontendAddresses: expandWebFrontendAddresses(d),
 		HostTagSelector:   hostTagSelector,
+		DisablePrivateDns: d.Get("disable_private_dns").(bool),
 	}
 	return
 }
@@ -254,10 +426,35 @@ func expandWebBackend(d *schema.ResourceData) (backend service.Backend) {
 	backend = service.Backend{
 		BackendTarget:       expandWebTarget(d),
 		ConnectorName:       d.Get("connector").(string),
-		BackendDNSOverrides: map[string]string{},
-		BackendWhitelist:    []string{},
+		BackendDNSOverrides: expandBackendDNSOverrides(d),
+		BackendWhitelist:    expandBackendWhitelist(d),
+		HttpConnect:         false,
 	}
 	return
+}
+
+func expandBackendWhitelist(d *schema.ResourceData) []string {
+	itemsRaw := d.Get("whitelist").([]interface{})
+	items := make([]string, len(itemsRaw))
+	for i, raw := range itemsRaw {
+		items[i] = raw.(string)
+	}
+	return items
+}
+
+func expandBackendDNSOverrides(d *schema.ResourceData) map[string]string {
+	dnsOverrides := make(map[string]string)
+	v, ok := d.GetOk("dns_overrides")
+
+	if !ok || len(v.(map[string]interface{})) == 0 {
+		return dnsOverrides
+	}
+
+	for eachKey, eachValue := range v.(map[string]interface{}) {
+		dnsOverrides[eachKey] = eachValue.(string)
+	}
+	return dnsOverrides
+
 }
 
 func expandWebTarget(d *schema.ResourceData) (target service.BackendTarget) {
@@ -271,10 +468,33 @@ func expandWebTarget(d *schema.ResourceData) (target service.BackendTarget) {
 
 func expandWebCertSettings(d *schema.ResourceData) (certSettings service.CertSettings) {
 	certSettings = service.CertSettings{
-		DNSNames:    []string{d.Get("domain").(string)},
-		Letsencrypt: d.Get("letsencrypt").(bool),
+		DNSNames:      []string{d.Get("domain").(string)},
+		Letsencrypt:   d.Get("letsencrypt").(bool),
+		CustomTLSCert: expandCustomTLSCert(d),
 	}
 	return
+}
+
+func expandCustomTLSCert(d *schema.ResourceData) service.CustomTLSCert {
+	v, ok := d.GetOk("custom_tls_cert")
+	if !ok {
+		return service.CustomTLSCert{
+			Enabled:  false,
+			CertFile: "",
+			KeyFile:  "",
+		}
+	}
+	certFile := ""
+	keyFile := ""
+	ctc := v.(*schema.Set).List()
+	certFile, _ = ctc[0].(map[string]interface{})["cert_file"].(string)
+	keyFile, _ = ctc[0].(map[string]interface{})["key_file"].(string)
+
+	return service.CustomTLSCert{
+		Enabled:  true,
+		CertFile: certFile,
+		KeyFile:  keyFile,
+	}
 }
 
 func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSettings) {
@@ -282,27 +502,120 @@ func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSet
 		Enabled:         true,
 		OIDCSettings:    expandWebOIDCSettings(d),
 		ExemptedPaths:   expandWebExemptedPaths(d),
-		Headers:         map[string]string{},
+		Headers:         expandCustomHttpHeaders(d),
 		HTTPHealthCheck: expandWebHTTPHealthCheck(),
+		TokenLoc:        expandWebTokenLoc(d),
 	}
 	return
+}
+
+func expandWebTokenLoc(d *schema.ResourceData) *service.TokenLocation {
+	v, ok := d.GetOk("service_account_access")
+	if !ok {
+		return nil
+	}
+	tc := v.(*schema.Set).List()
+	authorizationHeader := tc[0].(map[string]interface{})["authorization_header"].(bool)
+	customHeader := tc[0].(map[string]interface{})["custom_header"].(string)
+	queryParameter := tc[0].(map[string]interface{})["query_parameter"].(string)
+
+	return &service.TokenLocation{
+		QueryParam:          queryParameter,
+		AuthorizationHeader: authorizationHeader,
+		CustomHeader:        customHeader,
+	}
+}
+
+func expandCustomHttpHeaders(d *schema.ResourceData) map[string]string {
+	customHttpHeaders := map[string]string{}
+	v, ok := d.GetOk("custom_http_headers")
+
+	if !ok || len(v.(map[string]interface{})) == 0 {
+		return customHttpHeaders
+	}
+	for eachKey, eachValue := range v.(map[string]interface{}) {
+		customHttpHeaders[eachKey] = eachValue.(string)
+	}
+	return customHttpHeaders
 }
 
 func expandWebOIDCSettings(d *schema.ResourceData) (oidcSettings service.OIDCSettings) {
 	oidcSettings = service.OIDCSettings{
-		Enabled:           true,
-		ServiceDomainName: fmt.Sprintf("https://%s", d.Get("domain").(string)),
+		Enabled:                         true,
+		ServiceDomainName:               fmt.Sprintf("https://%s", d.Get("domain").(string)),
+		APIPath:                         "",
+		PostAuthRedirectPath:            "",
+		SuppressDeviceTrustVerification: d.Get("suppress_device_trust_verification").(bool),
 	}
 	return
 }
 
-func expandWebExemptedPaths(d *schema.ResourceData) (exemptedPaths service.ExemptedPaths) {
-	exemptedPaths = service.ExemptedPaths{
-		Enabled: false,
+func expandWebExemptedPaths(d *schema.ResourceData) service.ExemptedPaths {
+	exemptedPaths, ok := d.GetOk("exemptions")
+	if !ok {
+		return service.ExemptedPaths{
+			Enabled: false,
+		}
 	}
-	return
+
+	paths, err := getStringListFromPatternsPath(exemptedPaths.(*schema.Set), "legacy_paths")
+	if err != nil {
+		diag.Errorf("Unable to read paths from exempted_paths")
+
+	}
+
+	patterns, err := expandExemptedPathPatterns(exemptedPaths.(*schema.Set))
+	if err != nil {
+		diag.Errorf("Unable to read patterns from exempted_paths")
+	}
+
+	return service.ExemptedPaths{
+		Enabled:  true,
+		Paths:    paths,
+		Patterns: patterns,
+	}
 }
 
+func expandExemptedPathPatterns(exemptedPaths *schema.Set) (patterns []service.Pattern, err error) {
+	paths, err := getStringListFromPatternsPath(exemptedPaths, "paths")
+	if err != nil {
+		return
+	}
+	targetDomains, err := getStringListFromPatternsPath(exemptedPaths, "target_domain")
+	if err != nil {
+		return
+	}
+	httpMethods, err := getStringListFromPatternsPath(exemptedPaths, "http_methods")
+	if err != nil {
+		return
+	}
+	mandatoryHeaders, err := getStringListFromPatternsPath(exemptedPaths, "mandatory_headers")
+	if err != nil {
+		return
+	}
+	sourceCIDRs, err := getStringListFromPatternsPath(exemptedPaths, "source_cidrs")
+	if err != nil {
+		return
+	}
+	originHeaders, err := getStringListFromPatternsPath(exemptedPaths, "origin_header")
+	if err != nil {
+		return
+	}
+	hosts := service.Host{
+		OriginHeader: originHeaders,
+		Target:       targetDomains,
+	}
+	pattern := service.Pattern{
+		Template:         "CORS",
+		SourceCIDRs:      sourceCIDRs,
+		Hosts:            []service.Host{hosts},
+		Methods:          httpMethods,
+		Paths:            paths,
+		MandatoryHeaders: mandatoryHeaders,
+	}
+	patterns = []service.Pattern{pattern}
+	return
+}
 func expandWebHTTPHealthCheck() (httpHealthCheck service.HTTPHealthCheck) {
 	httpHealthCheck = service.HTTPHealthCheck{
 		Enabled:     false,

@@ -1,6 +1,7 @@
 package banyan
 
 import (
+	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"log"
 	"strconv"
@@ -89,6 +90,14 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	err = d.Set("disable_private_dns", svc.CreateServiceSpec.Spec.DisablePrivateDns)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("suppress_device_trust_verification", svc.CreateServiceSpec.Spec.SuppressDeviceTrustVerification)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	availableInApp, err := strconv.ParseBool(*svc.CreateServiceSpec.Metadata.Tags.UserFacing)
 	if err != nil {
 		diag.FromErr(err)
@@ -109,6 +118,64 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	}
 	d.SetId(d.Id())
 	log.Printf("[INFO] Read service %s", d.Id())
+	return
+}
+
+func flattenExemptions(paths service.ExemptedPaths) (flattened []interface{}, err error) {
+	if !paths.Enabled {
+		return
+	}
+	exemptions := make(map[string]interface{})
+	exemptions["legacy_paths"] = paths.Paths
+	if len(paths.Patterns) < 1 {
+		flattened = append(flattened, exemptions)
+		return
+	}
+
+	if len(paths.Patterns) > 1 {
+		err = fmt.Errorf("more than one pattern not supported to import in terraform")
+		return
+	}
+	exemptions["paths"] = paths.Patterns[0].Paths
+
+	exemptions["source_cidrs"] = paths.Patterns[0].SourceCIDRs
+	exemptions["mandatory_headers"] = paths.Patterns[0].MandatoryHeaders
+	exemptions["http_methods"] = paths.Patterns[0].Methods
+
+	var target []string
+	var originHeader []string
+	if len(paths.Patterns[0].Hosts) > 1 {
+		err = fmt.Errorf("more than one hosts entries not supported to import in terraform")
+		return
+	}
+	if len(paths.Patterns[0].Hosts) == 1 {
+		target = paths.Patterns[0].Hosts[0].Target
+		originHeader = paths.Patterns[0].Hosts[0].OriginHeader
+	}
+	exemptions["target_domain"] = target
+	exemptions["origin_header"] = originHeader
+	flattened = append(flattened, exemptions)
+	return
+}
+func flattenCustomTLSCert(cert service.CustomTLSCert) (flattened []interface{}) {
+	if !cert.Enabled {
+		return
+	}
+	ctc := make(map[string]interface{})
+	ctc["key_file"] = cert.KeyFile
+	ctc["cert_file"] = cert.CertFile
+	flattened = append(flattened, ctc)
+	return
+}
+func flattenServiceAccountAccess(tokenLocation *service.TokenLocation) (flattened []interface{}) {
+	if tokenLocation == nil {
+		return
+	}
+	tl := make(map[string]interface{})
+	tl["authorization_header"] = tokenLocation.AuthorizationHeader
+	tl["custom_header"] = tokenLocation.CustomHeader
+	tl["query_parameter"] = tokenLocation.QueryParam
+	flattened = append(flattened, tl)
 	return
 }
 
@@ -237,7 +304,7 @@ func expandInfraHTTPHealthCheck() (httpHealthCheck service.HTTPHealthCheck) {
 	return
 }
 
-func extractAutorun(d *schema.ResourceData) bool {
+func expandAutorun(d *schema.ResourceData) bool {
 	autorun, exists := d.GetOk("autorun")
 	if exists {
 		return autorun.(bool)

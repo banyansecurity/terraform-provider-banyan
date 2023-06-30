@@ -57,14 +57,38 @@ func dataSourceOidcSettingsRead(ctx context.Context, d *schema.ResourceData, m i
 		diagnostics = diag.FromErr(err)
 		return
 	}
-	d.Set("issuer_url", oidcSettings.IssuerUrl)
-	d.Set("authorization_endpoint", oidcSettings.AuthorizationEndpoint)
-	d.Set("token_endpoint", oidcSettings.TokenEndpoint)
-	d.Set("jwks_endpoint", oidcSettings.JwksEndpoint)
-	d.Set("redirect_url", oidcSettings.IssuerUrl+"/callback")
-	d.Set("scope", oidcSettings.Scope)
-	d.Set("userinfo _endpoint", oidcSettings.UserinfoEndpoint)
-	d.Set("openid_configuration_endpoint", oidcSettings.OpenidConfigurationEndpoint)
+	err = d.Set("issuer_url", oidcSettings.IssuerUrl)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("authorization_endpoint", oidcSettings.AuthorizationEndpoint)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("token_endpoint", oidcSettings.TokenEndpoint)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("jwks_endpoint", oidcSettings.JwksEndpoint)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("redirect_url", oidcSettings.IssuerUrl+"/callback")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("scope", oidcSettings.Scope)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("userinfo _endpoint", oidcSettings.UserinfoEndpoint)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("openid_configuration_endpoint", oidcSettings.OpenidConfigurationEndpoint)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	d.SetId("singleton")
 	return
 }

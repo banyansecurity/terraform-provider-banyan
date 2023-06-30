@@ -73,6 +73,12 @@ func SshSchema() map[string]*schema.Schema {
 			Required:    true,
 			Description: "The external-facing network address for this service; ex. website.example.com",
 		},
+		"suppress_device_trust_verification": {
+			Type:        schema.TypeBool,
+			Description: "suppress_device_trust_verification disables Device Trust Verification for a service if set to true",
+			Optional:    true,
+			Default:     false,
+		},
 		"backend_domain": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -102,6 +108,12 @@ func SshSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "",
 			Description: "Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config",
+		},
+		"disable_private_dns": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn off Private DNS Override i.e. disable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.",
 		},
 		"policy": {
 			Type:        schema.TypeString,
@@ -199,7 +211,7 @@ func SshFromState(d *schema.ResourceData) (svc service.CreateService) {
 			Description: d.Get("description").(string),
 			ClusterName: d.Get("cluster").(string),
 			Tags:        expandSSHMetatdataTags(d),
-			Autorun:     extractAutorun(d),
+			Autorun:     expandAutorun(d),
 		},
 		Kind:       "BanyanService",
 		APIVersion: "rbac.banyanops.com/v1",
