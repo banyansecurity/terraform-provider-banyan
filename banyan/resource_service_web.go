@@ -68,7 +68,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 		},
 		"suppress_device_trust_verification": {
 			Type:        schema.TypeBool,
-			Description: "Disabling/Suppressing Device Trust Verification will bypass the Device Verification and proceed to the Unregistered Devices check.",
+			Description: "suppress_device_trust_verification disables Device Trust Verification for a service if set to true",
 			Optional:    true,
 			Default:     false,
 		},
@@ -135,25 +135,28 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Private DNS override is used to resolve this service's domain name when a service tunnel is enabled.",
+			Description: "By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn off Private DNS Override i.e. disable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.",
 		},
 		"custom_http_headers": {
-			Type:     schema.TypeMap,
-			Optional: true,
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Description: "Custom HTTP headers if set would be sent to backend, As an example this can be used to set authentication headers to authenticate user agent with backend server",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 		},
 		"dns_overrides": {
-			Type:     schema.TypeMap,
-			Optional: true,
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Description: "dns_overrides is an optional section that specifies name-to-address or name-to-name mappings. Name-to-address mapping could be used instead of DNS lookup. Format is \"FQDN: ip_address\". Name-to-name mapping could be used to override one FQDN with the other. Format is \"FQDN1: FQDN2\" Example: name-to-address -> \"internal.myservice.com\" : \"10.23.0.1\"\n name-to-name    ->    \"exposed.service.com\" : \"internal.myservice.com\"",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 		},
 		"whitelist": {
-			Type:     schema.TypeList,
-			Optional: true,
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "whitelist is an optional section that indicates the allowed names for the backend workload instance. If this field is populated, then the backend name must match at least one entry in this field list to establish connection with the backend service.The names in this list are allowed to start with the wildcard character \"*\" to match more than one backend name. This field is used generally with http_connect=false. For all http_connect=true cases, or where more advanced backend defining patterns are required, use allow_patterns.",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},

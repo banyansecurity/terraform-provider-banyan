@@ -73,7 +73,7 @@ func RdpSchema() map[string]*schema.Schema {
 		},
 		"suppress_device_trust_verification": {
 			Type:        schema.TypeBool,
-			Description: "Disabling/Suppressing Device Trust Verification will bypass the Device Verification and proceed to the Unregistered Devices check.",
+			Description: "suppress_device_trust_verification disables Device Trust Verification for a service if set to true",
 			Optional:    true,
 			Default:     false,
 		},
@@ -111,7 +111,7 @@ func RdpSchema() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Private DNS override is used to resolve this service's domain name when a service tunnel is enabled.",
+			Description: "By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn off Private DNS Override i.e. disable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.",
 		},
 		"policy": {
 			Type:        schema.TypeString,
