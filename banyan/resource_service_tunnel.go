@@ -152,11 +152,6 @@ func resourceServiceTunnelCreate(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	// validate option public_traffic_tunnel_via_access_tier which has optional dependency on other parameters.
-	err = validatePublicTrafficViaAccessTier(d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	c := m.(*client.Holder)
 	tun, err := c.ServiceTunnel.Create(TunFromState(d))
 	if err != nil {
@@ -166,20 +161,6 @@ func resourceServiceTunnelCreate(ctx context.Context, d *schema.ResourceData, m 
 	err = attachPolicy(c, d)
 	if err != nil {
 		return diag.FromErr(err)
-	}
-	return
-}
-
-func validatePublicTrafficViaAccessTier(d *schema.ResourceData) (err error) {
-	inclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_include").(*schema.Set))
-	exclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_exclude").(*schema.Set))
-	inclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_include").(*schema.Set))
-	exclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_exclude").(*schema.Set))
-	if (inclCidrs != nil) || (exclCidrs != nil) || (inclDomains != nil) || (exclDomains != nil) {
-		_, ok := d.GetOk("public_traffic_tunnel_via_access_tier")
-		if !ok {
-			return fmt.Errorf("public_traffic_tunnel_via_access_tier is required if one of public_cidrs* and public_domains* is set")
-		}
 	}
 	return
 }
@@ -298,15 +279,18 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 		})
 	} else {
 		// If multiple accessTiers are set create peer foreach.
-		for _, eachAts := range ats {
+		for i, eachAts := range ats {
 			peer := servicetunnel.PeerAccessTier{
 				Cluster:     d.Get("cluster").(string),
 				AccessTiers: []string{eachAts},
 				Connectors:  nil,
 			}
 			if (inclCidrs != nil) || (exclCidrs != nil) || (inclDomains != nil) || (exclDomains != nil) {
-				publicTrafficAccessTier := d.Get("public_traffic_tunnel_via_access_tier").(string)
-				if strings.EqualFold(publicTrafficAccessTier, eachAts) {
+				publicTrafficAccessTier, ok := d.GetOk("public_traffic_tunnel_via_access_tier")
+
+				if strings.EqualFold(publicTrafficAccessTier.(string), eachAts) ||
+					/* if only one access tier */ len(ats) == 1 ||
+					/* backward compatibility */ (!ok && i == 0) {
 					peer.PublicCIDRs = &servicetunnel.PublicCIDRDomain{
 						Include: inclCidrs,
 						Exclude: exclCidrs,

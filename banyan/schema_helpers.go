@@ -22,7 +22,12 @@ func convertSchemaSetToStringSlice(original *schema.Set) (stringSlice []string) 
 	}
 	return
 }
-
+func convertSchemaListToStringSlice(original []interface{}) (stringSlice []string) {
+	for _, v := range original {
+		stringSlice = append(stringSlice, v.(string))
+	}
+	return
+}
 func getStringListFromPatternsPath(exemptedPaths *schema.Set, key string) (values []string, err error) {
 	if exemptedPaths.Len() == 0 {
 		return values, nil

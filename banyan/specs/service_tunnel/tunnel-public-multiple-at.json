@@ -1,0 +1,59 @@
+{
+    "kind": "BanyanServiceTunnel",
+    "api_version": "rbac.banyanops.com/v1",
+    "type": "origin",
+    "metadata":
+    {
+        "name": "tunnel-domains",
+        "friendly_name": "tunnel-domains",
+        "description": "describe tunnel-domains",
+        "tags":
+        {
+            "icon": "",
+            "description_link": ""
+        },
+        "autorun": false
+    },
+    "spec":
+    {
+        "peer_access_tiers":
+        [
+            {
+                "cluster": "cluster1",
+                "access_tiers":
+                [
+                    "gcp-tdnovpn-v1"
+                ]
+            },
+            {
+                "cluster": "cluster1",
+                "access_tiers":
+                [
+                    "gcp-tdnovpn-v2"
+                ],
+                "public_cidrs":
+                {
+                    "include":
+                    [
+                        "8.8.8.8/32",
+                        "75.75.75.75/32",
+                        "75.75.76.76/32"
+                    ],
+                    "exclude": null
+                },
+                "public_domains":
+                {
+                    "include":
+                    [
+                        "cnn.com",
+                        "icanhazip.com",
+                        "fast.com",
+                        "yahoo.com",
+                        "banyansecurity.io"
+                    ],
+                    "exclude": null
+                }
+            }
+        ]
+    }
+}
