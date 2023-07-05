@@ -7,6 +7,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"strings"
 )
 
 func resourceServiceTunnel() *schema.Resource {
@@ -52,15 +53,6 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "Autorun for the service, if set true service would autorun on the app",
 		},
-		"access_tiers": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Description: "Names of the access_tiers which the service tunnel should be associated with",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-			ConflictsWith: []string{"connectors"},
-		},
 		"connectors": {
 			Type:        schema.TypeSet,
 			Optional:    true,
@@ -69,6 +61,15 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 				Type: schema.TypeString,
 			},
 			ConflictsWith: []string{"access_tiers"},
+		},
+		"access_tiers": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Names of the access_tiers which the service tunnel should be associated with",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+			ConflictsWith: []string{"connectors"},
 		},
 		"public_cidrs_include": {
 			Type:        schema.TypeSet,
@@ -101,6 +102,11 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
+		},
+		"public_traffic_tunnel_via_access_tier": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Access Tier to be used to tunnel through public traffic",
 		},
 		"policy": {
 			Type:        schema.TypeString,
@@ -146,6 +152,11 @@ func resourceServiceTunnelCreate(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	// validate option public_traffic_tunnel_via_access_tier which has optional dependency on other parameters.
+	err = validatePublicTrafficViaAccessTier(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	c := m.(*client.Holder)
 	tun, err := c.ServiceTunnel.Create(TunFromState(d))
 	if err != nil {
@@ -155,6 +166,20 @@ func resourceServiceTunnelCreate(ctx context.Context, d *schema.ResourceData, m 
 	err = attachPolicy(c, d)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	return
+}
+
+func validatePublicTrafficViaAccessTier(d *schema.ResourceData) (err error) {
+	inclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_include").(*schema.Set))
+	exclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_exclude").(*schema.Set))
+	inclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_include").(*schema.Set))
+	exclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_exclude").(*schema.Set))
+	if (inclCidrs != nil) || (exclCidrs != nil) || (inclDomains != nil) || (exclDomains != nil) {
+		_, ok := d.GetOk("public_traffic_tunnel_via_access_tier")
+		if !ok {
+			return fmt.Errorf("public_traffic_tunnel_via_access_tier is required if one of public_cidrs* and public_domains* is set")
+		}
 	}
 	return
 }
@@ -262,53 +287,42 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 	inclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_include").(*schema.Set))
 	exclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_exclude").(*schema.Set))
 
-	// 1st peer
-	var p1 servicetunnel.PeerAccessTier
+	var peers []servicetunnel.PeerAccessTier
 
 	// if access_tiers not set => global-edge, use ["*"]
 	if len(ats) == 0 {
-		p1 = servicetunnel.PeerAccessTier{
+		peers = append(peers, servicetunnel.PeerAccessTier{
 			Cluster:     d.Get("cluster").(string),
 			AccessTiers: []string{"*"},
 			Connectors:  conns,
-		}
+		})
 	} else {
-		p1 = servicetunnel.PeerAccessTier{
-			Cluster:     d.Get("cluster").(string),
-			AccessTiers: []string{ats[0]},
-			Connectors:  nil,
-		}
-	}
-
-	// 1st peer always gets public CIDR and Domain logic
-	if (inclCidrs != nil) || (exclCidrs != nil) || (inclDomains != nil) || (exclDomains != nil) {
-		p1.PublicCIDRs = &servicetunnel.PublicCIDRDomain{
-			Include: inclCidrs,
-			Exclude: exclCidrs,
-		}
-		p1.PublicDomains = &servicetunnel.PublicCIDRDomain{
-			Include: inclDomains,
-			Exclude: exclDomains,
-		}
-	}
-
-	var peerAccessTiers []servicetunnel.PeerAccessTier
-	peerAccessTiers = append(peerAccessTiers, p1)
-
-	// if multiple ATs, add individually to peerAccessTiers
-	if len(ats) > 1 {
-		for _, atSec := range ats[1:] {
-			pSec := servicetunnel.PeerAccessTier{
+		// If multiple accessTiers are set create peer foreach.
+		for _, eachAts := range ats {
+			peer := servicetunnel.PeerAccessTier{
 				Cluster:     d.Get("cluster").(string),
-				AccessTiers: []string{atSec},
+				AccessTiers: []string{eachAts},
+				Connectors:  nil,
 			}
-			peerAccessTiers = append(peerAccessTiers, pSec)
+			if (inclCidrs != nil) || (exclCidrs != nil) || (inclDomains != nil) || (exclDomains != nil) {
+				publicTrafficAccessTier := d.Get("public_traffic_tunnel_via_access_tier").(string)
+				if strings.EqualFold(publicTrafficAccessTier, eachAts) {
+					peer.PublicCIDRs = &servicetunnel.PublicCIDRDomain{
+						Include: inclCidrs,
+						Exclude: exclCidrs,
+					}
+					peer.PublicDomains = &servicetunnel.PublicCIDRDomain{
+						Include: inclDomains,
+						Exclude: exclDomains,
+					}
+				}
+			}
+			peers = append(peers, peer)
 		}
-
 	}
 
 	expanded = servicetunnel.Spec{
-		PeerAccessTiers: peerAccessTiers,
+		PeerAccessTiers: peers,
 	}
 	return
 }
@@ -317,16 +331,14 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 	if len(tun.Spec.PeerAccessTiers) == 0 {
 		return
 	}
-
-	// 1st peer
+	// set common parameters using first peer.
 	p1 := tun.Spec.PeerAccessTiers[0]
-
+	err = d.Set("cluster", p1.Cluster)
+	if err != nil {
+		return err
+	}
 	// if connectors set => global-edge
 	if len(p1.Connectors) > 0 {
-		err = d.Set("cluster", p1.Cluster)
-		if err != nil {
-			return err
-		}
 		err = d.Set("connectors", p1.Connectors)
 		if err != nil {
 			return err
@@ -336,21 +348,41 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 			return err
 		}
 	} else {
-		// 1st peer
-		err = d.Set("cluster", p1.Cluster)
-		if err != nil {
-			return err
-		}
+		ats := p1.AccessTiers
 		err = d.Set("connectors", nil)
 		if err != nil {
 			return err
 		}
-		ats := p1.AccessTiers
-		// if multiple ATs, add later
-		if len(tun.Spec.PeerAccessTiers) > 1 {
-			for _, pSec := range tun.Spec.PeerAccessTiers[1:] {
-				atSec := pSec.AccessTiers
-				ats = append(ats, atSec...)
+		for _, eachPeer := range tun.Spec.PeerAccessTiers {
+			ats = append(ats, eachPeer.AccessTiers...)
+			if eachPeer.PublicCIDRs != nil {
+				err = d.Set("public_cidrs_include", p1.PublicCIDRs.Include)
+				if err != nil {
+					return err
+				}
+				err = d.Set("public_cidrs_exclude", p1.PublicCIDRs.Exclude)
+				if err != nil {
+					return err
+				}
+				err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
+				if err != nil {
+					return err
+				}
+
+			}
+			if eachPeer.PublicDomains != nil {
+				err = d.Set("public_domains_include", p1.PublicDomains.Include)
+				if err != nil {
+					return err
+				}
+				err = d.Set("public_domains_exclude", p1.PublicDomains.Exclude)
+				if err != nil {
+					return err
+				}
+				err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
+				if err != nil {
+					return err
+				}
 			}
 		}
 		err = d.Set("access_tiers", ats)
@@ -358,25 +390,5 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 			return err
 		}
 	}
-
-	if p1.PublicCIDRs != nil {
-		err = d.Set("public_cidrs_include", p1.PublicCIDRs.Include)
-		if err != nil {
-			return err
-		}
-		err = d.Set("public_cidrs_exclude", p1.PublicCIDRs.Exclude)
-		if err != nil {
-			return err
-		}
-		err = d.Set("public_domains_include", p1.PublicDomains.Include)
-		if err != nil {
-			return err
-		}
-		err = d.Set("public_domains_exclude", p1.PublicDomains.Exclude)
-		if err != nil {
-			return err
-		}
-	}
-
 	return
 }
