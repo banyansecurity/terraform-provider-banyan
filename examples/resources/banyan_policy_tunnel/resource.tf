@@ -13,3 +13,26 @@ resource "banyan_policy_tunnel" "anyone-high" {
     }
   }
 }
+
+resource "banyan_policy_tunnel" "example" {
+  name        = "example-policy"
+  description = "Example policy description"
+  access {
+    roles       = ["role1", "role2"]
+    trust_level = "Medium"
+    l4_access {
+      allow {
+        cidrs     = ["10.0.0.0/24"]
+        protocols = ["TCP", "UDP"]
+        ports     = ["8080", "443","80"]
+        fqdns     = ["example.com"]
+      }
+      deny {
+        cidrs     = ["192.168.0.0/16"]
+        protocols = ["TCP"]
+        ports     = ["8443"]
+        fqdns     = ["example.org"]
+      }
+    }
+  }
+}
