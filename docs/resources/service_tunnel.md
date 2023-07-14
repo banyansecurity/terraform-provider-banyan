@@ -115,6 +115,7 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 ### Optional
 
 - `access_tiers` (Set of String) Names of the access_tiers which the service tunnel should be associated with
+- `autorun` (Boolean) Autorun for the service, if set true service would autorun on the app
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connectors` (Set of String) Names of the connectors which the service tunnel should be associated with
 - `description` (String) Description of the service tunnel
@@ -123,6 +124,7 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 - `public_cidrs_include` (Set of String) Specifies public IP addresses in CIDR notation that should be included in the tunnel, ex: 8.8.0.0/16.
 - `public_domains_exclude` (Set of String) Specifies the domains that should be that should be excluded from the tunnel, ex: zoom.us
 - `public_domains_include` (Set of String) Specifies the domains that should be that should be included in the tunnel, ex: cnn.com
+- `public_traffic_tunnel_via_access_tier` (String) Access Tier to be used to tunnel through public traffic
 
 ### Read-Only
 

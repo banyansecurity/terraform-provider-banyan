@@ -41,5 +41,3 @@ resource "banyan_api_key" "example" {
 
 - `id` (String) ID of the API key in Banyan
 - `secret` (String, Sensitive) API Secret key
-
-

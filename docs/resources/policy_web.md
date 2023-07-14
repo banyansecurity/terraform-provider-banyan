@@ -76,7 +76,7 @@ resource "banyan_policy_web" "example" {
 
 Required:
 
-- `roles` (Set of String) Role names to include 
+- `roles` (Set of String) Role names to include
 - `trust_level` (String) The trust level of the end user device, must be one of: "High", "Medium", "Low", or ""
 
 Optional:
@@ -93,5 +93,3 @@ Optional:
 										Each resource can have wildcard prefix or suffix, or both.
 										A resource can be prefixed with "!", meaning DENY.
 										Any DENY rule overrides any other rule that would allow the access.
-
-

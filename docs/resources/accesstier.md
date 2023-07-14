@@ -2,7 +2,7 @@
 page_title: "banyan_accesstier Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 Terraform registry module specific to your cloud provider. For more information about the access tier see the documentation https://docs.banyansecurity.io/docs/banyan-components/accesstier/
+  The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider. For more information about the access tier see the documentation https://docs.banyansecurity.io/docs/banyan-components/accesstier/
 ---
 
 # banyan_accesstier (Resource)
@@ -69,6 +69,29 @@ resource "banyan_policy_tunnel" "anyone-high" {
 
 - `cluster` (String) Cluster / shield name in Banyan. If not provided then the cluster will be chosen automatically
 - `console_log_level` (String) Controls verbosity of logs to console. Must be one of "ERR", "WARN", "INFO", "DEBUG"
+- `debug_address_transparency` (Boolean) Provide client address transparency
+- `debug_client_timeout` (Number) Client identification timeout
+- `debug_code_flow` (Boolean) Enable or disable OpenID Connect
+- `debug_cpu_profile` (String) Output file for CPU profiling; may impact performance. If empty, this is disabled
+- `debug_disable_docker` (Boolean) Disable Docker monitoring
+- `debug_full_server_cert_chain` (Boolean) Include non-root (intermediate) CA certs during TLS handshakes
+- `debug_host_only` (Boolean) Host only mode
+- `debug_http_backend_log` (Boolean) Verbose logging for HTTP backend traffic
+- `debug_inactivity_timeout` (Number) HTTP inactivity timeout
+- `debug_keep_alive` (Boolean) Enable TCP keepalive messages for TCP sockets handled by Netagent
+- `debug_keep_count` (Number) Number of missing TCP keepalive acknowledgements before closing connection
+- `debug_keep_idle` (Number) Idle time before sending a TCP keepalive
+- `debug_keep_interval` (Number) Time between consecutive TCP keepalive messages
+- `debug_mem_profile` (Boolean) Output file for memory profiling; may impact performance. If empty, this is disabled
+- `debug_period` (Number) Interval for reporting statistics
+- `debug_request_level_events` (Boolean) Generate access events at the request level
+- `debug_send_zeros` (Boolean) Send all-zero data points to Shield
+- `debug_service_discovery_enable` (Boolean) Enable or disable DNS and conntrack logging
+- `debug_service_discovery_msg_limit` (Number) Message threshold for batch processing
+- `debug_service_discovery_msg_timeout` (Number) Timeout value for service discovery batch processing
+- `debug_shield_timeout` (Number) If Shield is not available, policies will be treated as if they are permissive. Zero means this is disabled.
+- `debug_use_rsa` (Boolean) Netagent will generate RSA instead of ECDSA keys
+- `debug_visibility_only` (Boolean) Enable or disable visibility mode. If on, Netagent will not do policy enforcement on inbound traffic
 - `disable_snat` (Boolean) Disable Source Network Address Translation (SNAT)
 - `enable_hsts` (Boolean) If enabled, Banyan will send the HTTP Strict-Transport-Security response header
 - `event_key_rate_limiting` (Boolean) Enable rate limiting of Access Event generation based on a credit-based rate control mechanism
@@ -83,6 +106,7 @@ resource "banyan_policy_tunnel" "anyone-high" {
 - `statsd_address` (String) Address to send statsd messages: “hostname:port” for UDP, “unix:///path/to/socket” for UDS
 - `tunnel_cidrs` (Set of String) Backend CIDR Ranges that correspond to the IP addresses in your private network(s)
 - `tunnel_connector_port` (Number) UDP port for connectors to associated with this access tier to utilize
+- `tunnel_enable_dns` (Boolean) Enable DNS for Service Tunnels (needed to work properly with both private and public targets)
 - `tunnel_private_domains` (Set of String) Any internal domains that can only be resolved on your internal network’s private DNS
 
 ### Read-Only

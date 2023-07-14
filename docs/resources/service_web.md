@@ -42,14 +42,63 @@ resource "banyan_service_web" "example" {
 - `backend_tls_insecure` (Boolean) Indicates the connection to the backend should not validate the backend server TLS certificate
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connector` (String) Name of the connector which will proxy requests to your service backend
+- `custom_http_headers` (Map of String) Custom HTTP headers if set would be sent to backend, As an example this can be used to set authentication headers to authenticate user agent with backend server
+- `custom_tls_cert` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--custom_tls_cert))
+- `custom_trust_cookie` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--custom_trust_cookie))
 - `description` (String) Description of the service
 - `description_link` (String) Link shown to the end user of the banyan app for this service
+- `disable_private_dns` (Boolean) By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn off Private DNS Override i.e. disable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.
+- `dns_overrides` (Map of String) dns_overrides is an optional section that specifies name-to-address or name-to-name mappings. Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address". Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2" Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
+ name-to-name    ->    "exposed.service.com" : "internal.myservice.com"
+- `exemptions` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--exemptions))
 - `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `letsencrypt` (Boolean) Use a Public CA-issued server certificate instead of a Private CA-issued one
 - `port` (Number) The external-facing port for this service
+- `service_account_access` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--service_account_access))
+- `suppress_device_trust_verification` (Boolean) suppress_device_trust_verification disables Device Trust Verification for a service if set to true
+- `whitelist` (List of String) whitelist is an optional section that indicates the allowed names for the backend workload instance. If this field is populated, then the backend name must match at least one entry in this field list to establish connection with the backend service.The names in this list are allowed to start with the wildcard character "*" to match more than one backend name. This field is used generally with http_connect=false. For all http_connect=true cases, or where more advanced backend defining patterns are required, use allow_patterns.
 
 ### Read-Only
 
 - `id` (String) Id of the service in Banyan
 
+<a id="nestedblock--custom_tls_cert"></a>
+### Nested Schema for `custom_tls_cert`
 
+Optional:
+
+- `cert_file` (String)
+- `key_file` (String)
+
+
+<a id="nestedblock--custom_trust_cookie"></a>
+### Nested Schema for `custom_trust_cookie`
+
+Optional:
+
+- `same_site_policy` (String)
+- `trust_cookie_path` (String)
+
+
+<a id="nestedblock--exemptions"></a>
+### Nested Schema for `exemptions`
+
+Optional:
+
+- `http_methods` (List of String)
+- `legacy_paths` (List of String)
+- `mandatory_headers` (List of String)
+- `origin_header` (List of String)
+- `paths` (List of String)
+- `source_cidrs` (List of String)
+- `target_domain` (List of String)
+
+
+<a id="nestedblock--service_account_access"></a>
+### Nested Schema for `service_account_access`
+
+Optional:
+
+- `authorization_header` (Boolean)
+- `custom_header` (String)
+- `query_parameter` (String)

@@ -37,6 +37,7 @@ resource "banyan_service_rdp" "example" {
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
+- `autorun` (Boolean) Autorun for the service, if set true service would autorun on the app
 - `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
 - `client_banyanproxy_listen_port` (Number) Sets the listen port of the service for the end user Banyan app
@@ -44,14 +45,14 @@ resource "banyan_service_rdp" "example" {
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
 - `description_link` (String) Link shown to the end user of the banyan app for this service
+- `disable_private_dns` (Boolean) By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn off Private DNS Override i.e. disable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.
 - `end_user_override` (Boolean) Allow the end user to override the backend_port for this service
 - `http_connect` (Boolean) Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway
 - `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `policy` (String) Policy ID to be attached to this service
 - `port` (Number) The external-facing port for this service
+- `suppress_device_trust_verification` (Boolean) suppress_device_trust_verification disables Device Trust Verification for a service if set to true
 
 ### Read-Only
 
 - `id` (String) Id of the service in Banyan
-
-

@@ -79,7 +79,7 @@ resource "banyan_policy_tunnel" "example" {
 
 Required:
 
-- `roles` (Set of String) Role names to include 
+- `roles` (Set of String) Role names to include
 - `trust_level` (String) The trust level of the end user device, must be one of: "High", "Medium", "Low", or ""
 
 Optional:
@@ -91,8 +91,8 @@ Optional:
 
 Optional:
 
-- `allow` (Block List) Role names to include  (see [below for nested schema](#nestedblock--access--l4_access--allow))
-- `deny` (Block List) Role names to include  (see [below for nested schema](#nestedblock--access--l4_access--deny))
+- `allow` (Block List) Role names to include (see [below for nested schema](#nestedblock--access--l4_access--allow))
+- `deny` (Block List) Role names to include (see [below for nested schema](#nestedblock--access--l4_access--deny))
 
 <a id="nestedblock--access--l4_access--allow"></a>
 ### Nested Schema for `access.l4_access.allow`
@@ -100,9 +100,10 @@ Optional:
 Optional:
 
 - `cidrs` (Set of String) Allowed CIDRs through the service tunnel
+- `fqdns` (Set of String) Allowed FQDNs through the service tunnel
 - `ports` (Set of String) Allowed ports through the service tunnel
 - `protocols` (Set of String) Allowed protocols through the service tunnel. Set to "TCP", "UDP", "ICMP", or "ALL"
-- `fqdns` (Set of String) Allowed Fully Qualified Domain names through the service tunnel.
+
 
 <a id="nestedblock--access--l4_access--deny"></a>
 ### Nested Schema for `access.l4_access.deny`
@@ -110,8 +111,6 @@ Optional:
 Optional:
 
 - `cidrs` (Set of String) Denied CIDRs through the service tunnel
+- `fqdns` (Set of String) Allowed FQDNs through the service tunnel
 - `ports` (Set of String) Denied ports through the service tunnel
 - `protocols` (Set of String) Denied protocols through the service tunnel. Set to "TCP", "UDP", "ICMP", or "ALL"
-- `fqdns` (Set of String) Denied Fully Qualified Domain names through the service tunnel.
-
-
