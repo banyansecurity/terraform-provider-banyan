@@ -7,6 +7,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 	"strconv"
 )
@@ -159,6 +160,24 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Description: "whitelist is an optional section that indicates the allowed names for the backend workload instance. If this field is populated, then the backend name must match at least one entry in this field list to establish connection with the backend service.The names in this list are allowed to start with the wildcard character \"*\" to match more than one backend name. This field is used generally with http_connect=false. For all http_connect=true cases, or where more advanced backend defining patterns are required, use allow_patterns.",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
+			},
+		},
+		"custom_trust_cookie": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"same_site_policy": {
+						Type:         schema.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.StringInSlice([]string{"lax", "none", "strict"}, false),
+					},
+					"trust_cookie_path": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
 			},
 		},
 		"service_account_access": {
@@ -325,6 +344,10 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		if err != nil {
 			return diag.FromErr(err)
 		}
+	}
+	err = d.Set("custom_trust_cookie", flattenCustomTrustCookie(svc.CreateServiceSpec.Spec.CustomTrustCookie))
+	if err != nil {
+		return diag.FromErr(err)
 	}
 	err = d.Set("service_account_access", flattenServiceAccountAccess(svc.CreateServiceSpec.Spec.TokenLoc))
 	if err != nil {
@@ -499,16 +522,30 @@ func expandCustomTLSCert(d *schema.ResourceData) service.CustomTLSCert {
 
 func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSettings) {
 	httpSettings = service.HTTPSettings{
-		Enabled:         true,
-		OIDCSettings:    expandWebOIDCSettings(d),
-		ExemptedPaths:   expandWebExemptedPaths(d),
-		Headers:         expandCustomHttpHeaders(d),
-		HTTPHealthCheck: expandWebHTTPHealthCheck(),
-		TokenLoc:        expandWebTokenLoc(d),
+		Enabled:           true,
+		CustomTrustCookie: expandCustomTrustCookie(d),
+		OIDCSettings:      expandWebOIDCSettings(d),
+		ExemptedPaths:     expandWebExemptedPaths(d),
+		Headers:           expandCustomHttpHeaders(d),
+		HTTPHealthCheck:   expandWebHTTPHealthCheck(),
+		TokenLoc:          expandWebTokenLoc(d),
 	}
 	return
 }
+func expandCustomTrustCookie(d *schema.ResourceData) *service.CustomTrustCookie {
+	v, ok := d.GetOk("custom_trust_cookie")
+	if !ok {
+		return nil
+	}
+	tc := v.(*schema.Set).List()
+	sameSitePolicy := tc[0].(map[string]interface{})["same_site_policy"].(string)
+	trustCookiePath := tc[0].(map[string]interface{})["trust_cookie_path"].(string)
 
+	return &service.CustomTrustCookie{
+		SameSite: sameSitePolicy,
+		Path:     trustCookiePath,
+	}
+}
 func expandWebTokenLoc(d *schema.ResourceData) *service.TokenLocation {
 	v, ok := d.GetOk("service_account_access")
 	if !ok {
@@ -625,6 +662,22 @@ func expandWebHTTPHealthCheck() (httpHealthCheck service.HTTPHealthCheck) {
 		UserAgent:   "",
 		FromAddress: []string{},
 		HTTPS:       false,
+	}
+	return
+}
+func flattenCustomTrustCookie(customTrustCookie *service.CustomTrustCookie) (flattened []interface{}) {
+	if customTrustCookie == nil {
+		return
+	}
+	tl := make(map[string]interface{})
+	if customTrustCookie.SameSite != "" {
+		tl["same_site_policy"] = customTrustCookie.SameSite
+	}
+	if customTrustCookie.Path != "" {
+		tl["trust_cookie_path"] = customTrustCookie.Path
+	}
+	if len(tl) != 0 {
+		flattened = append(flattened, tl)
 	}
 	return
 }
