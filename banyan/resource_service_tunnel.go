@@ -3,11 +3,12 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/servicetunnel"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"strings"
 )
 
 func resourceServiceTunnel() *schema.Resource {
@@ -340,32 +341,36 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 		for _, eachPeer := range tun.Spec.PeerAccessTiers {
 			ats = append(ats, eachPeer.AccessTiers...)
 			if eachPeer.PublicCIDRs != nil {
-				err = d.Set("public_cidrs_include", p1.PublicCIDRs.Include)
+				err = d.Set("public_cidrs_include", eachPeer.PublicCIDRs.Include)
 				if err != nil {
 					return err
 				}
-				err = d.Set("public_cidrs_exclude", p1.PublicCIDRs.Exclude)
+				err = d.Set("public_cidrs_exclude", eachPeer.PublicCIDRs.Exclude)
 				if err != nil {
 					return err
 				}
-				err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
-				if err != nil {
-					return err
+				if len(eachPeer.AccessTiers) > 0 {
+					err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
+					if err != nil {
+						return err
+					}
 				}
 
 			}
 			if eachPeer.PublicDomains != nil {
-				err = d.Set("public_domains_include", p1.PublicDomains.Include)
+				err = d.Set("public_domains_include", eachPeer.PublicDomains.Include)
 				if err != nil {
 					return err
 				}
-				err = d.Set("public_domains_exclude", p1.PublicDomains.Exclude)
+				err = d.Set("public_domains_exclude", eachPeer.PublicDomains.Exclude)
 				if err != nil {
 					return err
 				}
-				err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
-				if err != nil {
-					return err
+				if len(eachPeer.AccessTiers) > 0 {
+					err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
