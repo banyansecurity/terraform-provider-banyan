@@ -332,7 +332,7 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 			return err
 		}
 	} else {
-		ats := p1.AccessTiers
+		var ats []string
 		err = d.Set("connectors", nil)
 		if err != nil {
 			return err
@@ -340,13 +340,17 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 		for _, eachPeer := range tun.Spec.PeerAccessTiers {
 			ats = append(ats, eachPeer.AccessTiers...)
 			if eachPeer.PublicCIDRs != nil {
-				err = d.Set("public_cidrs_include", p1.PublicCIDRs.Include)
-				if err != nil {
-					return err
+				if len(eachPeer.PublicCIDRs.Include) > 0 {
+					err = d.Set("public_cidrs_include", eachPeer.PublicCIDRs.Include)
+					if err != nil {
+						return err
+					}
 				}
-				err = d.Set("public_cidrs_exclude", p1.PublicCIDRs.Exclude)
-				if err != nil {
-					return err
+				if len(eachPeer.PublicCIDRs.Exclude) > 0 {
+					err = d.Set("public_cidrs_exclude", eachPeer.PublicCIDRs.Exclude)
+					if err != nil {
+						return err
+					}
 				}
 				err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
 				if err != nil {
@@ -355,13 +359,17 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 
 			}
 			if eachPeer.PublicDomains != nil {
-				err = d.Set("public_domains_include", p1.PublicDomains.Include)
-				if err != nil {
-					return err
+				if len(eachPeer.PublicDomains.Include) > 0 {
+					err = d.Set("public_domains_include", eachPeer.PublicDomains.Include)
+					if err != nil {
+						return err
+					}
 				}
-				err = d.Set("public_domains_exclude", p1.PublicDomains.Exclude)
-				if err != nil {
-					return err
+				if len(eachPeer.PublicDomains.Exclude) > 0 {
+					err = d.Set("public_domains_exclude", eachPeer.PublicDomains.Exclude)
+					if err != nil {
+						return err
+					}
 				}
 				err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
 				if err != nil {
