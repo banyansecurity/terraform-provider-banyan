@@ -91,7 +91,7 @@ func TestSchemaServiceTunnel_tunnel_public_select_at_from_multiple(t *testing.T)
 		"name":                                  "tunnel-domains",
 		"description":                           "describe tunnel-domains",
 		"cluster":                               "cluster1",
-		"access_tiers":                          []interface{}{"gcp-tdnovpn-v2", "gcp-tdnovpn-v1"},
+		"access_tiers":                          []interface{}{"gcp-tdnovpn-v1", "gcp-tdnovpn-v2"},
 		"public_cidrs_include":                  []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
 		"public_domains_include":                []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
 		"public_traffic_tunnel_via_access_tier": "gcp-tdnovpn-v2",
