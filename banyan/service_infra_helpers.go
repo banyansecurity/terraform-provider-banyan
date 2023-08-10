@@ -52,9 +52,11 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("connector", svc.CreateServiceSpec.Spec.Backend.ConnectorName)
-	if err != nil {
-		return diag.FromErr(err)
+	if len(strings.TrimSpace(svc.CreateServiceSpec.Spec.Backend.ConnectorName)) > 0 {
+		err = d.Set("connector", svc.CreateServiceSpec.Spec.Backend.ConnectorName)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	err = d.Set("domain", svc.CreateServiceSpec.Metadata.Tags.Domain)
 	if err != nil {
@@ -94,9 +96,11 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("suppress_device_trust_verification", svc.CreateServiceSpec.Spec.SuppressDeviceTrustVerification)
-	if err != nil {
-		return diag.FromErr(err)
+	if svc.CreateServiceSpec.Spec.SuppressDeviceTrustVerification {
+		err = d.Set("suppress_device_trust_verification", svc.CreateServiceSpec.Spec.SuppressDeviceTrustVerification)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	availableInApp, err := strconv.ParseBool(*svc.CreateServiceSpec.Metadata.Tags.UserFacing)
 	if err != nil {
@@ -132,12 +136,11 @@ func flattenExemptions(paths service.ExemptedPaths) (flattened []interface{}, er
 		return
 	}
 
-	if len(paths.Patterns) > 1 {
+	if len(paths.Patterns) != 1 {
 		err = fmt.Errorf("more than one pattern not supported to import in terraform")
 		return
 	}
 	exemptions["paths"] = paths.Patterns[0].Paths
-
 	exemptions["source_cidrs"] = paths.Patterns[0].SourceCIDRs
 	exemptions["mandatory_headers"] = paths.Patterns[0].MandatoryHeaders
 	exemptions["http_methods"] = paths.Patterns[0].Methods

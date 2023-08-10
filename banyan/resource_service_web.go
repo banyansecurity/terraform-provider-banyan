@@ -315,28 +315,42 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("custom_http_headers", svc.CreateServiceSpec.Spec.Headers)
-	if err != nil {
-		return diag.FromErr(err)
+	if len(svc.CreateServiceSpec.Spec.Headers) > 0 {
+		err = d.Set("custom_http_headers", svc.CreateServiceSpec.Spec.Headers)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	err = d.Set("dns_overrides", svc.CreateServiceSpec.Spec.BackendDNSOverrides)
-	if err != nil {
-		return diag.FromErr(err)
+	if len(svc.CreateServiceSpec.Spec.BackendDNSOverrides) > 0 {
+		err = d.Set("dns_overrides", svc.CreateServiceSpec.Spec.BackendDNSOverrides)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	err = d.Set("whitelist", svc.CreateServiceSpec.Spec.Backend.BackendWhitelist)
-	if err != nil {
-		return diag.FromErr(err)
+	if len(svc.CreateServiceSpec.Spec.Backend.BackendWhitelist) > 0 {
+		err = d.Set("whitelist", svc.CreateServiceSpec.Spec.Backend.BackendWhitelist)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	exemptions, err := flattenExemptions(svc.CreateServiceSpec.Spec.HTTPSettings.ExemptedPaths)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("exemptions", exemptions)
-	if err != nil {
-		return diag.FromErr(err)
+	if len(exemptions) > 0 {
+		err = d.Set("exemptions", exemptions)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if len(svc.CreateServiceSpec.Spec.ClientCIDRs) > 0 {
 		return diag.Errorf("Client CIDRs are deprecated cannot import if it is set.")
+	}
+	if svc.CreateServiceSpec.Spec.CertSettings.Letsencrypt {
+		err = d.Set("letsencrypt", svc.CreateServiceSpec.Spec.CertSettings.Letsencrypt)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	customTlsCert := flattenCustomTLSCert(svc.CreateServiceSpec.Spec.CustomTLSCert)
 	if len(customTlsCert) != 0 {
@@ -349,9 +363,11 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("service_account_access", flattenServiceAccountAccess(svc.CreateServiceSpec.Spec.TokenLoc))
-	if err != nil {
-		return diag.FromErr(err)
+	if svc.CreateServiceSpec.Spec.TokenLoc != nil && svc.CreateServiceSpec.Spec.TokenLoc.AuthorizationHeader {
+		err = d.Set("service_account_access", flattenServiceAccountAccess(svc.CreateServiceSpec.Spec.TokenLoc))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	return
 }
@@ -598,7 +614,6 @@ func expandWebExemptedPaths(d *schema.ResourceData) service.ExemptedPaths {
 	paths, err := getStringListFromPatternsPath(exemptedPaths.(*schema.Set), "legacy_paths")
 	if err != nil {
 		diag.Errorf("Unable to read paths from exempted_paths")
-
 	}
 
 	patterns, err := expandExemptedPathPatterns(exemptedPaths.(*schema.Set))
