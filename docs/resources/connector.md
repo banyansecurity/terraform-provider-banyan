@@ -73,3 +73,6 @@ resource "banyan_service_tunnel" "example" {
 ### Read-Only
 
 - `id` (String) ID of the connector in Banyan
+## Import
+Import is supported using the following syntax:
+{{codefile "shell" "/Users/naresh/banyan/banyansecurity-terraform-provider-banyan/examples/resources/banyan_connector/import.sh"}}

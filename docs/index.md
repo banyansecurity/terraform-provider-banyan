@@ -37,7 +37,6 @@ API key is *required* in order to manage an access tier, connector, or service t
 `access_tier` and `connector` API key scopes are required by the *launch configuration* of access tiers and connectors. Terraform is able to provision `access_tier` and `connector` API keys which are used by access tier and connector instances. The  [access tier](https://registry.terraform.io/modules/banyansecurity/banyan-accesstier2) and [connector](https://registry.terraformio/modules/banyansecurity/banyan-connector) Terraform modules use these API key scopes to launch access tier and connector instances.
 
 ## Configuration with your Banyan API Key as a parameter
-
 ```terraform
 terraform {
   required_providers {

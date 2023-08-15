@@ -112,3 +112,6 @@ resource "banyan_policy_tunnel" "anyone-high" {
 ### Read-Only
 
 - `id` (String) ID of the access tier in Banyan
+## Import
+Import is supported using the following syntax:
+{{codefile "shell" "/Users/naresh/banyan/banyansecurity-terraform-provider-banyan/examples/resources/banyan_accesstier/import.sh"}}

@@ -142,3 +142,6 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 ### Read-Only
 
 - `id` (String) ID of the service tunnel key in Banyan
+## Import
+Import is supported using the following syntax:
+{{codefile "shell" "/Users/naresh/banyan/banyansecurity-terraform-provider-banyan/examples/resources/banyan_service_tunnel/import.sh"}}
