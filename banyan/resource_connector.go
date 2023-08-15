@@ -2,12 +2,12 @@ package banyan
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"time"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -73,7 +73,7 @@ func resourceConnector() *schema.Resource {
 }
 
 func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
-	// if access_tiers not set, use ["*"]
+	// if access_tiers not set, use \["*"\]
 	ats := convertSchemaSetToStringSlice(d.Get("access_tiers").(*schema.Set))
 	if ats == nil {
 		ats = []string{"*"}
@@ -155,13 +155,13 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m inte
 
 func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	err := resource.RetryContext(ctx, 180*time.Second, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 180*time.Second, func() *retry.RetryError {
 		err := c.Satellite.Delete(d.Id())
 		if err != nil {
 			if err.Error() == "connector not found" {
 				return nil
 			}
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		return nil
 	})

@@ -96,12 +96,12 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if svc.CreateServiceSpec.Spec.SuppressDeviceTrustVerification {
-		err = d.Set("suppress_device_trust_verification", svc.CreateServiceSpec.Spec.SuppressDeviceTrustVerification)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+
+	err = d.Set("suppress_device_trust_verification", svc.CreateServiceSpec.Spec.SuppressDeviceTrustVerification)
+	if err != nil {
+		return diag.FromErr(err)
 	}
+
 	availableInApp, err := strconv.ParseBool(*svc.CreateServiceSpec.Metadata.Tags.UserFacing)
 	if err != nil {
 		diag.FromErr(err)
