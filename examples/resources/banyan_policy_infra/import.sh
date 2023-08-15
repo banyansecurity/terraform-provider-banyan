@@ -2,11 +2,11 @@
 # And we need to create an entry in .tf file which represents the resource which would be imported.
 # for e.g adding an entry into main.tf
 # main.tf:
-# resource "banyan_service_web" "myexample" {
+# resource "banyan_policy_infra" "myexample" {
 #   name = "myexample"
 # }
 
-terraform import banyan_service_web.myexample myexample.global-edge.bnn
+terraform import banyan_policy_infra.myexample 46f3a708-2a9a-4c87-b18e-b11b6c92bf24
 
 terraform show
 # update thw show output configuration into above main.tf file, then resource is managed.
@@ -17,8 +17,8 @@ terraform show
 # for e.g
 # import.tf:
 # import {
-#  to = banyan_service_web.myexample
-#  id = "myexample.global-edge.bnn"
+#  to = banyan_policy_infra.myexample
+#  id = "46f3a708-2a9a-4c87-b18e-b11b6c92bf24"
 # }
 #  Then execute
 terraform plan -generate-config-out=generated.tf
