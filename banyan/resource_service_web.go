@@ -7,6 +7,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 	"strconv"
 )
@@ -161,6 +162,24 @@ func WebSchema() (s map[string]*schema.Schema) {
 				Type: schema.TypeString,
 			},
 		},
+		"custom_trust_cookie": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"same_site_policy": {
+						Type:         schema.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.StringInSlice([]string{"lax", "none", "strict"}, false),
+					},
+					"trust_cookie_path": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
+		},
 		"service_account_access": {
 			Type:     schema.TypeSet,
 			MaxItems: 1,
@@ -296,28 +315,42 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("custom_http_headers", svc.CreateServiceSpec.Spec.Headers)
-	if err != nil {
-		return diag.FromErr(err)
+	if len(svc.CreateServiceSpec.Spec.Headers) > 0 {
+		err = d.Set("custom_http_headers", svc.CreateServiceSpec.Spec.Headers)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	err = d.Set("dns_overrides", svc.CreateServiceSpec.Spec.BackendDNSOverrides)
-	if err != nil {
-		return diag.FromErr(err)
+	if len(svc.CreateServiceSpec.Spec.BackendDNSOverrides) > 0 {
+		err = d.Set("dns_overrides", svc.CreateServiceSpec.Spec.BackendDNSOverrides)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	err = d.Set("whitelist", svc.CreateServiceSpec.Spec.Backend.BackendWhitelist)
-	if err != nil {
-		return diag.FromErr(err)
+	if len(svc.CreateServiceSpec.Spec.Backend.BackendWhitelist) > 0 {
+		err = d.Set("whitelist", svc.CreateServiceSpec.Spec.Backend.BackendWhitelist)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	exemptions, err := flattenExemptions(svc.CreateServiceSpec.Spec.HTTPSettings.ExemptedPaths)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("exemptions", exemptions)
-	if err != nil {
-		return diag.FromErr(err)
+	if len(exemptions) > 0 {
+		err = d.Set("exemptions", exemptions)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if len(svc.CreateServiceSpec.Spec.ClientCIDRs) > 0 {
 		return diag.Errorf("Client CIDRs are deprecated cannot import if it is set.")
+	}
+	if svc.CreateServiceSpec.Spec.CertSettings.Letsencrypt {
+		err = d.Set("letsencrypt", svc.CreateServiceSpec.Spec.CertSettings.Letsencrypt)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	customTlsCert := flattenCustomTLSCert(svc.CreateServiceSpec.Spec.CustomTLSCert)
 	if len(customTlsCert) != 0 {
@@ -326,9 +359,15 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 			return diag.FromErr(err)
 		}
 	}
-	err = d.Set("service_account_access", flattenServiceAccountAccess(svc.CreateServiceSpec.Spec.TokenLoc))
+	err = d.Set("custom_trust_cookie", flattenCustomTrustCookie(svc.CreateServiceSpec.Spec.CustomTrustCookie))
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	if svc.CreateServiceSpec.Spec.TokenLoc != nil && svc.CreateServiceSpec.Spec.TokenLoc.AuthorizationHeader {
+		err = d.Set("service_account_access", flattenServiceAccountAccess(svc.CreateServiceSpec.Spec.TokenLoc))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	return
 }
@@ -499,16 +538,30 @@ func expandCustomTLSCert(d *schema.ResourceData) service.CustomTLSCert {
 
 func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSettings) {
 	httpSettings = service.HTTPSettings{
-		Enabled:         true,
-		OIDCSettings:    expandWebOIDCSettings(d),
-		ExemptedPaths:   expandWebExemptedPaths(d),
-		Headers:         expandCustomHttpHeaders(d),
-		HTTPHealthCheck: expandWebHTTPHealthCheck(),
-		TokenLoc:        expandWebTokenLoc(d),
+		Enabled:           true,
+		CustomTrustCookie: expandCustomTrustCookie(d),
+		OIDCSettings:      expandWebOIDCSettings(d),
+		ExemptedPaths:     expandWebExemptedPaths(d),
+		Headers:           expandCustomHttpHeaders(d),
+		HTTPHealthCheck:   expandWebHTTPHealthCheck(),
+		TokenLoc:          expandWebTokenLoc(d),
 	}
 	return
 }
+func expandCustomTrustCookie(d *schema.ResourceData) *service.CustomTrustCookie {
+	v, ok := d.GetOk("custom_trust_cookie")
+	if !ok {
+		return nil
+	}
+	tc := v.(*schema.Set).List()
+	sameSitePolicy := tc[0].(map[string]interface{})["same_site_policy"].(string)
+	trustCookiePath := tc[0].(map[string]interface{})["trust_cookie_path"].(string)
 
+	return &service.CustomTrustCookie{
+		SameSite: sameSitePolicy,
+		Path:     trustCookiePath,
+	}
+}
 func expandWebTokenLoc(d *schema.ResourceData) *service.TokenLocation {
 	v, ok := d.GetOk("service_account_access")
 	if !ok {
@@ -561,7 +614,6 @@ func expandWebExemptedPaths(d *schema.ResourceData) service.ExemptedPaths {
 	paths, err := getStringListFromPatternsPath(exemptedPaths.(*schema.Set), "legacy_paths")
 	if err != nil {
 		diag.Errorf("Unable to read paths from exempted_paths")
-
 	}
 
 	patterns, err := expandExemptedPathPatterns(exemptedPaths.(*schema.Set))
@@ -625,6 +677,22 @@ func expandWebHTTPHealthCheck() (httpHealthCheck service.HTTPHealthCheck) {
 		UserAgent:   "",
 		FromAddress: []string{},
 		HTTPS:       false,
+	}
+	return
+}
+func flattenCustomTrustCookie(customTrustCookie *service.CustomTrustCookie) (flattened []interface{}) {
+	if customTrustCookie == nil {
+		return
+	}
+	tl := make(map[string]interface{})
+	if customTrustCookie.SameSite != "" {
+		tl["same_site_policy"] = customTrustCookie.SameSite
+	}
+	if customTrustCookie.Path != "" {
+		tl["trust_cookie_path"] = customTrustCookie.Path
+	}
+	if len(tl) != 0 {
+		flattened = append(flattened, tl)
 	}
 	return
 }

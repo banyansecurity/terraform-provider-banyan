@@ -38,8 +38,7 @@
                         "8.8.8.8/32",
                         "75.75.75.75/32",
                         "75.75.76.76/32"
-                    ],
-                    "exclude": null
+                    ]
                 },
                 "public_domains":
                 {
@@ -50,8 +49,7 @@
                         "fast.com",
                         "yahoo.com",
                         "banyansecurity.io"
-                    ],
-                    "exclude": null
+                    ]
                 }
             }
         ]
