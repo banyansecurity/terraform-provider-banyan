@@ -3,7 +3,7 @@
 page_title: "banyan_policy_web Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  The web policy resource is used to manage the lifecycle of policies which will be attached to services of the type "banyanserviceweb". For more information on Banyan policies, see the documentation. https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/
+  The web policy resource is used to manage the lifecycle of policies which will be attached to services of the type banyan_service_web. For more information on Banyan policies, see the documentation. https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/
 ---
 
 # banyan_policy_web (Resource)
@@ -21,10 +21,9 @@ resource "banyan_policy_web" "example" {
     trust_level = "High"
   }
 }
-```
 
 ## Example Web Policy with Layer 7 Access Policy
-```terraform
+
 resource "banyan_service_web" "example" {
   name           = "example-web"
   access_tier    = "us-west1"
