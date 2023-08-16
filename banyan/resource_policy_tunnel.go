@@ -14,7 +14,7 @@ import (
 
 func resourcePolicyTunnel() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The tunnel policy resource is used to manage the lifecycle of policies which will be attached to services of the type \"banyan_service_tunnel\". For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
+		Description:   "The tunnel policy resource is used to manage the lifecycle of policies which will be attached to services of the type `banyan_service_tunnel`. For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
 		CreateContext: resourcePolicyTunnelCreate,
 		ReadContext:   resourcePolicyTunnelRead,
 		UpdateContext: resourcePolicyTunnelUpdate,

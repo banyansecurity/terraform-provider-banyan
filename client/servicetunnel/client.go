@@ -44,7 +44,7 @@ func (a *ServiceTunnel) Get(id string) (spec ServiceTunnelInfo, err error) {
 
 func (a *ServiceTunnel) Create(spec Info) (created ServiceTunnelInfo, err error) {
 	body, err := json.Marshal(Info{
-		Kind:       "BanyanAccessTier",
+		Kind:       "BanyanServiceTunnel",
 		APIVersion: "rbac.banyanops.com/v1",
 		Type:       "attribute-based",
 		Metadata: Metadata{
@@ -67,7 +67,7 @@ func (a *ServiceTunnel) Create(spec Info) (created ServiceTunnelInfo, err error)
 
 func (a *ServiceTunnel) Update(id string, spec Info) (updated ServiceTunnelInfo, err error) {
 	body, err := json.Marshal(Info{
-		Kind:       "BanyanAccessTier",
+		Kind:       "BanyanServiceTunnel",
 		APIVersion: "rbac.banyanops.com/v1",
 		Type:       "attribute-based",
 		Metadata: Metadata{

@@ -9,14 +9,14 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAccessTier() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider. For more information about the access tier see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/accesstier/)",
+		Description:   "The access tier resource allows for configuration of the access tier API object. We recommend utilizing the [banyan-accesstier2](https://registry.terraform.io/modules/banyansecurity/banyan-accesstier2) Terraform registry module specific to your cloud provider. For more information about the access tier see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/accesstier/)",
 		CreateContext: resourceAccessTierCreate,
 		ReadContext:   resourceAccessTierRead,
 		UpdateContext: resourceAccessTierUpdate,
@@ -429,13 +429,13 @@ func resourceAccessTierUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 func resourceAccessTierDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	err := resource.RetryContext(ctx, 180*time.Second, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 180*time.Second, func() *retry.RetryError {
 		err := c.AccessTier.Delete(d.Id())
 		if err != nil {
 			if err.Error() == "access_tier not found" {
 				return nil
 			}
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		return nil
 	})

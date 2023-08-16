@@ -7,7 +7,7 @@ description: |-
 
 # banyan_connector (Resource)
 
-The connector resource allows for configuration of the connector API object. We recommend utilizing the banyansecurity/banyan-connector Terraform registry module specific to your cloud provider. For more information on connector resource see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/connector/)
+The connector resource allows for configuration of the connector API object. We recommend utilizing the banyansecurity/banyan-connector terraform registry module specific to your cloud provider. For more information on connector resource see the [documentation](https://docs.banyansecurity.io/docs/banyan-components/connector/)
 
 ## Example Usage
 ```terraform
@@ -73,3 +73,6 @@ resource "banyan_service_tunnel" "example" {
 ### Read-Only
 
 - `id` (String) ID of the connector in Banyan
+## Import
+Import is supported using the following syntax:
+{{codefile "shell" "/Users/naresh/banyan/banyansecurity-terraform-provider-banyan/examples/resources/banyan_connector/import.sh"}}

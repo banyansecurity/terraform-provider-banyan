@@ -11,7 +11,7 @@ import (
 
 func resourcePolicyInfra() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The infrastructure policy resource is used to manage the lifecycle of policies which will be attached to services of the type \"banyan_service_db\" \"banyan_service_k8s\" \"banyan_service_rdp\" and \"banyan_service_ssh\" . For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
+		Description:   "The infrastructure policy resource is used to manage the lifecycle of policies which will be attached to services of the type `banyan_service_db` `banyan_service_k8s` `banyan_service_rdp` and `banyan_service_ssh` . For more information on Banyan policies, see the [documentation.](https://docs.banyanops.com/docs/feature-guides/administer-security-policies/policies/manage-policies/)",
 		CreateContext: resourcePolicyInfraCreate,
 		ReadContext:   resourcePolicyInfraRead,
 		UpdateContext: resourcePolicyInfraUpdate,

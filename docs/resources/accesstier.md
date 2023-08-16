@@ -2,7 +2,7 @@
 page_title: "banyan_accesstier Resource - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyansecurity/banyan-accesstier2 terraform registry module specific to your cloud provider. For more information about the access tier see the documentation https://docs.banyansecurity.io/docs/banyan-components/accesstier/
+  The access tier resource allows for configuration of the access tier API object. We recommend utilizing the banyan-accesstier2 https://registry.terraform.io/modules/banyansecurity/banyan-accesstier2 Terraform registry module specific to your cloud provider. For more information about the access tier see the documentation https://docs.banyansecurity.io/docs/banyan-components/accesstier/
 ---
 
 # banyan_accesstier (Resource)
@@ -112,3 +112,6 @@ resource "banyan_policy_tunnel" "anyone-high" {
 ### Read-Only
 
 - `id` (String) ID of the access tier in Banyan
+## Import
+Import is supported using the following syntax:
+{{codefile "shell" "/Users/naresh/banyan/banyansecurity-terraform-provider-banyan/examples/resources/banyan_accesstier/import.sh"}}
