@@ -29,6 +29,7 @@ func NewClient(restClient *restclient.Client) Client {
 
 type Client interface {
 	Get(id string) (spec GetPolicy, err error)
+	GetName(name string) (spec GetPolicy, err error)
 	Create(policy Object) (created GetPolicy, err error)
 	Update(id string, policy Object) (updated GetPolicy, err error)
 	Delete(id string) (err error)
@@ -131,7 +132,7 @@ func (p *policy) GetQuery(key string, value string) (spec GetPolicy, err error) 
 
 // GetName Need to add new API query parameters
 func (p *policy) GetName(name string) (spec GetPolicy, err error) {
-	specs, err := p.GetAll(name)
+	specs, err := p.GetAll()
 	if err != nil {
 		return
 	}
@@ -139,7 +140,7 @@ func (p *policy) GetName(name string) (spec GetPolicy, err error) {
 	return
 }
 
-func (p *policy) GetAll(name string) (specs []GetPolicy, err error) {
+func (p *policy) GetAll() (specs []GetPolicy, err error) {
 	path := "api/v1/security_policies"
 	myUrl, err := url.Parse(path)
 	if err != nil {

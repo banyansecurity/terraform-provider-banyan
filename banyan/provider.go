@@ -45,6 +45,10 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"banyan_oidc_settings": dataSourceOidcSettings(),
+			"banyan_policy_web":    dataSourcePolicyWeb(),
+			"banyan_policy_tunnel": dataSourcePolicyTunnel(),
+			"banyan_policy_infra":  dataSourcePolicyInfra(),
+			"banyan_role":          dataSourceRole(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
