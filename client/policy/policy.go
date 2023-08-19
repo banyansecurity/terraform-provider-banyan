@@ -47,6 +47,14 @@ func (p *policy) Create(policy Object) (created GetPolicy, err error) {
 	if err != nil {
 		return
 	}
+	// The API will always clobber, which leads to odd behavior
+	// This aligns behavior with user expectations
+	// Don't clobber if the policy name is in use
+	existing, err := p.GetName(policy.Name)
+	if existing.ID != "" {
+		err = errors.New("The policy name " + policy.Name + " is already in use")
+		return
+	}
 	resp, err := p.restClient.Create(apiVersion, component, body, path)
 	if err != nil {
 		return
@@ -66,12 +74,19 @@ func (p *policy) Update(id string, policy Object) (updated GetPolicy, err error)
 	if err != nil {
 		return
 	}
-	resp, err := p.restClient.Update(apiVersion, component, id, body, "")
+	// Until this endpoint exists use Create
+	// resp, err := p.restClient.Update(apiVersion, component, id, body, "")
+	path := "api/v1/insert_security_policy"
+	resp, err := p.restClient.Create(apiVersion, component, body, path)
 	if err != nil {
 		return
 	}
-	var j GetPolicy
-	err = json.Unmarshal(resp, &j)
+	err = json.Unmarshal(resp, &updated)
+	if err != nil {
+		return
+	}
+	specString := html.UnescapeString(updated.Spec)
+	err = json.Unmarshal([]byte(specString), &updated.UnmarshalledPolicy)
 	return
 }
 
