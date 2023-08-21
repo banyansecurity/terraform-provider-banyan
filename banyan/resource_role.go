@@ -30,6 +30,7 @@ func RoleSchema() (s map[string]*schema.Schema) {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
+			ForceNew:    true,
 			Description: "Name of the role",
 		},
 		"description": {
