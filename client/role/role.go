@@ -104,6 +104,14 @@ func (r *Role) Create(role CreateRole) (created GetRole, err error) {
 	if err != nil {
 		return
 	}
+	// The API will always clobber, which leads to odd behavior
+	// This aligns behavior with user expectations
+	// Don't clobber if the role name is in use
+	existing, err := r.GetName(role.Metadata.Name)
+	if existing.ID != "" {
+		err = errors.New("The policy name " + role.Metadata.Name + " is already in use")
+		return
+	}
 	resp, err := r.restClient.Create(apiVersion, component, body, path)
 	if err != nil {
 		return
@@ -118,10 +126,23 @@ func (r *Role) Create(role CreateRole) (created GetRole, err error) {
 }
 
 func (r *Role) Update(role CreateRole) (updatedRole GetRole, err error) {
-	updatedRole, err = r.Create(role)
+	body, err := json.Marshal(role)
 	if err != nil {
 		return
 	}
+	// Until this endpoint exists use Create
+	// resp, err := r.restClient.Update(apiVersion, component, id, body, "")
+	path := "api/v1/insert_security_role"
+	resp, err := r.restClient.Create(apiVersion, component, body, path)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(resp, &updatedRole)
+	if err != nil {
+		return
+	}
+	sSpec := html.UnescapeString(updatedRole.Spec)
+	err = json.Unmarshal([]byte(sSpec), &updatedRole.UnmarshalledSpec)
 	return
 }
 
