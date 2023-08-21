@@ -147,7 +147,19 @@ func resourcePolicyWebCreate(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func resourcePolicyWebUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	diagnostics = resourcePolicyWebCreate(ctx, d, m)
+	c := m.(*client.Holder)
+
+	// 	ValidateFunc is not supported on lists or sets, so use this method instead
+	err := invalidL7AccessRules(d)
+	if err != nil {
+		return diag.FromErr(errors.WithMessage(err, "invalid l7_access block"))
+	}
+	updatedPolicy, err := c.Policy.Update(d.State().ID, policyWebFromState(d))
+	if err != nil {
+		return diag.FromErr(errors.WithMessage(err, "couldn't create new web policy"))
+	}
+	d.SetId(updatedPolicy.ID)
+	diagnostics = resourcePolicyWebRead(ctx, d, m)
 	return
 }
 
