@@ -29,7 +29,6 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 		},
 		"container_fqdn": {
 			Type:        schema.TypeSet,
-			Optional:    true,
 			Computed:    true,
 			Description: "FQDN for the container",
 			Elem: &schema.Schema{
@@ -38,7 +37,6 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 		},
 		"image": {
 			Type:        schema.TypeSet,
-			Optional:    true,
 			Computed:    true,
 			Description: "Image",
 			Elem: &schema.Schema{
@@ -47,7 +45,6 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 		},
 		"repo_tag": {
 			Type:        schema.TypeSet,
-			Optional:    true,
 			Computed:    true,
 			Description: "Repo Tag",
 			Elem: &schema.Schema{
@@ -56,7 +53,7 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 		},
 		"service_account": {
 			Type:        schema.TypeSet,
-			Optional:    true,
+			Computed:    true,
 			Description: "Service accounts to be included in the role",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -64,7 +61,6 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 		},
 		"user_group": {
 			Type:        schema.TypeSet,
-			Optional:    true,
 			Computed:    true,
 			Description: "Names of the groups (from your IdP) which will be included in the role",
 			Elem: &schema.Schema{
@@ -73,7 +69,6 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 		},
 		"email": {
 			Type:        schema.TypeSet,
-			Optional:    true,
 			Computed:    true,
 			Description: "Email addresses for the users in the role",
 			Elem: &schema.Schema{
@@ -82,7 +77,6 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 		},
 		"device_ownership": {
 			Type:        schema.TypeSet,
-			Optional:    true,
 			Computed:    true,
 			Description: "Device ownership specification for the role",
 			Elem: &schema.Schema{
@@ -91,7 +85,6 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 		},
 		"platform": {
 			Type:        schema.TypeSet,
-			Optional:    true,
 			Computed:    true,
 			Description: "Platform type which is required by the role",
 			Elem: &schema.Schema{
@@ -100,13 +93,11 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 		},
 		"known_device_only": {
 			Type:        schema.TypeBool,
-			Optional:    true,
 			Computed:    true,
 			Description: "Enforces whether the role requires known devices only for access",
 		},
 		"mdm_present": {
 			Type:        schema.TypeBool,
-			Optional:    true,
 			Computed:    true,
 			Description: "Enforces whether the role requires an MDM to be present on the device",
 		},
