@@ -3,9 +3,10 @@ package role
 import (
 	"encoding/json"
 	"errors"
-	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"html"
 	"net/url"
+
+	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 )
 
 const apiVersion = "api/v1"
@@ -25,6 +26,7 @@ func NewClient(restClient *restclient.Client) Client {
 
 type Client interface {
 	Get(id string) (role GetRole, err error)
+	GetName(name string) (role GetRole, err error)
 	Create(role CreateRole) (created GetRole, err error)
 	Update(role CreateRole) (updated GetRole, err error)
 	Delete(id string) (err error)
@@ -102,6 +104,14 @@ func (r *Role) Create(role CreateRole) (created GetRole, err error) {
 	if err != nil {
 		return
 	}
+	// The API will always clobber, which leads to odd behavior
+	// This aligns behavior with user expectations
+	// Don't clobber if the role name is in use
+	existing, err := r.GetName(role.Metadata.Name)
+	if existing.ID != "" {
+		err = errors.New("The policy name " + role.Metadata.Name + " is already in use")
+		return
+	}
 	resp, err := r.restClient.Create(apiVersion, component, body, path)
 	if err != nil {
 		return
@@ -116,10 +126,23 @@ func (r *Role) Create(role CreateRole) (created GetRole, err error) {
 }
 
 func (r *Role) Update(role CreateRole) (updatedRole GetRole, err error) {
-	updatedRole, err = r.Create(role)
+	body, err := json.Marshal(role)
 	if err != nil {
 		return
 	}
+	// Until this endpoint exists use Create
+	// resp, err := r.restClient.Update(apiVersion, component, id, body, "")
+	path := "api/v1/insert_security_role"
+	resp, err := r.restClient.Create(apiVersion, component, body, path)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(resp, &updatedRole)
+	if err != nil {
+		return
+	}
+	sSpec := html.UnescapeString(updatedRole.Spec)
+	err = json.Unmarshal([]byte(sSpec), &updatedRole.UnmarshalledSpec)
 	return
 }
 
@@ -138,5 +161,41 @@ func (r *Role) Delete(id string) (err error) {
 	query.Set("RoleID", id)
 	myUrl.RawQuery = query.Encode()
 	err = r.restClient.DeleteQuery(component, id, query, path)
+	return
+}
+
+func (r *Role) GetName(name string) (spec GetRole, err error) {
+	specs, err := r.GetAll()
+	if err != nil {
+		return
+	}
+	spec, err = findByName(name, specs)
+	return
+}
+
+func (r *Role) GetAll() (specs []GetRole, err error) {
+	path := "api/v1/security_roles"
+	myUrl, err := url.Parse(path)
+	if err != nil {
+		return
+	}
+	query := myUrl.Query()
+	resp, err := r.restClient.ReadQuery(component, query, path)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(resp, &specs)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func findByName(name string, specs []GetRole) (spec GetRole, err error) {
+	for _, s := range specs {
+		if s.Name == name {
+			return s, nil
+		}
+	}
 	return
 }
