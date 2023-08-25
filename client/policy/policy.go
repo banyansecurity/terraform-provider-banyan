@@ -2,6 +2,7 @@ package policy
 
 import (
 	"encoding/json"
+	"fmt"
 	"html"
 	"log"
 	"net/url"
@@ -52,8 +53,11 @@ func (p *policy) Create(policy Object) (created GetPolicy, err error) {
 	// This aligns behavior with user expectations
 	// Don't clobber if the policy name is in use
 	existing, err := p.GetName(policy.Name)
+	if err != nil {
+		return
+	}
 	if existing.ID != "" {
-		err = errors.New("The policy name " + policy.Name + " is already in use")
+		err = fmt.Errorf("the policy name %s is already in use", policy.Name)
 		return
 	}
 	resp, err := p.restClient.Create(apiVersion, component, body, path)
@@ -75,8 +79,6 @@ func (p *policy) Update(id string, policy Object) (updated GetPolicy, err error)
 	if err != nil {
 		return
 	}
-	// Until this endpoint exists use Create
-	// resp, err := p.restClient.Update(apiVersion, component, id, body, "")
 	path := "api/v1/insert_security_policy"
 	resp, err := p.restClient.Create(apiVersion, component, body, path)
 	if err != nil {

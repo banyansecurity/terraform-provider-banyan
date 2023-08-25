@@ -8,7 +8,7 @@ description: |-
 
 # banyan_role (Data Source)
 
-Obtains information describing the role. This is best effort since the name is not *guaranteed* unique.
+
 
 ## Example Usage
 
@@ -34,8 +34,10 @@ resource "banyan_service_web" "example" {
 ### Read-Only
 
 - `container_fqdn` (Set of String) FQDN for the container
+- `description` (String) Description of the role
 - `device_ownership` (Set of String) Device ownership specification for the role
 - `email` (Set of String) Email addresses for the users in the role
+- `id` (String) ID of the role in Banyan
 - `image` (Set of String) Image
 - `known_device_only` (Boolean) Enforces whether the role requires known devices only for access
 - `mdm_present` (Boolean) Enforces whether the role requires an MDM to be present on the device
@@ -43,5 +45,3 @@ resource "banyan_service_web" "example" {
 - `repo_tag` (Set of String) Repo Tag
 - `service_account` (Set of String) Service accounts to be included in the role
 - `user_group` (Set of String) Names of the groups (from your IdP) which will be included in the role
-- `description` (String) Description of the role
-- `id` (String) ID of the role in Banyan

@@ -3,12 +3,11 @@
 page_title: "banyan_policy_web Data Source - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  Obtains information describing the service
+  
 ---
 
 # banyan_policy_web (Data Source)
 
-Obtains information describing the service. This is best effort since the name is not *guaranteed* unique.
 
 
 ## Example Usage

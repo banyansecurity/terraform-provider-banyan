@@ -3,6 +3,7 @@ package role
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"html"
 	"net/url"
 
@@ -108,8 +109,11 @@ func (r *Role) Create(role CreateRole) (created GetRole, err error) {
 	// This aligns behavior with user expectations
 	// Don't clobber if the role name is in use
 	existing, err := r.GetName(role.Metadata.Name)
+	if err != nil {
+		return
+	}
 	if existing.ID != "" {
-		err = errors.New("The policy name " + role.Metadata.Name + " is already in use")
+		err = fmt.Errorf("the role %s is already in use", role.Metadata.Name)
 		return
 	}
 	resp, err := r.restClient.Create(apiVersion, component, body, path)
@@ -130,8 +134,6 @@ func (r *Role) Update(role CreateRole) (updatedRole GetRole, err error) {
 	if err != nil {
 		return
 	}
-	// Until this endpoint exists use Create
-	// resp, err := r.restClient.Update(apiVersion, component, id, body, "")
 	path := "api/v1/insert_security_role"
 	resp, err := r.restClient.Create(apiVersion, component, body, path)
 	if err != nil {

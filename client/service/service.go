@@ -107,6 +107,18 @@ func (s *Service) Create(spec CreateService) (created GetServiceSpec, err error)
 	if err != nil {
 		return
 	}
+	// The API will always clobber, which leads to odd behavior
+	// This aligns behavior with user expectations
+	// Don't clobber if the service name already exist
+	existing, err := s.GetByName(spec.Metadata.Name)
+	if err != nil {
+		return
+	}
+	if existing.ServiceID != "" {
+		err = fmt.Errorf("the service name %s is already exists", existing.ServiceName)
+		return
+	}
+
 	resp, err := s.restClient.Create(apiVersion, component, body, path)
 	log.Printf("[INFO] Created service %s", resp)
 	if err != nil {
@@ -129,11 +141,30 @@ func (s *Service) Create(spec CreateService) (created GetServiceSpec, err error)
 }
 
 func (s *Service) Update(id string, spec CreateService) (updated GetServiceSpec, err error) {
-	updated, err = s.Create(spec)
+	path := "api/v1/insert_registered_service"
+	body, err := json.Marshal(spec)
 	if err != nil {
-		err = errors.Errorf("could not update service: %s", id)
+		return
 	}
-	return
+	resp, err := s.restClient.Create(apiVersion, component, body, path)
+	log.Printf("[INFO] Updated service %s", resp)
+	if err != nil {
+		return
+	}
+	var j GetServicesJson
+	err = json.Unmarshal(resp, &j)
+	if err != nil {
+		return
+	}
+	j.ServiceSpec = html.UnescapeString(j.ServiceSpec)
+	var createdService CreateService
+	err = json.Unmarshal([]byte(j.ServiceSpec), &createdService)
+	if err != nil {
+		return
+	}
+	j.Spec = createdService.Spec
+	log.Printf("[INFO] Updated service %s", id)
+	return MapToGetServiceSpec(j), nil
 }
 
 func MapToGetServiceSpec(original GetServicesJson) (new GetServiceSpec) {
@@ -178,5 +209,39 @@ func (s *Service) GetPolicyForService(id string) (attachedPolicy policy.GetPolic
 		return
 	}
 	attachedPolicy, err = pClient.Get(policyAtt.PolicyID)
+	return
+}
+
+func (s *Service) GetAll() (services []RegisteredServiceInfo, err error) {
+	path := "api/v1/registered_services"
+	myUrl, err := url.Parse(path)
+	if err != nil {
+		return
+	}
+	query := myUrl.Query()
+	resp, err := s.restClient.ReadQuery(component, query, path)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(resp, &services)
+	if err != nil {
+		return
+	}
+	return
+}
+func (s *Service) GetByName(name string) (service RegisteredServiceInfo, err error) {
+	specs, err := s.GetAll()
+	if err != nil {
+		return
+	}
+	service, err = findByName(name, specs)
+	return
+}
+func findByName(name string, specs []RegisteredServiceInfo) (spec RegisteredServiceInfo, err error) {
+	for _, s := range specs {
+		if s.ServiceName == name {
+			return s, nil
+		}
+	}
 	return
 }

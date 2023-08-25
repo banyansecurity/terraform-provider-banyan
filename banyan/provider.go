@@ -12,7 +12,7 @@ import (
 
 // Provider for Banyan
 func Provider() *schema.Provider {
-	return &schema.Provider{
+	var provider = schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"host": {
 				Type:        schema.TypeString,
@@ -52,6 +52,10 @@ func Provider() *schema.Provider {
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
+	//provider.ResourcesMap["banyan_registered_domain"]
+	//provider.ResourcesMap["banyan_registered_domain_validate"]
+
+	return &provider
 }
 
 // Configures the Banyan provider with the given refresh / API token and host url

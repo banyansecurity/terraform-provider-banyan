@@ -171,7 +171,12 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	diagnostics = resourceRoleCreate(ctx, d, m)
+	c := m.(*client.Holder)
+	resp, err := c.Role.Update(RoleFromState(d))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(resp.ID)
 	return
 }
 
