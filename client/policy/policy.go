@@ -57,7 +57,7 @@ func (p *policy) Create(policy Object) (created GetPolicy, err error) {
 		return
 	}
 	if existing.ID != "" {
-		err = fmt.Errorf("the policy name %s is already in use", policy.Name)
+		err = fmt.Errorf("the policy name %s already in use", policy.Name)
 		return
 	}
 	resp, err := p.restClient.Create(apiVersion, component, body, path)

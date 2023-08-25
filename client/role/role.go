@@ -113,7 +113,7 @@ func (r *Role) Create(role CreateRole) (created GetRole, err error) {
 		return
 	}
 	if existing.ID != "" {
-		err = fmt.Errorf("the role %s is already in use", role.Metadata.Name)
+		err = fmt.Errorf("the role %s already in use", role.Metadata.Name)
 		return
 	}
 	resp, err := r.restClient.Create(apiVersion, component, body, path)

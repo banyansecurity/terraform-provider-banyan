@@ -115,7 +115,7 @@ func (s *Service) Create(spec CreateService) (created GetServiceSpec, err error)
 		return
 	}
 	if existing.ServiceID != "" {
-		err = fmt.Errorf("the service name %s is already exists", existing.ServiceName)
+		err = fmt.Errorf("the service name %s already exists", existing.ServiceName)
 		return
 	}
 
