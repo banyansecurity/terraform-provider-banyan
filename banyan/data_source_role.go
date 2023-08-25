@@ -107,6 +107,7 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 
 func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
+		Description: "Obtains information describing the role from banyan",
 		ReadContext: dataSourceRoleRead,
 		Schema:      dataSourceRoleSchema(),
 	}

@@ -55,6 +55,7 @@ func dataSourcePolicyInfraSchema() (s map[string]*schema.Schema) {
 
 func dataSourcePolicyInfra() *schema.Resource {
 	return &schema.Resource{
+		Description: "Obtains information describing the infra policy from banyan",
 		ReadContext: dataSourcePolicyInfraRead,
 		Schema:      dataSourcePolicyInfraSchema(),
 	}

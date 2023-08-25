@@ -146,6 +146,7 @@ func dataSourcePolicyTunnelSchema() (s map[string]*schema.Schema) {
 
 func dataSourcePolicyTunnel() *schema.Resource {
 	return &schema.Resource{
+		Description: "Obtains information describing the tunnel policy from banyan",
 		ReadContext: dataSourcePolicyTunnelRead,
 		Schema:      dataSourcePolicyTunnelSchema(),
 	}

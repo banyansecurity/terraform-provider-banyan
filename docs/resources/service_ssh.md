@@ -40,7 +40,6 @@ resource "banyan_service_ssh" "example" {
 - `autorun` (Boolean) Autorun for the service, if set true service would autorun on the app
 - `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
-- `client_banyanproxy_listen_port` (Number) For SSH, banyanproxy uses stdin instead of a local port
 - `client_ssh_auth` (String) Specifies which certificates - TRUSTCERT | SSHCERT | BOTH - should be used when the user connects to this service; default: TRUSTCERT
 - `client_ssh_host_directive` (String) Creates an entry in the SSH config file using the Host keyword. Wildcards are supported such as "192.168.*.?"; default: <service name>
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service

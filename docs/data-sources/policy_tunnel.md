@@ -3,12 +3,12 @@
 page_title: "banyan_policy_tunnel Data Source - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  
+  Obtains information describing the tunnel policy from banyan
 ---
 
 # banyan_policy_tunnel (Data Source)
 
-
+Obtains information describing the tunnel policy from banyan
 
 ## Example Usage
 

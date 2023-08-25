@@ -13,6 +13,7 @@ import (
 func dataSourceOidcSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceOidcSettingsRead,
+		Description: "Obtains information describing the OIDC settings from banyan",
 		Schema: map[string]*schema.Schema{
 			"issuer_url": {
 				Type:     schema.TypeString,

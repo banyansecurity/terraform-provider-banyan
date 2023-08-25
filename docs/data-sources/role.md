@@ -3,12 +3,12 @@
 page_title: "banyan_role Data Source - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  Obtains information describing the role
+  Obtains information describing the role from banyan
 ---
 
 # banyan_role (Data Source)
 
-
+Obtains information describing the role from banyan
 
 ## Example Usage
 

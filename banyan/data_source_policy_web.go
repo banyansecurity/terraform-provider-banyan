@@ -84,6 +84,7 @@ func dataSourcePolicyWebSchema() (s map[string]*schema.Schema) {
 
 func dataSourcePolicyWeb() *schema.Resource {
 	return &schema.Resource{
+		Description: "Obtains information describing the web policy from banyan",
 		ReadContext: dataSourcePolicyWebRead,
 		Schema:      dataSourcePolicyWebSchema(),
 	}

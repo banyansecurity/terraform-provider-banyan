@@ -3,12 +3,12 @@
 page_title: "banyan_policy_infra Data Source - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  
+  Obtains information describing the infra policy from banyan
 ---
 
 # banyan_policy_infra (Data Source)
 
-
+Obtains information describing the infra policy from banyan
 
 ## Example Usage
 

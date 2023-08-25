@@ -3,12 +3,12 @@
 page_title: "banyan_policy_web Data Source - terraform-provider-banyan"
 subcategory: ""
 description: |-
-  
+  Obtains information describing the web policy from banyan
 ---
 
 # banyan_policy_web (Data Source)
 
-
+Obtains information describing the web policy from banyan
 
 ## Example Usage
 
