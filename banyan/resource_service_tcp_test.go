@@ -111,7 +111,7 @@ func testAccService_tcp_create_json(name string) string {
             "icon": "",
             "service_app_type": "GENERIC",
             "banyanproxy_mode": "TCP",
-            "app_listen_port": "0",
+            "app_listen_port": "",
             "allow_user_override": true,
             "description_link": "",
    			"include_domains": []

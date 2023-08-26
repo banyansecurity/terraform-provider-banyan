@@ -146,12 +146,6 @@ func SshSchema() map[string]*schema.Schema {
 			Description: "Override DNS for service domain name with this value",
 			Optional:    true,
 		},
-		"client_banyanproxy_listen_port": {
-			Type:         schema.TypeInt,
-			Description:  "For SSH, banyanproxy uses stdin instead of a local port",
-			Optional:     true,
-			ValidateFunc: validatePort(),
-		},
 		"http_connect": {
 			Type:        schema.TypeBool,
 			Description: "Indicates to use HTTP Connect request to derive the backend target address.",

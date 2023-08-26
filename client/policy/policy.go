@@ -2,6 +2,7 @@ package policy
 
 import (
 	"encoding/json"
+	"fmt"
 	"html"
 	"log"
 	"net/url"
@@ -29,6 +30,7 @@ func NewClient(restClient *restclient.Client) Client {
 
 type Client interface {
 	Get(id string) (spec GetPolicy, err error)
+	GetName(name string) (spec GetPolicy, err error)
 	Create(policy Object) (created GetPolicy, err error)
 	Update(id string, policy Object) (updated GetPolicy, err error)
 	Delete(id string) (err error)
@@ -45,6 +47,17 @@ func (p *policy) Create(policy Object) (created GetPolicy, err error) {
 	path := "api/v1/insert_security_policy"
 	body, err := json.Marshal(policy)
 	if err != nil {
+		return
+	}
+	// The API will always clobber, which leads to odd behavior
+	// This aligns behavior with user expectations
+	// Don't clobber if the policy name is in use
+	existing, err := p.GetName(policy.Name)
+	if err != nil {
+		return
+	}
+	if existing.ID != "" {
+		err = fmt.Errorf("the policy name %s already in use", policy.Name)
 		return
 	}
 	resp, err := p.restClient.Create(apiVersion, component, body, path)
@@ -66,12 +79,17 @@ func (p *policy) Update(id string, policy Object) (updated GetPolicy, err error)
 	if err != nil {
 		return
 	}
-	resp, err := p.restClient.Update(apiVersion, component, id, body, "")
+	path := "api/v1/insert_security_policy"
+	resp, err := p.restClient.Create(apiVersion, component, body, path)
 	if err != nil {
 		return
 	}
-	var j GetPolicy
-	err = json.Unmarshal(resp, &j)
+	err = json.Unmarshal(resp, &updated)
+	if err != nil {
+		return
+	}
+	specString := html.UnescapeString(updated.Spec)
+	err = json.Unmarshal([]byte(specString), &updated.UnmarshalledPolicy)
 	return
 }
 
@@ -131,7 +149,7 @@ func (p *policy) GetQuery(key string, value string) (spec GetPolicy, err error) 
 
 // GetName Need to add new API query parameters
 func (p *policy) GetName(name string) (spec GetPolicy, err error) {
-	specs, err := p.GetAll(name)
+	specs, err := p.GetAll()
 	if err != nil {
 		return
 	}
@@ -139,7 +157,7 @@ func (p *policy) GetName(name string) (spec GetPolicy, err error) {
 	return
 }
 
-func (p *policy) GetAll(name string) (specs []GetPolicy, err error) {
+func (p *policy) GetAll() (specs []GetPolicy, err error) {
 	path := "api/v1/security_policies"
 	myUrl, err := url.Parse(path)
 	if err != nil {

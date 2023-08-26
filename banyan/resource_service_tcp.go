@@ -133,10 +133,9 @@ func TcpSchema() map[string]*schema.Schema {
 			Optional:    true,
 		},
 		"client_banyanproxy_listen_port": {
-			Type:         schema.TypeInt,
-			Description:  "Sets the listen port of the service for the end user Banyan app",
-			Optional:     true,
-			ValidateFunc: validatePort(),
+			Type:        schema.TypeInt,
+			Description: "Sets the listen port of the service for the end user Banyan app",
+			Optional:    true,
 		},
 		"client_banyanproxy_allowed_domains": {
 			Type:        schema.TypeSet,
@@ -291,8 +290,11 @@ func expandTCPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	if d.Get("http_connect").(bool) {
 		banyanProxyMode = "CHAIN"
 	}
-	alp := d.Get("client_banyanproxy_listen_port").(int)
-	appListenPort := strconv.Itoa(alp)
+	alp, ok := d.GetOk("client_banyanproxy_listen_port")
+	appListenPort := ""
+	if ok {
+		appListenPort = strconv.Itoa(alp.(int))
+	}
 	includeDomains := convertSchemaSetToStringSlice(d.Get("client_banyanproxy_allowed_domains").(*schema.Set))
 	if includeDomains == nil {
 		includeDomains = []string{}

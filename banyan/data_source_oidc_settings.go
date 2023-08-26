@@ -13,36 +13,37 @@ import (
 func dataSourceOidcSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceOidcSettingsRead,
+		Description: "Obtains information describing the OIDC settings from banyan",
 		Schema: map[string]*schema.Schema{
-			"issuer_url": &schema.Schema{
+			"issuer_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"authorization_endpoint": &schema.Schema{
+			"authorization_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"token_endpoint": &schema.Schema{
+			"token_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"jwks_endpoint": &schema.Schema{
+			"jwks_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"redirect_url": &schema.Schema{
+			"redirect_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"scope": &schema.Schema{
+			"scope": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"userinfo_endpoint": &schema.Schema{
+			"userinfo_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"openid_configuration_endpoint": &schema.Schema{
+			"openid_configuration_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,8 +52,8 @@ func dataSourceOidcSettings() *schema.Resource {
 }
 
 func dataSourceOidcSettingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	client := m.(*client.Holder)
-	oidcSettings, err := client.Admin.OidcSettings.Get()
+	myClient := m.(*client.Holder)
+	oidcSettings, err := myClient.Admin.OidcSettings.Get()
 	if err != nil {
 		diagnostics = diag.FromErr(err)
 		return

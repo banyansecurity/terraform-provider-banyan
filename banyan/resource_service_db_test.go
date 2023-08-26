@@ -102,7 +102,7 @@ func testAccService_database_create_json(name string) string {
             "icon": "",
             "service_app_type": "DATABASE",
             "banyanproxy_mode": "TCP",
-            "app_listen_port": "0",
+            "app_listen_port": "",
             "allow_user_override": true,
             "description_link": "https://test.com",
             "include_domains": []

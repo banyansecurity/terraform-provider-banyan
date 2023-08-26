@@ -132,10 +132,9 @@ func RdpSchema() map[string]*schema.Schema {
 			Optional:    true,
 		},
 		"client_banyanproxy_listen_port": {
-			Type:         schema.TypeInt,
-			Description:  "Sets the listen port of the service for the end user Banyan app",
-			Optional:     true,
-			ValidateFunc: validatePort(),
+			Type:        schema.TypeInt,
+			Description: "Sets the listen port of the service for the end user Banyan app",
+			Optional:    true,
 		},
 		"http_connect": {
 			Type:        schema.TypeBool,
@@ -223,8 +222,11 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 			banyanProxyMode = "RDPGATEWAY"
 		}
 	}
-	alpInt := d.Get("client_banyanproxy_listen_port").(int)
-	appListenPort := strconv.Itoa(alpInt)
+	alp, ok := d.GetOk("client_banyanproxy_listen_port")
+	appListenPort := ""
+	if ok {
+		appListenPort = strconv.Itoa(alp.(int))
+	}
 	metadatatags = service.Tags{
 		Template:          &template,
 		UserFacing:        &userFacing,
