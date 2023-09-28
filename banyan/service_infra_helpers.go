@@ -80,18 +80,6 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 			return diag.FromErr(err)
 		}
 	}
-
-	allowPatterns, err := flattenAllowPatterns(svc.CreateServiceSpec.Spec.HttpConnect, svc.CreateServiceSpec.Spec.BackendAllowPatterns)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if len(allowPatterns) > 0 {
-		err = d.Set("allow_patterns", allowPatterns)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
 	if svc.CreateServiceSpec.Metadata.Tags.AppListenPort != nil {
 		clientPortVal := *svc.CreateServiceSpec.Metadata.Tags.AppListenPort
 		err = d.Set("client_banyanproxy_listen_port", clientPortVal)

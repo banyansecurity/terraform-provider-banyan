@@ -214,6 +214,16 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	allowPatterns, err := flattenAllowPatterns(svc.CreateServiceSpec.Spec.HttpConnect, svc.CreateServiceSpec.Spec.BackendAllowPatterns)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if len(allowPatterns) > 0 {
+		err = d.Set("allow_patterns", allowPatterns)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
 	return
 }

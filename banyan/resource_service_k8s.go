@@ -142,35 +142,6 @@ func K8sSchema() map[string]*schema.Schema {
 			Default:     true,
 			Description: "Allow the end user to override the backend_port for this service",
 		},
-		"http_connect": {
-			Type:        schema.TypeBool,
-			Description: "Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway",
-			Optional:    true,
-			Default:     false,
-		},
-		"allow_patterns": {
-			Type:     schema.TypeSet,
-			MaxItems: 1,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"cidrs": {
-						Type:     schema.TypeList,
-						Optional: true,
-						Elem: &schema.Schema{
-							Type: schema.TypeString,
-						},
-					},
-					"hostnames": {
-						Type:     schema.TypeList,
-						Optional: true,
-						Elem: &schema.Schema{
-							Type: schema.TypeString,
-						},
-					},
-				},
-			},
-		},
 	}
 }
 
@@ -209,10 +180,6 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	err = d.Set("end_user_override", svc.CreateServiceSpec.Metadata.Tags.AllowUserOverride)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.HttpConnect)
 	if err != nil {
 		return diag.FromErr(err)
 	}
