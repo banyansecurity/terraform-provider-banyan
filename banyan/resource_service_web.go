@@ -611,7 +611,7 @@ func expandWebExemptedPaths(d *schema.ResourceData) service.ExemptedPaths {
 		}
 	}
 
-	paths, err := getStringListFromPatternsPath(exemptedPaths.(*schema.Set), "legacy_paths")
+	paths, err := getStringListWithinSetForKey(exemptedPaths.(*schema.Set), "legacy_paths")
 	if err != nil {
 		diag.Errorf("Unable to read paths from exempted_paths")
 	}
@@ -629,27 +629,27 @@ func expandWebExemptedPaths(d *schema.ResourceData) service.ExemptedPaths {
 }
 
 func expandExemptedPathPatterns(exemptedPaths *schema.Set) (patterns []service.Pattern, err error) {
-	paths, err := getStringListFromPatternsPath(exemptedPaths, "paths")
+	paths, err := getStringListWithinSetForKey(exemptedPaths, "paths")
 	if err != nil {
 		return
 	}
-	targetDomains, err := getStringListFromPatternsPath(exemptedPaths, "target_domain")
+	targetDomains, err := getStringListWithinSetForKey(exemptedPaths, "target_domain")
 	if err != nil {
 		return
 	}
-	httpMethods, err := getStringListFromPatternsPath(exemptedPaths, "http_methods")
+	httpMethods, err := getStringListWithinSetForKey(exemptedPaths, "http_methods")
 	if err != nil {
 		return
 	}
-	mandatoryHeaders, err := getStringListFromPatternsPath(exemptedPaths, "mandatory_headers")
+	mandatoryHeaders, err := getStringListWithinSetForKey(exemptedPaths, "mandatory_headers")
 	if err != nil {
 		return
 	}
-	sourceCIDRs, err := getStringListFromPatternsPath(exemptedPaths, "source_cidrs")
+	sourceCIDRs, err := getStringListWithinSetForKey(exemptedPaths, "source_cidrs")
 	if err != nil {
 		return
 	}
-	originHeaders, err := getStringListFromPatternsPath(exemptedPaths, "origin_header")
+	originHeaders, err := getStringListWithinSetForKey(exemptedPaths, "origin_header")
 	if err != nil {
 		return
 	}

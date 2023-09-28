@@ -127,7 +127,7 @@ func DbSchema() map[string]*schema.Schema {
 			Optional:    true,
 		},
 		"client_banyanproxy_listen_port": {
-			Type:        schema.TypeInt,
+			Type:        schema.TypeString,
 			Description: "Sets the listen port of the service for the end user Banyan app",
 			Optional:    true,
 		},
@@ -144,6 +144,29 @@ func DbSchema() map[string]*schema.Schema {
 			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
 			Optional:    true,
 			Default:     false,
+		},
+		"allow_patterns": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"cidrs": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"hostnames": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
 		},
 		"policy": {
 			Type:        schema.TypeString,
@@ -232,10 +255,10 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 	if d.Get("http_connect").(bool) {
 		banyanProxyMode = "CHAIN"
 	}
-	alp, ok := d.GetOk("client_banyanproxy_listen_port")
+	alp := d.Get("client_banyanproxy_listen_port")
 	appListenPort := ""
-	if ok {
-		appListenPort = strconv.Itoa(alp.(int))
+	if alp != nil {
+		appListenPort = alp.(string)
 	}
 	includeDomains := convertSchemaSetToStringSlice(d.Get("client_banyanproxy_allowed_domains").(*schema.Set))
 	if includeDomains == nil {

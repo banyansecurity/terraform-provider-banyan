@@ -80,10 +80,21 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 			return diag.FromErr(err)
 		}
 	}
+
+	allowPatterns, err := flattenAllowPatterns(svc.CreateServiceSpec.Spec.HttpConnect, svc.CreateServiceSpec.Spec.BackendAllowPatterns)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if len(allowPatterns) > 0 {
+		err = d.Set("allow_patterns", allowPatterns)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	if svc.CreateServiceSpec.Metadata.Tags.AppListenPort != nil {
 		clientPortVal := *svc.CreateServiceSpec.Metadata.Tags.AppListenPort
-		clientPortInt, _ := strconv.Atoi(clientPortVal)
-		err = d.Set("client_banyanproxy_listen_port", clientPortInt)
+		err = d.Set("client_banyanproxy_listen_port", clientPortVal)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -182,6 +193,37 @@ func flattenServiceAccountAccess(tokenLocation *service.TokenLocation) (flattene
 	return
 }
 
+func flattenAllowPatterns(httpConnect bool, patterns []service.BackendAllowPattern) (flattened []interface{}, err error) {
+	// if http connect is false allow patterns should be empty
+	if !httpConnect || len(patterns) == 0 {
+		return
+	}
+
+	if !httpConnect && len(patterns) > 1 {
+		err = fmt.Errorf("invalid configuiration, httpConnect is false and allow_patterns contains an entry")
+		return
+	}
+
+	if len(patterns) > 1 {
+		err = fmt.Errorf("more than one allow patterns not supported to import in terraform")
+		return
+	}
+	allowPatterns := make(map[string]interface{})
+	if len(patterns[0].CIDRs) > 0 {
+		allowPatterns["cidrs"] = patterns[0].CIDRs
+	}
+
+	if len(patterns[0].Hostnames) > 0 {
+		allowPatterns["hostnames"] = patterns[0].Hostnames
+	}
+	// if allow patterns is set return empty
+	if len(allowPatterns) == 0 {
+		return
+	}
+	flattened = append(flattened, allowPatterns)
+	return
+}
+
 func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	attributes, err := expandInfraAttributes(d)
 	if err != nil {
@@ -197,6 +239,31 @@ func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	return
 }
 
+func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
+	domain := d.Get("domain").(string)
+	// build DNSOverrides
+	DNSOverrides := map[string]string{}
+	backendOverride, ok := d.GetOk("backend_dns_override_for_domain")
+	if ok {
+		DNSOverrides = map[string]string{
+			domain: backendOverride.(string),
+		}
+	}
+	httpConnect := false
+	_, ok = d.GetOk("http_connect")
+	if ok {
+		httpConnect = d.Get("http_connect").(bool)
+	}
+	backend = service.Backend{
+		BackendTarget:        expandInfraTarget(d, httpConnect),
+		BackendDNSOverrides:  DNSOverrides,
+		HttpConnect:          httpConnect,
+		ConnectorName:        d.Get("connector").(string),
+		BackendAllowPatterns: expandBackendAllowPatterns(d, httpConnect),
+		BackendWhitelist:     []string{}, // deprecated
+	}
+	return
+}
 func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attributes, err error) {
 	hostTagSelector, err := buildHostTagSelector(d)
 	if err != nil {
@@ -313,4 +380,31 @@ func expandAutorun(d *schema.ResourceData) bool {
 		return autorun.(bool)
 	}
 	return false
+}
+
+func expandBackendAllowPatterns(d *schema.ResourceData, connect bool) (allowPatterns []service.BackendAllowPattern) {
+	if !connect {
+		return allowPatterns
+	}
+	allowPattern := service.BackendAllowPattern{}
+	patterns, ok := d.GetOk("allow_patterns")
+	if !ok {
+		diag.Errorf("Unable to read allow_patterns")
+	}
+
+	cidrs, err := getStringListWithinSetForKey(patterns.(*schema.Set), "cidrs")
+	if err != nil {
+		diag.Errorf("Unable to read cidrs from allow_patterns")
+	}
+	if len(cidrs) > 1 {
+		allowPattern.CIDRs = cidrs
+	}
+	hostnames, err := getStringListWithinSetForKey(patterns.(*schema.Set), "hostnames")
+	if err != nil {
+		diag.Errorf("Unable to read hostnames from allow_patterns")
+	}
+	if len(hostnames) > 1 {
+		allowPattern.Hostnames = hostnames
+	}
+	return []service.BackendAllowPattern{allowPattern}
 }

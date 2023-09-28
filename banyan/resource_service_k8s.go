@@ -117,7 +117,7 @@ func K8sSchema() map[string]*schema.Schema {
 			Description: "Policy ID to be attached to this service",
 		},
 		"client_banyanproxy_listen_port": {
-			Type:        schema.TypeInt,
+			Type:        schema.TypeString,
 			Description: "Sets the listen port of the service for the end user Banyan app",
 			Optional:    true,
 		},
@@ -141,6 +141,35 @@ func K8sSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     true,
 			Description: "Allow the end user to override the backend_port for this service",
+		},
+		"http_connect": {
+			Type:        schema.TypeBool,
+			Description: "Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway",
+			Optional:    true,
+			Default:     false,
+		},
+		"allow_patterns": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"cidrs": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"hostnames": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -183,6 +212,10 @@ func resourceServiceInfraK8sRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.HttpConnect)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return resourceServiceInfraCommonRead(svc, d, m)
 }
 
@@ -220,10 +253,10 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	descriptionLink := d.Get("description_link").(string)
 	allowUserOverride := d.Get("end_user_override").(bool)
 	banyanProxyMode := "CHAIN"
-	alp, ok := d.GetOk("client_banyanproxy_listen_port")
+	alp := d.Get("client_banyanproxy_listen_port")
 	appListenPort := ""
-	if ok {
-		appListenPort = strconv.Itoa(alp.(int))
+	if alp != nil {
+		appListenPort = alp.(string)
 	}
 	kubeClusterName := d.Get("client_kube_cluster_name").(string)
 	kubeCaKey := d.Get("client_kube_ca_key").(string)

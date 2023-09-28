@@ -54,8 +54,13 @@ func TestAccService_k8s(t *testing.T) {
 					  client_kube_cluster_name = "k8s-cluster"
 					  client_kube_ca_key = "k8scAk3yH3re"
 					  client_banyanproxy_listen_port = "9119"
+					  http_connect = true
+					  allow_patterns {
+					    cidrs = []
+					    hostnames = ["%s-k8s.corp.com"]
+					  }
 					}
-					`, rName, rName, rName),
+					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_k8s.example", &bnnService),
 				),

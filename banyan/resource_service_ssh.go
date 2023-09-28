@@ -152,6 +152,29 @@ func SshSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     false,
 		},
+		"allow_patterns": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"cidrs": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"hostnames": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
+		},
 	}
 	return s
 }
