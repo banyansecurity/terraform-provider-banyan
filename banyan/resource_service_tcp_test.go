@@ -30,7 +30,6 @@ func TestSchemaServiceInfraTcp_tcp_at(t *testing.T) {
 	json_spec, _ := os.ReadFile("./specs/service_infra/tcp-at.json")
 	var ref_obj service.CreateService
 	_ = json.Unmarshal(json_spec, &ref_obj)
-
 	AssertCreateServiceEqual(t, svc_obj, ref_obj)
 }
 
@@ -206,4 +205,182 @@ func testAccService_tcp_create_json(name string) string {
     }
 }
 `, name, name, name, name, name)
+}
+
+func TestAccService_tcp_httpconn(t *testing.T) {
+	var bnnService service.GetServiceSpec
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceDestroy(t, &bnnService.ServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccService_tcp_httpconn_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingService("banyan_service_tcp.example", &bnnService),
+					testAccCheckServiceAgainstJson(t, testAccService_tcp_httpconn_create_json(rName), &bnnService.ServiceID),
+				),
+			},
+			{
+				ResourceName:      "banyan_service_tcp.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccService_tcp_httpconn_create(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_service_tcp" "example" {
+  name        = "%s-tcp"
+  description = "some tcp service description"
+  access_tier   = "us-west1"
+  domain      = "%s-tcp.corp.com"
+  backend_domain = ""
+  backend_port = 0
+  http_connect = true
+  allow_patterns {
+	  ports {
+         port_list = ["8443", "8444", "8445"]
+		 port_range {
+			 min = 9443
+			 max = 9445
+		 }
+      }
+  }
+}
+`, name, name)
+}
+
+func testAccService_tcp_httpconn_create_json(name string) string {
+	return fmt.Sprintf(`
+{
+    "kind": "BanyanService",
+    "apiVersion": "rbac.banyanops.com/v1",
+    "type": "origin",
+    "metadata": {
+        "name": "%s-tcp",
+        "description": "some tcp service description",
+        "cluster": "cluster1",
+        "tags": {
+            "template": "TCP_USER",
+            "user_facing": "true",
+            "protocol": "tcp",
+            "domain": "%s-tcp.corp.com",
+            "port": "8443",
+            "icon": "",
+            "service_app_type": "GENERIC",
+            "banyanproxy_mode": "CHAIN",
+            "app_listen_port": "",
+            "allow_user_override": true,
+            "description_link": "",
+   			"include_domains": []
+        }
+    },
+    "spec": {
+        "attributes": {
+            "tls_sni": [
+                "%s-tcp.corp.com"
+            ],
+            "frontend_addresses": [
+                {
+                    "cidr": "",
+                    "port": "8443"
+                }
+            ],
+            "host_tag_selector": [
+                {
+                    "com.banyanops.hosttag.site_name": "us-west1"
+                }
+            ],
+            "disable_private_dns": false
+        },
+        "backend": {
+            "target": {
+                "name": "",
+                "port": "",
+                "tls": false,
+                "tls_insecure": false,
+                "client_certificate": false
+            },
+            "dns_overrides": {},
+            "whitelist": [],
+			"http_connect": true,
+			"allow_patterns": [{
+				"ports": {
+					"port_list": [
+						8443,
+						8444,
+						8445
+					],
+					"port_ranges": [
+						{
+							"min": 9443,
+							"max": 9445
+						}
+					]
+				}
+			}],
+            "connector_name": ""
+        },
+        "cert_settings": {
+            "dns_names": [
+                "%s-tcp.corp.com"
+            ],
+            "custom_tls_cert": {
+                "enabled": false,
+                "cert_file": "",
+                "key_file": ""
+            },
+            "letsencrypt": false
+        },
+        "http_settings": {
+            "enabled": false,
+            "oidc_settings": {
+                "enabled": false,
+                "service_domain_name": "",
+                "post_auth_redirect_path": "",
+                "api_path": "",
+                "trust_callbacks": null,
+                "suppress_device_trust_verification": false
+            },
+            "http_health_check": {
+                "enabled": false,
+                "addresses": null,
+                "method": "",
+                "path": "",
+                "user_agent": "",
+                "from_address": [],
+                "https": false
+            },
+            "http_redirect": {
+                "enabled": false,
+                "addresses": null,
+                "from_address": null,
+                "url": "",
+                "status_code": 0
+            },
+            "exempted_paths": {
+                "enabled": false,
+                "patterns": [
+                    {
+                        "hosts": [
+                            {
+                                "origin_header": [],
+                                "target": []
+                            }
+                        ],
+                        "methods": [],
+                        "paths": [],
+                        "mandatory_headers": []
+                    }
+                ]                
+            },
+            "headers": {}
+        },
+        "client_cidrs": []
+    }
+}
+`, name, name, name, name)
 }

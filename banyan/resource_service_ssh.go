@@ -172,6 +172,38 @@ func SshSchema() map[string]*schema.Schema {
 							Type: schema.TypeString,
 						},
 					},
+					"ports": {
+						Type:     schema.TypeSet,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"port_list": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeInt,
+									},
+								},
+								"port_range": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"min": {
+												Type:     schema.TypeInt,
+												Required: true,
+											},
+											"max": {
+												Type:     schema.TypeInt,
+												Required: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -211,6 +243,16 @@ func resourceServiceInfraSshRead(ctx context.Context, d *schema.ResourceData, m 
 	err = d.Set("http_connect", svc.CreateServiceSpec.Spec.Backend.HttpConnect)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	if svc.CreateServiceSpec.Spec.HttpConnect {
+		err = d.Set("backend_domain", "")
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = d.Set("backend_port", 0)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	allowPatterns, err := flattenAllowPatterns(svc.CreateServiceSpec.Spec.HttpConnect, svc.CreateServiceSpec.Spec.BackendAllowPatterns)
 	if err != nil {
