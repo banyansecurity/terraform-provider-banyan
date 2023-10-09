@@ -40,7 +40,7 @@ resource "banyan_service_infra_k8s" "example" {
 - `autorun` (Boolean) Autorun for the service, if set true service would autorun on the app
 - `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
-- `client_banyanproxy_listen_port` (Number) Sets the listen port of the service for the end user Banyan app
+- `client_banyanproxy_listen_port` (String) Sets the listen port of the service for the end user Banyan app
 - `client_kube_ca_key` (String) CA Public Key generated during Kube-OIDC-Proxy deployment
 - `client_kube_cluster_name` (String) Creates an entry in the Banyan KUBE config file under this name and populates the associated configuration parameters
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service

@@ -37,10 +37,11 @@ resource "banyan_service_rdp" "example" {
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
+- `allow_patterns` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--allow_patterns))
 - `autorun` (Boolean) Autorun for the service, if set true service would autorun on the app
 - `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_dns_override_for_domain` (String) Override DNS for service domain name with this value
-- `client_banyanproxy_listen_port` (Number) Sets the listen port of the service for the end user Banyan app
+- `client_banyanproxy_listen_port` (String) Sets the listen port of the service for the end user Banyan app
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connector` (String) Name of the connector which will proxy requests to your service backend
 - `description` (String) Description of the service
@@ -56,6 +57,14 @@ resource "banyan_service_rdp" "example" {
 ### Read-Only
 
 - `id` (String) Id of the service in Banyan
+
+<a id="nestedblock--allow_patterns"></a>
+### Nested Schema for `allow_patterns`
+
+Optional:
+
+- `cidrs` (List of String)
+- `hostnames` (List of String)
 
 ## Import
 

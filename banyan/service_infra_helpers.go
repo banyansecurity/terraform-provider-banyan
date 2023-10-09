@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -80,10 +81,10 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 			return diag.FromErr(err)
 		}
 	}
+
 	if svc.CreateServiceSpec.Metadata.Tags.AppListenPort != nil {
 		clientPortVal := *svc.CreateServiceSpec.Metadata.Tags.AppListenPort
-		clientPortInt, _ := strconv.Atoi(clientPortVal)
-		err = d.Set("client_banyanproxy_listen_port", clientPortInt)
+		err = d.Set("client_banyanproxy_listen_port", clientPortVal)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -182,6 +183,62 @@ func flattenServiceAccountAccess(tokenLocation *service.TokenLocation) (flattene
 	return
 }
 
+func flattenAllowPatterns(httpConnect bool, patterns []service.BackendAllowPattern) (flattened []interface{}, err error) {
+	// if http connect is false allow patterns should be empty
+	if !httpConnect || len(patterns) == 0 {
+		return
+	}
+
+	if !httpConnect && len(patterns) > 1 {
+		err = fmt.Errorf("invalid configuiration, httpConnect is false and allow_patterns contains an entry")
+		return
+	}
+
+	if len(patterns) > 1 {
+		err = fmt.Errorf("more than one allow patterns not supported to import in terraform")
+		return
+	}
+
+	allowPatterns := make(map[string]interface{})
+	if len(patterns[0].CIDRs) > 0 {
+		allowPatterns["cidrs"] = patterns[0].CIDRs
+	}
+
+	if len(patterns[0].Hostnames) > 0 {
+		allowPatterns["hostnames"] = patterns[0].Hostnames
+	}
+	if len(patterns[0].Ports.PortList) > 0 || len(patterns[0].Ports.PortRanges) > 0 {
+		allowPatterns["ports"] = flattenPorts(patterns[0].Ports)
+	}
+	// if allow patterns is set return empty
+	if len(allowPatterns) == 0 {
+		return
+	}
+	flattened = append(flattened, allowPatterns)
+	return
+}
+
+func flattenPorts(ports service.BackendAllowPorts) []interface{} {
+	portsMap := make(map[string]interface{})
+	if len(ports.PortList) > 0 {
+		portsMap["port_list"] = ports.PortList
+	}
+	if len(ports.PortRanges) > 0 {
+		portsMap["port_range"] = flattenPortRanges(ports.PortRanges)
+	}
+	return []interface{}{portsMap}
+}
+
+func flattenPortRanges(ranges []service.PortRange) (portRanges []interface{}) {
+	rangesMap := make(map[string]interface{})
+	for _, r := range ranges {
+		rangesMap["min"] = r.Min
+		rangesMap["max"] = r.Max
+		portRanges = append(portRanges, rangesMap)
+	}
+	return
+}
+
 func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	attributes, err := expandInfraAttributes(d)
 	if err != nil {
@@ -197,6 +254,31 @@ func expandInfraServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 	return
 }
 
+func expandInfraBackend(d *schema.ResourceData) (backend service.Backend) {
+	domain := d.Get("domain").(string)
+	// build DNSOverrides
+	DNSOverrides := map[string]string{}
+	backendOverride, ok := d.GetOk("backend_dns_override_for_domain")
+	if ok {
+		DNSOverrides = map[string]string{
+			domain: backendOverride.(string),
+		}
+	}
+	httpConnect := false
+	_, ok = d.GetOk("http_connect")
+	if ok {
+		httpConnect = d.Get("http_connect").(bool)
+	}
+	backend = service.Backend{
+		BackendTarget:        expandInfraTarget(d, httpConnect),
+		BackendDNSOverrides:  DNSOverrides,
+		HttpConnect:          httpConnect,
+		ConnectorName:        d.Get("connector").(string),
+		BackendAllowPatterns: expandBackendAllowPatterns(d, httpConnect),
+		BackendWhitelist:     []string{}, // deprecated
+	}
+	return
+}
 func expandInfraAttributes(d *schema.ResourceData) (attributes service.Attributes, err error) {
 	hostTagSelector, err := buildHostTagSelector(d)
 	if err != nil {
@@ -313,4 +395,123 @@ func expandAutorun(d *schema.ResourceData) bool {
 		return autorun.(bool)
 	}
 	return false
+}
+
+func expandBackendAllowPatterns(d *schema.ResourceData, connect bool) (allowPatterns []service.BackendAllowPattern) {
+	if !connect {
+		return allowPatterns
+	}
+	allowPattern := service.BackendAllowPattern{}
+	patterns, ok := d.GetOk("allow_patterns")
+	if !ok {
+		diag.Errorf("Unable to read allow_patterns")
+	}
+
+	cidrs, err := getStringListWithinSetForKey(patterns.(*schema.Set), "cidrs")
+	if err != nil {
+		diag.Errorf("Unable to read cidrs from allow_patterns")
+	}
+	if len(cidrs) > 1 {
+		allowPattern.CIDRs = cidrs
+	}
+	hostnames, err := getStringListWithinSetForKey(patterns.(*schema.Set), "hostnames")
+	if err != nil {
+		diag.Errorf("Unable to read hostnames from allow_patterns")
+	}
+	if len(hostnames) > 1 {
+		allowPattern.Hostnames = hostnames
+	}
+	ports, err := getBackendAllowPorts(patterns.(*schema.Set))
+	if err != nil {
+		diag.Errorf("Unable to read ports from allow_patterns")
+	}
+	if !reflect.DeepEqual(ports, service.BackendAllowPorts{}) {
+		allowPattern.Ports = ports
+	}
+	return []service.BackendAllowPattern{allowPattern}
+}
+
+func getBackendAllowPorts(allowPatterns *schema.Set) (backendAllowPorts service.BackendAllowPorts, err error) {
+	if allowPatterns.Len() == 0 {
+		return
+	}
+	// There would be only 1 element for allow_patterns
+	patternMap, ok := allowPatterns.List()[0].(map[string]interface{})
+	if !ok {
+		err = fmt.Errorf("unable to read allow_patterns %v", patternMap)
+		return
+	}
+
+	ports, ok := patternMap["ports"].(*schema.Set)
+	if !ok {
+		err = fmt.Errorf("unable to read ports from allow_patterns")
+		return
+	}
+	if ports.Len() == 0 {
+		return
+	}
+
+	if ports.Len() > 1 {
+		err = fmt.Errorf("invalid ports configuration only 1 element is supported")
+		return
+	}
+
+	portsMap, ok := ports.List()[0].(map[string]interface{})
+	if !ok {
+		err = fmt.Errorf("unable to read ports from allow_pattern")
+		return
+	}
+	portList, err := getPortList(portsMap["port_list"])
+	if err != nil {
+		return
+	}
+	//portRange := ports[0].(map[string]interface{})["port_range"]
+	portRanges, err := getPortRange(portsMap["port_range"])
+	if err != nil {
+		return
+	}
+	if len(portList) > 0 {
+		backendAllowPorts.PortList = portList
+	}
+	if len(portRanges) > 0 {
+		backendAllowPorts.PortRanges = portRanges
+	}
+
+	return
+}
+
+func getPortRange(inputPortRanges interface{}) (portRanges []service.PortRange, err error) {
+	ports, ok := inputPortRanges.([]interface{})
+	if !ok {
+		err = fmt.Errorf("unable to read port range from ports")
+	}
+	for _, port := range ports {
+		v, ok1 := port.(map[string]interface{})
+		if !ok1 {
+			err = fmt.Errorf("invalid port range %v in ports", port)
+			return
+		}
+		portRanges = append(portRanges, service.PortRange{
+			Min: v["min"].(int),
+			Max: v["max"].(int),
+		})
+	}
+	return
+}
+
+func getPortList(inputPortList interface{}) (portList []int, err error) {
+	ports, ok := inputPortList.([]interface{})
+	if !ok {
+		err = fmt.Errorf("unable to read port list integer from ports")
+		return
+	}
+	for _, port := range ports {
+		v, err1 := typeSwitchPort(port)
+		if err1 != nil {
+			err = fmt.Errorf("invalid port %q in ports : %s", port, err1)
+			return
+		}
+		portList = append(portList, v)
+	}
+	return
 }

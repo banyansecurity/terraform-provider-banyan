@@ -22,7 +22,7 @@ func convertSchemaSetToStringSlice(original *schema.Set) (stringSlice []string) 
 	}
 	return
 }
-func getStringListFromPatternsPath(exemptedPaths *schema.Set, key string) (values []string, err error) {
+func getStringListWithinSetForKey(exemptedPaths *schema.Set, key string) (values []string, err error) {
 	if exemptedPaths.Len() == 0 {
 		return values, nil
 	}

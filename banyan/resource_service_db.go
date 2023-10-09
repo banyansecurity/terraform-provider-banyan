@@ -127,7 +127,7 @@ func DbSchema() map[string]*schema.Schema {
 			Optional:    true,
 		},
 		"client_banyanproxy_listen_port": {
-			Type:        schema.TypeInt,
+			Type:        schema.TypeString,
 			Description: "Sets the listen port of the service for the end user Banyan app",
 			Optional:    true,
 		},
@@ -144,6 +144,61 @@ func DbSchema() map[string]*schema.Schema {
 			Description: "Indicates to use HTTP Connect request to derive the backend target address.",
 			Optional:    true,
 			Default:     false,
+		},
+		"allow_patterns": {
+			Type:     schema.TypeSet,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"cidrs": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"hostnames": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"ports": {
+						Type:     schema.TypeSet,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"port_list": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeInt,
+									},
+								},
+								"port_range": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"min": {
+												Type:     schema.TypeInt,
+												Required: true,
+											},
+											"max": {
+												Type:     schema.TypeInt,
+												Required: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		"policy": {
 			Type:        schema.TypeString,
@@ -187,9 +242,29 @@ func resourceServiceInfraDbRead(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	if svc.CreateServiceSpec.Spec.HttpConnect {
+		err = d.Set("backend_domain", "")
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = d.Set("backend_port", 0)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	err = d.Set("end_user_override", svc.CreateServiceSpec.Metadata.Tags.AllowUserOverride)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	allowPatterns, err := flattenAllowPatterns(svc.CreateServiceSpec.Spec.HttpConnect, svc.CreateServiceSpec.Spec.BackendAllowPatterns)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if len(allowPatterns) > 0 {
+		err = d.Set("allow_patterns", allowPatterns)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	diagnostics = resourceServiceInfraCommonRead(svc, d, m)
 	return
@@ -232,10 +307,10 @@ func expandDatabaseMetatdataTags(d *schema.ResourceData) (metadatatags service.T
 	if d.Get("http_connect").(bool) {
 		banyanProxyMode = "CHAIN"
 	}
-	alp, ok := d.GetOk("client_banyanproxy_listen_port")
+	alp := d.Get("client_banyanproxy_listen_port")
 	appListenPort := ""
-	if ok {
-		appListenPort = strconv.Itoa(alp.(int))
+	if alp != nil {
+		appListenPort = alp.(string)
 	}
 	includeDomains := convertSchemaSetToStringSlice(d.Get("client_banyanproxy_allowed_domains").(*schema.Set))
 	if includeDomains == nil {

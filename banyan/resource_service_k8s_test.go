@@ -23,7 +23,6 @@ func TestSchemaServiceInfraK8s_k8s_conn(t *testing.T) {
 		"client_banyanproxy_listen_port":  9199,
 		"client_kube_cluster_name":        "eks-hero",
 		"client_kube_ca_key":              "AAAA1234",
-		"http_connect":                    true,
 		"backend_port":                    0,
 	}
 	d := schema.TestResourceDataRaw(t, K8sSchema(), svc_k8s_conn)

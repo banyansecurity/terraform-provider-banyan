@@ -117,7 +117,7 @@ func K8sSchema() map[string]*schema.Schema {
 			Description: "Policy ID to be attached to this service",
 		},
 		"client_banyanproxy_listen_port": {
-			Type:        schema.TypeInt,
+			Type:        schema.TypeString,
 			Description: "Sets the listen port of the service for the end user Banyan app",
 			Optional:    true,
 		},
@@ -220,10 +220,10 @@ func expandK8sMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	descriptionLink := d.Get("description_link").(string)
 	allowUserOverride := d.Get("end_user_override").(bool)
 	banyanProxyMode := "CHAIN"
-	alp, ok := d.GetOk("client_banyanproxy_listen_port")
+	alp := d.Get("client_banyanproxy_listen_port")
 	appListenPort := ""
-	if ok {
-		appListenPort = strconv.Itoa(alp.(int))
+	if alp != nil {
+		appListenPort = alp.(string)
 	}
 	kubeClusterName := d.Get("client_kube_cluster_name").(string)
 	kubeCaKey := d.Get("client_kube_ca_key").(string)
