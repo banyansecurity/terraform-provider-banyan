@@ -122,6 +122,22 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
 			ForceNew:    true,
 		},
+		"public_applications_include": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Specifies the applications ids that should be that should be included in the tunnel, ex: 905a72d3-6216-4ffc-ad18-db1593782915",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"public_applications_Exclude": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Specifies the applications ids that should be that should be included in the tunnel, ex: 633301ab-fd20-439b-b5ae-47153ec7fbf2",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 	}
 	return
 }
@@ -268,6 +284,8 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 	exclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_exclude").(*schema.Set))
 	inclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_include").(*schema.Set))
 	exclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_exclude").(*schema.Set))
+	inclApplications := convertSchemaSetToStringSlice(d.Get("public_applications_include").(*schema.Set))
+	exclApplications := convertSchemaSetToStringSlice(d.Get("public_applications_exclude").(*schema.Set))
 
 	var peers []servicetunnel.PeerAccessTier
 
@@ -286,19 +304,23 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 				AccessTiers: []string{eachAts},
 				Connectors:  nil,
 			}
-			if (inclCidrs != nil) || (exclCidrs != nil) || (inclDomains != nil) || (exclDomains != nil) {
+			if (inclCidrs != nil) || (exclCidrs != nil) || (inclDomains != nil) || (exclDomains != nil) || (inclApplications != nil) || (exclApplications != nil) {
 				publicTrafficAccessTier, ok := d.GetOk("public_traffic_tunnel_via_access_tier")
 
 				if strings.EqualFold(publicTrafficAccessTier.(string), eachAts) ||
 					/* if only one access tier */ len(ats) == 1 ||
 					/* backward compatibility */ (!ok && i == 0) {
-					peer.PublicCIDRs = &servicetunnel.PublicCIDRDomain{
+					peer.PublicCIDRs = &servicetunnel.IncludeExclude{
 						Include: inclCidrs,
 						Exclude: exclCidrs,
 					}
-					peer.PublicDomains = &servicetunnel.PublicCIDRDomain{
+					peer.PublicDomains = &servicetunnel.IncludeExclude{
 						Include: inclDomains,
 						Exclude: exclDomains,
+					}
+					peer.Applications = &servicetunnel.IncludeExclude{
+						Include: inclApplications,
+						Exclude: exclApplications,
 					}
 				}
 			}
@@ -370,6 +392,26 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 				}
 				if len(eachPeer.PublicDomains.Exclude) > 0 {
 					err = d.Set("public_domains_exclude", eachPeer.PublicDomains.Exclude)
+					if err != nil {
+						return err
+					}
+				}
+				if len(eachPeer.AccessTiers) > 0 {
+					err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
+					if err != nil {
+						return err
+					}
+				}
+			}
+			if eachPeer.Applications != nil {
+				if len(eachPeer.Applications.Include) > 0 {
+					err = d.Set("public_applications_include", eachPeer.Applications.Include)
+					if err != nil {
+						return err
+					}
+				}
+				if len(eachPeer.Applications.Exclude) > 0 {
+					err = d.Set("public_applications_exclude", eachPeer.Applications.Exclude)
 					if err != nil {
 						return err
 					}
