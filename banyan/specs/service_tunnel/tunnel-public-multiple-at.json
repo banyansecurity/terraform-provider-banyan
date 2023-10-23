@@ -50,6 +50,14 @@
                         "yahoo.com",
                         "banyansecurity.io"
                     ]
+                },
+                "public_applications":
+                {
+                    "include":
+                    [
+                        "067c3a25-8271-4764-89dd-c3543ac99a5a",
+                        "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"
+                    ]
                 }
             }
         ]
