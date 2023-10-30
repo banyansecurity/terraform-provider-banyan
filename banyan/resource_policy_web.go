@@ -155,7 +155,7 @@ func resourcePolicyWebUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "invalid l7_access block"))
 	}
-	updatedPolicy, err := c.Policy.Update(d.State().ID, policyWebFromState(d))
+	updatedPolicy, err := c.Policy.Update(policyWebFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new web policy"))
 	}

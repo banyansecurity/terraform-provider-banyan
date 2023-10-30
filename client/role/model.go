@@ -1,7 +1,5 @@
 package role
 
-import "sync"
-
 // Info represents the specification of a role populated by json.Unmarshal.
 type Info struct {
 	Kind       string `json:"kind"`
@@ -39,48 +37,12 @@ type Spec struct {
 	Platform        []string `json:"platform"`
 	KnownDeviceOnly bool     `json:"known_device_only"`
 	MDMPresent      bool     `json:"mdm_present"`
+
+	SerialNumbers []string `json:"serial_numbers"`
 }
 
 // RepoTagList is a list of repo:tag strings within a role.Spec.
 type RepoTagList []string
-
-// Records keeps track of role definitions and the record of
-// which containers can take on which roles.
-type Records struct {
-	sync.RWMutex
-}
-
-// ServiceAccounter is any type that implements the ServiceAccount() method.
-type ServiceAccounter interface {
-	ServiceAccount(containerID string) string
-}
-
-// Diff is returned by Records.CheckNonExistentRoles() and is used to report a new set of roles (could be empty) for a container.
-type Diff struct {
-	// ContainerID identifies a container
-	ContainerID string
-	// Roles are all the roles the corresponding container can take on
-	Roles []string
-	// Versions are the corresponding role versions : len(Versions) == len(Roles)
-	Versions []int
-}
-
-type UserClaims struct {
-	Name   string
-	Email  string
-	Phone  string
-	Groups []string
-}
-
-type DeviceClaims struct {
-	DeviceID        string
-	SerialNumber    string
-	DeviceOwnership string
-	Platform        string
-	MDMPresent      bool
-	IsStagedInstall bool
-	Unregistered    bool
-}
 
 // LabSel represents a label map within a role.Spec.
 type LabSel map[string]string
