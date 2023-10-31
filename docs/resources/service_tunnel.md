@@ -133,7 +133,7 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 - `connectors` (Set of String) Names of the connectors which the service tunnel should be associated with
 - `description` (String) Description of the service tunnel
 - `description_link` (String) Link shown to the end user of the banyan app for this service
-- `public_applications_Exclude` (Set of String) Specifies the applications ids that should be that should be included in the tunnel, ex: 633301ab-fd20-439b-b5ae-47153ec7fbf2
+- `public_applications_exclude` (Set of String) Specifies the applications ids that should be that should be included in the tunnel, ex: 633301ab-fd20-439b-b5ae-47153ec7fbf2
 - `public_applications_include` (Set of String) Specifies the applications ids that should be that should be included in the tunnel, ex: 905a72d3-6216-4ffc-ad18-db1593782915
 - `public_cidrs_exclude` (Set of String) Specifies public IP addresses in CIDR notation that should be excluded from the tunnel, ex: 8.8.12.0/24.
 - `public_cidrs_include` (Set of String) Specifies public IP addresses in CIDR notation that should be included in the tunnel, ex: 8.8.0.0/16.
@@ -146,4 +146,4 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 - `id` (String) ID of the service tunnel key in Banyan
 ## Import
 Import is supported using the following syntax:
-{{codefile "shell" "/Users/naresh/banyan/banyansecurity-terraform-provider-banyan/examples/resources/banyan_service_tunnel/import.sh"}}
+{{codefile "shell" "/home/josh/banyanops/terraform-provider-banyan/examples/resources/banyan_service_tunnel/import.sh"}}

@@ -130,7 +130,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 				Type: schema.TypeString,
 			},
 		},
-		"public_applications_Exclude": {
+		"public_applications_exclude": {
 			Type:        schema.TypeSet,
 			Optional:    true,
 			Description: "Specifies the applications ids that should be that should be included in the tunnel, ex: 633301ab-fd20-439b-b5ae-47153ec7fbf2",
