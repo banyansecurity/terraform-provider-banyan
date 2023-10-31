@@ -46,7 +46,6 @@ func RoleSchema() (s map[string]*schema.Schema) {
 		"container_fqdn": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Computed:    true,
 			Description: "FQDN for the container",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -55,7 +54,6 @@ func RoleSchema() (s map[string]*schema.Schema) {
 		"image": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Computed:    true,
 			Description: "Image",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -64,7 +62,6 @@ func RoleSchema() (s map[string]*schema.Schema) {
 		"repo_tag": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Computed:    true,
 			Description: "Repo Tag",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -81,7 +78,6 @@ func RoleSchema() (s map[string]*schema.Schema) {
 		"user_group": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Computed:    true,
 			Description: "Names of the groups (from your IdP) which will be included in the role",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -90,7 +86,6 @@ func RoleSchema() (s map[string]*schema.Schema) {
 		"email": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Computed:    true,
 			Description: "Email addresses for the users in the role",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -99,7 +94,6 @@ func RoleSchema() (s map[string]*schema.Schema) {
 		"device_ownership": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Computed:    true,
 			Description: "Device ownership specification for the role",
 			Elem: &schema.Schema{
 				Type:         schema.TypeString,
@@ -109,7 +103,6 @@ func RoleSchema() (s map[string]*schema.Schema) {
 		"platform": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Computed:    true,
 			Description: "Platform type which is required by the role",
 			Elem: &schema.Schema{
 				Type:         schema.TypeString,
@@ -125,6 +118,14 @@ func RoleSchema() (s map[string]*schema.Schema) {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Description: "Enforces whether the role requires an MDM to be present on the device",
+		},
+		"serial_numbers": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Serial Numbers of devices to be applicable for role",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 	}
 	return
@@ -155,6 +156,7 @@ func RoleFromState(d *schema.ResourceData) (r role.CreateRole) {
 			Platform:        convertSchemaSetToStringSlice(d.Get("platform").(*schema.Set)),
 			KnownDeviceOnly: d.Get("known_device_only").(bool),
 			MDMPresent:      d.Get("mdm_present").(bool),
+			SerialNumbers:   convertSchemaSetToStringSlice(d.Get("serial_numbers").(*schema.Set)),
 		},
 	}
 	return
@@ -229,6 +231,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diag.FromErr(err)
 	}
 	err = d.Set("mdm_present", resp.UnmarshalledSpec.Spec.MDMPresent)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("serial_numbers", resp.UnmarshalledSpec.Spec.SerialNumbers)
 	if err != nil {
 		return diag.FromErr(err)
 	}

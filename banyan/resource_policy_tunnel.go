@@ -207,7 +207,20 @@ func resourcePolicyTunnelCreate(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func resourcePolicyTunnelUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	diagnostics = resourcePolicyTunnelCreate(ctx, d, m)
+	c := m.(*client.Holder)
+
+	// 	ValidateFunc is not supported on lists or sets, so use this method instead
+	err := invalidL4AccessRules(d)
+	if err != nil {
+		return diag.FromErr(errors.WithMessage(err, "invalid l4_access block"))
+	}
+
+	createdPolicy, err := c.Policy.Update(policyTunnelFromState(d))
+	if err != nil {
+		return diag.FromErr(errors.WithMessage(err, "couldn't create new tunnel policy"))
+	}
+	d.SetId(createdPolicy.ID)
+	diagnostics = resourcePolicyTunnelRead(ctx, d, m)
 	return
 }
 

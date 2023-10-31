@@ -127,8 +127,15 @@ func resourcePolicyInfraRead(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func resourcePolicyInfraUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	diagnostics = resourcePolicyInfraCreate(ctx, d, m)
+	c := m.(*client.Holder)
+	resp, err := c.Policy.Update(policyInfraFromState(d))
+	if err != nil {
+		return diag.FromErr(errors.WithMessage(err, "couldn't create new infra policy"))
+	}
+	d.SetId(resp.ID)
+	diagnostics = resourcePolicyInfraRead(ctx, d, m)
 	return
+
 }
 
 func resourcePolicyInfraDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
