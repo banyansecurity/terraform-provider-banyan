@@ -37,6 +37,8 @@ func TestSchemaRole_device_ownership(t *testing.T) {
 		"description":      "[TF] Admins on corporate devices",
 		"user_group":       []interface{}{"Admins"},
 		"device_ownership": []interface{}{"Corporate Dedicated", "Corporate Shared"},
+		"platform":         []interface{}{"Windows"},
+		"serial_numbers":   []interface{}{"DeviceSerial1"},
 	}
 	d := schema.TestResourceDataRaw(t, RoleSchema(), role_device_ownership)
 	role_obj := RoleFromState(d)
@@ -166,6 +168,7 @@ resource "banyan_role" "acceptance" {
   known_device_only = true
   mdm_present       = true
   platform          = ["Windows", "macOS", "Linux", "iOS", "Android", "Unregistered"]
+  serial_numbers    = ["First","Second","Third"]
 }
 `, name)
 }
@@ -182,6 +185,7 @@ resource "banyan_role" "acceptance" {
   email = ["john@marsha.com"]
   device_ownership = ["Corporate Dedicated", "Employee Owned"]
   mdm_present = true
+  serial_numbers = ["First"]
 }
 `, name)
 }
@@ -199,6 +203,7 @@ resource "banyan_role" "acceptance" {
   email = ["john@marsha.com"]
   device_ownership = ["Corporate Dedicated", "Employee Owned"]
   mdm_present = true
+  serial_numbers = ["First"]
 }
 `, name)
 }

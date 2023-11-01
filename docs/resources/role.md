@@ -40,6 +40,7 @@ resource "banyan_role" "example" {
 - `mdm_present` (Boolean) Enforces whether the role requires an MDM to be present on the device
 - `platform` (Set of String) Platform type which is required by the role
 - `repo_tag` (Set of String) Repo Tag
+- `serial_numbers` (Set of String) Serial Numbers of devices to be applicable for role
 - `service_account` (Set of String) Service accounts to be included in the role
 - `user_group` (Set of String) Names of the groups (from your IdP) which will be included in the role
 

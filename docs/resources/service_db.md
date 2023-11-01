@@ -66,6 +66,23 @@ Optional:
 
 - `cidrs` (List of String)
 - `hostnames` (List of String)
+- `ports` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--allow_patterns--ports))
+
+<a id="nestedblock--allow_patterns--ports"></a>
+### Nested Schema for `allow_patterns.ports`
+
+Optional:
+
+- `port_list` (List of Number)
+- `port_range` (Block List) (see [below for nested schema](#nestedblock--allow_patterns--ports--port_range))
+
+<a id="nestedblock--allow_patterns--ports--port_range"></a>
+### Nested Schema for `allow_patterns.ports.port_range`
+
+Required:
+
+- `max` (Number)
+- `min` (Number)
 
 ## Import
 
