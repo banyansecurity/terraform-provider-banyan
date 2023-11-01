@@ -75,6 +75,8 @@ func TestSchemaServiceTunnel_tunnel_public_one_at(t *testing.T) {
 		"access_tiers":           []interface{}{"gcp-tdnovpn-v2"},
 		"public_cidrs_include":   []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
 		"public_domains_include": []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
+
+		"applications_include": []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
 	svc_obj := TunFromState(d)
@@ -94,6 +96,7 @@ func TestSchemaServiceTunnel_tunnel_public_select_at_from_multiple(t *testing.T)
 		"access_tiers":                          []interface{}{"gcp-tdnovpn-v1", "gcp-tdnovpn-v2"},
 		"public_cidrs_include":                  []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
 		"public_domains_include":                []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
+		"applications_include":                  []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
 		"public_traffic_tunnel_via_access_tier": "gcp-tdnovpn-v2",
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
