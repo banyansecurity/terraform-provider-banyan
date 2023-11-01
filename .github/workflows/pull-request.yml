@@ -8,7 +8,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       -
         name: Unshallow
         run: git fetch --prune --unshallow
@@ -27,6 +27,17 @@ jobs:
           TF_ACC: true
           BANYAN_API_KEY: ${{ secrets.BANYAN_API_KEY }}
           BANYAN_HOST: ${{ secrets.BANYAN_HOST }}
+      -
+        name: Generate Documentation
+        run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name terraform-provider-banyan --examples-dir ./examples/
+      -
+        name: check in documentation
+        uses: actions/checkout@v4
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -m "documentation generated"
+          git push
       -
         name: Static Check
         uses: dominikh/staticcheck-action@v1.3.0
