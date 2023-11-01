@@ -46,7 +46,7 @@
                     ],
                     "exclude": null
                 },
-                "public_applications":
+                "applications":
                 {
                     "include":
                     [
