@@ -35,18 +35,15 @@ jobs:
         name: Generate Documentation
         run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name terraform-provider-banyan --examples-dir ./examples/
       -
-        name: Commit
-        uses: actions/checkout@v4
-      -
         name: commit documentation changes if any
         run: |
-          ls
-          git status --porcelain
           if  [[ $(if [[ -n "$(git status --porcelain)" ]]; then echo "true"; else echo "false"; fi) == "true" ]]; then
             git config user.name github-actions
             git config user.email github-actions@github.com
-            echo `git commit -m "Documentation generated" || echo "No changes to commit"`
+            git commit -m "Documentation generated"
             git push
+          else 
+            echo "\n++No Changes to Documentation++\n"
           fi
       -
         name: Static Check
