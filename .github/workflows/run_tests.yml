@@ -7,6 +7,10 @@ on:
 jobs:
   run_tests:
     runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
     steps:
       -
         name: Checkout
@@ -33,12 +37,14 @@ jobs:
         name: Generate Documentation
         run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name terraform-provider-banyan --examples-dir ./examples/
       -
-        name: check in documentation
+        name: Commit
         uses: actions/checkout@v4
+      -
+        name: commit documentation changes if any
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git commit -m "documentation generated"
+          echo `git commit -m "Documentation generated" || echo "No changes to commit"`
           git push
       -
         name: Static Check
