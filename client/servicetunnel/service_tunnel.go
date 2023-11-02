@@ -89,11 +89,12 @@ type PeerAccessTier struct {
 	AccessTiers []string `json:"access_tiers"`
 	Connectors  []string `json:"connectors,omitempty"`
 
-	PublicCIDRs   *PublicCIDRDomain `json:"public_cidrs,omitempty"`
-	PublicDomains *PublicCIDRDomain `json:"public_domains,omitempty"`
+	PublicCIDRs   *IncludeExclude `json:"public_cidrs,omitempty"`
+	PublicDomains *IncludeExclude `json:"public_domains,omitempty"`
+	Applications  *IncludeExclude `json:"applications,omitempty"`
 }
 
-type PublicCIDRDomain struct {
+type IncludeExclude struct {
 	Include []string `json:"include"`
 	Exclude []string `json:"exclude"`
 }
