@@ -5,10 +5,17 @@ on:
 jobs:
   pull_request:
     runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
       -
         name: Unshallow
         run: git fetch --prune --unshallow
@@ -27,6 +34,20 @@ jobs:
           TF_ACC: true
           BANYAN_API_KEY: ${{ secrets.BANYAN_API_KEY }}
           BANYAN_HOST: ${{ secrets.BANYAN_HOST }}
+      -
+        name: Generate Documentation
+        run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name terraform-provider-banyan --examples-dir ./examples/
+      -
+        name: commit documentation changes if any
+        run: |
+          if  [[ $(if [[ -n "$(git status --porcelain)" ]]; then echo "true"; else echo "false"; fi) == "true" ]]; then
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git commit -a -m "Documentation generated"
+            git push
+          else 
+            echo "\n++No Changes to Documentation++\n"
+          fi
       -
         name: Static Check
         uses: dominikh/staticcheck-action@v1.3.0

@@ -122,7 +122,7 @@ func RoleSchema() (s map[string]*schema.Schema) {
 		"serial_numbers": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Description: "Serial Numbers of devices to be applicable for role",
+			Description: "List of Serial Numbers belonging to devices for the role",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
