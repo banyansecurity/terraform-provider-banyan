@@ -128,6 +128,8 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 ### Optional
 
 - `access_tiers` (Set of String) Names of the access_tiers which the service tunnel should be associated with
+- `applications_exclude` (Set of String) Specifies the applications ids that should be excluded in the tunnel, ex: 633301ab-fd20-439b-b5ae-47153ec7fbf2
+- `applications_include` (Set of String) Specifies the applications ids that should be included in the tunnel, ex: 905a72d3-6216-4ffc-ad18-db1593782915
 - `autorun` (Boolean) Autorun for the service, if set true service would autorun on the app
 - `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
 - `connectors` (Set of String) Names of the connectors which the service tunnel should be associated with
