@@ -37,7 +37,7 @@ resource "banyan_service_db" "example" {
   policy         = data.banyan_policy_infra.example.id
 }
 
-resource "banyan_service_infra_k8s" "example" {
+resource "banyan_service_k8s" "example" {
   name                            = "example-k8s"
   description                     = "some k8s service description"
   access_tier                     = "us-west1"

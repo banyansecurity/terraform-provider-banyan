@@ -13,7 +13,7 @@ Resource used for lifecycle management of kubernetes services. For more informat
 ## Example Usage
 
 ```terraform
-resource "banyan_service_infra_k8s" "example" {
+resource "banyan_service_k8s" "example" {
   name                            = "example-k8s"
   description                     = "some k8s service description"
   access_tier                     = "us-west1"
