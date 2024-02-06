@@ -631,17 +631,22 @@ func expandExemptedPathPatterns(exemptedPaths *schema.Set) (patterns []service.P
 	patterns = make([]service.Pattern, 0)
 	for _, exemptedPath := range exemptedPaths.List() {
 		exemptedPatterns, ok := exemptedPath.(map[string]interface{})
-		exemptedPatternMap := make(map[string][]string)
-		for k, v := range exemptedPatterns {
-			strValue := make([]string, 0)
-			for _, r := range v.([]interface{}) {
-				strValue = append(strValue, r.(string))
-			}
-			exemptedPatternMap[k] = strValue
-		}
 		if !ok {
 			err = fmt.Errorf("unable to parse exemptions")
 			return
+		}
+		exemptedPatternMap := make(map[string][]string)
+		for k, v := range exemptedPatterns {
+			strValue := make([]string, 0)
+			valueList, ok := v.([]interface{})
+			if !ok {
+				err = fmt.Errorf("unable to parse key %s under exemptions", k)
+				return
+			}
+			for _, r := range valueList {
+				strValue = append(strValue, r.(string))
+			}
+			exemptedPatternMap[k] = strValue
 		}
 		hosts := service.Host{
 			OriginHeader: exemptedPatternMap["origin_header"],
