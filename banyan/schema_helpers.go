@@ -22,18 +22,12 @@ func convertSchemaSetToStringSlice(original *schema.Set) (stringSlice []string) 
 	}
 	return
 }
-func getStringListWithinSetForKey(exemptedPaths *schema.Set, key string) (values []string, err error) {
-	if exemptedPaths.Len() == 0 {
-		return values, nil
-	}
-	legacyPathRaw := exemptedPaths.List()[0]
-	lp := legacyPathRaw.(map[string]interface{})[key]
-
-	if len(lp.([]interface{})) == 0 {
-		return values, nil
-	}
-	for _, v := range lp.([]interface{}) {
-		values = append(values, v.(string))
+func getStringListWithinSetForKey(keys *schema.Set, key string) (values []string, err error) {
+	for _, keyRaw := range keys.List() {
+		lp := keyRaw.(map[string]interface{})[key]
+		for _, v := range lp.([]interface{}) {
+			values = append(values, v.(string))
+		}
 	}
 	return
 }

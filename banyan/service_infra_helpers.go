@@ -130,35 +130,42 @@ func flattenExemptions(paths service.ExemptedPaths) (flattened []interface{}, er
 	if !paths.Enabled {
 		return
 	}
-	exemptions := make(map[string]interface{})
-	exemptions["legacy_paths"] = paths.Paths
-	if len(paths.Patterns) < 1 {
-		flattened = append(flattened, exemptions)
-		return
+	flattened = make([]interface{}, 0)
+	for _, eachPattern := range paths.Patterns {
+		myExemption := make(map[string]interface{})
+		if len(eachPattern.Paths) > 0 {
+			myExemption["paths"] = eachPattern.Paths
+		}
+		if len(eachPattern.SourceCIDRs) > 0 {
+			myExemption["source_cidrs"] = eachPattern.SourceCIDRs
+		}
+		if len(eachPattern.MandatoryHeaders) > 0 {
+			myExemption["mandatory_headers"] = eachPattern.MandatoryHeaders
+		}
+		if len(eachPattern.Methods) > 0 {
+			myExemption["http_methods"] = eachPattern.Methods
+		}
+		var target []string
+		var originHeader []string
+		for _, eachHost := range eachPattern.Hosts {
+			target = append(target, eachHost.Target...)
+			originHeader = append(originHeader, eachHost.OriginHeader...)
+		}
+		if len(target) > 0 {
+			myExemption["target_domain"] = target
+		}
+		if len(originHeader) > 0 {
+			myExemption["origin_header"] = originHeader
+		}
+		if len(myExemption) > 0 {
+			flattened = append(flattened, myExemption)
+		}
 	}
-
-	if len(paths.Patterns) != 1 {
-		err = fmt.Errorf("more than one pattern not supported to import in terraform")
-		return
+	if len(paths.Paths) > 0 {
+		legacyPath := make(map[string]interface{})
+		legacyPath["legacy_paths"] = paths.Paths
+		flattened = append(flattened, legacyPath)
 	}
-	exemptions["paths"] = paths.Patterns[0].Paths
-	exemptions["source_cidrs"] = paths.Patterns[0].SourceCIDRs
-	exemptions["mandatory_headers"] = paths.Patterns[0].MandatoryHeaders
-	exemptions["http_methods"] = paths.Patterns[0].Methods
-
-	var target []string
-	var originHeader []string
-	if len(paths.Patterns[0].Hosts) > 1 {
-		err = fmt.Errorf("more than one hosts entries not supported to import in terraform")
-		return
-	}
-	if len(paths.Patterns[0].Hosts) == 1 {
-		target = paths.Patterns[0].Hosts[0].Target
-		originHeader = paths.Patterns[0].Hosts[0].OriginHeader
-	}
-	exemptions["target_domain"] = target
-	exemptions["origin_header"] = originHeader
-	flattened = append(flattened, exemptions)
 	return
 }
 func flattenCustomTLSCert(cert service.CustomTLSCert) (flattened []interface{}) {

@@ -225,7 +225,6 @@ func WebSchema() (s map[string]*schema.Schema) {
 		},
 		"exemptions": {
 			Type:     schema.TypeSet,
-			MaxItems: 1,
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
@@ -629,43 +628,40 @@ func expandWebExemptedPaths(d *schema.ResourceData) service.ExemptedPaths {
 }
 
 func expandExemptedPathPatterns(exemptedPaths *schema.Set) (patterns []service.Pattern, err error) {
-	paths, err := getStringListWithinSetForKey(exemptedPaths, "paths")
-	if err != nil {
-		return
+	patterns = make([]service.Pattern, 0)
+	for _, exemptedPath := range exemptedPaths.List() {
+		exemptedPatterns, ok := exemptedPath.(map[string]interface{})
+		if !ok {
+			err = fmt.Errorf("unable to parse exemptions")
+			return
+		}
+		exemptedPatternMap := make(map[string][]string)
+		for k, v := range exemptedPatterns {
+			strValue := make([]string, 0)
+			valueList, ok := v.([]interface{})
+			if !ok {
+				err = fmt.Errorf("unable to parse key %s under exemptions", k)
+				return
+			}
+			for _, r := range valueList {
+				strValue = append(strValue, r.(string))
+			}
+			exemptedPatternMap[k] = strValue
+		}
+		hosts := service.Host{
+			OriginHeader: exemptedPatternMap["origin_header"],
+			Target:       exemptedPatternMap["target_domain"],
+		}
+		pattern := service.Pattern{
+			Template:         "CORS",
+			SourceCIDRs:      exemptedPatternMap["source_cidrs"],
+			Hosts:            []service.Host{hosts},
+			Methods:          exemptedPatternMap["http_methods"],
+			Paths:            exemptedPatternMap["paths"],
+			MandatoryHeaders: exemptedPatternMap["mandatory_headers"],
+		}
+		patterns = append(patterns, pattern)
 	}
-	targetDomains, err := getStringListWithinSetForKey(exemptedPaths, "target_domain")
-	if err != nil {
-		return
-	}
-	httpMethods, err := getStringListWithinSetForKey(exemptedPaths, "http_methods")
-	if err != nil {
-		return
-	}
-	mandatoryHeaders, err := getStringListWithinSetForKey(exemptedPaths, "mandatory_headers")
-	if err != nil {
-		return
-	}
-	sourceCIDRs, err := getStringListWithinSetForKey(exemptedPaths, "source_cidrs")
-	if err != nil {
-		return
-	}
-	originHeaders, err := getStringListWithinSetForKey(exemptedPaths, "origin_header")
-	if err != nil {
-		return
-	}
-	hosts := service.Host{
-		OriginHeader: originHeaders,
-		Target:       targetDomains,
-	}
-	pattern := service.Pattern{
-		Template:         "CORS",
-		SourceCIDRs:      sourceCIDRs,
-		Hosts:            []service.Host{hosts},
-		Methods:          httpMethods,
-		Paths:            paths,
-		MandatoryHeaders: mandatoryHeaders,
-	}
-	patterns = []service.Pattern{pattern}
 	return
 }
 func expandWebHTTPHealthCheck() (httpHealthCheck service.HTTPHealthCheck) {

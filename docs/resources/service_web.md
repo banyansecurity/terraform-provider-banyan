@@ -111,7 +111,7 @@ resource "banyan_service_web" "example-service" {
 - `disable_private_dns` (Boolean) By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn off Private DNS Override i.e. disable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.
 - `dns_overrides` (Map of String) dns_overrides is an optional section that specifies name-to-address or name-to-name mappings. Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address". Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2" Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
  name-to-name    ->    "exposed.service.com" : "internal.myservice.com"
-- `exemptions` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--exemptions))
+- `exemptions` (Block Set) (see [below for nested schema](#nestedblock--exemptions))
 - `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `letsencrypt` (Boolean) Use a Public CA-issued server certificate instead of a Private CA-issued one
 - `policy` (String) Policy ID to be attached to this service

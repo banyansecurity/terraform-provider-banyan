@@ -183,6 +183,8 @@ func TestAccService_optional_web(t *testing.T) {
                         }
 						exemptions {
 							legacy_paths = ["/legacypath1","/legacypath2"]
+						}
+						exemptions {
 							paths = ["/paths1","/paths2"]
 							target_domain = ["https://targetdomain1:443","https://targetdomain2:443"]
 							http_methods = ["GET","POST"]
@@ -242,6 +244,8 @@ func TestAccService_optional_web(t *testing.T) {
                         }
 						exemptions {
 							legacy_paths = ["/legacypath1","/legacypath2"]
+						}
+						exemptions {
 							paths = ["/paths1","/paths2"]
 							target_domain = ["https://targetdomain1:443","https://targetdomain2:443"]
 							http_methods = ["GET","POST"]
