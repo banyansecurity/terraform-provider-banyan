@@ -71,8 +71,15 @@ func (a *AccessTier) GetName(name string) (spec AccessTierInfo, err error) {
 		err = fmt.Errorf("access tier with name %s not found", name)
 		return
 	}
-
-	return j.Data.AccessTiers[0], nil
+	for _, accessTier := range j.Data.AccessTiers {
+		if accessTier.Name == name {
+			spec = accessTier
+		}
+	}
+	if spec.Name == "" {
+		err = fmt.Errorf("access tier with name %s not found in results %+v", name, j.Data.AccessTiers)
+	}
+	return
 }
 
 func (a *AccessTier) Create(spec AccessTierPost) (created AccessTierInfo, err error) {
