@@ -3,6 +3,7 @@ package restclient
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -128,9 +129,10 @@ func (c *Client) Read(api string, component string, id string, path string) (res
 	}
 	response, err := c.DoGet(myUrl.String())
 	if err != nil {
+		err = errors.Join(fmt.Errorf("request to %s %s failed", response.Request.Method, response.Request.URL.String()), err)
 		return
 	}
-	return HandleResponse(response, myUrl.String())
+	return HandleResponse(response)
 }
 
 func (c *Client) ReadQuery(component string, query url.Values, path string) (r []byte, err error) {
@@ -141,9 +143,10 @@ func (c *Client) ReadQuery(component string, query url.Values, path string) (r [
 	myUrl.RawQuery = query.Encode()
 	response, err := c.DoGet(myUrl.String())
 	if err != nil {
+		err = errors.Join(fmt.Errorf("request to %s %s failed", response.Request.Method, response.Request.URL.String()), err)
 		return
 	}
-	return HandleResponse(response, myUrl.String())
+	return HandleResponse(response)
 }
 
 func (c *Client) Create(api string, component string, body []byte, path string) (r []byte, err error) {
@@ -152,13 +155,15 @@ func (c *Client) Create(api string, component string, body []byte, path string) 
 	}
 	request, err := c.NewRequest(http.MethodPost, path, bytes.NewBuffer(body))
 	if err != nil {
+		err = errors.Join(fmt.Errorf("request formation failed for %s %s", request.Method, request.URL.String()), err)
 		return
 	}
 	response, err := c.Do(request)
 	if err != nil {
+		err = errors.Join(fmt.Errorf("request to %s %s failed", request.Method, request.URL.String()), err)
 		return
 	}
-	return HandleResponse(response, path)
+	return HandleResponse(response)
 }
 
 func (c *Client) Update(api string, component string, id string, body []byte, path string) (r []byte, err error) {
@@ -167,14 +172,16 @@ func (c *Client) Update(api string, component string, id string, body []byte, pa
 	}
 	request, err := c.NewRequest(http.MethodPut, path, bytes.NewBuffer(body))
 	if err != nil {
+		err = errors.Join(fmt.Errorf("request formation failed for %s %s", request.Method, request.URL.String()), err)
 		return
 	}
 	response, err := c.Do(request)
 	if err != nil {
+		err = errors.Join(fmt.Errorf("request to %s %s failed", request.Method, request.URL.String()), err)
 		return
 	}
 
-	return HandleResponse(response, path)
+	return HandleResponse(response)
 }
 
 func (c *Client) Delete(api string, component string, id string, path string) (err error) {
@@ -191,10 +198,11 @@ func (c *Client) Delete(api string, component string, id string, path string) (e
 	}
 	response, err := c.DoDelete(myUrl.String())
 	if err != nil {
+		err = errors.Join(fmt.Errorf("request to %s %s failed", response.Request.Method, response.Request.URL.String()), err)
 		return
 	}
 
-	_, err = HandleResponse(response, myUrl.String())
+	_, err = HandleResponse(response)
 	return
 }
 
@@ -210,14 +218,16 @@ func (c *Client) DeleteQuery(component string, id string, query url.Values, path
 	myUrl.RawQuery = query.Encode()
 	response, err := c.DoDelete(myUrl.String())
 	if err != nil {
+		err = errors.Join(fmt.Errorf("request to %s %s failed", response.Request.Method, response.Request.URL.String()), err)
 		return
 	}
-	_, err = HandleResponse(response, myUrl.String())
+	_, err = HandleResponse(response)
 	return
 }
 
-func HandleResponse(response *http.Response, requestStr string) (responseData []byte, err error) {
+func HandleResponse(response *http.Response) (responseData []byte, err error) {
 	defer response.Body.Close()
+	requestStr := fmt.Sprintf("%s %s", response.Request.Method, response.Request.URL.String())
 	responseData, err = io.ReadAll(response.Body)
 	if err != nil {
 		return

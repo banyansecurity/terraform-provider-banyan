@@ -49,7 +49,7 @@ func (s *Shield) GetAll() (shields []string, err error) {
 	if err != nil {
 		return
 	}
-	responseData, err := restclient.HandleResponse(response, myUrl.String())
+	responseData, err := restclient.HandleResponse(response)
 	if err != nil {
 		return
 	}
