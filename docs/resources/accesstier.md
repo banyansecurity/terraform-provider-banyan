@@ -126,6 +126,13 @@ Import is supported using the following syntax:
 terraform import banyan_accesstier.myexample 46f3a708-2a9a-4c87-b18e-b11b6c92bf24
 
 terraform show
+
+# or import via accesstier name
+terraform import banyan_accesstier.myexample name:myexample
+
+terraform show
+
+
 # update thw show output configuration into above main.tf file, then resource is managed.
 # BE CAUTIOUS before terraform apply, do terraform plan and verify there are no changes to be applied.
 
@@ -136,6 +143,11 @@ terraform show
 # import {
 #  to = banyan_accesstier.myexample
 #  id = "46f3a708-2a9a-4c87-b18e-b11b6c92bf24"
+# }
+# or import via access_tier name
+# import {
+#  to = banyan_accesstier.myexample
+#  id = "name:myexample"
 # }
 #  Then execute
 terraform plan -generate-config-out=generated.tf

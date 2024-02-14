@@ -3,7 +3,6 @@ package restclient
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -129,13 +128,13 @@ func (c *Client) Read(api string, component string, id string, path string) (res
 	}
 	response, err := c.DoGet(myUrl.String())
 	if err != nil {
-		err = errors.Join(fmt.Errorf("request to %s %s failed", response.Request.Method, response.Request.URL.String()), err)
+		err = fmt.Errorf("request to %s %s failed %w", response.Request.Method, response.Request.URL.String(), err)
 		return
 	}
 	return HandleResponse(response)
 }
 
-func (c *Client) ReadQuery(component string, query url.Values, path string) (r []byte, err error) {
+func (c *Client) ReadQuery(_ string, query url.Values, path string) (r []byte, err error) {
 	myUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -143,7 +142,7 @@ func (c *Client) ReadQuery(component string, query url.Values, path string) (r [
 	myUrl.RawQuery = query.Encode()
 	response, err := c.DoGet(myUrl.String())
 	if err != nil {
-		err = errors.Join(fmt.Errorf("request to %s %s failed", response.Request.Method, response.Request.URL.String()), err)
+		err = fmt.Errorf("request to %s %s failed %w", response.Request.Method, response.Request.URL.String(), err)
 		return
 	}
 	return HandleResponse(response)
@@ -155,12 +154,12 @@ func (c *Client) Create(api string, component string, body []byte, path string) 
 	}
 	request, err := c.NewRequest(http.MethodPost, path, bytes.NewBuffer(body))
 	if err != nil {
-		err = errors.Join(fmt.Errorf("request formation failed for %s %s", request.Method, request.URL.String()), err)
+		err = fmt.Errorf("request formation failed for %s %s %w", request.Method, request.URL.String(), err)
 		return
 	}
 	response, err := c.Do(request)
 	if err != nil {
-		err = errors.Join(fmt.Errorf("request to %s %s failed", request.Method, request.URL.String()), err)
+		err = fmt.Errorf("request to %s %s failed %w", request.Method, request.URL.String(), err)
 		return
 	}
 	return HandleResponse(response)
@@ -172,12 +171,12 @@ func (c *Client) Update(api string, component string, id string, body []byte, pa
 	}
 	request, err := c.NewRequest(http.MethodPut, path, bytes.NewBuffer(body))
 	if err != nil {
-		err = errors.Join(fmt.Errorf("request formation failed for %s %s", request.Method, request.URL.String()), err)
+		err = fmt.Errorf("request formation failed for %s %s %w", request.Method, request.URL.String(), err)
 		return
 	}
 	response, err := c.Do(request)
 	if err != nil {
-		err = errors.Join(fmt.Errorf("request to %s %s failed", request.Method, request.URL.String()), err)
+		err = fmt.Errorf("request to %s %s failed %w", request.Method, request.URL.String(), err)
 		return
 	}
 
@@ -198,7 +197,7 @@ func (c *Client) Delete(api string, component string, id string, path string) (e
 	}
 	response, err := c.DoDelete(myUrl.String())
 	if err != nil {
-		err = errors.Join(fmt.Errorf("request to %s %s failed", response.Request.Method, response.Request.URL.String()), err)
+		err = fmt.Errorf("request to %s %s failed %w", response.Request.Method, response.Request.URL.String(), err)
 		return
 	}
 
@@ -218,7 +217,7 @@ func (c *Client) DeleteQuery(component string, id string, query url.Values, path
 	myUrl.RawQuery = query.Encode()
 	response, err := c.DoDelete(myUrl.String())
 	if err != nil {
-		err = errors.Join(fmt.Errorf("request to %s %s failed", response.Request.Method, response.Request.URL.String()), err)
+		err = fmt.Errorf("request to %s %s failed %w", response.Request.Method, response.Request.URL.String(), err)
 		return
 	}
 	_, err = HandleResponse(response)
@@ -245,8 +244,8 @@ func HandleResponse(response *http.Response) (responseData []byte, err error) {
 		if err != nil {
 			return
 		}
-		uerr := json.Unmarshal(responseData, &errResp)
-		if uerr == nil {
+		myErr := json.Unmarshal(responseData, &errResp)
+		if myErr == nil {
 			err = fmt.Errorf("recieved error code %d: %s \n response: \n %s", response.StatusCode, requestStr, responseData)
 		}
 		return

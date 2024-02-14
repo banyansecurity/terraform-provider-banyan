@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -23,9 +24,29 @@ func resourceAccessTier() *schema.Resource {
 		DeleteContext: resourceAccessTierDelete,
 		Schema:        AccessTierSchema(),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceImporter,
 		},
 	}
+}
+
+func resourceImporter(ctx context.Context, data *schema.ResourceData, i interface{}) ([]*schema.ResourceData, error) {
+	inID := data.Id()
+	parts := strings.Split(inID, ":")
+	if len(parts) == 1 {
+		data.SetId(inID)
+		return []*schema.ResourceData{data}, nil
+	}
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "name" {
+		return nil, fmt.Errorf("invalid ID (%s), expected name:<name of access tier to import>", parts)
+	}
+	name := parts[1]
+	accessTierClient := i.(*client.Holder)
+	accessTierInfo, err := accessTierClient.AccessTier.GetName(name)
+	if err != nil {
+		return nil, err
+	}
+	data.SetId(accessTierInfo.ID)
+	return []*schema.ResourceData{data}, nil
 }
 
 func AccessTierSchema() map[string]*schema.Schema {

@@ -53,16 +53,26 @@ func (a *AccessTier) GetName(name string) (spec AccessTierInfo, err error) {
 	if err != nil {
 		return
 	}
-	var j ATResponse
+	type ats struct {
+		AccessTiers []AccessTierInfo `json:"access_tiers,omitempty"`
+		Count       int              `json:"count"`
+	}
+	j := struct {
+		RequestId        string `json:"request_id"`
+		ErrorCode        int    `json:"error_code"`
+		ErrorDescription string `json:"error_description"`
+		Data             ats    `json:"data"`
+	}{}
 	err = json.Unmarshal(resp, &j)
 	if err != nil {
 		return
 	}
-	if j.Count == 0 {
+	if j.Data.Count == 0 {
 		err = fmt.Errorf("access tier with name %s not found", name)
 		return
 	}
-	return j.Data, nil
+
+	return j.Data.AccessTiers[0], nil
 }
 
 func (a *AccessTier) Create(spec AccessTierPost) (created AccessTierInfo, err error) {

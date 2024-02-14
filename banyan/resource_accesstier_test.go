@@ -38,6 +38,7 @@ func TestAccAccessTier_required(t *testing.T) {
 			},
 			{
 				ResourceName:      "banyan_accesstier.example",
+				ImportStateId:     fmt.Sprintf("name:%s", rName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
