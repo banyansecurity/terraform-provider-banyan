@@ -241,12 +241,9 @@ func HandleResponse(response *http.Response) (responseData []byte, err error) {
 	}
 	if response.StatusCode != 200 {
 		var errResp ErrorResponse
-		if err != nil {
-			return
-		}
-		myErr := json.Unmarshal(responseData, &errResp)
-		if myErr == nil {
-			err = fmt.Errorf("recieved error code %d: %s \n response: \n %s", response.StatusCode, requestStr, responseData)
+		err = json.Unmarshal(responseData, &errResp)
+		if err == nil {
+			err = fmt.Errorf("received error code %d: %s \n response: \n %s", response.StatusCode, requestStr, responseData)
 		}
 		return
 	}

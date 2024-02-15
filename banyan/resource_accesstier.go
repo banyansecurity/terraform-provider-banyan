@@ -40,7 +40,10 @@ func resourceImporter(ctx context.Context, data *schema.ResourceData, i interfac
 		return nil, fmt.Errorf("invalid ID (%s), expected name:<name of access tier to import>", parts)
 	}
 	name := parts[1]
-	accessTierClient := i.(*client.Holder)
+	accessTierClient, ok := i.(*client.Holder)
+	if !ok {
+		return nil, fmt.Errorf("error occured during import %s", inID)
+	}
 	accessTierInfo, err := accessTierClient.AccessTier.GetName(name)
 	if err != nil {
 		return nil, err
