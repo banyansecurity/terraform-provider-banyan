@@ -74,6 +74,7 @@ func (a *AccessTier) GetName(name string) (spec AccessTierInfo, err error) {
 	for _, accessTier := range j.Data.AccessTiers {
 		if accessTier.Name == name {
 			spec = accessTier
+			break
 		}
 	}
 	if spec.Name == "" {
