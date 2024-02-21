@@ -27,8 +27,6 @@ func NewClient(restClient *restclient.Client) Client {
 	return &PolicyAttachmentClient
 }
 
-const component = "policyattachment"
-
 // Client is used to perform CRUD operations against the policy attachment resource
 type Client interface {
 	Get(attachedToID string, attachedToType string) (attachment GetBody, err error)
@@ -136,7 +134,7 @@ func (p *PolicyAttachment) Create(policyID string, PolicyAttachment CreateBody) 
 	if err != nil {
 		return
 	}
-	data, err := restclient.HandleResponse(response, component)
+	data, err := restclient.HandleResponse(response)
 	if err != nil {
 		return
 	}

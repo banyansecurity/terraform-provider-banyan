@@ -128,12 +128,13 @@ func (c *Client) Read(api string, component string, id string, path string) (res
 	}
 	response, err := c.DoGet(myUrl.String())
 	if err != nil {
+		err = fmt.Errorf("request to %s %s failed %w", response.Request.Method, response.Request.URL.String(), err)
 		return
 	}
-	return HandleResponse(response, myUrl.String())
+	return HandleResponse(response)
 }
 
-func (c *Client) ReadQuery(component string, query url.Values, path string) (r []byte, err error) {
+func (c *Client) ReadQuery(_ string, query url.Values, path string) (r []byte, err error) {
 	myUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -141,9 +142,10 @@ func (c *Client) ReadQuery(component string, query url.Values, path string) (r [
 	myUrl.RawQuery = query.Encode()
 	response, err := c.DoGet(myUrl.String())
 	if err != nil {
+		err = fmt.Errorf("request to %s %s failed %w", response.Request.Method, response.Request.URL.String(), err)
 		return
 	}
-	return HandleResponse(response, myUrl.String())
+	return HandleResponse(response)
 }
 
 func (c *Client) Create(api string, component string, body []byte, path string) (r []byte, err error) {
@@ -152,13 +154,15 @@ func (c *Client) Create(api string, component string, body []byte, path string) 
 	}
 	request, err := c.NewRequest(http.MethodPost, path, bytes.NewBuffer(body))
 	if err != nil {
+		err = fmt.Errorf("request formation failed for %s %s %w", request.Method, request.URL.String(), err)
 		return
 	}
 	response, err := c.Do(request)
 	if err != nil {
+		err = fmt.Errorf("request to %s %s failed %w", request.Method, request.URL.String(), err)
 		return
 	}
-	return HandleResponse(response, path)
+	return HandleResponse(response)
 }
 
 func (c *Client) Update(api string, component string, id string, body []byte, path string) (r []byte, err error) {
@@ -167,14 +171,16 @@ func (c *Client) Update(api string, component string, id string, body []byte, pa
 	}
 	request, err := c.NewRequest(http.MethodPut, path, bytes.NewBuffer(body))
 	if err != nil {
+		err = fmt.Errorf("request formation failed for %s %s %w", request.Method, request.URL.String(), err)
 		return
 	}
 	response, err := c.Do(request)
 	if err != nil {
+		err = fmt.Errorf("request to %s %s failed %w", request.Method, request.URL.String(), err)
 		return
 	}
 
-	return HandleResponse(response, path)
+	return HandleResponse(response)
 }
 
 func (c *Client) Delete(api string, component string, id string, path string) (err error) {
@@ -191,10 +197,11 @@ func (c *Client) Delete(api string, component string, id string, path string) (e
 	}
 	response, err := c.DoDelete(myUrl.String())
 	if err != nil {
+		err = fmt.Errorf("request to %s %s failed %w", response.Request.Method, response.Request.URL.String(), err)
 		return
 	}
 
-	_, err = HandleResponse(response, myUrl.String())
+	_, err = HandleResponse(response)
 	return
 }
 
@@ -210,14 +217,16 @@ func (c *Client) DeleteQuery(component string, id string, query url.Values, path
 	myUrl.RawQuery = query.Encode()
 	response, err := c.DoDelete(myUrl.String())
 	if err != nil {
+		err = fmt.Errorf("request to %s %s failed %w", response.Request.Method, response.Request.URL.String(), err)
 		return
 	}
-	_, err = HandleResponse(response, myUrl.String())
+	_, err = HandleResponse(response)
 	return
 }
 
-func HandleResponse(response *http.Response, requestStr string) (responseData []byte, err error) {
+func HandleResponse(response *http.Response) (responseData []byte, err error) {
 	defer response.Body.Close()
+	requestStr := fmt.Sprintf("%s %s", response.Request.Method, response.Request.URL.String())
 	responseData, err = io.ReadAll(response.Body)
 	if err != nil {
 		return
@@ -232,12 +241,9 @@ func HandleResponse(response *http.Response, requestStr string) (responseData []
 	}
 	if response.StatusCode != 200 {
 		var errResp ErrorResponse
-		if err != nil {
-			return
-		}
-		uerr := json.Unmarshal(responseData, &errResp)
-		if uerr == nil {
-			err = fmt.Errorf("recieved error code %d: %s \n response: \n %s", response.StatusCode, requestStr, responseData)
+		err = json.Unmarshal(responseData, &errResp)
+		if err == nil {
+			err = fmt.Errorf("received error code %d: %s \n response: \n %s", response.StatusCode, requestStr, responseData)
 		}
 		return
 	}
