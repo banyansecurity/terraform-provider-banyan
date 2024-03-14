@@ -63,3 +63,7 @@ type ATGResponse struct {
 	ErrorDescription string                  `json:"error_description"`
 	Data             AccessTierGroupResponse `json:"data"`
 }
+
+type AccessTierList struct {
+	AccessTierIDs []string `json:"access_tier_ids"`
+}

@@ -1,8 +1,11 @@
 package accesstiregroup
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
@@ -29,6 +32,8 @@ type Client interface {
 	Delete(id string) (err error)
 	Update(id string, post AccessTierGroupPost) (updatedApiKey AccessTierGroupResponse, err error)
 	GetName(name string) (spec AccessTierGroupResponse, err error)
+	AttachAccessTier(groupID string, ats AccessTierList) (attachedATs []string, err error)
+	DetachAccessTier(groupID string, ats AccessTierList) (detachedATs []string, err error)
 }
 
 func (a *AccessTierGroup) Create(atgInfo AccessTierGroupPost) (created AccessTierGroupResponse, err error) {
@@ -113,5 +118,62 @@ func (a *AccessTierGroup) GetName(name string) (spec AccessTierGroupResponse, er
 	if spec.Name == "" {
 		err = fmt.Errorf("access tier group with name %s not found in results %+v", name, j.Data.AccessTierGroups)
 	}
+	return
+}
+
+func (a *AccessTierGroup) AttachAccessTier(groupID string, ats AccessTierList) (attachedATs []string, err error) {
+	body, err := json.Marshal(ats)
+	if err != nil {
+		return
+	}
+	attachURL := fmt.Sprintf("/%s/%s/attach", component, groupID)
+	resp, err := a.restClient.Create(apiVersion, attachURL, body, "")
+	if err != nil {
+		return
+	}
+	var j AccessTierList
+	err = json.Unmarshal(resp, &j)
+	if err != nil {
+		return
+	}
+
+	attachedATs = j.AccessTierIDs
+	return
+}
+
+func (a *AccessTierGroup) DetachAccessTier(groupID string, ats AccessTierList) (detachedATs []string, err error) {
+	body, err := json.Marshal(ats)
+	if err != nil {
+		return
+	}
+	detachURL := fmt.Sprintf("%s/%s/%s/detach", apiVersion, component, groupID)
+	req, err := a.restClient.NewRequest(http.MethodDelete, detachURL, bytes.NewBuffer(body))
+	if err != nil {
+		return
+	}
+
+	HTTPClient := &http.Client{}
+	resp, err := HTTPClient.Do(req)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("error occurred while detaching access tier from group")
+		return
+	}
+
+	response, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	var j AccessTierList
+	err = json.Unmarshal(response, &j)
+	if err != nil {
+		return
+	}
+
+	detachedATs = j.AccessTierIDs
 	return
 }

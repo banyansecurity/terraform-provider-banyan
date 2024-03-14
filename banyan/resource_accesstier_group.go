@@ -95,6 +95,22 @@ func AccessTierGroupSchema() map[string]*schema.Schema {
 			Required:    true,
 			Description: "shared fqdn",
 		},
+		"attach_access_tier_ids": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Access tier IDs to attach to access tier group",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"detach_access_tier_ids": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Access tier IDs to detach from access tier group",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 	}
 	return s
 }
@@ -107,6 +123,15 @@ func resourceAccessTierGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(spec.ID)
+
+	attachIDs := convertSchemaSetToStringSlice(d.Get("attach_access_tier_ids").(*schema.Set))
+	if len(attachIDs) != 0 {
+		err = attachAccessTier(c, d.Get("id").(string), attachIDs)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
@@ -166,6 +191,23 @@ func resourceAccessTierGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	attachIDs := convertSchemaSetToStringSlice(d.Get("attach_access_tier_ids").(*schema.Set))
+	if len(attachIDs) != 0 {
+		err = attachAccessTier(c, d.Get("id").(string), attachIDs)
+		if err != nil {
+			return
+		}
+	}
+
+	detachIDs := convertSchemaSetToStringSlice(d.Get("detach_access_tier_ids").(*schema.Set))
+	if len(detachIDs) != 0 {
+		err = detachAccessTier(c, d.Get("id").(string), detachIDs)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
@@ -204,4 +246,29 @@ func setATGTunnelConfigEndUserRequest(d *schema.ResourceData) (expanded *accesst
 		return nil
 	}
 	return &e
+}
+
+func attachAccessTier(c *client.Holder, atgID string, atIDs []string) (err error) {
+
+	attachReqBody := accesstiregroup.AccessTierList{
+		AccessTierIDs: atIDs,
+	}
+	_, err = c.AccessTierGroup.AttachAccessTier(atgID, attachReqBody)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func detachAccessTier(c *client.Holder, atgID string, atIDs []string) (err error) {
+	attachReqBody := accesstiregroup.AccessTierList{
+		AccessTierIDs: atIDs,
+	}
+	_, err = c.AccessTierGroup.DetachAccessTier(atgID, attachReqBody)
+	if err != nil {
+		return
+	}
+
+	return
 }
