@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"github.com/banyansecurity/terraform-banyan-provider/client/accesstiregroup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -207,6 +208,8 @@ func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName str
 	_, connsOk := d.GetOk("connectors")
 	ats, atsOk := d.GetOk("access_tiers")
 
+	atg, atgOk := d.GetOk("access_tier_group")
+
 	// error if singular and plural are used
 	if (connOk && connsOk) || (atOk && atsOk) {
 		err = errors.New("cannot have both access_tier and access_tiers set or both connector and connectors set")
@@ -216,6 +219,11 @@ func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName str
 	// error if both are set
 	if (connOk && atOk) || (connsOk && atsOk) {
 		err = errors.New("cannot have both access_tier and connector set")
+		return
+	}
+
+	if (atgOk && atOk) || (atgOk && atsOk) {
+		err = errors.New("cannot have both access_tier and access tier group set")
 		return
 	}
 
@@ -231,6 +239,18 @@ func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName str
 		if atsOk {
 			at = atsSlice[0]
 		}
+	}
+
+	if atg != "" {
+		var atDetails accesstiregroup.AccessTierGroupResponse
+		atDetails, err = c.AccessTierGroup.GetName(atg.(string))
+		if err != nil {
+			_ = fmt.Errorf("accesstier group %s not found", atg.(string))
+			clusterName, err = getFirstCluster(c)
+			return
+		}
+		clusterName = atDetails.ClusterName
+		return
 	}
 
 	// otherwise determine which cluster to set based off of the access tier
