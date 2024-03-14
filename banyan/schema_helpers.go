@@ -164,10 +164,16 @@ func GetIntPtr(d *schema.ResourceData, key string) (result *int) {
 func buildHostTagSelector(d *schema.ResourceData) (hostTagSelector []map[string]string, err error) {
 	conn, connOk := d.GetOk("connector")
 	at, atOk := d.GetOk("access_tier")
+	atg, atgOk := d.GetOk("access_tier_group")
 
 	// error if both are set
 	if connOk && atOk {
 		err = errors.New("cannot have both access_tier and connector set")
+		return
+	}
+
+	if (atgOk && atOk) || (connOk && atgOk) {
+		err = errors.New("cannot have both access_tier or connector and access tier group set")
 		return
 	}
 
@@ -176,6 +182,11 @@ func buildHostTagSelector(d *schema.ResourceData) (hostTagSelector []map[string]
 		at = "*"
 	}
 	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": at.(string)}
+
+	if atg != "" {
+		siteNameSelector["com.banyanops.hosttag.access_tier_group"] = atg.(string)
+	}
+
 	hostTagSelector = append(hostTagSelector, siteNameSelector)
 	return
 }
