@@ -36,12 +36,12 @@ func AccessTierGroupSchema() map[string]*schema.Schema {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Name of the access tier",
+			Description: "Name of the access tier group",
 		},
 		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "description of access tier group",
+			Description: "Description of access tier group",
 		},
 		"cluster": {
 			Type:        schema.TypeString,
@@ -64,8 +64,7 @@ func AccessTierGroupSchema() map[string]*schema.Schema {
 		"dns_enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     true,
-			Description: "Enable DNS for Service Tunnels (needed to work properly with both private and public targets)",
+			Description: "Enable DNS for service tunnels (needed to work properly with both private and public targets)",
 		},
 		"udp_port_number": {
 			Type:        schema.TypeInt,
@@ -75,7 +74,7 @@ func AccessTierGroupSchema() map[string]*schema.Schema {
 		"keepalive": {
 			Type:        schema.TypeInt,
 			Required:    true,
-			Description: "keepalive",
+			Description: "Keepalive",
 		},
 		"domains": {
 			Type:        schema.TypeSet,
@@ -93,7 +92,7 @@ func AccessTierGroupSchema() map[string]*schema.Schema {
 		"shared_fqdn": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "shared fqdn",
+			Description: "Shared FQDN",
 		},
 		"attach_access_tier_ids": {
 			Type:        schema.TypeSet,
@@ -117,16 +116,16 @@ func AccessTierGroupSchema() map[string]*schema.Schema {
 
 func resourceAccessTierGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	spec, err := c.AccessTierGroup.Create(atgFromState(d))
+	atg, err := c.AccessTierGroup.Create(atgFromState(d))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(spec.ID)
+	d.SetId(atg.ID)
 
 	attachIDs := convertSchemaSetToStringSlice(d.Get("attach_access_tier_ids").(*schema.Set))
 	if len(attachIDs) != 0 {
-		err = attachAccessTier(c, d.Get("id").(string), attachIDs)
+		err = attachAccessTiers(c, d.Get("id").(string), attachIDs)
 		if err != nil {
 			return
 		}
@@ -189,7 +188,7 @@ func resourceAccessTierGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	attachIDs := convertSchemaSetToStringSlice(d.Get("attach_access_tier_ids").(*schema.Set))
 	if len(attachIDs) != 0 {
-		err = attachAccessTier(c, d.Get("id").(string), attachIDs)
+		err = attachAccessTiers(c, d.Get("id").(string), attachIDs)
 		if err != nil {
 			return
 		}
@@ -197,7 +196,7 @@ func resourceAccessTierGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	detachIDs := convertSchemaSetToStringSlice(d.Get("detach_access_tier_ids").(*schema.Set))
 	if len(detachIDs) != 0 {
-		err = detachAccessTier(c, d.Get("id").(string), detachIDs)
+		err = detachAccessTiers(c, d.Get("id").(string), detachIDs)
 		if err != nil {
 			return
 		}
@@ -243,12 +242,12 @@ func setATGTunnelConfigEndUserRequest(d *schema.ResourceData) (expanded *accesst
 	return &e
 }
 
-func attachAccessTier(c *client.Holder, atgID string, atIDs []string) (err error) {
+func attachAccessTiers(c *client.Holder, atgID string, atIDs []string) (err error) {
 
 	attachReqBody := accesstiregroup.AccessTierList{
 		AccessTierIDs: atIDs,
 	}
-	_, err = c.AccessTierGroup.AttachAccessTier(atgID, attachReqBody)
+	_, err = c.AccessTierGroup.AttachAccessTiers(atgID, attachReqBody)
 	if err != nil {
 		return
 	}
@@ -256,11 +255,11 @@ func attachAccessTier(c *client.Holder, atgID string, atIDs []string) (err error
 	return
 }
 
-func detachAccessTier(c *client.Holder, atgID string, atIDs []string) (err error) {
+func detachAccessTiers(c *client.Holder, atgID string, atIDs []string) (err error) {
 	attachReqBody := accesstiregroup.AccessTierList{
 		AccessTierIDs: atIDs,
 	}
-	_, err = c.AccessTierGroup.DetachAccessTier(atgID, attachReqBody)
+	_, err = c.AccessTierGroup.DetachAccessTiers(atgID, attachReqBody)
 	if err != nil {
 		return
 	}

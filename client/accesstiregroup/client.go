@@ -32,8 +32,8 @@ type Client interface {
 	Delete(id string) (err error)
 	Update(id string, post AccessTierGroupPost) (updatedApiKey AccessTierGroupResponse, err error)
 	GetName(name string) (spec AccessTierGroupResponse, err error)
-	AttachAccessTier(groupID string, ats AccessTierList) (attachedATs []string, err error)
-	DetachAccessTier(groupID string, ats AccessTierList) (detachedATs []string, err error)
+	AttachAccessTiers(groupID string, ats AccessTierList) (attachedATs []string, err error)
+	DetachAccessTiers(groupID string, ats AccessTierList) (detachedATs []string, err error)
 }
 
 func (a *AccessTierGroup) Create(atgInfo AccessTierGroupPost) (created AccessTierGroupResponse, err error) {
@@ -84,44 +84,51 @@ func (a *AccessTierGroup) Delete(id string) (err error) {
 	return a.restClient.Delete(apiVersion, component, id, "")
 }
 
-func (a *AccessTierGroup) GetName(name string) (spec AccessTierGroupResponse, err error) {
+func (a *AccessTierGroup) GetName(name string) (atg AccessTierGroupResponse, err error) {
 	v := url.Values{}
 	v.Add("access_tier_group_name", name)
 	resp, err := a.restClient.ReadQuery(component, v, fmt.Sprintf("%s/%s", apiVersion, component))
 	if err != nil {
 		return
 	}
-	type ats struct {
+
+	type atgs struct {
 		AccessTierGroups []AccessTierGroupResponse `json:"access_tier_groups,omitempty"`
 		Count            int                       `json:"count"`
 	}
-	j := struct {
+
+	response := struct {
 		RequestId        string `json:"request_id"`
 		ErrorCode        int    `json:"error_code"`
 		ErrorDescription string `json:"error_description"`
-		Data             ats    `json:"data"`
+		Data             atgs   `json:"data"`
 	}{}
-	err = json.Unmarshal(resp, &j)
+
+	err = json.Unmarshal(resp, &response)
 	if err != nil {
 		return
 	}
-	if j.Data.Count == 0 {
+
+	if response.Data.Count == 0 {
 		err = fmt.Errorf("access tier with name %s not found", name)
 		return
 	}
-	for _, accessTierGroup := range j.Data.AccessTierGroups {
+
+	for _, accessTierGroup := range response.Data.AccessTierGroups {
 		if accessTierGroup.Name == name {
-			spec = accessTierGroup
+			atg = accessTierGroup
 			break
 		}
 	}
-	if spec.Name == "" {
-		err = fmt.Errorf("access tier group with name %s not found in results %+v", name, j.Data.AccessTierGroups)
+
+	if atg.Name == "" {
+		err = fmt.Errorf("access tier group with name %s not found in results %+v", name, response.Data.AccessTierGroups)
 	}
+
 	return
 }
 
-func (a *AccessTierGroup) AttachAccessTier(groupID string, ats AccessTierList) (attachedATs []string, err error) {
+func (a *AccessTierGroup) AttachAccessTiers(groupID string, ats AccessTierList) (attachedATs []string, err error) {
 	body, err := json.Marshal(ats)
 	if err != nil {
 		return
@@ -141,7 +148,7 @@ func (a *AccessTierGroup) AttachAccessTier(groupID string, ats AccessTierList) (
 	return
 }
 
-func (a *AccessTierGroup) DetachAccessTier(groupID string, ats AccessTierList) (detachedATs []string, err error) {
+func (a *AccessTierGroup) DetachAccessTiers(groupID string, ats AccessTierList) (detachedATs []string, err error) {
 	body, err := json.Marshal(ats)
 	if err != nil {
 		return

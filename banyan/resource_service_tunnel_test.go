@@ -106,8 +106,6 @@ func TestSchemaServiceTunnel_tunnel_public_select_at_from_multiple(t *testing.T)
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
 	svc_obj := TunFromState(d)
 
-	fmt.Println("values of d : ", d.Get("access_tier_group"))
-
 	json_spec, _ := os.ReadFile("./specs/service_tunnel/tunnel-public-multiple-at.json")
 	var ref_obj servicetunnel.Info
 	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
