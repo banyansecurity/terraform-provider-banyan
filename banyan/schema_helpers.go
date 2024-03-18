@@ -183,7 +183,7 @@ func buildHostTagSelector(d *schema.ResourceData) (hostTagSelector []map[string]
 	}
 	siteNameSelector := map[string]string{"com.banyanops.hosttag.site_name": at.(string)}
 
-	if atg != "" {
+	if atg != nil {
 		siteNameSelector["com.banyanops.hosttag.access_tier_group"] = atg.(string)
 	}
 
@@ -252,7 +252,7 @@ func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName str
 		}
 	}
 
-	if atg != "" {
+	if atg != nil {
 		var atDetails accesstiregroup.AccessTierGroupResponse
 		atDetails, err = c.AccessTierGroup.GetName(atg.(string))
 		if err != nil {

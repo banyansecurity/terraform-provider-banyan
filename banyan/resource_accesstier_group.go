@@ -172,11 +172,6 @@ func resourceAccessTierGroupRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("advanced_settings", key.AdvancedSettings)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	err = d.Set("shared_fqdn", key.TunnelConfig.SharedFQDN)
 	if err != nil {
 		return diag.FromErr(err)
