@@ -57,6 +57,7 @@ func TestSchemaServiceTunnel_tunnel_public(t *testing.T) {
 		"public_domains_include":                []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
 		"public_traffic_tunnel_via_access_tier": "gcp-tdnovpn-v2",
 		"applications_include":                  []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
+		"access_tier_group":                     "",
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
 	svc_obj := TunFromState(d)
@@ -78,6 +79,7 @@ func TestSchemaServiceTunnel_tunnel_public_one_at(t *testing.T) {
 		"public_domains_include": []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
 
 		"applications_include": []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
+		"access_tier_group":    "",
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
 	svc_obj := TunFromState(d)
@@ -99,6 +101,7 @@ func TestSchemaServiceTunnel_tunnel_public_select_at_from_multiple(t *testing.T)
 		"public_domains_include":                []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
 		"applications_include":                  []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
 		"public_traffic_tunnel_via_access_tier": "gcp-tdnovpn-v2",
+		"access_tier_group":                     "",
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
 	svc_obj := TunFromState(d)
@@ -287,6 +290,90 @@ func TestAccServiceTunnel_change_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("banyan_service_tunnel.example", "name", rName),
 				),
+			},
+		},
+	})
+}
+
+func TestSchemaServiceTunnel_with_access_tier_group(t *testing.T) {
+	svc_tunnel_public := map[string]interface{}{
+		"name":              "tunnel-domains",
+		"description":       "describe tunnel-domains",
+		"cluster":           "cluster1",
+		"access_tier_group": "atg-1",
+	}
+	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
+	svc_obj := TunFromState(d)
+
+	json_spec := []byte(`{
+		"kind": "BanyanServiceTunnel",
+		"api_version": "rbac.banyanops.com/v1",
+		"type": "origin",
+		"metadata":
+		{
+			"name": "tunnel-domains",
+			"friendly_name": "tunnel-domains",
+			"description": "describe tunnel-domains",
+			"tags":
+			{
+				"icon": "",
+				"description_link": ""
+			},
+			"autorun": false
+		},
+		"spec":
+		{
+			"peer_access_tiers":
+			[
+				{
+					"cluster": "cluster1",
+					"access_tier_group":"atg-1"
+				}
+			]
+		}
+	}`)
+	var ref_obj servicetunnel.Info
+	_ = json.Unmarshal([]byte(json_spec), &ref_obj)
+
+	AssertServiceTunnelEqual(t, svc_obj, ref_obj)
+}
+
+func TestAccServiceTunnel_with_access_tier_group(t *testing.T) {
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// Creates the servicetunnel with the given terraform configuration and asserts that the servicetunnel is created
+			{
+				Config: fmt.Sprintf(`
+
+					resource "banyan_policy_tunnel" "example" {
+						name        = "%s"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+
+					resource "banyan_service_tunnel" "example" {
+						name                    = "%s"
+						description       	    = "realdescription"
+						access_tier_group       = "new-grp-1"
+                        policy                  = banyan_policy_tunnel.example.id
+					}
+					`, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_service_tunnel.example", "name", rName),
+				),
+			},
+			{
+				ResourceName:      "banyan_service_tunnel.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
