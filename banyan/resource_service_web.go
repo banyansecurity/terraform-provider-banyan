@@ -285,7 +285,6 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "access tier group which is associated with service",
-			Default:     "",
 		},
 	}
 	return

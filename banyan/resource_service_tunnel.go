@@ -367,10 +367,6 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 		if err != nil {
 			return err
 		}
-		err = d.Set("access_tier_group", nil)
-		if err != nil {
-			return err
-		}
 	} else {
 		var ats []string
 		err = d.Set("connectors", nil)
