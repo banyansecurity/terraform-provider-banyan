@@ -97,6 +97,7 @@ resource "banyan_service_web" "example-service" {
 ### Optional
 
 - `access_tier` (String) Name of the access_tier which will proxy requests to your service backend
+- `access_tier_group` (String) access tier group which is associated with service
 - `available_in_app` (Boolean) Whether this service is available in the app for users with permission to access this service
 - `backend_port` (Number) The internal port where this service is hosted. Default is 443
 - `backend_tls` (Boolean) Indicates whether the connection to the backend server uses TLS
