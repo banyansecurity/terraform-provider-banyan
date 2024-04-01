@@ -321,7 +321,7 @@ func TestSchemaServiceTunnel_with_access_tier_group(t *testing.T) {
 				"description_link": ""
 			},
 			"autorun": false,
-        	"lock_autorun": true
+        	"lock_autorun": false
 		},
 		"spec":
 		{
