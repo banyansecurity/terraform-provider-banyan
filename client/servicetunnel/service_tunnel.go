@@ -69,6 +69,7 @@ type Metadata struct {
 	Description  string `json:"description,omitempty"`
 	Tags         Tags   `json:"tags"`
 	Autorun      bool   `json:"autorun"`
+	LockAutoRun  bool   `json:"lock_autorun"`
 }
 
 // Tags represents the metadata tags

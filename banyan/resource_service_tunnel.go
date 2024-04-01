@@ -143,6 +143,11 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "Name of the access_tier group which the service tunnel should be associated with",
 		},
+		"lock_autorun": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off",
+		},
 	}
 	return
 }
@@ -163,7 +168,8 @@ func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
 				Icon:            &icon,
 				DescriptionLink: &descriptionLink,
 			},
-			Autorun: expandAutorun(d),
+			Autorun:     expandAutorun(d),
+			LockAutoRun: expandLockAutorun(d),
 		},
 		Spec: expandServiceTunnelSpec(d),
 	}
@@ -449,4 +455,12 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 		}
 	}
 	return
+}
+
+func expandLockAutorun(d *schema.ResourceData) bool {
+	lockAutorun, exists := d.GetOk("lock_autorun")
+	if exists {
+		return lockAutorun.(bool)
+	}
+	return false
 }

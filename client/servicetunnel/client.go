@@ -3,9 +3,10 @@ package servicetunnel
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"html"
 	"log"
+
+	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 )
 
 const apiVersion = "api/v2"
@@ -51,6 +52,8 @@ func (a *ServiceTunnel) Create(spec Info) (created ServiceTunnelInfo, err error)
 			Name:         spec.Metadata.Name,
 			FriendlyName: spec.Metadata.FriendlyName,
 			Description:  spec.Metadata.Description,
+			Autorun:      spec.Autorun,
+			LockAutoRun:  spec.LockAutoRun,
 		},
 		Spec: spec.Spec,
 	})

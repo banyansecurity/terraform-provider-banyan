@@ -19,6 +19,7 @@ func TestSchemaServiceTunnel_tunnel_at(t *testing.T) {
 		"autorun":      true,
 		"cluster":      "cluster1",
 		"access_tiers": []interface{}{"gcp-tdnovpn-v1", "gcp-tdnovpn-v2"},
+		"lock_autorun": true,
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_at)
 	svc_obj := TunFromState(d)
@@ -319,7 +320,8 @@ func TestSchemaServiceTunnel_with_access_tier_group(t *testing.T) {
 				"icon": "",
 				"description_link": ""
 			},
-			"autorun": false
+			"autorun": false,
+        	"lock_autorun": true
 		},
 		"spec":
 		{

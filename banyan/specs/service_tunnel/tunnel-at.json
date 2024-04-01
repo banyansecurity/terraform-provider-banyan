@@ -12,7 +12,8 @@
             "icon": "",
             "description_link": ""
         },
-        "autorun": true
+        "autorun": true,
+        "lock_autorun": true
     },
     "spec":
     {
@@ -31,7 +32,7 @@
                 [
                     "gcp-tdnovpn-v2"
                 ]
-            }            
+            }
         ]
     }
 }
