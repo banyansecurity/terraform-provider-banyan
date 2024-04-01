@@ -34,7 +34,7 @@ resource "banyan_accesstier_group" "example" {
 	description            = "testing-1"
 	cluster                = "cluster1"
 	dns_search_domains     = ""
-	advanced_settings      = "{\"kind\":\"BanyanAccessTierLocalConfig\",\"api_version\":\"rbac.banyanops.com/v1\",\"type\":\"attribute-based\",\"metadata\":{},\"spec\":{\"base\":{\"shield_address\":\"ted-us-west1.shield.bnntest.com:34140\",\"site_address\":\"\"},\"logging\":{},\"events\":{},\"hosted_web_services\":{}}}"
+    statsd_address 		   = "192.168.0.1:8090"
 	domains                = ["test-1.com"]
 	cidrs                  = ["198.169.0.1/24"]
 	dns_enabled            = false
