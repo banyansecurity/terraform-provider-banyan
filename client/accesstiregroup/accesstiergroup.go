@@ -1,6 +1,8 @@
 package accesstiregroup
 
-import "github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
+import (
+	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
+)
 
 type AccessTierGroupInfo struct {
 	ID               string `json:"id"`
@@ -15,12 +17,16 @@ type AccessTierGroupInfo struct {
 }
 
 type AccessTierGroupPost struct {
+	ID               string                               `json:"id"`
 	Name             string                               `json:"name"`
+	OrgID            string                               `json:"org_id"`
 	Description      string                               `json:"description"`
 	SharedFQDN       string                               `json:"shared_fqdn"`
+	TunnelConfig     *accesstier.AccessTierTunnelInfoPost `json:"tunnel_enduser"`
+	AdvancedSettings accesstier.AccessTierLocalConfig     `json:"advanced_settings"`
 	ClusterName      string                               `json:"cluster_name"`
-	TunnelEnduser    *accesstier.AccessTierTunnelInfoPost `json:"tunnel_enduser,omitempty"`
-	AdvancedSettings string                               `json:"advanced_settings"`
+	CreatedAt        int64                                `json:"created_at"`
+	UpdatedAt        int64                                `json:"updated_at"`
 }
 
 type AccessTierGroupResponse struct {

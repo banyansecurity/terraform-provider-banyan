@@ -10,11 +10,16 @@ import (
 )
 
 var want = accesstiregroup.AccessTierGroupPost{
-	Name:             "new-nnm-88w",
-	Description:      "testing-1",
-	ClusterName:      "cluster1",
-	AdvancedSettings: "{\"kind\":\"BanyanAccessTierLocalConfig\",\"api_version\":\"rbac.banyanops.com/v1\",\"type\":\"attribute-based\",\"metadata\":{},\"spec\":{\"base\":{\"shield_address\":\"ted-us-west1.shield.bnntest.com:34140\",\"site_address\":\"\"},\"logging\":{},\"events\":{},\"hosted_web_services\":{}}}",
-	TunnelEnduser: &accesstier.AccessTierTunnelInfoPost{
+	Name:        "new-nnm-88w",
+	Description: "testing-1",
+	ClusterName: "cluster1",
+	AdvancedSettings: accesstier.AccessTierLocalConfig{
+		LoggingParameters: &accesstier.LoggingParameters{
+			StatsD:        accesstier.BoolPtr(false),
+			StatsDAddress: accesstier.StringPtr("127.0.0.1:8125"),
+		},
+	},
+	TunnelConfig: &accesstier.AccessTierTunnelInfoPost{
 		DNSSearchDomains: "",
 		Domains:          []string{"test-1.com"},
 		CIDRs:            []string{"198.169.0.1/24"},
