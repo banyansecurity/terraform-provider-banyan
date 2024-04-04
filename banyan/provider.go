@@ -45,6 +45,7 @@ func Provider() *schema.Provider {
 
 			"banyan_accesstier_group": resourceAccessTierGroup(),
 			"banyan_scim":             resourceSCIM(),
+
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"banyan_oidc_settings": dataSourceOidcSettings(),
