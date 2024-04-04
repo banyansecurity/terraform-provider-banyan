@@ -143,7 +143,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "Name of the access_tier group which the service tunnel should be associated with",
 		},
-		"lock_autorun": {
+    "lock_autorun": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Description: "Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off",
