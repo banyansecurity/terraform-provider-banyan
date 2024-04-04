@@ -30,7 +30,6 @@
             ],
             "host_tag_selector": [
                 {
-                    "com.banyanops.hosttag.access_tier_group": "",
                     "com.banyanops.hosttag.site_name": "gcp-wg"
                 }
             ],

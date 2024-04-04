@@ -306,7 +306,6 @@ func testAccService_basic_web_create_json(name string) string {
             ],
             "host_tag_selector": [
                 {
-					"com.banyanops.hosttag.access_tier_group": "",
                     "com.banyanops.hosttag.site_name": "us-west1"
                 }
             ],
@@ -406,7 +405,6 @@ func testAccService_basic_web_update_json(name string) string {
             ],
             "host_tag_selector": [
                 {
-					"com.banyanops.hosttag.access_tier_group": "",
                     "com.banyanops.hosttag.site_name": "us-west1"
                 }
             ],
