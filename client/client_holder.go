@@ -30,7 +30,6 @@ type Holder struct {
 	AccessTier       accesstier.Client
 	Shield           shield.Client
 	RestClient       *restclient.Client
-
 	AccessTierGroup accesstiregroup.Client
 	SCIM            scim.Client
 }

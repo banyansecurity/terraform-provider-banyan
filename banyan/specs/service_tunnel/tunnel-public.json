@@ -12,7 +12,8 @@
             "icon": "",
             "description_link": ""
         },
-        "autorun": false
+        "autorun": false,
+        "lock_autorun": false
     },
     "spec":
     {
