@@ -127,6 +127,7 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 
 ### Optional
 
+- `access_tier_group` (String) Name of the access_tier group which the service tunnel should be associated with
 - `access_tiers` (Set of String) Names of the access_tiers which the service tunnel should be associated with
 - `applications_exclude` (Set of String) Specifies the applications ids that should be excluded in the tunnel, ex: 633301ab-fd20-439b-b5ae-47153ec7fbf2
 - `applications_include` (Set of String) Specifies the applications ids that should be included in the tunnel, ex: 905a72d3-6216-4ffc-ad18-db1593782915
