@@ -1,4 +1,4 @@
-package accesstiregroup
+package accesstiergroup
 
 import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"

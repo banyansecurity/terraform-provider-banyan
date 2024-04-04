@@ -1,4 +1,4 @@
-package accesstiregroup
+package accesstiergroup
 
 import (
 	"bytes"

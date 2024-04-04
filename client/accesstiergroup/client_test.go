@@ -1,15 +1,15 @@
-package accesstiregroup_test
+package accesstiergroup_test
 
 import (
 	"testing"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
-	"github.com/banyansecurity/terraform-banyan-provider/client/accesstiregroup"
+	"github.com/banyansecurity/terraform-banyan-provider/client/accesstiergroup"
 	"github.com/banyansecurity/terraform-banyan-provider/client/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
-var want = accesstiregroup.AccessTierGroupPost{
+var want = accesstiergroup.AccessTierGroupPost{
 	Name:        "new-nnm-88w",
 	Description: "testing-1",
 	ClusterName: "cluster1",

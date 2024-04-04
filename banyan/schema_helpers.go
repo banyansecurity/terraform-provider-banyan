@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
-	"github.com/banyansecurity/terraform-banyan-provider/client/accesstiregroup"
+	"github.com/banyansecurity/terraform-banyan-provider/client/accesstiergroup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -253,7 +253,7 @@ func determineCluster(c *client.Holder, d *schema.ResourceData) (clusterName str
 	}
 
 	if atg != nil {
-		var atDetails accesstiregroup.AccessTierGroupResponse
+		var atDetails accesstiergroup.AccessTierGroupResponse
 		atDetails, err = c.AccessTierGroup.GetName(atg.(string))
 		if err != nil {
 			_ = fmt.Errorf("accesstier group %s not found", atg.(string))

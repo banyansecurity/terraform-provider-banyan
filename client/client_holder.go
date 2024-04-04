@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
-	"github.com/banyansecurity/terraform-banyan-provider/client/accesstiregroup"
+	"github.com/banyansecurity/terraform-banyan-provider/client/accesstiergroup"
 	admin "github.com/banyansecurity/terraform-banyan-provider/client/admin"
 	"github.com/banyansecurity/terraform-banyan-provider/client/apikey"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
@@ -30,8 +30,8 @@ type Holder struct {
 	AccessTier       accesstier.Client
 	Shield           shield.Client
 	RestClient       *restclient.Client
-	AccessTierGroup accesstiregroup.Client
-	SCIM            scim.Client
+	AccessTierGroup  accesstiergroup.Client
+	SCIM             scim.Client
 }
 
 // NewClientHolder returns a new client which is used to perform operations on all Banyan resources.
@@ -52,7 +52,7 @@ func NewClientHolder(hostUrl string, apiKey string) (client *Holder, err error) 
 		Admin:            admin.NewClient(restClient),
 		Shield:           shield.NewClient(restClient),
 		RestClient:       restClient,
-		AccessTierGroup:  accesstiregroup.NewClient(restClient),
+		AccessTierGroup:  accesstiergroup.NewClient(restClient),
 		SCIM:             scim.NewClient(restClient),
 	}
 	return &c, err

@@ -7,7 +7,7 @@ import (
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/accesstier"
-	"github.com/banyansecurity/terraform-banyan-provider/client/accesstiregroup"
+	"github.com/banyansecurity/terraform-banyan-provider/client/accesstiergroup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -414,8 +414,8 @@ func resourceAccessTierGroupDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 // creates an access tier group from the terraform state
-func atgFromState(d *schema.ResourceData) accesstiregroup.AccessTierGroupPost {
-	at := accesstiregroup.AccessTierGroupPost{
+func atgFromState(d *schema.ResourceData) accesstiergroup.AccessTierGroupPost {
+	at := accesstiergroup.AccessTierGroupPost{
 		Name:             d.Get("name").(string),
 		Description:      d.Get("description").(string),
 		SharedFQDN:       d.Get("shared_fqdn").(string),
@@ -441,7 +441,7 @@ func setATGTunnelConfigEndUserRequest(d *schema.ResourceData) (expanded *accesst
 
 func attachAccessTiers(c *client.Holder, atgID string, atIDs []string) (err error) {
 
-	attachReqBody := accesstiregroup.AccessTierList{
+	attachReqBody := accesstiergroup.AccessTierList{
 		AccessTierIDs: atIDs,
 	}
 	_, err = c.AccessTierGroup.AttachAccessTiers(atgID, attachReqBody)
@@ -453,7 +453,7 @@ func attachAccessTiers(c *client.Holder, atgID string, atIDs []string) (err erro
 }
 
 func detachAccessTiers(c *client.Holder, atgID string, atIDs []string) (err error) {
-	attachReqBody := accesstiregroup.AccessTierList{
+	attachReqBody := accesstiergroup.AccessTierList{
 		AccessTierIDs: atIDs,
 	}
 	_, err = c.AccessTierGroup.DetachAccessTiers(atgID, attachReqBody)
