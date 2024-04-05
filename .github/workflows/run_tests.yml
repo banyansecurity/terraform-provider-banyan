@@ -1,7 +1,7 @@
 name: run_tests
 
 on:
-  workflow_run:
+  workflow_dispatch:
     branches: [ "dev" ]
     inputs:
       command_center_url:
