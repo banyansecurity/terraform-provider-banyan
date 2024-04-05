@@ -1,7 +1,7 @@
 name: pull_request
 on:
   pull_request:
-    types: [push, force-push, opened, edited, synchronize, reopened]
+    types: [opened, edited, synchronize, reopened]
 jobs:
   pull_request:
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
         name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.20.5
+          go-version: 1.22
       -
         name: Run Go Mod Tidy
         run: go mod tidy
