@@ -136,6 +136,7 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 - `connectors` (Set of String) Names of the connectors which the service tunnel should be associated with
 - `description` (String) Description of the service tunnel
 - `description_link` (String) Link shown to the end user of the banyan app for this service
+- `lock_autorun` (Boolean) Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off
 - `public_cidrs_exclude` (Set of String) Specifies public IP addresses in CIDR notation that should be excluded from the tunnel, ex: 8.8.12.0/24.
 - `public_cidrs_include` (Set of String) Specifies public IP addresses in CIDR notation that should be included in the tunnel, ex: 8.8.0.0/16.
 - `public_domains_exclude` (Set of String) Specifies the domains that should be that should be excluded from the tunnel, ex: zoom.us
