@@ -1,8 +1,19 @@
 name: run_tests
 
 on:
-  push:
+  workflow_dispatch:
     branches: [ "dev" ]
+    inputs:
+      command_center_url:
+        description: 'Command Center URL'
+        required: true
+        default: 'https://net.banyanops.com'
+        type: string
+    secrets:
+      api_key:
+        description: 'API Key'
+        required: true
+        type: string
 
 jobs:
   run_tests:
@@ -20,9 +31,9 @@ jobs:
         run: git fetch --prune --unshallow
       -
         name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.20.5
+          go-version: 1.22
       -
         name: Run Go Mod Tidy
         run: go mod tidy
@@ -31,8 +42,8 @@ jobs:
         run: go test ./banyan/... -v
         env:
           TF_ACC: true
-          BANYAN_API_KEY: ${{ secrets.BANYAN_API_KEY }}
-          BANYAN_HOST: ${{ secrets.BANYAN_HOST }}
+          BANYAN_API_KEY: ${{ secrets.api_key }}
+          BANYAN_HOST: ${{ inputs.command_center_url }}
       -
         name: Generate Documentation
         run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name terraform-provider-banyan --examples-dir ./examples/
@@ -47,6 +58,6 @@ jobs:
           fi
       -
         name: Static Check
-        uses: dominikh/staticcheck-action@v1.3.0
+        uses: dominikh/staticcheck-action@v1.3.1
         with:
-          version: "2022.1.3"
+          version: "latest"

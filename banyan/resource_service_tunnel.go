@@ -138,6 +138,16 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 				Type: schema.TypeString,
 			},
 		},
+		"access_tier_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Name of the access_tier group which the service tunnel should be associated with",
+		},
+    "lock_autorun": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off",
+		},
 	}
 	return
 }
@@ -158,7 +168,8 @@ func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
 				Icon:            &icon,
 				DescriptionLink: &descriptionLink,
 			},
-			Autorun: expandAutorun(d),
+			Autorun:     expandAutorun(d),
+			LockAutoRun: expandLockAutorun(d),
 		},
 		Spec: expandServiceTunnelSpec(d),
 	}
@@ -288,14 +299,22 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 	exclApplications := convertSchemaSetToStringSlice(d.Get("applications_exclude").(*schema.Set))
 
 	var peers []servicetunnel.PeerAccessTier
-
-	// if access_tiers not set => global-edge, use ["*"]
+	accessTierGroup := d.Get("access_tier_group").(string)
+	// if access_tiers not set and access tier group is empty => global-edge, use ["*"]
 	if len(ats) == 0 {
-		peers = append(peers, servicetunnel.PeerAccessTier{
+		peer := servicetunnel.PeerAccessTier{
 			Cluster:     d.Get("cluster").(string),
 			AccessTiers: []string{"*"},
 			Connectors:  conns,
-		})
+		}
+
+		if accessTierGroup != "" {
+			peer.AccessTiers = nil
+			peer.Connectors = nil
+			peer.AccessTierGroup = accessTierGroup
+		}
+
+		peers = append(peers, peer)
 	} else {
 		// If multiple accessTiers are set create peer foreach.
 		for i, eachAts := range ats {
@@ -423,6 +442,12 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 					}
 				}
 			}
+
+			err = d.Set("access_tier_group", eachPeer.AccessTierGroup)
+			if err != nil {
+				return err
+			}
+
 		}
 		err = d.Set("access_tiers", ats)
 		if err != nil {
@@ -430,4 +455,12 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 		}
 	}
 	return
+}
+
+func expandLockAutorun(d *schema.ResourceData) bool {
+	lockAutorun, exists := d.GetOk("lock_autorun")
+	if exists {
+		return lockAutorun.(bool)
+	}
+	return false
 }

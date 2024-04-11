@@ -3,13 +3,14 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"log"
+	"strconv"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
-	"strconv"
 )
 
 // Schema for the service resource. For more information on Banyan services, see the documentation
@@ -279,6 +280,11 @@ func WebSchema() (s map[string]*schema.Schema) {
 					},
 				},
 			},
+		},
+		"access_tier_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "access tier group which is associated with service",
 		},
 	}
 	return

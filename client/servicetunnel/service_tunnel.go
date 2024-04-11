@@ -69,6 +69,7 @@ type Metadata struct {
 	Description  string `json:"description,omitempty"`
 	Tags         Tags   `json:"tags"`
 	Autorun      bool   `json:"autorun"`
+	LockAutoRun  bool   `json:"lock_autorun"`
 }
 
 // Tags represents the metadata tags
@@ -92,6 +93,8 @@ type PeerAccessTier struct {
 	PublicCIDRs   *IncludeExclude `json:"public_cidrs,omitempty"`
 	PublicDomains *IncludeExclude `json:"public_domains,omitempty"`
 	Applications  *IncludeExclude `json:"applications,omitempty"`
+
+	AccessTierGroup string `json:"access_tier_group"`
 }
 
 type IncludeExclude struct {
