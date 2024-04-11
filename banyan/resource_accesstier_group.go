@@ -421,7 +421,7 @@ func atgFromState(d *schema.ResourceData) accesstiergroup.AccessTierGroupPost {
 		SharedFQDN:       d.Get("shared_fqdn").(string),
 		ClusterName:      d.Get("cluster").(string),
 		TunnelConfig:     setATGTunnelConfigEndUserRequest(d),
-		AdvancedSettings: exapandAdvancedSettings(d),
+		AdvancedSettings: expandAdvancedSettings(d),
 	}
 	return at
 }
@@ -464,7 +464,7 @@ func detachAccessTiers(c *client.Holder, atgID string, atIDs []string) (err erro
 	return
 }
 
-func exapandAdvancedSettings(d *schema.ResourceData) accesstier.AccessTierLocalConfig {
+func expandAdvancedSettings(d *schema.ResourceData) accesstier.AccessTierLocalConfig {
 	lc := accesstier.AccessTierLocalConfig{
 		LoggingParameters:               expandLogging(d),
 		EventParameters:                 expandEventParameters(d),

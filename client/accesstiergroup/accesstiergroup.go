@@ -22,7 +22,7 @@ type AccessTierGroupPost struct {
 	OrgID            string                               `json:"org_id"`
 	Description      string                               `json:"description"`
 	SharedFQDN       string                               `json:"shared_fqdn"`
-	TunnelConfig     *accesstier.AccessTierTunnelInfoPost `json:"tunnel_enduser"`
+	TunnelConfig     *accesstier.AccessTierTunnelInfoPost `json:"tunnel_config"`
 	AdvancedSettings accesstier.AccessTierLocalConfig     `json:"advanced_settings"`
 	ClusterName      string                               `json:"cluster_name"`
 	CreatedAt        int64                                `json:"created_at"`
