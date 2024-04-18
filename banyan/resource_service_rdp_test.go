@@ -22,6 +22,7 @@ func TestSchemaServiceInfraRdp_rdp_conn(t *testing.T) {
 		"backend_domain":                 "10.10.2.1",
 		"backend_port":                   3309,
 		"client_banyanproxy_listen_port": 9109,
+		"rdp_settings":                   []interface{}{"devicestoredirect:s:*"},
 	}
 
 	d := schema.TestResourceDataRaw(t, RdpSchema(), svc_rdp_conn)
@@ -43,6 +44,7 @@ func TestSchemaServiceInfraRdp_rdp_collection(t *testing.T) {
 		"domain":                         "test-rdp-collection.tdupnsan.getbnn.com",
 		"http_connect":                   true,
 		"client_banyanproxy_listen_port": 9108,
+		"rdp_settings":                   []interface{}{"devicestoredirect:s:*"},
 	}
 
 	d := schema.TestResourceDataRaw(t, RdpSchema(), svc_rdp_collection)
@@ -88,6 +90,7 @@ resource "banyan_service_rdp" "example" {
   domain         = "%s-rdp.corp.com"
   backend_domain = "%s-rdp.internal"
   backend_port   = 3389
+  rdp_settings   = ["devicestoredirect:s:*"]
 }
 `, name, name, name)
 }
@@ -113,7 +116,8 @@ func testAccService_infra_rdp_create_json(name string) string {
             "banyanproxy_mode": "TCP",
             "app_listen_port": "",
             "allow_user_override": true,
-            "description_link": ""
+            "description_link": "",
+            "rdp_settings": ["devicestoredirect:s:*"]
         }
     },
     "spec": {
@@ -200,7 +204,7 @@ func testAccService_infra_rdp_create_json(name string) string {
                 ]
             },
             "headers": {}
-        },        
+        },
         "client_cidrs": []
     }
 }

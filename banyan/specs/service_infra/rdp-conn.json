@@ -17,7 +17,8 @@
             "banyanproxy_mode": "TCP",
             "app_listen_port": "9109",
             "allow_user_override": true,
-            "description_link": ""
+            "description_link": "",
+            "rdp_settings": ["devicestoredirect:s:*"]
         },
         "autorun": false
     },

@@ -72,6 +72,8 @@ type Tags struct {
 	DescriptionLink   *string   `json:"description_link,omitempty" toml:"description_link,omitempty"`
 	IncludeDomains    *[]string `json:"include_domains,omitempty" toml:"include_domains,omitempty"`
 
+	RDPSettings *[]string `json:"rdp_settings,omitempty" toml:"rdp_settings,omitempty"`
+
 	RegisteredDomainID *string `json:"registered_domain_id,omitempty" toml:"registered_domain_id,omitempty"`
 }
 

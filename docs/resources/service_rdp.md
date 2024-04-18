@@ -52,6 +52,7 @@ resource "banyan_service_rdp" "example" {
 - `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `policy` (String) Policy ID to be attached to this service
 - `port` (Number) The external-facing port for this service
+- `rdp_settings` (Set of String)
 - `suppress_device_trust_verification` (Boolean) suppress_device_trust_verification disables Device Trust Verification for a service if set to true
 
 ### Read-Only

@@ -203,6 +203,13 @@ func RdpSchema() map[string]*schema.Schema {
 			Default:     true,
 			Description: "Allow the end user to override the backend_port for this service",
 		},
+		"rdp_settings": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 	}
 }
 
@@ -254,6 +261,8 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 			return diag.FromErr(err)
 		}
 	}
+
+	d.Set("rdp_settings", svc.CreateServiceSpec.Metadata.Tags.RDPSettings)
 	return resourceServiceInfraCommonRead(svc, d, m)
 }
 
@@ -302,6 +311,9 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 	if alp != nil {
 		appListenPort = alp.(string)
 	}
+
+	rdpSettings := convertSchemaSetToStringSlice(d.Get("rdp_settings").(*schema.Set))
+
 	metadatatags = service.Tags{
 		Template:          &template,
 		UserFacing:        &userFacing,
@@ -314,6 +326,7 @@ func expandRDPMetatdataTags(d *schema.ResourceData) (metadatatags service.Tags) 
 		AppListenPort:     &appListenPort,
 		AllowUserOverride: &allowUserOverride,
 		DescriptionLink:   &descriptionLink,
+		RDPSettings:       &rdpSettings,
 	}
 	return
 }
