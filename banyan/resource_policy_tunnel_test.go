@@ -14,24 +14,28 @@ import (
 
 func TestSchemaPolicyTunnel_l4(t *testing.T) {
 	access1 := map[string]interface{}{
+		"name":        "test-name",
+		"description": "test-desc",
 		"roles":       []interface{}{"UsersRegisteredDevice"},
 		"trust_level": "Low",
 		"l4_access": []interface{}{
 			map[string]interface{}{
 				"allow": []interface{}{
 					map[string]interface{}{
-						"cidrs":     []interface{}{"10.138.0.14/32", "10.138.0.11/32", "10.10.0.0/16"},
-						"protocols": []interface{}{"ALL"},
-						"ports":     []interface{}{"*"},
-						"fqdns":     []interface{}{},
+						"description": "test-description",
+						"cidrs":       []interface{}{"10.138.0.14/32", "10.138.0.11/32", "10.10.0.0/16"},
+						"protocols":   []interface{}{"ALL"},
+						"ports":       []interface{}{"*"},
+						"fqdns":       []interface{}{},
 					},
 				},
 				"deny": []interface{}{
 					map[string]interface{}{
-						"cidrs":     []interface{}{"10.10.1.0/24", "10.10.2.0/24"},
-						"protocols": []interface{}{"TCP"},
-						"ports":     []interface{}{"22"},
-						"fqdns":     []interface{}{},
+						"description": "test-description",
+						"cidrs":       []interface{}{"10.10.1.0/24", "10.10.2.0/24"},
+						"protocols":   []interface{}{"TCP"},
+						"ports":       []interface{}{"22"},
+						"fqdns":       []interface{}{},
 					},
 				},
 			},
@@ -174,7 +178,7 @@ func testAccPolicy_tunnel_l4_create_json(name string) string {
                                     "UDP"
                                 ],
                                 "fqdns": [
-                                    "www.example.com"	
+                                    "www.example.com"
                                 ]
                             }
                         ],
@@ -285,7 +289,7 @@ func testAccPolicy_tunnel_l4_create_json_fqdn(name string) string {
                                     "UDP"
                                 ],
                                 "fqdns": [
-                                    "www.example.com"	
+                                    "www.example.com"
                                 ]
                             }
                         ],

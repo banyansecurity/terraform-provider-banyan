@@ -16,6 +16,8 @@
         },
         "access": [
             {
+                "name" : "test-name",
+                "description" : "test-desc",
                 "roles": [
                     "UsersRegisteredDevice"
                 ],
@@ -24,6 +26,7 @@
                     "l4_access": {
                         "allow": [
                             {
+                                "description": "test-description",
                                 "cidrs": [
                                     "10.138.0.14/32",
                                     "10.138.0.11/32",
@@ -39,6 +42,7 @@
                         ],
                         "deny": [
                             {
+                                "description": "test-description",
                                 "cidrs": [
                                     "10.10.1.0/24",
                                     "10.10.2.0/24"
@@ -50,7 +54,7 @@
                                     "22"
                                 ]
                             }
-                        ]                        
+                        ]
                     },
                     "conditions": {
                         "trust_level": "Low"

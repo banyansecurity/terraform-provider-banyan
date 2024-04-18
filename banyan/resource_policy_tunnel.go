@@ -51,6 +51,16 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 			Description: "Access describes the access rights for a set of roles",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "access group name",
+					},
+					"description": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "access group description description",
+					},
 					"roles": {
 						Type:        schema.TypeSet,
 						Description: "Role names to include ",
@@ -79,6 +89,11 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 									Optional:    true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
+											"description": {
+												Type:        schema.TypeString,
+												Optional:    true,
+												Description: "l4 policy description",
+											},
 											"cidrs": {
 												Type:        schema.TypeSet,
 												Description: "Allowed CIDRs through the service tunnel",
@@ -121,6 +136,11 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 									Optional:    true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
+											"description": {
+												Type:        schema.TypeString,
+												Optional:    true,
+												Description: "l4 policy description",
+											},
 											"cidrs": {
 												Type:        schema.TypeSet,
 												Description: "Denied CIDRs through the service tunnel",
@@ -279,12 +299,25 @@ func expandPolicyTunnelAccess(m []interface{}) (access []policy.Access) {
 		data := raw.(map[string]interface{})
 
 		a := policy.Access{
-			Roles: convertSchemaSetToStringSlice(data["roles"].(*schema.Set)),
+			Name:        data["name"].(string),
+			Description: data["description"].(string),
+			Roles:       convertSchemaSetToStringSlice(data["roles"].(*schema.Set)),
 			Rules: policy.Rules{
 				L4Access: expandL4Access(data["l4_access"].([]interface{})),
 			},
 		}
 		a.Rules.Conditions.TrustLevel = data["trust_level"].(string)
+
+		name := data["name"]
+		if name != nil {
+			a.Name = name.(string)
+		}
+
+		description := data["description"]
+		if description != nil {
+			a.Description = description.(string)
+		}
+
 		access = append(access, a)
 	}
 	return
@@ -295,9 +328,10 @@ func expandL4Access(m []interface{}) *policy.L4Access {
 		var allow []policy.L4Rule
 		var deny []policy.L4Rule
 		allow = append(allow, policy.L4Rule{
-			CIDRs:     []string{"*"},
-			Protocols: []string{"ALL"},
-			Ports:     []string{"*"},
+			Description: "",
+			CIDRs:       []string{"*"},
+			Protocols:   []string{"ALL"},
+			Ports:       []string{"*"},
 		})
 		p := policy.L4Access{
 			Allow: allow,
@@ -334,12 +368,19 @@ func expandL4Rules(m interface{}) (l4Rules []policy.L4Rule) {
 			ports = []string{"*"}
 		}
 
+		description := ""
+		if rule["description"] != nil {
+			description = rule["description"].(string)
+		}
+
 		l4Rules = append(l4Rules, policy.L4Rule{
-			CIDRs:     cidrs,
-			Protocols: protocols,
-			Ports:     ports,
-			FQDNs:     fqdns,
+			Description: description,
+			CIDRs:       cidrs,
+			Protocols:   protocols,
+			Ports:       ports,
+			FQDNs:       fqdns,
 		})
+
 	}
 	return
 }
