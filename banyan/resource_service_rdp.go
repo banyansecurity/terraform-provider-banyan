@@ -209,6 +209,7 @@ func RdpSchema() map[string]*schema.Schema {
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
+			Description: "allow admin to add custom rdp settings which app will add in rdp file",
 		},
 	}
 }
@@ -262,7 +263,11 @@ func resourceServiceInfraRdpRead(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	d.Set("rdp_settings", svc.CreateServiceSpec.Metadata.Tags.RDPSettings)
+	rdpSettings := svc.CreateServiceSpec.Metadata.Tags.RDPSettings
+	if rdpSettings != nil {
+		d.Set("rdp_settings", rdpSettings)
+	}
+
 	return resourceServiceInfraCommonRead(svc, d, m)
 }
 
