@@ -210,13 +210,6 @@ func policyTunnelFromState(d *schema.ResourceData) (pol policy.Object) {
 
 func resourcePolicyTunnelCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-
-	// 	ValidateFunc is not supported on lists or sets, so use this method instead
-	err := invalidL4AccessRules(d)
-	if err != nil {
-		return diag.FromErr(errors.WithMessage(err, "invalid l4_access block"))
-	}
-
 	createdPolicy, err := c.Policy.Create(policyTunnelFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new tunnel policy"))
@@ -228,13 +221,6 @@ func resourcePolicyTunnelCreate(ctx context.Context, d *schema.ResourceData, m i
 
 func resourcePolicyTunnelUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-
-	// 	ValidateFunc is not supported on lists or sets, so use this method instead
-	err := invalidL4AccessRules(d)
-	if err != nil {
-		return diag.FromErr(errors.WithMessage(err, "invalid l4_access block"))
-	}
-
 	createdPolicy, err := c.Policy.Update(policyTunnelFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new tunnel policy"))
@@ -271,27 +257,6 @@ func resourcePolicyTunnelRead(ctx context.Context, d *schema.ResourceData, m int
 func resourcePolicyTunnelDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	diagnostics = resourcePolicyInfraDelete(ctx, d, m)
 	return
-}
-
-func invalidL4AccessRules(d *schema.ResourceData) error {
-	allowAll := []policy.L4Rule{{CIDRs: []string{"*"}, Protocols: []string{"ALL"}, Ports: []string{"*"}}}
-
-	m := d.Get("access").([]interface{})
-	for _, raw := range m {
-		data := raw.(map[string]interface{})
-		l4Access := data["l4_access"].([]interface{})
-		if len(l4Access) == 0 || l4Access[0] == nil {
-			continue
-		}
-		l4Rules := l4Access[0].(map[string]interface{})
-		allowRule := expandL4Rules(l4Rules["allow"].([]interface{}))
-		denyRule := expandL4Rules(l4Rules["deny"].([]interface{}))
-		if reflect.DeepEqual(allowRule, allowAll) && denyRule == nil {
-			return errors.New("redundant l4_access block with allow_all rules; remove l4_access block entirely")
-		}
-	}
-
-	return nil
 }
 
 func expandPolicyTunnelAccess(m []interface{}) (access []policy.Access) {
