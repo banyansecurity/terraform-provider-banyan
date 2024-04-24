@@ -389,6 +389,8 @@ func flattenPolicyTunnelAccess(toFlatten []policy.Access) (flattened []interface
 	flattened = make([]interface{}, len(toFlatten))
 	for idx, accessItem := range toFlatten {
 		ai := make(map[string]interface{})
+		ai["name"] = accessItem.Name
+		ai["description"] = accessItem.Description
 		ai["roles"] = accessItem.Roles
 		ai["trust_level"] = accessItem.Rules.Conditions.TrustLevel
 		ai["l4_access"] = flattenL4Access(accessItem.L4Access)
@@ -413,10 +415,11 @@ func flattenL4Access(l4Access *policy.L4Access) (flattened []interface{}) {
 func flattenL4Rules(l4Rules []policy.L4Rule) (flattened []interface{}) {
 	for _, rule := range l4Rules {
 		flattened = append(flattened, map[string]interface{}{
-			"cidrs":     rule.CIDRs,
-			"protocols": rule.Protocols,
-			"ports":     rule.Ports,
-			"fqdns":     rule.FQDNs,
+			"description": rule.Description,
+			"cidrs":       rule.CIDRs,
+			"protocols":   rule.Protocols,
+			"ports":       rule.Ports,
+			"fqdns":       rule.FQDNs,
 		})
 	}
 	return
