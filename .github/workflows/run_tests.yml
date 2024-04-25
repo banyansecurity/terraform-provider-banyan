@@ -41,8 +41,8 @@ jobs:
         run: go test ./banyan/... -v
         env:
           TF_ACC: true
-          BANYAN_API_KEY: "::add-mask::${{ inputs.api_key }}"
-          BANYAN_HOST: "::add-mask::${{ inputs.command_center_url }}"
+          BANYAN_API_KEY: ${{ inputs.api_key }}
+          BANYAN_HOST: ${{ inputs.command_center_url }}
       -
         name: Generate Documentation
         run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name terraform-provider-banyan --examples-dir ./examples/
