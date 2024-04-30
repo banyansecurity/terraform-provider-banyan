@@ -121,7 +121,9 @@ Required:
 
 Optional:
 
+- `description` (String) access group description description
 - `l4_access` (Block List, Max: 1) L4 access rules (see [below for nested schema](#nestedblock--access--l4_access))
+- `name` (String) access group name
 
 <a id="nestedblock--access--l4_access"></a>
 ### Nested Schema for `access.l4_access`
@@ -137,6 +139,7 @@ Optional:
 Optional:
 
 - `cidrs` (Set of String) Allowed CIDRs through the service tunnel
+- `description` (String) l4 policy description
 - `fqdns` (Set of String) Allowed FQDNs through the service tunnel
 - `ports` (Set of String) Allowed ports through the service tunnel
 - `protocols` (Set of String) Allowed protocols through the service tunnel. Set to "TCP", "UDP", "ICMP", or "ALL"
@@ -148,6 +151,7 @@ Optional:
 Optional:
 
 - `cidrs` (Set of String) Denied CIDRs through the service tunnel
+- `description` (String) l4 policy description
 - `fqdns` (Set of String) Allowed FQDNs through the service tunnel
 - `ports` (Set of String) Denied ports through the service tunnel
 - `protocols` (Set of String) Denied protocols through the service tunnel. Set to "TCP", "UDP", "ICMP", or "ALL"
