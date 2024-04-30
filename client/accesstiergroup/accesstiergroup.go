@@ -39,7 +39,7 @@ type AccessTierGroupResponse struct {
 	ClusterName      string           `json:"cluster_name"`
 	CreatedAt        int64            `json:"created_at"`
 	UpdatedAt        int64            `json:"updated_at"`
-	TunnelConfig     TunnelConfigInfo `json:"tunnel_config"`
+	TunnelConfig     TunnelConfigInfo `json:"tunnel_enduser"`
 }
 
 type TunnelConfigInfo struct {
