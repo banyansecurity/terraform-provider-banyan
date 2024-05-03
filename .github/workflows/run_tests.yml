@@ -3,17 +3,8 @@ name: run_tests
 on:
   workflow_dispatch:
     branches: [ "dev" ]
-    inputs:
-      command_center_url:
-        description: 'Command Center URL'
-        required: true
-        default: 'https://net.banyanops.com'
-        type: string
-    secrets:
-      api_key:
-        description: 'API Key'
-        required: true
-        type: string
+    environment:
+      name: 'Dev'
 
 jobs:
   run_tests:
@@ -42,16 +33,16 @@ jobs:
         run: go test ./banyan/... -v
         env:
           TF_ACC: true
-          BANYAN_API_KEY: ${{ secrets.api_key }}
-          BANYAN_HOST: ${{ inputs.command_center_url }}
+          BANYAN_API_KEY: ${{ secrets.BANYAN_API_KEY }}
+          BANYAN_HOST: ${{ secrets.BANYAN_HOST }}
       -
         name: Generate Documentation
         run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name terraform-provider-banyan --examples-dir ./examples/
       -
-        name: commit documentation changes if any
+        name: Check if Documentation changes are required
         run: |
           if  [[ $(if [[ -n "$(git status --porcelain)" ]]; then echo "true"; else echo "false"; fi) == "true" ]]; then
-            echo "\n ERROR: check in documentation changes"
+            echo "\n ERROR: Documentation changes are required, please update documentation to reflect the changes."
             exit 1
           else 
             echo "\n++No Changes to Documentation++\n"

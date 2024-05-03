@@ -21,10 +21,10 @@ var want = accesstiergroup.AccessTierGroupPost{
 	},
 	TunnelConfig: &accesstier.AccessTierTunnelInfoPost{
 		DNSSearchDomains: "",
-		Domains:          []string{"test-1.com"},
-		CIDRs:            []string{"198.169.0.1/24"},
+		Domains:          []string{"test-2.com"},
+		CIDRs:            []string{"198.170.0.1/24"},
 		DNSEnabled:       false,
-		UDPPortNumber:    16578,
+		UDPPortNumber:    16579,
 	},
 	SharedFQDN: "testing.com",
 }

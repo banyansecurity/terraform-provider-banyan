@@ -60,6 +60,10 @@ type Options struct {
 
 // Access describes the access rights for a set of roles.
 type Access struct {
+	// Name is an optional name for this access group.
+	Name string `json:"name,omitempty"`
+	// Description is an optional description for this access group.
+	Description string `json:"description,omitempty"`
 	// Roles is a list of Role names to include .
 	Roles []string `json:"roles"`
 	// Rules lists the access rights given to principals/subjects that have any of the corresponding Roles.
@@ -106,10 +110,12 @@ type L4Access struct {
 }
 
 type L4Rule struct {
-	CIDRs     []string `json:"cidrs,omitempty"`
-	Protocols []string `json:"protocols,omitempty"`
-	Ports     []string `json:"ports,omitempty"`
-	FQDNs     []string `json:"fqdns,omitempty"`
+	// Description is an optional description for this L4 rule.
+	Description string   `json:"description,omitempty"`
+	CIDRs       []string `json:"cidrs,omitempty"`
+	Protocols   []string `json:"protocols,omitempty"`
+	Ports       []string `json:"ports,omitempty"`
+	FQDNs       []string `json:"fqdns,omitempty"`
 }
 
 // Exception describes exceptional cases that bypass regular policy enforcement.

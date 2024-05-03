@@ -51,6 +51,16 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 			Description: "Access describes the access rights for a set of roles",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "access group name",
+					},
+					"description": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "access group description description",
+					},
 					"roles": {
 						Type:        schema.TypeSet,
 						Description: "Role names to include ",
@@ -79,6 +89,11 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 									Optional:    true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
+											"description": {
+												Type:        schema.TypeString,
+												Optional:    true,
+												Description: "l4 policy description",
+											},
 											"cidrs": {
 												Type:        schema.TypeSet,
 												Description: "Allowed CIDRs through the service tunnel",
@@ -121,6 +136,11 @@ func PolicyTunnelSchema() (s map[string]*schema.Schema) {
 									Optional:    true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
+											"description": {
+												Type:        schema.TypeString,
+												Optional:    true,
+												Description: "l4 policy description",
+											},
 											"cidrs": {
 												Type:        schema.TypeSet,
 												Description: "Denied CIDRs through the service tunnel",
@@ -190,13 +210,6 @@ func policyTunnelFromState(d *schema.ResourceData) (pol policy.Object) {
 
 func resourcePolicyTunnelCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-
-	// 	ValidateFunc is not supported on lists or sets, so use this method instead
-	err := invalidL4AccessRules(d)
-	if err != nil {
-		return diag.FromErr(errors.WithMessage(err, "invalid l4_access block"))
-	}
-
 	createdPolicy, err := c.Policy.Create(policyTunnelFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new tunnel policy"))
@@ -208,13 +221,6 @@ func resourcePolicyTunnelCreate(ctx context.Context, d *schema.ResourceData, m i
 
 func resourcePolicyTunnelUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-
-	// 	ValidateFunc is not supported on lists or sets, so use this method instead
-	err := invalidL4AccessRules(d)
-	if err != nil {
-		return diag.FromErr(errors.WithMessage(err, "invalid l4_access block"))
-	}
-
 	createdPolicy, err := c.Policy.Update(policyTunnelFromState(d))
 	if err != nil {
 		return diag.FromErr(errors.WithMessage(err, "couldn't create new tunnel policy"))
@@ -253,38 +259,30 @@ func resourcePolicyTunnelDelete(ctx context.Context, d *schema.ResourceData, m i
 	return
 }
 
-func invalidL4AccessRules(d *schema.ResourceData) error {
-	allowAll := []policy.L4Rule{{CIDRs: []string{"*"}, Protocols: []string{"ALL"}, Ports: []string{"*"}}}
-
-	m := d.Get("access").([]interface{})
-	for _, raw := range m {
-		data := raw.(map[string]interface{})
-		l4Access := data["l4_access"].([]interface{})
-		if len(l4Access) == 0 || l4Access[0] == nil {
-			continue
-		}
-		l4Rules := l4Access[0].(map[string]interface{})
-		allowRule := expandL4Rules(l4Rules["allow"].([]interface{}))
-		denyRule := expandL4Rules(l4Rules["deny"].([]interface{}))
-		if reflect.DeepEqual(allowRule, allowAll) && denyRule == nil {
-			return errors.New("redundant l4_access block with allow_all rules; remove l4_access block entirely")
-		}
-	}
-
-	return nil
-}
-
 func expandPolicyTunnelAccess(m []interface{}) (access []policy.Access) {
 	for _, raw := range m {
 		data := raw.(map[string]interface{})
 
 		a := policy.Access{
-			Roles: convertSchemaSetToStringSlice(data["roles"].(*schema.Set)),
+			Name:        data["name"].(string),
+			Description: data["description"].(string),
+			Roles:       convertSchemaSetToStringSlice(data["roles"].(*schema.Set)),
 			Rules: policy.Rules{
 				L4Access: expandL4Access(data["l4_access"].([]interface{})),
 			},
 		}
 		a.Rules.Conditions.TrustLevel = data["trust_level"].(string)
+
+		name := data["name"]
+		if name != nil {
+			a.Name = name.(string)
+		}
+
+		description := data["description"]
+		if description != nil {
+			a.Description = description.(string)
+		}
+
 		access = append(access, a)
 	}
 	return
@@ -295,9 +293,10 @@ func expandL4Access(m []interface{}) *policy.L4Access {
 		var allow []policy.L4Rule
 		var deny []policy.L4Rule
 		allow = append(allow, policy.L4Rule{
-			CIDRs:     []string{"*"},
-			Protocols: []string{"ALL"},
-			Ports:     []string{"*"},
+			Description: "",
+			CIDRs:       []string{"*"},
+			Protocols:   []string{"ALL"},
+			Ports:       []string{"*"},
 		})
 		p := policy.L4Access{
 			Allow: allow,
@@ -334,12 +333,19 @@ func expandL4Rules(m interface{}) (l4Rules []policy.L4Rule) {
 			ports = []string{"*"}
 		}
 
+		description := ""
+		if rule["description"] != nil {
+			description = rule["description"].(string)
+		}
+
 		l4Rules = append(l4Rules, policy.L4Rule{
-			CIDRs:     cidrs,
-			Protocols: protocols,
-			Ports:     ports,
-			FQDNs:     fqdns,
+			Description: description,
+			CIDRs:       cidrs,
+			Protocols:   protocols,
+			Ports:       ports,
+			FQDNs:       fqdns,
 		})
+
 	}
 	return
 }
@@ -348,6 +354,8 @@ func flattenPolicyTunnelAccess(toFlatten []policy.Access) (flattened []interface
 	flattened = make([]interface{}, len(toFlatten))
 	for idx, accessItem := range toFlatten {
 		ai := make(map[string]interface{})
+		ai["name"] = accessItem.Name
+		ai["description"] = accessItem.Description
 		ai["roles"] = accessItem.Roles
 		ai["trust_level"] = accessItem.Rules.Conditions.TrustLevel
 		ai["l4_access"] = flattenL4Access(accessItem.L4Access)
@@ -372,10 +380,11 @@ func flattenL4Access(l4Access *policy.L4Access) (flattened []interface{}) {
 func flattenL4Rules(l4Rules []policy.L4Rule) (flattened []interface{}) {
 	for _, rule := range l4Rules {
 		flattened = append(flattened, map[string]interface{}{
-			"cidrs":     rule.CIDRs,
-			"protocols": rule.Protocols,
-			"ports":     rule.Ports,
-			"fqdns":     rule.FQDNs,
+			"description": rule.Description,
+			"cidrs":       rule.CIDRs,
+			"protocols":   rule.Protocols,
+			"ports":       rule.Ports,
+			"fqdns":       rule.FQDNs,
 		})
 	}
 	return
