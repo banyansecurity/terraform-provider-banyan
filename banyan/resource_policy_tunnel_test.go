@@ -213,8 +213,8 @@ func TestAccPolicy_tunnel_l4_fqdn(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
-		//		CheckDestroy: testAccCheckPolicy_destroy(t, &bnnPolicy.ID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckPolicy_destroy(t, &bnnPolicy.ID),
 		Steps: []resource.TestStep{
 			// Create the policy using terraform config and check that it exists
 			{
