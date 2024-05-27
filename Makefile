@@ -8,10 +8,10 @@ MAKEFLAGS += --no-builtin-rules
 #Constants
 ARTIFACT_NAME = terraform-provider-banyan
 
-HOSTNAME=github.com
+HOSTNAME=terraform.local
 NAMESPACE=banyansecurity
 NAME=banyan
-OS_ARCH=darwin_amd64
+OS_ARCH=linux_amd64
 VERSION=1.1.0
 
 # ifeq ($(origin .RECIPEPREFIX), undefined)
