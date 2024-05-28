@@ -15,7 +15,7 @@ func resourceAppConfig() *schema.Resource {
 		CreateContext: resourceAppConfigCreate,
 		ReadContext:   resourceAppConfigRead,
 		UpdateContext: resourceAppConfigUpdate,
-		// DeleteContext: resourceAppConfigDelete,
+		DeleteContext: resourceAppConfigDelete,
 		Schema: AppConfigSchema(),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -78,20 +78,20 @@ func resourceAppConfigUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	return
 }
 
-// func resourceAppConfigDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-// 	c := m.(*client.Holder)
-// 	err := c.AppConfig.Delete(d.Id())
-// 	if err != nil {
-// 		diagnostics = diag.FromErr(err)
-// 		return
-// 	}
-// 	d.SetId("")
-// 	return
-// }
+func resourceAppConfigDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
+	c := m.(*client.Holder)
+	err := c.AppConfig.Delete(d.Id())
+	if err != nil {
+		diagnostics = diag.FromErr(err)
+		return
+	}
+	d.SetId("")
+	return
+}
 
 // creates an app config from the terraform state
 func appConfigFromState(d *schema.ResourceData) appconfig.AppConfigRequest {
-	nrptConfig := d.Get("nrpt_cnofig").(bool)
+	nrptConfig := d.Get("nrpt_config").(bool)
 	ac := appconfig.AppConfigRequest{
 		NRPTConfig: &nrptConfig,
 	}

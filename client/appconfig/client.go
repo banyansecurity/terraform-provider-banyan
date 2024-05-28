@@ -7,7 +7,7 @@ import (
 )
 
 const apiVersion = "api/v2"
-const component = "app_config"
+const component = "/org/app_config"
 const path = apiVersion + component
 
 type AppConfig struct {
@@ -26,7 +26,7 @@ type Client interface {
 	Create(appConfig AppConfigRequest) (resp AppConfigRecord, err error)
 	Get(id string) (resp AppConfigRecord, err error)
 	Update(appConfig AppConfigRequest) (resp AppConfigRecord, err error)
-	// Delete(id string) (err error)
+	Delete(id string) (err error)
 }
 
 func (a *AppConfig) Create(appConfig AppConfigRequest) (created AppConfigRecord, err error) {
@@ -74,6 +74,6 @@ func (a *AppConfig) Update(appConfig AppConfigRequest) (updated AppConfigRecord,
 	return
 }
 
-// func (a *AppConfig) Delete(id string) (err error) {
-// 	return a.restClient.Delete(apiVersion, component, id, "")
-// }
+func (a *AppConfig) Delete(id string) (err error) {
+	return a.restClient.Delete(apiVersion, component, id, "")
+}
