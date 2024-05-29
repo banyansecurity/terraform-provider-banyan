@@ -29,7 +29,7 @@ func Test_Create(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, got.NRPTConfig, want.NRPTConfig)
+	assert.Equal(t, got.Data.NRPTConfig, want.NRPTConfig)
 }
 
 func Test_Get(t *testing.T) {
@@ -40,5 +40,5 @@ func Test_Get(t *testing.T) {
 	got, err := client.AppConfig.Get("")
 
 	assert.NoError(t, err, "expected no error here")
-	assert.Equal(t, got.NRPTConfig, want.NRPTConfig)
+	assert.Equal(t, got.Data.NRPTConfig, want.NRPTConfig)
 }

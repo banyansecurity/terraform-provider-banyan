@@ -16,7 +16,7 @@ func resourceAppConfig() *schema.Resource {
 		ReadContext:   resourceAppConfigRead,
 		UpdateContext: resourceAppConfigUpdate,
 		DeleteContext: resourceAppConfigDelete,
-		Schema: AppConfigSchema(),
+		Schema:        AppConfigSchema(),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -42,12 +42,12 @@ func AppConfigSchema() map[string]*schema.Schema {
 
 func resourceAppConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	atg, err := c.AppConfig.Create(appConfigFromState(d))
+	appConfig, err := c.AppConfig.Create(appConfigFromState(d))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(atg.ID)
+	d.SetId(appConfig.Data.ID)
 
 	return
 }
@@ -59,8 +59,10 @@ func resourceAppConfigRead(ctx context.Context, d *schema.ResourceData, m interf
 		handleNotFoundError(d, err)
 		return
 	}
-	d.SetId(key.ID)
-	err = d.Set("nrpt_config", key.NRPTConfig)
+
+	d.SetId(key.Data.ID)
+
+	err = d.Set("nrpt_config", key.Data.NRPTConfig)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -79,13 +81,6 @@ func resourceAppConfigUpdate(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func resourceAppConfigDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	c := m.(*client.Holder)
-	err := c.AppConfig.Delete(d.Id())
-	if err != nil {
-		diagnostics = diag.FromErr(err)
-		return
-	}
-	d.SetId("")
 	return
 }
 

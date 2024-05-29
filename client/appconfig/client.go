@@ -23,13 +23,12 @@ func NewClient(restClient *restclient.Client) Client {
 }
 
 type Client interface {
-	Create(appConfig AppConfigRequest) (resp AppConfigRecord, err error)
-	Get(id string) (resp AppConfigRecord, err error)
-	Update(appConfig AppConfigRequest) (resp AppConfigRecord, err error)
-	Delete(id string) (err error)
+	Create(appConfig AppConfigRequest) (resp AppConfigResponse, err error)
+	Get(id string) (resp AppConfigResponse, err error)
+	Update(appConfig AppConfigRequest) (resp AppConfigResponse, err error)
 }
 
-func (a *AppConfig) Create(appConfig AppConfigRequest) (created AppConfigRecord, err error) {
+func (a *AppConfig) Create(appConfig AppConfigRequest) (created AppConfigResponse, err error) {
 	body, err := json.Marshal(appConfig)
 	if err != nil {
 		return
@@ -47,7 +46,7 @@ func (a *AppConfig) Create(appConfig AppConfigRequest) (created AppConfigRecord,
 	return
 }
 
-func (a *AppConfig) Get(id string) (get AppConfigRecord, err error) {
+func (a *AppConfig) Get(id string) (get AppConfigResponse, err error) {
 	resp, err := a.restClient.Read(apiVersion, component, id, path)
 	if err != nil {
 		return
@@ -61,7 +60,7 @@ func (a *AppConfig) Get(id string) (get AppConfigRecord, err error) {
 	return
 }
 
-func (a *AppConfig) Update(appConfig AppConfigRequest) (updated AppConfigRecord, err error) {
+func (a *AppConfig) Update(appConfig AppConfigRequest) (updated AppConfigResponse, err error) {
 	body, err := json.Marshal(appConfig)
 	if err != nil {
 		return
@@ -72,8 +71,4 @@ func (a *AppConfig) Update(appConfig AppConfigRequest) (updated AppConfigRecord,
 	}
 	err = json.Unmarshal(resp, &updated)
 	return
-}
-
-func (a *AppConfig) Delete(id string) (err error) {
-	return a.restClient.Delete(apiVersion, component, id, "")
 }
