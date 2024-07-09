@@ -68,6 +68,16 @@ func resourceConnector() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"platform": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Windows, Linux, sonicOS, other",
+			},
+			"method": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "app, tar, docker, firmware, terraform, other",
+			},
 		},
 	}
 }
@@ -96,6 +106,10 @@ func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
 			},
 			CIDRs:   convertSchemaSetToStringSlice(d.Get("cidrs").(*schema.Set)),
 			Domains: convertSchemaSetToStringSlice(d.Get("domains").(*schema.Set)),
+			Deployment: &satellite.Deployment{
+				Platform: d.Get("platform").(string),
+				Method:   d.Get("method").(string),
+			},
 		},
 	}
 	return spec
