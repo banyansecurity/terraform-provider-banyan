@@ -71,12 +71,12 @@ func resourceConnector() *schema.Resource {
 			"platform": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Windows, Linux, sonicOS, other",
+				Description: "The platform from which the satellite is deployed.",
 			},
 			"method": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "app, tar, docker, firmware, terraform, other",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The method used for the deployment of the satellite.",
 			},
 		},
 	}
