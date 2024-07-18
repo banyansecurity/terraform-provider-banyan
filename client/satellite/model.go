@@ -102,6 +102,12 @@ type Spec struct {
 	PeerAccessTiers []PeerAccessTier `json:"peer_access_tiers"`
 	DisableSnat     bool             `json:"disable_snat"`
 	Domains         []string         `json:"domains,omitempty"`
+	Deployment      *Deployment      `json:"deployment,omitempty"`
+}
+
+type Deployment struct {
+	Platform string `json:"platform"` // Windows, Linux, sonicOS, other
+	Method   string `json:"method"`   // app, tar, docker, firmware, terraform, other
 }
 
 type PeerAccessTier struct {
