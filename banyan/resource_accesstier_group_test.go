@@ -37,7 +37,7 @@ resource "banyan_accesstier_group" "example" {
     statsd_address 		   = "192.168.0.1:8090"
 	domains                = ["test-1.com"]
 	cidrs                  = ["198.169.0.1/24"]
-	dns_enabled            = false
+	dns_enabled            = true
 	shared_fqdn            = "testing.com"
 	udp_port_number        = 16580
 	keepalive              = 30
