@@ -1,5 +1,6 @@
 package banyan
 
+// Commented the tests because this is a one time setting, create can be done only once.
 // import (
 // 	"encoding/json"
 // 	"fmt"
