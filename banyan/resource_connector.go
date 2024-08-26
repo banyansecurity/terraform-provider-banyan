@@ -68,6 +68,16 @@ func resourceConnector() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"platform": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The platform from which the satellite is deployed.",
+			},
+			"method": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The method used for the deployment of the satellite.",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -102,6 +112,10 @@ func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
 			},
 			CIDRs:   convertSchemaSetToStringSlice(d.Get("cidrs").(*schema.Set)),
 			Domains: convertSchemaSetToStringSlice(d.Get("domains").(*schema.Set)),
+			Deployment: &satellite.Deployment{
+				Platform: d.Get("platform").(string),
+				Method:   d.Get("method").(string),
+			},
 		},
 	}
 	return spec
