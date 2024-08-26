@@ -1,11 +1,12 @@
 package satellite_test
 
 import (
+	"testing"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
 	"github.com/banyansecurity/terraform-banyan-provider/client/testutil"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_CreatSatellite(t *testing.T) {
@@ -28,6 +29,10 @@ func Test_CreatSatellite(t *testing.T) {
 					Cluster:     "us-west",
 					AccessTiers: []string{"us-west1"},
 				},
+			},
+			Deployment: &satellite.Deployment{
+				Platform: "Linux",
+				Method:   "docker",
 			},
 		},
 	}
