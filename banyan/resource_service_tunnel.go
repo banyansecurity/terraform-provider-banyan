@@ -474,14 +474,6 @@ func expandPeerAccessTiers(d *schema.ResourceData, input []servicetunnel.PeerAcc
 		if len(eachPeerAccessTier) == 0 {
 			continue
 		}
-		if atsRaw, ok := eachPeerAccessTier["access_tiers"]; ok {
-			ats, ok := atsRaw.([]string)
-			if !ok {
-				err = fmt.Errorf("unable to parse access_tiers")
-				return
-			}
-			peer.AccessTiers = ats
-		}
 
 		if connectorsRaw, ok := eachPeerAccessTier["connectors"]; ok {
 			connectors, ok := connectorsRaw.([]string)
@@ -490,6 +482,21 @@ func expandPeerAccessTiers(d *schema.ResourceData, input []servicetunnel.PeerAcc
 				return
 			}
 			peer.Connectors = connectors
+		}
+
+		if len(peer.Connectors) > 0 {
+			peer.AccessTiers = []string{"*"}
+		}
+
+		atsRaw, ok := eachPeerAccessTier["access_tiers"]
+		// Ignore access_tier if set if there is connector set and set as {*} as it would be a global edge access_tier
+		if ok && len(peer.Connectors) == 0 {
+			ats, ok := atsRaw.([]string)
+			if !ok {
+				err = fmt.Errorf("unable to parse access_tiers")
+				return
+			}
+			peer.AccessTiers = ats
 		}
 
 		if atGroupRaw, ok := eachPeerAccessTier["access_tier_group"]; ok {
