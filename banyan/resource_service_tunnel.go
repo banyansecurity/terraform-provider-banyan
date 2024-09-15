@@ -3,6 +3,7 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"github.com/banyansecurity/terraform-banyan-provider/client/dns"
 	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -54,108 +55,161 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "Autorun for the service, if set true service would autorun on the app",
 		},
-		"connectors": {
+		"lock_autorun": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off",
+		},
+
+		"network_settings": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Description: "Names of the connectors which the service tunnel should be associated with",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
+			Description: "Add a network that will be accessible via this Service Tunnel.",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"cluster": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "cluster name where access-tier belongs to",
+					},
+					"access_tiers": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"connectors": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"public_cidrs": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"include": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+								"exclude": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+							},
+						},
+					},
+					"public_domains": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"include": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+								"exclude": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+							},
+						},
+					},
+					"applications": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"include": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+								"exclude": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+							},
+						},
+					},
+					"access_tier_group": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Default:     "",
+						Description: "AccessTier group name",
+					},
+				},
 			},
-			ConflictsWith: []string{"access_tiers"},
 		},
-		"access_tiers": {
+		"name_resolution": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Description: "Names of the access_tiers which the service tunnel should be associated with",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
+			MaxItems:    1,
+			Description: "Private Search Domains",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name_servers": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"dns_search_domains": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
 			},
-			ConflictsWith: []string{"connectors"},
-		},
-		"public_cidrs_include": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Description: "Specifies public IP addresses in CIDR notation that should be included in the tunnel, ex: 8.8.0.0/16.",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"public_cidrs_exclude": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Description: "Specifies public IP addresses in CIDR notation that should be excluded from the tunnel, ex: 8.8.12.0/24.",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"public_domains_include": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Description: "Specifies the domains that should be that should be included in the tunnel, ex: cnn.com",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"public_domains_exclude": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Description: "Specifies the domains that should be that should be excluded from the tunnel, ex: zoom.us",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"public_traffic_tunnel_via_access_tier": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Access Tier to be used to tunnel through public traffic",
 		},
 		"policy": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Policy ID to be attached to this service tunnel",
 		},
-		"cluster": {
-			Type:        schema.TypeString,
-			Description: "(Depreciated) Sets the cluster / shield for the service",
-			Computed:    true,
-			Optional:    true,
-			Deprecated:  "This attribute is now configured automatically. This attribute will be removed in a future release of the provider.",
-			ForceNew:    true,
-		},
-		"applications_include": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Description: "Specifies the applications ids that should be included in the tunnel, ex: 905a72d3-6216-4ffc-ad18-db1593782915",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"applications_exclude": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Description: "Specifies the applications ids that should be excluded in the tunnel, ex: 633301ab-fd20-439b-b5ae-47153ec7fbf2",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"access_tier_group": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Name of the access_tier group which the service tunnel should be associated with",
-		},
-    "lock_autorun": {
+		"policy_enforcing": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Description: "Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off",
+			Default:     true,
+			Description: "Policy Enforcing / Permissive",
 		},
 	}
 	return
 }
 
-func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
+func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info, err error) {
 	icon := ""
 	descriptionLink := ""
-
+	spec, err := expandServiceTunnelSpec(d)
+	if err != nil {
+		return
+	}
 	tun = servicetunnel.Info{
 		Kind:       "BanyanServiceTunnel",
 		APIVersion: "rbac.banyanops.com/v1",
@@ -171,17 +225,17 @@ func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
 			Autorun:     expandAutorun(d),
 			LockAutoRun: expandLockAutorun(d),
 		},
-		Spec: expandServiceTunnelSpec(d),
+		Spec: spec,
 	}
 	return
 }
 func resourceServiceTunnelCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
-	err := setCluster(d, m)
+	c := m.(*client.Holder)
+	state, err := TunFromState(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	c := m.(*client.Holder)
-	tun, err := c.ServiceTunnel.Create(TunFromState(d))
+	tun, err := c.ServiceTunnel.Create(state)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -195,7 +249,11 @@ func resourceServiceTunnelCreate(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceServiceTunnelUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	tun, err := c.ServiceTunnel.Update(d.Id(), TunFromState(d))
+	state, err := TunFromState(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	tun, err := c.ServiceTunnel.Update(d.Id(), state)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -212,9 +270,14 @@ func attachPolicy(c *client.Holder, d *schema.ResourceData) (err error) {
 	if policy == nil {
 		return
 	}
+	policyEnforcing := d.Get("policy_enforcing")
+	if policyEnforcing == nil {
+		return
+	}
+
 	_, err = c.ServiceTunnel.AttachPolicy(d.Id(), servicetunnel.PolicyAttachmentPost{
 		PolicyID: policy.(string),
-		Enabled:  true,
+		Enabled:  policyEnforcing.(bool),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to attach policy to service tunnel: %s", err)
@@ -238,7 +301,7 @@ func resourceServiceTunnelRead(ctx context.Context, d *schema.ResourceData, m in
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = flattenServiceTunnelSpec(d, tun)
+	err = flattenServiceTunnelSpec(d, tun.Spec.Spec)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -247,6 +310,15 @@ func resourceServiceTunnelRead(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 	err = d.Set("policy", policy.PolicyID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	policyEnforcing := false
+	if strings.EqualFold("TRUE", policy.Enabled) {
+		policyEnforcing = true
+	}
+	err = d.Set("policy_enforcing", policyEnforcing)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -280,7 +352,6 @@ func resourceServiceTunnelDetachPolicy(d *schema.ResourceData, c *client.Holder)
 	if err != nil {
 		return
 	}
-	// This may not be necessary after policy refactor
 	err = c.PolicyAttachment.Delete(attachedPolicy.PolicyID)
 	if err != nil {
 		return
@@ -288,171 +359,271 @@ func resourceServiceTunnelDetachPolicy(d *schema.ResourceData, c *client.Holder)
 	return
 }
 
-func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spec) {
-	ats := convertSchemaSetToStringSlice(d.Get("access_tiers").(*schema.Set))
-	conns := convertSchemaSetToStringSlice(d.Get("connectors").(*schema.Set))
-	inclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_include").(*schema.Set))
-	exclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_exclude").(*schema.Set))
-	inclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_include").(*schema.Set))
-	exclDomains := convertSchemaSetToStringSlice(d.Get("public_domains_exclude").(*schema.Set))
-	inclApplications := convertSchemaSetToStringSlice(d.Get("applications_include").(*schema.Set))
-	exclApplications := convertSchemaSetToStringSlice(d.Get("applications_exclude").(*schema.Set))
-
-	var peers []servicetunnel.PeerAccessTier
-	accessTierGroup := d.Get("access_tier_group").(string)
-	// if access_tiers not set and access tier group is empty => global-edge, use ["*"]
-	if len(ats) == 0 {
-		peer := servicetunnel.PeerAccessTier{
-			Cluster:     d.Get("cluster").(string),
-			AccessTiers: []string{"*"},
-			Connectors:  conns,
-		}
-
-		if accessTierGroup != "" {
-			peer.AccessTiers = nil
-			peer.Connectors = nil
-			peer.AccessTierGroup = accessTierGroup
-		}
-
-		peers = append(peers, peer)
-	} else {
-		// If multiple accessTiers are set create peer foreach.
-		for i, eachAts := range ats {
-			peer := servicetunnel.PeerAccessTier{
-				Cluster:     d.Get("cluster").(string),
-				AccessTiers: []string{eachAts},
-				Connectors:  nil,
-			}
-			if (inclCidrs != nil) || (exclCidrs != nil) || (inclDomains != nil) || (exclDomains != nil) || (inclApplications != nil) || (exclApplications != nil) {
-				publicTrafficAccessTier, ok := d.GetOk("public_traffic_tunnel_via_access_tier")
-
-				if strings.EqualFold(publicTrafficAccessTier.(string), eachAts) ||
-					/* if only one access tier */ len(ats) == 1 ||
-					/* backward compatibility */ (!ok && i == 0) {
-					peer.PublicCIDRs = &servicetunnel.IncludeExclude{
-						Include: inclCidrs,
-						Exclude: exclCidrs,
-					}
-					peer.PublicDomains = &servicetunnel.IncludeExclude{
-						Include: inclDomains,
-						Exclude: exclDomains,
-					}
-					peer.Applications = &servicetunnel.IncludeExclude{
-						Include: inclApplications,
-						Exclude: exclApplications,
-					}
-				}
-			}
-			peers = append(peers, peer)
-		}
+func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spec, err error) {
+	peers, err := expandPeerAccessTiers(d)
+	if err != nil {
+		return
 	}
 
 	expanded = servicetunnel.Spec{
 		PeerAccessTiers: peers,
 	}
+	nameResolution, err := expandNameResolution(d)
+	if err != nil {
+		return
+	}
+	if nameResolution != nil {
+		expanded.NameResolution = nameResolution
+	}
 	return
 }
 
-func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceTunnelInfo) (err error) {
-	if len(tun.Spec.PeerAccessTiers) == 0 {
+func expandNameResolution(d *schema.ResourceData) (nameResolutionRef *dns.NameResolutionInfo, err error) {
+	nameResolutionSet := d.Get("name_resolution").(*schema.Set)
+	var nameResolution dns.NameResolutionInfo
+	nameResolution.NameServers = make([]string, 0)
+	nameResolution.DnsSearchDomains = make([]string, 0)
+	for _, eachNameResolution := range nameResolutionSet.List() {
+		eachNameResolutionItem, ok := eachNameResolution.(map[string]interface{})
+		if !ok {
+			err = fmt.Errorf("unable to read name_resolution")
+			return
+		}
+		nameServer, ok := eachNameResolutionItem["name_servers"].([]interface{})
+		if !ok {
+			err = fmt.Errorf("unable to read name_servers")
+			return
+		}
+		for _, eachNameServer := range nameServer {
+			eachNameServerString, ok := eachNameServer.(string)
+			if ok {
+				nameResolution.NameServers = append(nameResolution.NameServers, eachNameServerString)
+			}
+		}
+		dnsSearchDomains, ok := eachNameResolutionItem["dns_search_domains"].([]interface{})
+		if !ok {
+			err = fmt.Errorf("unable to read dns_search_domains")
+			return
+		}
+		for _, eachDnsSearchDomains := range dnsSearchDomains {
+			eachDnsSearchDomainsString, ok := eachDnsSearchDomains.(string)
+			if ok {
+				nameResolution.DnsSearchDomains = append(nameResolution.DnsSearchDomains, eachDnsSearchDomainsString)
+			}
+		}
+	}
+	if len(nameResolution.NameServers) > 0 || len(nameResolution.DnsSearchDomains) > 0 {
+		nameResolutionRef = &nameResolution
+	}
+	return
+}
+
+func expandPeerAccessTiers(d *schema.ResourceData) (peers []servicetunnel.PeerAccessTier, err error) {
+	peers = make([]servicetunnel.PeerAccessTier, 0)
+	peerAccessTierConfigs := d.Get("network_settings").(*schema.Set)
+	for _, eachPeer := range peerAccessTierConfigs.List() {
+		var peer servicetunnel.PeerAccessTier
+		eachPeerAccessTier, ok := eachPeer.(map[string]interface{})
+		if !ok {
+			err = fmt.Errorf("unable to parse PeerAccessTier")
+			return
+		}
+		if len(eachPeerAccessTier) == 0 {
+			continue
+		}
+
+		if connectorsRaw, ok := eachPeerAccessTier["connectors"]; ok {
+			connectors, ok := connectorsRaw.([]interface{})
+			if !ok {
+				err = fmt.Errorf("unable to parse connectors")
+				return
+			}
+
+			for _, eachConnector := range connectors {
+				connectorString, ok := eachConnector.(string)
+				if ok {
+					peer.Connectors = append(peer.Connectors, connectorString)
+				}
+			}
+
+		}
+
+		atsRaw, ok := eachPeerAccessTier["access_tiers"]
+		// Ignore access_tier if set if there is connector set and set as {*} as it would be a global edge access_tier
+		if ok && len(peer.Connectors) == 0 {
+			ats, ok := atsRaw.([]interface{})
+			if !ok {
+				err = fmt.Errorf("unable to parse access_tiers")
+				return
+			}
+			for _, eachAt := range ats {
+				eachAtString, ok := eachAt.(string)
+				if ok {
+					peer.AccessTiers = append(peer.AccessTiers, eachAtString)
+				}
+			}
+		} else if len(peer.Connectors) > 0 {
+			peer.AccessTiers = []string{"*"}
+		}
+
+		if atGroupRaw, ok := eachPeerAccessTier["access_tier_group"]; ok {
+			atGroup, ok := atGroupRaw.(string)
+			if !ok {
+				err = fmt.Errorf("unable to parse access_tier_group")
+				return
+			}
+			if atGroup != "" && len(peer.AccessTiers) > 0 {
+				err = fmt.Errorf("invalid configuration cannot set both access_tier_group and access_tiers")
+				return
+			}
+			if atGroup != "" {
+				peer.AccessTierGroup = atGroup
+			}
+		}
+
+		if clusterNameRaw, ok := eachPeerAccessTier["cluster"]; ok {
+			clusterName, ok := clusterNameRaw.(string)
+			if !ok {
+				err = fmt.Errorf("unable to parse cluster")
+				return
+			}
+			if clusterName != "" {
+				peer.Cluster = clusterName
+			}
+		}
+
+		if len(peer.Connectors) > 0 && peer.Cluster == "" {
+			peer.Cluster = "global-edge"
+		}
+
+		if publicCIDRsRaw, ok := eachPeerAccessTier["public_cidrs"]; ok {
+			publicCIDRs, myErr := extractIncludeExclude("public_cidrs", publicCIDRsRaw)
+			if myErr != nil {
+				err = myErr
+				return
+			}
+			peer.PublicCIDRs = publicCIDRs
+		}
+
+		if publicDomainsRaw, ok := eachPeerAccessTier["public_domains"]; ok {
+			publicDomains, myErr := extractIncludeExclude("public_domains", publicDomainsRaw)
+			if myErr != nil {
+				err = myErr
+				return
+			}
+			peer.PublicDomains = publicDomains
+		}
+
+		if applicationsRaw, ok := eachPeerAccessTier["applications"]; ok {
+			applications, myErr := extractIncludeExclude("applications", applicationsRaw)
+			if myErr != nil {
+				err = myErr
+				return
+			}
+			peer.Applications = applications
+		}
+		peers = append(peers, peer)
+	}
+	return
+}
+
+func extractIncludeExclude(key string, inputRaw interface{}) (extracted *servicetunnel.IncludeExclude, err error) {
+	var inputBlock servicetunnel.IncludeExclude
+	inputRawSet, ok := inputRaw.(*schema.Set)
+	if !ok {
+		err = fmt.Errorf("unable to parse " + key)
 		return
 	}
-	// set common parameters using first peer.
-	p1 := tun.Spec.PeerAccessTiers[0]
-	err = d.Set("cluster", p1.Cluster)
+	inputList := inputRawSet.List()
+	if len(inputList) > 1 {
+		err = fmt.Errorf("max length is 1 for " + key)
+		return
+	}
+	for _, eachInput := range inputList {
+		input, ok := eachInput.(map[string]interface{})
+		if !ok {
+			err = fmt.Errorf("unable to read " + key + " block")
+			return
+		}
+		if inputInclude, ok := input["include"]; ok {
+			inputIncludeList, ok := inputInclude.([]interface{})
+			if !ok {
+				err = fmt.Errorf("unable to read " + key + "inlude ist")
+			}
+			for _, eachInputInclude := range inputIncludeList {
+				eachInputIncludeString, ok := eachInputInclude.(string)
+				if ok {
+					inputBlock.Include = append(inputBlock.Include, eachInputIncludeString)
+				}
+			}
+		}
+		if inputExclude, ok := input["exclude"]; ok {
+			inputExcludeList, ok := inputExclude.([]interface{})
+			if !ok {
+				err = fmt.Errorf("unable to read " + key + "exclude ist")
+			}
+
+			for _, eachInputExclude := range inputExcludeList {
+				eachInputExcludeString, ok := eachInputExclude.(string)
+				if ok {
+					inputBlock.Exclude = append(inputBlock.Exclude, eachInputExcludeString)
+				}
+			}
+		}
+		extracted = &inputBlock
+	}
+	return
+}
+
+func flattenServiceTunnelSpec(d *schema.ResourceData, spec servicetunnel.Spec) (err error) {
+	if len(spec.PeerAccessTiers) == 0 {
+		return
+	}
+
+	flattened := make([]interface{}, 0)
+	for _, eachPeerAccessTier := range spec.PeerAccessTiers {
+		eachPeerAccessTierMap := make(map[string]interface{})
+		// if connectors are set access_tiers are inferred to be *
+		if len(eachPeerAccessTier.AccessTiers) > 0 && eachPeerAccessTier.AccessTiers[0] != "*" {
+			eachPeerAccessTierMap["access_tiers"] = eachPeerAccessTier.AccessTiers
+		}
+		if len(eachPeerAccessTier.Connectors) > 0 {
+			eachPeerAccessTierMap["connectors"] = eachPeerAccessTier.Connectors
+		}
+		if eachPeerAccessTier.AccessTierGroup != "" {
+			eachPeerAccessTierMap["access_tier_group"] = eachPeerAccessTier.AccessTierGroup
+		}
+		// set cluster only if not global-edge as global edge is auto set.
+		if eachPeerAccessTier.Cluster != "" && eachPeerAccessTier.Cluster != "global-edge" {
+			eachPeerAccessTierMap["cluster"] = eachPeerAccessTier.Cluster
+		}
+		if eachPeerAccessTier.PublicCIDRs != nil {
+			publicCIDRs := make(map[string]interface{})
+			publicCIDRs["include"] = eachPeerAccessTier.PublicCIDRs.Include
+			publicCIDRs["exclude"] = eachPeerAccessTier.PublicCIDRs.Exclude
+			eachPeerAccessTierMap["public_cidrs"] = []map[string]interface{}{publicCIDRs}
+		}
+
+		if eachPeerAccessTier.PublicDomains != nil {
+			publicDomains := make(map[string]interface{})
+			publicDomains["include"] = eachPeerAccessTier.PublicDomains.Include
+			publicDomains["exclude"] = eachPeerAccessTier.PublicDomains.Exclude
+			eachPeerAccessTierMap["public_domains"] = []map[string]interface{}{publicDomains}
+		}
+
+		if eachPeerAccessTier.Applications != nil {
+			applications := make(map[string]interface{})
+			applications["include"] = eachPeerAccessTier.Applications.Include
+			applications["exclude"] = eachPeerAccessTier.Applications.Exclude
+			eachPeerAccessTierMap["applications"] = applications
+		}
+		if len(eachPeerAccessTierMap) > 0 {
+			flattened = append(flattened, eachPeerAccessTierMap)
+		}
+	}
+	err = d.Set("network_settings", flattened)
 	if err != nil {
 		return err
-	}
-	// if connectors set => global-edge
-	if len(p1.Connectors) > 0 {
-		err = d.Set("connectors", p1.Connectors)
-		if err != nil {
-			return err
-		}
-		err = d.Set("access_tiers", nil)
-		if err != nil {
-			return err
-		}
-	} else {
-		var ats []string
-		err = d.Set("connectors", nil)
-		if err != nil {
-			return err
-		}
-		for _, eachPeer := range tun.Spec.PeerAccessTiers {
-			ats = append(ats, eachPeer.AccessTiers...)
-			if eachPeer.PublicCIDRs != nil {
-				if len(eachPeer.PublicCIDRs.Include) > 0 {
-					err = d.Set("public_cidrs_include", eachPeer.PublicCIDRs.Include)
-					if err != nil {
-						return err
-					}
-				}
-				if len(eachPeer.PublicCIDRs.Exclude) > 0 {
-					err = d.Set("public_cidrs_exclude", eachPeer.PublicCIDRs.Exclude)
-					if err != nil {
-						return err
-					}
-				}
-				if len(eachPeer.AccessTiers) > 0 {
-					err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
-					if err != nil {
-						return err
-					}
-				}
-
-			}
-			if eachPeer.PublicDomains != nil {
-				if len(eachPeer.PublicDomains.Include) > 0 {
-					err = d.Set("public_domains_include", eachPeer.PublicDomains.Include)
-					if err != nil {
-						return err
-					}
-				}
-				if len(eachPeer.PublicDomains.Exclude) > 0 {
-					err = d.Set("public_domains_exclude", eachPeer.PublicDomains.Exclude)
-					if err != nil {
-						return err
-					}
-				}
-				if len(eachPeer.AccessTiers) > 0 {
-					err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
-					if err != nil {
-						return err
-					}
-				}
-			}
-			if eachPeer.Applications != nil {
-				if len(eachPeer.Applications.Include) > 0 {
-					err = d.Set("applications_include", eachPeer.Applications.Include)
-					if err != nil {
-						return err
-					}
-				}
-				if len(eachPeer.Applications.Exclude) > 0 {
-					err = d.Set("applications_exclude", eachPeer.Applications.Exclude)
-					if err != nil {
-						return err
-					}
-				}
-				if len(eachPeer.AccessTiers) > 0 {
-					err = d.Set("public_traffic_tunnel_via_access_tier", eachPeer.AccessTiers[0])
-					if err != nil {
-						return err
-					}
-				}
-			}
-
-			err = d.Set("access_tier_group", eachPeer.AccessTierGroup)
-			if err != nil {
-				return err
-			}
-
-		}
-		err = d.Set("access_tiers", ats)
-		if err != nil {
-			return err
-		}
 	}
 	return
 }
