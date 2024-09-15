@@ -39,6 +39,12 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Description: "Name of the service tunnel",
 			ForceNew:    true,
 		},
+		"friendly_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Friendly Name for the service tunnel",
+			ForceNew:    true,
+		},
 		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -54,9 +60,140 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "Autorun for the service, if set true service would autorun on the app",
 		},
+		"lock_autorun": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off",
+		},
+
+		"peer_access_tiers": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Add a network that will be accessible via this Service Tunnel.",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"cluster": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"access_tiers": {
+						Type: schema.TypeList,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"connectors": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"public_cidrs": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"include": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+								"exclude": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+							},
+						},
+					},
+					"public_domains": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"include": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+								"exclude": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+							},
+						},
+					},
+					"applications": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"include": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+								"exclude": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+							},
+						},
+					},
+					"access_tier_group": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Default:     "",
+						Description: "AccessTier group name",
+					},
+				},
+			},
+		},
+		"name_resolution": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Private Search Domains",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name_servers": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"dns_search_domains": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
+		},
 		"connectors": {
 			Type:        schema.TypeSet,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Names of the connectors which the service tunnel should be associated with",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -66,6 +203,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 		"access_tiers": {
 			Type:        schema.TypeSet,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Names of the access_tiers which the service tunnel should be associated with",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -75,6 +213,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 		"public_cidrs_include": {
 			Type:        schema.TypeSet,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Specifies public IP addresses in CIDR notation that should be included in the tunnel, ex: 8.8.0.0/16.",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -83,6 +222,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 		"public_cidrs_exclude": {
 			Type:        schema.TypeSet,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Specifies public IP addresses in CIDR notation that should be excluded from the tunnel, ex: 8.8.12.0/24.",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -91,6 +231,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 		"public_domains_include": {
 			Type:        schema.TypeSet,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Specifies the domains that should be that should be included in the tunnel, ex: cnn.com",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -99,6 +240,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 		"public_domains_exclude": {
 			Type:        schema.TypeSet,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Specifies the domains that should be that should be excluded from the tunnel, ex: zoom.us",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -107,12 +249,8 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 		"public_traffic_tunnel_via_access_tier": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Access Tier to be used to tunnel through public traffic",
-		},
-		"policy": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Policy ID to be attached to this service tunnel",
 		},
 		"cluster": {
 			Type:        schema.TypeString,
@@ -125,6 +263,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 		"applications_include": {
 			Type:        schema.TypeSet,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Specifies the applications ids that should be included in the tunnel, ex: 905a72d3-6216-4ffc-ad18-db1593782915",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -133,20 +272,30 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 		"applications_exclude": {
 			Type:        schema.TypeSet,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Specifies the applications ids that should be excluded in the tunnel, ex: 633301ab-fd20-439b-b5ae-47153ec7fbf2",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 		},
+
 		"access_tier_group": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Deprecated:  "Use peer_access_tier",
 			Description: "Name of the access_tier group which the service tunnel should be associated with",
 		},
-    "lock_autorun": {
+
+		"policy": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Policy ID to be attached to this service tunnel",
+		},
+		"policy_enforcing": {
 			Type:        schema.TypeBool,
-			Optional:    true,
-			Description: "Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off",
+			Required:    false,
+			Default:     true,
+			Description: "Policy Enforcing / Permissive",
 		},
 	}
 	return
@@ -171,6 +320,7 @@ func TunFromState(d *schema.ResourceData) (tun servicetunnel.Info) {
 			Autorun:     expandAutorun(d),
 			LockAutoRun: expandLockAutorun(d),
 		},
+		// TBD: read error is suppressed need to use diag error which requires refactoring all related methods.
 		Spec: expandServiceTunnelSpec(d),
 	}
 	return
@@ -289,6 +439,129 @@ func resourceServiceTunnelDetachPolicy(d *schema.ResourceData, c *client.Holder)
 }
 
 func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spec) {
+	// Read from Legacy configurations which are deprecated
+	// TBD: remove this in next major version
+	peers := expandFromLegacyDeprecatedConfiguration(d)
+
+	newPeers, err := expandPeerAccessTiers(d, peers)
+	if err != nil {
+		return
+	}
+	peers = append(peers, newPeers...)
+	expanded = servicetunnel.Spec{
+		PeerAccessTiers: peers,
+	}
+	return
+}
+
+func expandPeerAccessTiers(d *schema.ResourceData, input []servicetunnel.PeerAccessTier) (peers []servicetunnel.PeerAccessTier, err error) {
+	if len(input) > 0 {
+		peers = append(peers, input...)
+	}
+
+	peerAccessTierConfigs := d.Get("peer_access_tiers").(*schema.Set)
+	if peerAccessTierConfigs.Len() == 0 {
+		return
+	}
+
+	for _, eachPeer := range peerAccessTierConfigs.List() {
+		var peer servicetunnel.PeerAccessTier
+		eachPeerAccessTier, ok := eachPeer.(map[string]interface{})
+		if !ok {
+			err = fmt.Errorf("unable to parse PeerAccessTier")
+			return
+		}
+		if len(eachPeerAccessTier) == 0 {
+			continue
+		}
+		if atsRaw, ok := eachPeerAccessTier["access_tiers"]; ok {
+			ats, ok := atsRaw.([]string)
+			if !ok {
+				err = fmt.Errorf("unable to parse access_tiers")
+				return
+			}
+			peer.AccessTiers = ats
+		}
+
+		if connectorsRaw, ok := eachPeerAccessTier["connectors"]; ok {
+			connectors, ok := connectorsRaw.([]string)
+			if !ok {
+				err = fmt.Errorf("unable to parse connectors")
+				return
+			}
+			peer.Connectors = connectors
+		}
+
+		if atGroupRaw, ok := eachPeerAccessTier["access_tier_group"]; ok {
+			atGroup, ok := atGroupRaw.(string)
+			if !ok {
+				err = fmt.Errorf("unable to parse access_tier_group")
+				return
+			}
+			peer.AccessTierGroup = atGroup
+		}
+
+		if publicCIDRsRaw, ok := eachPeerAccessTier["public_cidrs"]; ok {
+			publicCIDRs, myErr := extractIncludeExclude("public_cidrs", publicCIDRsRaw)
+			if myErr != nil {
+				err = myErr
+				return
+			}
+			peer.PublicCIDRs = publicCIDRs
+		}
+
+		if publicDomainsRaw, ok := eachPeerAccessTier["public_domains"]; ok {
+			publicDomains, myErr := extractIncludeExclude("public_domains", publicDomainsRaw)
+			if myErr != nil {
+				err = myErr
+				return
+			}
+			peer.PublicDomains = publicDomains
+		}
+
+		if applicationsRaw, ok := eachPeerAccessTier["applications"]; ok {
+			applications, myErr := extractIncludeExclude("applications", applicationsRaw)
+			if myErr != nil {
+				err = myErr
+				return
+			}
+			peer.Applications = applications
+		}
+		peers = append(peers, peer)
+	}
+	return
+}
+
+func extractIncludeExclude(key string, inputRaw interface{}) (extracted *servicetunnel.IncludeExclude, err error) {
+	var inputBlock servicetunnel.IncludeExclude
+	inputRawSet, ok := inputRaw.(*schema.Set)
+	if !ok {
+		err = fmt.Errorf("unable to parse " + key)
+		return
+	}
+	inputList := inputRawSet.List()
+	if len(inputList) > 1 {
+		err = fmt.Errorf("max length is 1 for " + key)
+		return
+	}
+	if len(inputList) > 0 {
+		input, ok := inputList[0].(map[string][]string)
+		if !ok {
+			err = fmt.Errorf("unable to read " + key + " block")
+			return
+		}
+		if inputInclude, ok := input["include"]; ok {
+			inputBlock.Include = inputInclude
+		}
+		if inputExclude, ok := input["exclude"]; ok {
+			inputBlock.Exclude = inputExclude
+		}
+		extracted = &inputBlock
+	}
+	return
+}
+
+func expandFromLegacyDeprecatedConfiguration(d *schema.ResourceData) (peers []servicetunnel.PeerAccessTier) {
 	ats := convertSchemaSetToStringSlice(d.Get("access_tiers").(*schema.Set))
 	conns := convertSchemaSetToStringSlice(d.Get("connectors").(*schema.Set))
 	inclCidrs := convertSchemaSetToStringSlice(d.Get("public_cidrs_include").(*schema.Set))
@@ -298,9 +571,8 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 	inclApplications := convertSchemaSetToStringSlice(d.Get("applications_include").(*schema.Set))
 	exclApplications := convertSchemaSetToStringSlice(d.Get("applications_exclude").(*schema.Set))
 
-	var peers []servicetunnel.PeerAccessTier
 	accessTierGroup := d.Get("access_tier_group").(string)
-	// if access_tiers not set and access tier group is empty => global-edge, use ["*"]
+
 	if len(ats) == 0 {
 		peer := servicetunnel.PeerAccessTier{
 			Cluster:     d.Get("cluster").(string),
@@ -346,10 +618,6 @@ func expandServiceTunnelSpec(d *schema.ResourceData) (expanded servicetunnel.Spe
 			peers = append(peers, peer)
 		}
 	}
-
-	expanded = servicetunnel.Spec{
-		PeerAccessTiers: peers,
-	}
 	return
 }
 
@@ -357,12 +625,34 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, tun servicetunnel.ServiceT
 	if len(tun.Spec.PeerAccessTiers) == 0 {
 		return
 	}
-	// set common parameters using first peer.
-	p1 := tun.Spec.PeerAccessTiers[0]
-	err = d.Set("cluster", p1.Cluster)
-	if err != nil {
-		return err
+
+	flattened := make([]interface{}, 0)
+	for _, eachPeerAccessTier := range tun.Spec.PeerAccessTiers {
+		eachPeerAccessTierMap := make(map[string]interface{})
+		eachPeerAccessTierMap["access_tiers"] = eachPeerAccessTier.AccessTiers
+		eachPeerAccessTierMap["connectors"] = eachPeerAccessTier.Connectors
+		eachPeerAccessTierMap["access_tier_group"] = eachPeerAccessTier.AccessTierGroup
+		eachPeerAccessTierMap["cluster"] = eachPeerAccessTier.Cluster
+
+		publicCIDRs := make(map[string]interface{})
+		publicCIDRs["include"] = eachPeerAccessTier.PublicCIDRs.Include
+		publicCIDRs["exclude"] = eachPeerAccessTier.PublicCIDRs.Exclude
+		eachPeerAccessTierMap["public_cidrs"] = []map[string]interface{}{publicCIDRs}
+
+		publicDomains := make(map[string]interface{})
+		publicDomains["include"] = eachPeerAccessTier.PublicDomains.Include
+		publicDomains["exclude"] = eachPeerAccessTier.PublicDomains.Exclude
+		eachPeerAccessTierMap["public_domains"] = []map[string]interface{}{publicDomains}
+
+		applications := make(map[string]interface{})
+		applications["include"] = eachPeerAccessTier.Applications.Include
+		applications["exclude"] = eachPeerAccessTier.Applications.Exclude
+		eachPeerAccessTierMap["applications"] = applications
+
+		flattened = append(flattened, eachPeerAccessTierMap)
 	}
+
+	p1 := tun.Spec.PeerAccessTiers[0]
 	// if connectors set => global-edge
 	if len(p1.Connectors) > 0 {
 		err = d.Set("connectors", p1.Connectors)
