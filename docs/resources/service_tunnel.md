@@ -27,9 +27,78 @@ resource "banyan_accesstier" "example" {
 resource "banyan_service_tunnel" "example" {
   name         = "example-anyone-high"
   description  = "tunnel allowing anyone with a high trust level"
-  access_tiers = [banyan_accesstier.example.name]
+  network_settings {
+    cluster      = "cluster1"
+    access_tiers = [banyan_accesstier.example.name]
+  }
   policy       = banyan_policy_tunnel.anyone-high.id
+  policy_enforcing = true
 }
+
+resource "banyan_service_tunnel" "example1" {
+  name         = "example-anyone-high"
+  description  = "tunnel allowing anyone with a high trust level"
+  network_settings {
+    cluster      = "cluster1"
+    access_tiers = [banyan_accesstier.example.name]
+  }
+  network_settings {
+    connectors = ["myconnector"]
+    public_cidrs {
+      include = ["8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"]
+      exclude = ["99.99.99.99/32"]
+    }
+    public_domains {
+      include = ["cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"]
+      exclude = ["excluded.com"]
+    }
+    applications {
+      include = ["067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"]
+      exclude = ["067c3a25-8271-4764-89dd-c3543ac99a5c"]
+    }
+  }
+  network_settings {
+    cluster = "cluster1"
+    access_tiers = ["myaccesstier1"]
+    public_cidrs {
+      include = ["8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"]
+      exclude = ["99.99.99.99/32"]
+    }
+    public_domains {
+      include = ["cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"]
+      exclude = ["excluded.com"]
+    }
+    applications {
+      include = ["067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"]
+      exclude = ["067c3a25-8271-4764-89dd-c3543ac99a5c"]
+    }
+  }
+
+  network_settings {
+    cluster = "cluster1"
+    access_tier_group = "atg"
+    public_cidrs {
+      include = ["8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"]
+      exclude = ["99.99.99.99/32"]
+    }
+    public_domains {
+      include = ["cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"]
+      exclude = ["excluded.com"]
+    }
+    applications {
+      include = ["067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"]
+      exclude = ["067c3a25-8271-4764-89dd-c3543ac99a5c"]
+    }
+  }
+  name_resolution {
+    name_servers = ["8.8.8.8"]
+    dns_search_domains = ["mylocal.local"]
+  }
+  policy       = banyan_policy_tunnel.anyone-high.id
+  policy_enforcing = true
+}
+
+
 
 resource "banyan_policy_tunnel" "anyone-high" {
   name        = "allow anyone"
@@ -72,14 +141,21 @@ resource "banyan_accesstier" "example" {
 resource "banyan_service_tunnel" "users" {
   name         = "corporate network"
   description  = "tunnel allowing anyone with a high trust level access to 443"
-  access_tiers = [banyan_accesstier.example.name]
+  network_settings  {
+    cluster      = "cluster1"
+    access_tiers = [banyan_accesstier.example.name]
+  }
   policy       = banyan_policy_tunnel.anyone-high.id
+  polict_enforcing = true
 }
 
 resource "banyan_service_tunnel" "administrators" {
   name         = "corporate network admin"
   description  = "tunnel allowing administrators access to the networks"
-  access_tiers = [banyan_accesstier.example.name]
+  network_settings {
+    cluster      = "cluster1"
+    access_tiers = [banyan_accesstier.example.name]
+  }
   policy       = banyan_policy_tunnel.administrators.id
 }
 
@@ -132,7 +208,7 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 - `description_link` (String) Link shown to the end user of the banyan app for this service
 - `lock_autorun` (Boolean) Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off
 - `name_resolution` (Block Set, Max: 1) Private Search Domains (see [below for nested schema](#nestedblock--name_resolution))
-- `peer_access_tiers` (Block Set) Add a network that will be accessible via this Service Tunnel. (see [below for nested schema](#nestedblock--peer_access_tiers))
+- `network_settings` (Block Set) Add a network that will be accessible via this Service Tunnel. (see [below for nested schema](#nestedblock--network_settings))
 - `policy_enforcing` (Boolean) Policy Enforcing / Permissive
 
 ### Read-Only
@@ -148,30 +224,21 @@ Optional:
 - `name_servers` (List of String)
 
 
-<a id="nestedblock--peer_access_tiers"></a>
-### Nested Schema for `peer_access_tiers`
+<a id="nestedblock--network_settings"></a>
+### Nested Schema for `network_settings`
 
 Optional:
 
 - `access_tier_group` (String) AccessTier group name
 - `access_tiers` (List of String)
-- `applications` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--peer_access_tiers--applications))
+- `applications` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--network_settings--applications))
 - `cluster` (String) cluster name where access-tier belongs to
 - `connectors` (List of String)
-- `public_cidrs` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--peer_access_tiers--public_cidrs))
-- `public_domains` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--peer_access_tiers--public_domains))
+- `public_cidrs` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--network_settings--public_cidrs))
+- `public_domains` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--network_settings--public_domains))
 
-<a id="nestedblock--peer_access_tiers--applications"></a>
-### Nested Schema for `peer_access_tiers.applications`
-
-Optional:
-
-- `exclude` (List of String)
-- `include` (List of String)
-
-
-<a id="nestedblock--peer_access_tiers--public_cidrs"></a>
-### Nested Schema for `peer_access_tiers.public_cidrs`
+<a id="nestedblock--network_settings--applications"></a>
+### Nested Schema for `network_settings.applications`
 
 Optional:
 
@@ -179,8 +246,17 @@ Optional:
 - `include` (List of String)
 
 
-<a id="nestedblock--peer_access_tiers--public_domains"></a>
-### Nested Schema for `peer_access_tiers.public_domains`
+<a id="nestedblock--network_settings--public_cidrs"></a>
+### Nested Schema for `network_settings.public_cidrs`
+
+Optional:
+
+- `exclude` (List of String)
+- `include` (List of String)
+
+
+<a id="nestedblock--network_settings--public_domains"></a>
+### Nested Schema for `network_settings.public_domains`
 
 Optional:
 
