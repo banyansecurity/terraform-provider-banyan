@@ -61,7 +61,7 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 			Description: "Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off",
 		},
 
-		"peer_access_tiers": {
+		"network_settings": {
 			Type:        schema.TypeSet,
 			Optional:    true,
 			Description: "Add a network that will be accessible via this Service Tunnel.",
@@ -420,7 +420,7 @@ func expandNameResolution(d *schema.ResourceData) (nameResolutionRef *dns.NameRe
 
 func expandPeerAccessTiers(d *schema.ResourceData) (peers []servicetunnel.PeerAccessTier, err error) {
 	peers = make([]servicetunnel.PeerAccessTier, 0)
-	peerAccessTierConfigs := d.Get("peer_access_tiers").(*schema.Set)
+	peerAccessTierConfigs := d.Get("network_settings").(*schema.Set)
 	for _, eachPeer := range peerAccessTierConfigs.List() {
 		var peer servicetunnel.PeerAccessTier
 		eachPeerAccessTier, ok := eachPeer.(map[string]interface{})
@@ -621,7 +621,7 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, spec servicetunnel.Spec) (
 			flattened = append(flattened, eachPeerAccessTierMap)
 		}
 	}
-	err = d.Set("peer_access_tiers", flattened)
+	err = d.Set("network_settings", flattened)
 	if err != nil {
 		return err
 	}

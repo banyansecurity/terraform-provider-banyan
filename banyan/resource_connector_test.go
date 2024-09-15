@@ -76,7 +76,7 @@ func TestAccConnector_tunnel(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						peer_access_tiers {
+						network_settings {
 							connectors        = [banyan_connector.example.name]
                         }
 						policy            = banyan_policy_tunnel.example.id

@@ -27,14 +27,21 @@ resource "banyan_accesstier" "example" {
 resource "banyan_service_tunnel" "users" {
   name         = "corporate network"
   description  = "tunnel allowing anyone with a high trust level access to 443"
-  access_tiers = [banyan_accesstier.example.name]
+  network_settings  {
+    cluster      = "cluster1"
+    access_tiers = [banyan_accesstier.example.name]
+  }
   policy       = banyan_policy_tunnel.anyone-high.id
+  polict_enforcing = true
 }
 
 resource "banyan_service_tunnel" "administrators" {
   name         = "corporate network admin"
   description  = "tunnel allowing administrators access to the networks"
-  access_tiers = [banyan_accesstier.example.name]
+  network_settings {
+    cluster      = "cluster1"
+    access_tiers = [banyan_accesstier.example.name]
+  }
   policy       = banyan_policy_tunnel.administrators.id
 }
 

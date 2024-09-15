@@ -18,7 +18,7 @@ func TestSchemaServiceTunnel_tunnel_at(t *testing.T) {
 		"description":  "describe tunnel-at",
 		"autorun":      true,
 		"lock_autorun": true,
-		"peer_access_tiers": []interface{}{
+		"network_settings": []interface{}{
 			map[string]interface{}{
 				"cluster":      "cluster1",
 				"access_tiers": []interface{}{"gcp-tdnovpn-v1"},
@@ -39,7 +39,7 @@ func TestSchemaServiceTunnel_tunnel_conn(t *testing.T) {
 	svc_tunnel_conn := map[string]interface{}{
 		"name":        "global-edge-tunnel",
 		"description": "Geo DNS to multiple ATs",
-		"peer_access_tiers": []interface{}{
+		"network_settings": []interface{}{
 			map[string]interface{}{
 				"cluster":      "managed-cl-edge1",
 				"access_tiers": []interface{}{"*"},
@@ -61,7 +61,7 @@ func TestSchemaServiceTunnel_tunnel_public(t *testing.T) {
 	svc_tunnel_public := map[string]interface{}{
 		"name":        "tunnel-domains",
 		"description": "describe tunnel-domains",
-		"peer_access_tiers": []interface{}{
+		"network_settings": []interface{}{
 			map[string]interface{}{
 				"cluster":      "cluster1",
 				"access_tiers": []interface{}{"gcp-tdnovpn-v2"},
@@ -98,7 +98,7 @@ func TestSchemaServiceTunnel_tunnel_public_one_at(t *testing.T) {
 	svc_tunnel_public := map[string]interface{}{
 		"name":        "tunnel-domains",
 		"description": "describe tunnel-domains",
-		"peer_access_tiers": []interface{}{
+		"network_settings": []interface{}{
 			map[string]interface{}{
 				"cluster":      "cluster1",
 				"access_tiers": []interface{}{"gcp-tdnovpn-v2"},
@@ -134,7 +134,7 @@ func TestSchemaServiceTunnel_tunnel_public_select_at_from_multiple(t *testing.T)
 	svc_tunnel_public := map[string]interface{}{
 		"name":        "tunnel-domains",
 		"description": "describe tunnel-domains",
-		"peer_access_tiers": []interface{}{
+		"network_settings": []interface{}{
 			map[string]interface{}{
 				"cluster":      "cluster1",
 				"access_tiers": []interface{}{"gcp-tdnovpn-v2"},
@@ -202,7 +202,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "realdescription"
-                        peer_access_tiers {
+                        network_settings {
 							cluster = "cluster1"
 							access_tiers = [banyan_accesstier.example.name]
 						}
@@ -245,7 +245,7 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "some description"
-                        peer_access_tiers {
+                        network_settings {
 							cluster = "cluster1"
 							access_tiers = [banyan_accesstier.example.name]
 						}
@@ -300,7 +300,7 @@ func TestAccServiceTunnel_change_policy(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						peer_access_tiers {
+						network_settings {
 							cluster 		  = "cluster1"
 							access_tiers      = [banyan_accesstier.example.name]
 						}                        
@@ -346,7 +346,7 @@ func TestAccServiceTunnel_change_policy(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "some description"
-						peer_access_tiers {
+						network_settings {
 							cluster 		  = "cluster1"
 							access_tiers      = [banyan_accesstier.example.name]
 						}    
@@ -365,7 +365,7 @@ func TestSchemaServiceTunnel_with_access_tier_group(t *testing.T) {
 	svc_tunnel_public := map[string]interface{}{
 		"name":        "tunnel-domains",
 		"description": "describe tunnel-domains",
-		"peer_access_tiers": []interface{}{
+		"network_settings": []interface{}{
 			map[string]interface{}{
 				"cluster":           "cluster1",
 				"access_tier_group": "atg-1",
@@ -433,7 +433,7 @@ func TestAccServiceTunnel_with_access_tier_group(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name                    = "%s"
 						description       	    = "realdescription"
-						peer_access_tiers {
+						network_settings {
    							cluster 				= "cluster1"
 							access_tier_group       = "new-grp-1"
                         }
