@@ -17,12 +17,16 @@ func TestSchemaServiceTunnel_tunnel_at(t *testing.T) {
 		"name":         "tunnel-at",
 		"description":  "describe tunnel-at",
 		"autorun":      true,
-		"cluster":      "cluster1",
-		"access_tiers": []interface{}{"gcp-tdnovpn-v1", "gcp-tdnovpn-v2"},
 		"lock_autorun": true,
+		"network_settings": []interface{}{
+			map[string]interface{}{
+				"cluster":      "cluster1",
+				"access_tiers": []interface{}{"gcp-tdnovpn-v1"},
+			},
+		},
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_at)
-	svc_obj := TunFromState(d)
+	svc_obj, _ := TunFromState(d)
 
 	json_spec, _ := os.ReadFile("./specs/service_tunnel/tunnel-at.json")
 	var ref_obj servicetunnel.Info
@@ -35,11 +39,16 @@ func TestSchemaServiceTunnel_tunnel_conn(t *testing.T) {
 	svc_tunnel_conn := map[string]interface{}{
 		"name":        "global-edge-tunnel",
 		"description": "Geo DNS to multiple ATs",
-		"cluster":     "managed-cl-edge1",
-		"connectors":  []interface{}{"gcp-test-drive", "td-gcp-tdnovpn"},
+		"network_settings": []interface{}{
+			map[string]interface{}{
+				"cluster":      "managed-cl-edge1",
+				"access_tiers": []interface{}{"*"},
+				"connectors":   []interface{}{"gcp-test-drive", "td-gcp-tdnovpn"},
+			},
+		},
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_conn)
-	svc_obj := TunFromState(d)
+	svc_obj, _ := TunFromState(d)
 
 	json_spec, _ := os.ReadFile("./specs/service_tunnel/tunnel-conn.json")
 	var ref_obj servicetunnel.Info
@@ -50,18 +59,33 @@ func TestSchemaServiceTunnel_tunnel_conn(t *testing.T) {
 
 func TestSchemaServiceTunnel_tunnel_public(t *testing.T) {
 	svc_tunnel_public := map[string]interface{}{
-		"name":                                  "tunnel-domains",
-		"description":                           "describe tunnel-domains",
-		"cluster":                               "cluster1",
-		"access_tiers":                          []interface{}{"gcp-tdnovpn-v2"},
-		"public_cidrs_include":                  []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
-		"public_domains_include":                []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
-		"public_traffic_tunnel_via_access_tier": "gcp-tdnovpn-v2",
-		"applications_include":                  []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
-		"access_tier_group":                     "",
+		"name":        "tunnel-domains",
+		"description": "describe tunnel-domains",
+		"network_settings": []interface{}{
+			map[string]interface{}{
+				"cluster":      "cluster1",
+				"access_tiers": []interface{}{"gcp-tdnovpn-v2"},
+				"public_cidrs": []interface{}{
+					map[string]interface{}{
+						"include": []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
+					},
+				},
+				"public_domains": []interface{}{
+					map[string]interface{}{
+						"include": []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
+					},
+				},
+				"applications": []interface{}{
+					map[string]interface{}{
+						"include": []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
+					},
+				},
+			},
+		},
 	}
+
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
-	svc_obj := TunFromState(d)
+	svc_obj, _ := TunFromState(d)
 
 	json_spec, _ := os.ReadFile("./specs/service_tunnel/tunnel-public.json")
 	var ref_obj servicetunnel.Info
@@ -72,18 +96,32 @@ func TestSchemaServiceTunnel_tunnel_public(t *testing.T) {
 
 func TestSchemaServiceTunnel_tunnel_public_one_at(t *testing.T) {
 	svc_tunnel_public := map[string]interface{}{
-		"name":                   "tunnel-domains",
-		"description":            "describe tunnel-domains",
-		"cluster":                "cluster1",
-		"access_tiers":           []interface{}{"gcp-tdnovpn-v2"},
-		"public_cidrs_include":   []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
-		"public_domains_include": []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
-
-		"applications_include": []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
-		"access_tier_group":    "",
+		"name":        "tunnel-domains",
+		"description": "describe tunnel-domains",
+		"network_settings": []interface{}{
+			map[string]interface{}{
+				"cluster":      "cluster1",
+				"access_tiers": []interface{}{"gcp-tdnovpn-v2"},
+				"public_cidrs": []interface{}{
+					map[string]interface{}{
+						"include": []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
+					},
+				},
+				"public_domains": []interface{}{
+					map[string]interface{}{
+						"include": []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
+					},
+				},
+				"applications": []interface{}{
+					map[string]interface{}{
+						"include": []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
+					},
+				},
+			},
+		},
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
-	svc_obj := TunFromState(d)
+	svc_obj, _ := TunFromState(d)
 
 	json_spec, _ := os.ReadFile("./specs/service_tunnel/tunnel-public.json")
 	var ref_obj servicetunnel.Info
@@ -94,18 +132,32 @@ func TestSchemaServiceTunnel_tunnel_public_one_at(t *testing.T) {
 
 func TestSchemaServiceTunnel_tunnel_public_select_at_from_multiple(t *testing.T) {
 	svc_tunnel_public := map[string]interface{}{
-		"name":                                  "tunnel-domains",
-		"description":                           "describe tunnel-domains",
-		"cluster":                               "cluster1",
-		"access_tiers":                          []interface{}{"gcp-tdnovpn-v1", "gcp-tdnovpn-v2"},
-		"public_cidrs_include":                  []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
-		"public_domains_include":                []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
-		"applications_include":                  []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
-		"public_traffic_tunnel_via_access_tier": "gcp-tdnovpn-v2",
-		"access_tier_group":                     "",
+		"name":        "tunnel-domains",
+		"description": "describe tunnel-domains",
+		"network_settings": []interface{}{
+			map[string]interface{}{
+				"cluster":      "cluster1",
+				"access_tiers": []interface{}{"gcp-tdnovpn-v2"},
+				"public_cidrs": []interface{}{
+					map[string]interface{}{
+						"include": []interface{}{"8.8.8.8/32", "75.75.75.75/32", "75.75.76.76/32"},
+					},
+				},
+				"public_domains": []interface{}{
+					map[string]interface{}{
+						"include": []interface{}{"cnn.com", "icanhazip.com", "fast.com", "yahoo.com", "banyansecurity.io"},
+					},
+				},
+				"applications": []interface{}{
+					map[string]interface{}{
+						"include": []interface{}{"067c3a25-8271-4764-89dd-c3543ac99a5a", "0b90e7d0-e8fc-43fb-95b7-4ad5d6881bb8"},
+					},
+				},
+			},
+		},
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
-	svc_obj := TunFromState(d)
+	svc_obj, _ := TunFromState(d)
 
 	json_spec, _ := os.ReadFile("./specs/service_tunnel/tunnel-public-multiple-at.json")
 	var ref_obj servicetunnel.Info
@@ -150,8 +202,12 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						access_tiers      = [banyan_accesstier.example.name]
-                        policy            = banyan_policy_tunnel.example.id
+                        network_settings {
+							cluster = "cluster1"
+							access_tiers = [banyan_accesstier.example.name]
+						}
+						policy            = banyan_policy_tunnel.example.id
+						policy_enforcing  = false
 					}
 					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -189,8 +245,11 @@ func TestAccServiceTunnel_basic(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "some description"
-						access_tiers      = [banyan_accesstier.example.name]
-                        policy            = banyan_policy_tunnel.example.id
+                        network_settings {
+							cluster = "cluster1"
+							access_tiers = [banyan_accesstier.example.name]
+						}
+						policy            = banyan_policy_tunnel.example.id
 					}
 					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -241,8 +300,11 @@ func TestAccServiceTunnel_change_policy(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						access_tiers      = [banyan_accesstier.example.name]
-                        policy            = banyan_policy_tunnel.example.id
+						network_settings {
+							cluster 		  = "cluster1"
+							access_tiers      = [banyan_accesstier.example.name]
+						}                        
+						policy            = banyan_policy_tunnel.example.id
 					}
 					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -284,8 +346,11 @@ func TestAccServiceTunnel_change_policy(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "some description"
-						access_tiers      = [banyan_accesstier.example.name]
-                        policy            = banyan_policy_tunnel.new.id
+						network_settings {
+							cluster 		  = "cluster1"
+							access_tiers      = [banyan_accesstier.example.name]
+						}    
+						policy            = banyan_policy_tunnel.new.id
 					}
 					`, rName, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -298,13 +363,17 @@ func TestAccServiceTunnel_change_policy(t *testing.T) {
 
 func TestSchemaServiceTunnel_with_access_tier_group(t *testing.T) {
 	svc_tunnel_public := map[string]interface{}{
-		"name":              "tunnel-domains",
-		"description":       "describe tunnel-domains",
-		"cluster":           "cluster1",
-		"access_tier_group": "atg-1",
+		"name":        "tunnel-domains",
+		"description": "describe tunnel-domains",
+		"network_settings": []interface{}{
+			map[string]interface{}{
+				"cluster":           "cluster1",
+				"access_tier_group": "atg-1",
+			},
+		},
 	}
 	d := schema.TestResourceDataRaw(t, TunnelSchema(), svc_tunnel_public)
-	svc_obj := TunFromState(d)
+	svc_obj, _ := TunFromState(d)
 
 	json_spec := []byte(`{
 		"kind": "BanyanServiceTunnel",
@@ -364,8 +433,11 @@ func TestAccServiceTunnel_with_access_tier_group(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name                    = "%s"
 						description       	    = "realdescription"
-						access_tier_group       = "new-grp-1"
-                        policy                  = banyan_policy_tunnel.example.id
+						network_settings {
+   							cluster 				= "cluster1"
+							access_tier_group       = "new-grp-1"
+                        }
+						policy                  = banyan_policy_tunnel.example.id
 					}
 					`, rName, rName),
 				Check: resource.ComposeTestCheckFunc(

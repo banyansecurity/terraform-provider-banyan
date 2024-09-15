@@ -31,7 +31,7 @@ type Client interface {
 	Delete(id string) (err error)
 	AttachPolicy(id string, post PolicyAttachmentPost) (created PolicyAttachmentInfo, err error)
 	DeletePolicy(tunID string, policyID string) (err error)
-	GetPolicy(id string) (policy PolicyAttachmentInfo, err error)
+	GetPolicy(id string) (policy GetPolicyAttachmentInfo, err error)
 }
 
 func (a *ServiceTunnel) Get(id string) (spec ServiceTunnelInfo, err error) {
@@ -52,8 +52,9 @@ func (a *ServiceTunnel) Create(spec Info) (created ServiceTunnelInfo, err error)
 			Name:         spec.Metadata.Name,
 			FriendlyName: spec.Metadata.FriendlyName,
 			Description:  spec.Metadata.Description,
-			Autorun:      spec.Autorun,
-			LockAutoRun:  spec.LockAutoRun,
+			Autorun:      spec.Metadata.Autorun,
+			LockAutoRun:  spec.Metadata.LockAutoRun,
+			Tags:         spec.Metadata.Tags,
 		},
 		Spec: spec.Spec,
 	})
@@ -77,6 +78,9 @@ func (a *ServiceTunnel) Update(id string, spec Info) (updated ServiceTunnelInfo,
 			Name:         spec.Metadata.Name,
 			FriendlyName: spec.Metadata.FriendlyName,
 			Description:  spec.Metadata.Description,
+			Autorun:      spec.Metadata.Autorun,
+			LockAutoRun:  spec.Metadata.LockAutoRun,
+			Tags:         spec.Metadata.Tags,
 		},
 		Spec: spec.Spec,
 	})
@@ -97,9 +101,9 @@ func (a *ServiceTunnel) Delete(id string) (err error) {
 }
 
 // GetPolicy returns the policy attached to the service tunnel
-func (a *ServiceTunnel) GetPolicy(id string) (policy PolicyAttachmentInfo, err error) {
+func (a *ServiceTunnel) GetPolicy(id string) (policy GetPolicyAttachmentInfo, err error) {
 	path := fmt.Sprintf("%s/%s/%s/security_policy", apiVersion, component, id)
-	var j PolicyResponse
+	var j GetPolicyResponse
 	resp, err := a.restClient.Read(apiVersion, component, id, path)
 	if err != nil {
 		return policy, nil
@@ -173,7 +177,7 @@ func specFromResponse(respData []byte) (created ServiceTunnelInfo, err error) {
 		FriendlyName: spec.FriendlyName,
 		Description:  spec.Description,
 		Enabled:      spec.Enabled,
-		Spec:         jSpec.Spec,
+		Spec:         jSpec,
 		CreatedAt:    spec.CreatedAt,
 		CreatedBy:    spec.CreatedBy,
 		UpdatedAt:    spec.UpdatedAt,

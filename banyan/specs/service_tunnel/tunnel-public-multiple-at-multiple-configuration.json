@@ -1,0 +1,111 @@
+{
+    "kind": "BanyanServiceTunnel",
+    "api_version": "rbac.banyanops.com",
+    "type": "origin",
+    "metadata": {
+        "name": "MultipleATMultipleConfig",
+        "friendly_name": "MultipleATMultipleConfig",
+        "description": "Access to resources",
+        "autorun": false,
+        "lock_autorun": false,
+        "tags": {
+            "icon": "",
+            "description_link": ""
+        }
+    },
+    "spec": {
+        "peer_access_tiers": [
+            {
+                "cluster": "cluster1",
+                "access_tiers": [
+                    "my-accesstier-1"
+                ],
+                "public_cidrs": {
+                    "include": [],
+                    "exclude": []
+                },
+                "public_domains": {
+                    "include": [
+                        "my-domain-1.dev",
+                        "my-domain-2.dev",
+                        "my-domain-3.dev",
+                        "my-domain-4.dev"
+                    ],
+                    "exclude": []
+                },
+                "applications": {
+                    "include": [],
+                    "exclude": []
+                },
+                "access_tier_group": ""
+            },
+            {
+                "cluster": "cluster1",
+                "access_tiers": [
+                    "my-accesstier-2"
+                ],
+                "public_cidrs": {
+                    "include": [],
+                    "exclude": []
+                },
+                "public_domains": {
+                    "include": [
+                        "my-domain.com"
+                    ],
+                    "exclude": []
+                },
+                "applications": {
+                    "include": [],
+                    "exclude": []
+                },
+                "access_tier_group": ""
+            },
+            {
+                "cluster": "cluster1",
+                "access_tiers": [
+                    "my-accesstier-3"
+                ],
+                "public_cidrs": {
+                    "include": [],
+                    "exclude": []
+                },
+                "public_domains": {
+                    "include": [
+                        "my-domain.org"
+                    ],
+                    "exclude": []
+                },
+                "applications": {
+                    "include": [],
+                    "exclude": []
+                },
+                "access_tier_group": ""
+            },
+            {
+                "cluster": "cluster1",
+                "access_tiers": [
+                    "my-accesstier-4"
+                ],
+                "public_cidrs": {
+                    "include": [],
+                    "exclude": []
+                },
+                "public_domains": {
+                    "include": [
+                        "my-domain-1.net",
+                        "my-domain-2.net"
+                    ],
+                    "exclude": [
+                        "my-domain-3.net",
+                        "my-domain-4.net"
+                    ]
+                },
+                "applications": {
+                    "include": [],
+                    "exclude": []
+                },
+                "access_tier_group": ""
+            }
+        ]
+    }
+}

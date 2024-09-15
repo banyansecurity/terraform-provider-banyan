@@ -1,13 +1,25 @@
 package servicetunnel
 
+import "github.com/banyansecurity/terraform-banyan-provider/client/dns"
+
+type GetPolicyAttachmentInfo struct {
+	ID             string `json:"id"`
+	PolicyID       string `json:"policy_id"`
+	PolicyName     string `json:"policy_name"`
+	AttachedToID   string `json:"attached_to_id"`
+	AttachedToType string `json:"attached_to_type"`
+	AttachedBy     string `json:"attached_by"`
+	AttachedAt     int64  `json:"Attached_at"`
+	Enabled        string `json:"enabled"`
+}
 type PolicyAttachmentInfo struct {
 	ID              string `json:"id"`
 	PolicyID        string `json:"policy_id"`
-	PolicyVersion   int    `json:"policy_version"`
+	PolicyVersion   int64  `json:"policy_version"`
 	ServiceTunnelID string `json:"service_tunnel_id"`
 	AttachedBy      string `json:"attached_by"`
 	AttachedAt      int64  `json:"Attached_at"`
-	// BROKEN Enabled         bool   `json:"enabled"` //true/false: true => Enforced; false => Permissive mode
+	Enabled         bool   `json:"enabled"`
 }
 
 type PolicyAttachmentPost struct {
@@ -20,7 +32,13 @@ type PolicyResponse struct {
 	ErrorCode        int                  `json:"error_code"`
 	ErrorDescription string               `json:"error_description"`
 	Data             PolicyAttachmentInfo `json:"data"`
-	Count            int                  `json:"count"`
+}
+
+type GetPolicyResponse struct {
+	RequestId        string                  `json:"request_id"`
+	ErrorCode        int                     `json:"error_code"`
+	ErrorDescription string                  `json:"error_description"`
+	Data             GetPolicyAttachmentInfo `json:"data"`
 }
 
 // ServiceTunnelInfo used to send data to shield over websocket from restapi
@@ -31,11 +49,13 @@ type ServiceTunnelInfo struct {
 	FriendlyName string `json:"friendly_name"`
 	Description  string `json:"description"`
 	Enabled      bool   `json:"enabled"`
-	Spec         Spec   `json:"spec"`
+	Spec         Info   `json:"spec"`
 	CreatedAt    int64  `json:"created_at"`
 	CreatedBy    string `json:"created_by"`
 	UpdatedAt    int64  `json:"updated_at"`
 	UpdatedBy    string `json:"updated_by"`
+
+	ActiveConnectionsCount int64 `json:"active_connections_count"`
 }
 
 // Contains the spec string from the api response
@@ -67,22 +87,21 @@ type Metadata struct {
 	Name         string `json:"name,omitempty"`
 	FriendlyName string `json:"friendly_name,omitempty"`
 	Description  string `json:"description,omitempty"`
-	Tags         Tags   `json:"tags"`
 	Autorun      bool   `json:"autorun"`
 	LockAutoRun  bool   `json:"lock_autorun"`
+	Tags         Tags   `json:"tags"`
 }
 
 // Tags represents the metadata tags
 type Tags struct {
-	Template        *string `json:"template,omitempty"`
-	UserFacing      *string `json:"user_facing,omitempty"`
 	Icon            *string `json:"icon,omitempty"`
 	DescriptionLink *string `json:"description_link,omitempty"`
 }
 
 // Spec represents the attributes stanza of a Info.
 type Spec struct {
-	PeerAccessTiers []PeerAccessTier `json:"peer_access_tiers"`
+	PeerAccessTiers []PeerAccessTier        `json:"peer_access_tiers"`
+	NameResolution  *dns.NameResolutionInfo `json:"name_resolution,omitempty"`
 }
 
 type PeerAccessTier struct {
