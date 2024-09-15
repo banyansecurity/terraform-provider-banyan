@@ -315,7 +315,7 @@ func resourceServiceTunnelRead(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	policyEnforcing := false
-	if "TRUE" == strings.ToUpper(policy.Enabled) {
+	if strings.EqualFold("TRUE", policy.Enabled) {
 		policyEnforcing = true
 	}
 	err = d.Set("policy_enforcing", policyEnforcing)
@@ -412,7 +412,7 @@ func expandNameResolution(d *schema.ResourceData) (nameResolutionRef *dns.NameRe
 			}
 		}
 	}
-	if len(nameResolution.NameServers) > 0 || len(nameResolution.NameServers) > 0 {
+	if len(nameResolution.NameServers) > 0 || len(nameResolution.DnsSearchDomains) > 0 {
 		nameResolutionRef = &nameResolution
 	}
 	return
