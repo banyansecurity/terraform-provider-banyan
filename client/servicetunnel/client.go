@@ -31,7 +31,7 @@ type Client interface {
 	Delete(id string) (err error)
 	AttachPolicy(id string, post PolicyAttachmentPost) (created PolicyAttachmentInfo, err error)
 	DeletePolicy(tunID string, policyID string) (err error)
-	GetPolicy(id string) (policy PolicyAttachmentInfo, err error)
+	GetPolicy(id string) (policy GetPolicyAttachmentInfo, err error)
 }
 
 func (a *ServiceTunnel) Get(id string) (spec ServiceTunnelInfo, err error) {
@@ -101,9 +101,9 @@ func (a *ServiceTunnel) Delete(id string) (err error) {
 }
 
 // GetPolicy returns the policy attached to the service tunnel
-func (a *ServiceTunnel) GetPolicy(id string) (policy PolicyAttachmentInfo, err error) {
+func (a *ServiceTunnel) GetPolicy(id string) (policy GetPolicyAttachmentInfo, err error) {
 	path := fmt.Sprintf("%s/%s/%s/security_policy", apiVersion, component, id)
-	var j PolicyResponse
+	var j GetPolicyResponse
 	resp, err := a.restClient.Read(apiVersion, component, id, path)
 	if err != nil {
 		return policy, nil

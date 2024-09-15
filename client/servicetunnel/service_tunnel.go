@@ -2,14 +2,24 @@ package servicetunnel
 
 import "github.com/banyansecurity/terraform-banyan-provider/client/dns"
 
+type GetPolicyAttachmentInfo struct {
+	ID             string `json:"id"`
+	PolicyID       string `json:"policy_id"`
+	PolicyName     string `json:"policy_name"`
+	AttachedToID   string `json:"attached_to_id"`
+	AttachedToType string `json:"attached_to_type"`
+	AttachedBy     string `json:"attached_by"`
+	AttachedAt     int64  `json:"Attached_at"`
+	Enabled        string `json:"enabled"`
+}
 type PolicyAttachmentInfo struct {
 	ID              string `json:"id"`
 	PolicyID        string `json:"policy_id"`
-	PolicyVersion   int    `json:"policy_version"`
+	PolicyVersion   int64  `json:"policy_version"`
 	ServiceTunnelID string `json:"service_tunnel_id"`
 	AttachedBy      string `json:"attached_by"`
 	AttachedAt      int64  `json:"Attached_at"`
-	// BROKEN Enabled         bool   `json:"enabled"` //true/false: true => Enforced; false => Permissive mode
+	Enabled         bool   `json:"enabled"`
 }
 
 type PolicyAttachmentPost struct {
@@ -22,7 +32,13 @@ type PolicyResponse struct {
 	ErrorCode        int                  `json:"error_code"`
 	ErrorDescription string               `json:"error_description"`
 	Data             PolicyAttachmentInfo `json:"data"`
-	Count            int                  `json:"count"`
+}
+
+type GetPolicyResponse struct {
+	RequestId        string                  `json:"request_id"`
+	ErrorCode        int                     `json:"error_code"`
+	ErrorDescription string                  `json:"error_description"`
+	Data             GetPolicyAttachmentInfo `json:"data"`
 }
 
 // ServiceTunnelInfo used to send data to shield over websocket from restapi
