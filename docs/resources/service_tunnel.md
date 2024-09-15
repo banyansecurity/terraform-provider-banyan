@@ -127,25 +127,65 @@ In this example an access tier is configured to tunnel `10.10.0.0/16`. A service
 
 ### Optional
 
-- `access_tier_group` (String) Name of the access_tier group which the service tunnel should be associated with
-- `access_tiers` (Set of String) Names of the access_tiers which the service tunnel should be associated with
-- `applications_exclude` (Set of String) Specifies the applications ids that should be excluded in the tunnel, ex: 633301ab-fd20-439b-b5ae-47153ec7fbf2
-- `applications_include` (Set of String) Specifies the applications ids that should be included in the tunnel, ex: 905a72d3-6216-4ffc-ad18-db1593782915
 - `autorun` (Boolean) Autorun for the service, if set true service would autorun on the app
-- `cluster` (String, Deprecated) (Depreciated) Sets the cluster / shield for the service
-- `connectors` (Set of String) Names of the connectors which the service tunnel should be associated with
 - `description` (String) Description of the service tunnel
 - `description_link` (String) Link shown to the end user of the banyan app for this service
 - `lock_autorun` (Boolean) Lock autorun for the service, if set true service tunnel will be always autorun. end user cannot set it off
-- `public_cidrs_exclude` (Set of String) Specifies public IP addresses in CIDR notation that should be excluded from the tunnel, ex: 8.8.12.0/24.
-- `public_cidrs_include` (Set of String) Specifies public IP addresses in CIDR notation that should be included in the tunnel, ex: 8.8.0.0/16.
-- `public_domains_exclude` (Set of String) Specifies the domains that should be that should be excluded from the tunnel, ex: zoom.us
-- `public_domains_include` (Set of String) Specifies the domains that should be that should be included in the tunnel, ex: cnn.com
-- `public_traffic_tunnel_via_access_tier` (String) Access Tier to be used to tunnel through public traffic
+- `name_resolution` (Block Set, Max: 1) Private Search Domains (see [below for nested schema](#nestedblock--name_resolution))
+- `peer_access_tiers` (Block Set) Add a network that will be accessible via this Service Tunnel. (see [below for nested schema](#nestedblock--peer_access_tiers))
+- `policy_enforcing` (Boolean) Policy Enforcing / Permissive
 
 ### Read-Only
 
 - `id` (String) ID of the service tunnel key in Banyan
+
+<a id="nestedblock--name_resolution"></a>
+### Nested Schema for `name_resolution`
+
+Optional:
+
+- `dns_search_domains` (List of String)
+- `name_servers` (List of String)
+
+
+<a id="nestedblock--peer_access_tiers"></a>
+### Nested Schema for `peer_access_tiers`
+
+Optional:
+
+- `access_tier_group` (String) AccessTier group name
+- `access_tiers` (List of String)
+- `applications` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--peer_access_tiers--applications))
+- `cluster` (String) cluster name where access-tier belongs to
+- `connectors` (List of String)
+- `public_cidrs` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--peer_access_tiers--public_cidrs))
+- `public_domains` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--peer_access_tiers--public_domains))
+
+<a id="nestedblock--peer_access_tiers--applications"></a>
+### Nested Schema for `peer_access_tiers.applications`
+
+Optional:
+
+- `exclude` (List of String)
+- `include` (List of String)
+
+
+<a id="nestedblock--peer_access_tiers--public_cidrs"></a>
+### Nested Schema for `peer_access_tiers.public_cidrs`
+
+Optional:
+
+- `exclude` (List of String)
+- `include` (List of String)
+
+
+<a id="nestedblock--peer_access_tiers--public_domains"></a>
+### Nested Schema for `peer_access_tiers.public_domains`
+
+Optional:
+
+- `exclude` (List of String)
+- `include` (List of String)
 ## Import
 Import is supported using the following syntax:
 ```shell
