@@ -76,8 +76,10 @@ func TestAccConnector_tunnel(t *testing.T) {
 					resource "banyan_service_tunnel" "example" {
 						name              = "%s"
 						description       = "realdescription"
-						connectors        = [banyan_connector.example.name]
-                        policy            = banyan_policy_tunnel.example.id
+						peer_access_tiers {
+							connectors        = [banyan_connector.example.name]
+                        }
+						policy            = banyan_policy_tunnel.example.id
 					}
 					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(

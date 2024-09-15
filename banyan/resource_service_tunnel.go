@@ -69,7 +69,6 @@ func TunnelSchema() (s map[string]*schema.Schema) {
 				Schema: map[string]*schema.Schema{
 					"cluster": {
 						Type:        schema.TypeString,
-						Computed:    true,
 						Optional:    true,
 						Description: "cluster name where access-tier belongs to",
 					},
@@ -449,10 +448,6 @@ func expandPeerAccessTiers(d *schema.ResourceData) (peers []servicetunnel.PeerAc
 
 		}
 
-		if len(peer.Connectors) > 0 {
-			peer.AccessTiers = []string{"*"}
-		}
-
 		atsRaw, ok := eachPeerAccessTier["access_tiers"]
 		// Ignore access_tier if set if there is connector set and set as {*} as it would be a global edge access_tier
 		if ok && len(peer.Connectors) == 0 {
@@ -467,6 +462,8 @@ func expandPeerAccessTiers(d *schema.ResourceData) (peers []servicetunnel.PeerAc
 					peer.AccessTiers = append(peer.AccessTiers, eachAtString)
 				}
 			}
+		} else if len(peer.Connectors) > 0 {
+			peer.AccessTiers = []string{"*"}
 		}
 
 		if atGroupRaw, ok := eachPeerAccessTier["access_tier_group"]; ok {
@@ -490,7 +487,13 @@ func expandPeerAccessTiers(d *schema.ResourceData) (peers []servicetunnel.PeerAc
 				err = fmt.Errorf("unable to parse cluster")
 				return
 			}
-			peer.Cluster = clusterName
+			if clusterName != "" {
+				peer.Cluster = clusterName
+			}
+		}
+
+		if len(peer.Connectors) > 0 && peer.Cluster == "" {
+			peer.Cluster = "global-edge"
 		}
 
 		if publicCIDRsRaw, ok := eachPeerAccessTier["public_cidrs"]; ok {
@@ -580,7 +583,8 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, spec servicetunnel.Spec) (
 	flattened := make([]interface{}, 0)
 	for _, eachPeerAccessTier := range spec.PeerAccessTiers {
 		eachPeerAccessTierMap := make(map[string]interface{})
-		if len(eachPeerAccessTier.AccessTiers) > 0 {
+		// if connectors are set access_tiers are inferred to be *
+		if len(eachPeerAccessTier.AccessTiers) > 0 && eachPeerAccessTier.AccessTiers[0] != "*" {
 			eachPeerAccessTierMap["access_tiers"] = eachPeerAccessTier.AccessTiers
 		}
 		if len(eachPeerAccessTier.Connectors) > 0 {
@@ -589,7 +593,8 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, spec servicetunnel.Spec) (
 		if eachPeerAccessTier.AccessTierGroup != "" {
 			eachPeerAccessTierMap["access_tier_group"] = eachPeerAccessTier.AccessTierGroup
 		}
-		if eachPeerAccessTier.Cluster != "" {
+		// set cluster only if not global-edge as global edge is auto set.
+		if eachPeerAccessTier.Cluster != "" && eachPeerAccessTier.Cluster != "global-edge" {
 			eachPeerAccessTierMap["cluster"] = eachPeerAccessTier.Cluster
 		}
 		if eachPeerAccessTier.PublicCIDRs != nil {
