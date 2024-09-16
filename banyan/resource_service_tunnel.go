@@ -615,12 +615,13 @@ func flattenServiceTunnelSpec(d *schema.ResourceData, spec servicetunnel.Spec) (
 			applications := make(map[string]interface{})
 			applications["include"] = eachPeerAccessTier.Applications.Include
 			applications["exclude"] = eachPeerAccessTier.Applications.Exclude
-			eachPeerAccessTierMap["applications"] = applications
+			eachPeerAccessTierMap["applications"] = []map[string]interface{}{applications}
 		}
 		if len(eachPeerAccessTierMap) > 0 {
 			flattened = append(flattened, eachPeerAccessTierMap)
 		}
 	}
+
 	err = d.Set("network_settings", flattened)
 	if err != nil {
 		return err
