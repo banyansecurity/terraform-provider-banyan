@@ -316,7 +316,7 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_tls_insecure", svc.CreateServiceSpec.Spec.BackendTarget.TLS)
+	err = d.Set("backend_tls_insecure", svc.CreateServiceSpec.Spec.BackendTarget.TLSInsecure)
 	if err != nil {
 		return diag.FromErr(err)
 	}
