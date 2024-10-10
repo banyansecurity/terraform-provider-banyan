@@ -94,7 +94,7 @@ type Info struct {
 type Metadata struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
-	Description string `description`
+	Description string `json:"description"`
 }
 
 type Spec struct {
