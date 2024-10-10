@@ -92,6 +92,7 @@ resource "banyan_policy_tunnel" "anyone-high" {
 - `debug_shield_timeout` (Number) If Shield is not available, policies will be treated as if they are permissive. Zero means this is disabled.
 - `debug_use_rsa` (Boolean) Netagent will generate RSA instead of ECDSA keys
 - `debug_visibility_only` (Boolean) Enable or disable visibility mode. If on, Netagent will not do policy enforcement on inbound traffic
+- `description` (String) description of an access tier
 - `disable_snat` (Boolean) Disable Source Network Address Translation (SNAT)
 - `enable_hsts` (Boolean) If enabled, Banyan will send the HTTP Strict-Transport-Security response header
 - `event_key_rate_limiting` (Boolean) Enable rate limiting of Access Event generation based on a credit-based rate control mechanism
