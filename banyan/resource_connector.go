@@ -68,6 +68,11 @@ func resourceConnector() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "description of connector",
+			},
 		},
 	}
 }
@@ -85,6 +90,7 @@ func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
 		Metadata: satellite.Metadata{
 			Name:        d.Get("name").(string),
 			DisplayName: d.Get("name").(string),
+			Description: d.Get("description").(string),
 		},
 		Spec: satellite.Spec{
 			APIKeyID: d.Get("api_key_id").(string),
@@ -137,6 +143,11 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 	err = d.Set("cluster", "global-edge")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("description", sat.Description)
 	if err != nil {
 		return diag.FromErr(err)
 	}
