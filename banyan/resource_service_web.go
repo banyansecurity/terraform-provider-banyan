@@ -286,6 +286,11 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "access tier group which is associated with service",
 		},
+		"post_auth_redirect_path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "redirect the user to the following path after authentication",
+		},
 	}
 	return
 }
@@ -373,6 +378,11 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		if err != nil {
 			return diag.FromErr(err)
 		}
+	}
+
+	err = d.Set("post_auth_redirect_path", svc.CreateServiceSpec.Spec.HTTPSettings.OIDCSettings.PostAuthRedirectPath)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 	return
 }
@@ -602,7 +612,7 @@ func expandWebOIDCSettings(d *schema.ResourceData) (oidcSettings service.OIDCSet
 		Enabled:                         true,
 		ServiceDomainName:               fmt.Sprintf("https://%s", d.Get("domain").(string)),
 		APIPath:                         "",
-		PostAuthRedirectPath:            "",
+		PostAuthRedirectPath:            d.Get("post_auth_redirect_path").(string),
 		SuppressDeviceTrustVerification: d.Get("suppress_device_trust_verification").(bool),
 	}
 	return
