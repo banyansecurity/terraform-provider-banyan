@@ -286,6 +286,13 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "access tier group which is associated with service",
 		},
+		"tls_sni": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 	}
 	return
 }
@@ -374,6 +381,11 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 			return diag.FromErr(err)
 		}
 	}
+
+	err = d.Set("tls_sni", svc.CreateServiceSpec.Spec.Attributes.TLSSNI)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 
@@ -447,8 +459,11 @@ func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes,
 	if err != nil {
 		return
 	}
+
+	TLSSNI := expandTLSSNIs(d)
+
 	attributes = service.Attributes{
-		TLSSNI:            []string{d.Get("domain").(string)},
+		TLSSNI:            TLSSNI,
 		FrontendAddresses: expandWebFrontendAddresses(d),
 		HostTagSelector:   hostTagSelector,
 		DisablePrivateDns: d.Get("disable_private_dns").(bool),
@@ -479,6 +494,15 @@ func expandWebBackend(d *schema.ResourceData) (backend service.Backend) {
 
 func expandBackendWhitelist(d *schema.ResourceData) []string {
 	itemsRaw := d.Get("whitelist").([]interface{})
+	items := make([]string, len(itemsRaw))
+	for i, raw := range itemsRaw {
+		items[i] = raw.(string)
+	}
+	return items
+}
+
+func expandTLSSNIs(d *schema.ResourceData) []string {
+	itemsRaw := d.Get("tls_sni").([]interface{})
 	items := make([]string, len(itemsRaw))
 	for i, raw := range itemsRaw {
 		items[i] = raw.(string)
