@@ -290,6 +290,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "redirect the user to the following path after authentication",
+			Default:     "/",
 		},
 	}
 	return
