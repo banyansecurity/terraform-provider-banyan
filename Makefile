@@ -1,4 +1,4 @@
-SHELL := bash
+SHELL := bash 
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
 .DELETE_ON_ERROR:
