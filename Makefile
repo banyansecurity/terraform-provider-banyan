@@ -8,11 +8,11 @@ MAKEFLAGS += --no-builtin-rules
 #Constants
 ARTIFACT_NAME = terraform-provider-banyan
 
-HOSTNAME=terraform.local
-NAMESPACE=local
+HOSTNAME=github.com
+NAMESPACE=banyansecurity
 NAME=banyan
-OS_ARCH=linux_amd64
-VERSION=1.1.1
+OS_ARCH=darwin_amd64
+VERSION=1.1.0
 
 # ifeq ($(origin .RECIPEPREFIX), undefined)
 #   $(error This Make does not support .RECIPEPREFIX. Please use GNU Make 4.0 or later)
