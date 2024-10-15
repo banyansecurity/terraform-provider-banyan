@@ -382,10 +382,14 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		}
 	}
 
-	err = d.Set("tls_sni", svc.CreateServiceSpec.Spec.Attributes.TLSSNI)
-	if err != nil {
-		return diag.FromErr(err)
+	TLSSNI := d.Get("tls_sni")
+	if TLSSNI != nil {
+		err = d.Set("tls_sni", expandTLSSNIs(d))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
+
 	return
 }
 
@@ -461,6 +465,14 @@ func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes,
 	}
 
 	TLSSNI := expandTLSSNIs(d)
+	if len(TLSSNI) != 0 {
+		err = d.Set("tls_sni", TLSSNI)
+		if err != nil {
+			return
+		}
+	} else {
+		TLSSNI = append(TLSSNI, d.Get("domain").(string))
+	}
 
 	attributes = service.Attributes{
 		TLSSNI:            TLSSNI,
