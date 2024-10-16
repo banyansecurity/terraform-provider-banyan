@@ -3,12 +3,13 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -70,6 +71,20 @@ func attachPolicyToService(d *schema.ResourceData, c *client.Holder) (err error)
 		IsEnabled:      true,
 		Enabled:        "TRUE",
 	}
+
+	// policy is enforcing by default if this field is set to false
+	// policy is considered as permissive
+	policyEnabled := d.Get("policy_enforcing").(bool)
+	if !policyEnabled {
+		body.Enabled = "FALSE"
+
+		//set field state
+		err = d.Set("policy_enforcing", policyEnabled)
+		if err != nil {
+			return
+		}
+	}
+
 	pa, err := c.PolicyAttachment.Create(policyID, body)
 	if err != nil {
 		return

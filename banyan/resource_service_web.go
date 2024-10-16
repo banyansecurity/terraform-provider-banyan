@@ -286,6 +286,12 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "access tier group which is associated with service",
 		},
+		"policy_enforcing": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "mode in which policy should be. If this is true policy is in enforcing mode else policy is in Permissive mode",
+		},
 	}
 	return
 }
