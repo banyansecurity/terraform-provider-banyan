@@ -286,18 +286,19 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "access tier group which is associated with service",
 		},
-"tls_sni": {
+		"tls_sni": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
+		},
 		"post_auth_redirect_path": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "redirect the user to the following path after authentication",
 			Default:     "/",
-    },
+		},
 	}
 	return
 }
