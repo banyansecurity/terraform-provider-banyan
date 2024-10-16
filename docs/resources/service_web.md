@@ -117,6 +117,7 @@ resource "banyan_service_web" "example-service" {
 - `letsencrypt` (Boolean) Use a Public CA-issued server certificate instead of a Private CA-issued one
 - `policy` (String) Policy ID to be attached to this service
 - `port` (Number) The external-facing port for this service
+- `post_auth_redirect_path` (String) redirect the user to the following path after authentication
 - `service_account_access` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--service_account_access))
 - `suppress_device_trust_verification` (Boolean) suppress_device_trust_verification disables Device Trust Verification for a service if set to true
 - `whitelist` (List of String) whitelist is an optional section that indicates the allowed names for the backend workload instance. If this field is populated, then the backend name must match at least one entry in this field list to establish connection with the backend service.The names in this list are allowed to start with the wildcard character "*" to match more than one backend name. This field is used generally with http_connect=false. For all http_connect=true cases, or where more advanced backend defining patterns are required, use allow_patterns.

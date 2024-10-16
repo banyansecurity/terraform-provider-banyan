@@ -64,7 +64,7 @@
             "oidc_settings": {
                 "enabled": true,
                 "service_domain_name": "https://test-web-at.bar.com",
-                "post_auth_redirect_path": "",
+                "post_auth_redirect_path": "/",
                 "api_path": "",
                 "trust_callbacks": null,
                 "suppress_device_trust_verification": false
