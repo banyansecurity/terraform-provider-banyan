@@ -69,20 +69,11 @@ func attachPolicyToService(d *schema.ResourceData, c *client.Holder) (err error)
 		AttachedToID:   d.Get("id").(string),
 		AttachedToType: "service",
 		IsEnabled:      true,
-		Enabled:        "TRUE",
 	}
 
-	// policy is enforcing by default if this field is set to false
-	// policy is considered as permissive
-	policyEnabled := d.Get("policy_enforcing").(bool)
-	if !policyEnabled {
-		body.Enabled = "FALSE"
-
-		//set field state
-		err = d.Set("policy_enforcing", policyEnabled)
-		if err != nil {
-			return
-		}
+	policyEnforcing := d.Get("policy_enforcing")
+	if policyEnforcing != nil {
+		body.Enabled = boolToString(policyEnforcing.(bool))
 	}
 
 	pa, err := c.PolicyAttachment.Create(policyID, body)
@@ -108,4 +99,11 @@ func resourceServiceUpdate(svc service.CreateService, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	return
+}
+
+func boolToString(boolValue bool) string {
+	if boolValue {
+		return "TRUE"
+	}
+	return "FALSE"
 }
