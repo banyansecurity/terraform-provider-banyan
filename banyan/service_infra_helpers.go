@@ -2,11 +2,12 @@ package banyan
 
 import (
 	"fmt"
-	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/banyansecurity/terraform-banyan-provider/client"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -112,15 +113,26 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	// set policy for service
-	policy, err := c.Service.GetPolicyForService(svc.ServiceID)
+	policyInfo, err := c.PolicyAttachment.Get(svc.ServiceID, "service")
+	if err != nil {
+		return
+	}
+
+	err = d.Set("policy", policyInfo.PolicyID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("policy", policy.ID)
+
+	policyEnforcing := false
+	if strings.EqualFold("TRUE", policyInfo.Enabled) {
+		policyEnforcing = true
+	}
+
+	err = d.Set("policy_enforcing", policyEnforcing)
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
 	d.SetId(d.Id())
 	log.Printf("[INFO] Read service %s", d.Id())
 	return

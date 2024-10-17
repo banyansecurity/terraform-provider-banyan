@@ -87,6 +87,7 @@ resource "banyan_service_tcp" "example" {
   domain      = "%s-tcp.corp.com"
   backend_domain = "%s-tcp.internal"
   backend_port = 5673
+  policy_enforcing = false
 }
 `, name, name, name)
 }
@@ -197,7 +198,7 @@ func testAccService_tcp_create_json(name string) string {
                         "paths": [],
                         "mandatory_headers": []
                     }
-                ]                
+                ]
             },
             "headers": {}
         },
@@ -240,6 +241,7 @@ resource "banyan_service_tcp" "example" {
   backend_domain = ""
   backend_port = 0
   http_connect = true
+  policy_enforcing = false
   allow_patterns {
 	  ports {
          port_list = ["8443", "8444", "8445"]
@@ -375,7 +377,7 @@ func testAccService_tcp_httpconn_create_json(name string) string {
                         "paths": [],
                         "mandatory_headers": []
                     }
-                ]                
+                ]
             },
             "headers": {}
         },
@@ -383,4 +385,102 @@ func testAccService_tcp_httpconn_create_json(name string) string {
     }
 }
 `, name, name, name, name)
+}
+
+func TestAccTCPService_basic(t *testing.T) {
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			//test case with policy enforce
+			{
+				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.example.com"
+						api_key_id = banyan_api_key.example.id
+					}
+
+					resource "banyan_policy_infra" "example" {
+						name        = "%s"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+
+					resource "banyan_service_tcp" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						access_tier 	  = banyan_accesstier.example.name
+						domain            = "test-k8s.corp.com"
+						policy            = banyan_policy_infra.example.id
+                        backend_domain    = "10.1.34.54"
+                        backend_port      = 3389
+					}
+					`, rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_service_tcp.example", "name", rName),
+				),
+			},
+			{
+				ResourceName:      "banyan_service_tcp.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// test case without policy enforcing
+			{
+				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.example.com"
+						api_key_id = banyan_api_key.example.id
+					}
+
+					resource "banyan_policy_infra" "example" {
+						name        = "%s"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+
+					resource "banyan_service_tcp" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						access_tier 	  = banyan_accesstier.example.name
+						domain            = "test-k8s.corp.com"
+						policy            = banyan_policy_infra.example.id
+                        backend_domain    = "10.1.34.54"
+                        backend_port      = 3389
+					}
+					`, rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_service_tcp.example", "name", rName),
+				),
+			},
+			{
+				ResourceName:      "banyan_service_tcp.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }

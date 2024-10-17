@@ -293,6 +293,11 @@ func AccessTierSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Timeout value for service discovery batch processing",
 		},
+		"description": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "description of an access tier",
+		},
 	}
 	return s
 }
@@ -383,6 +388,12 @@ func resourceAccessTierRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	err = d.Set("description", at.Description)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	err = flattenTunnelConfigSatellite(d, &at)
 	if err != nil {
 		return diag.FromErr(err)
@@ -431,6 +442,7 @@ func atFromState(d *schema.ResourceData, clusterName string) (accessTier accesst
 		DisableSnat:     d.Get("disable_snat").(bool),
 		SrcNATCIDRRange: d.Get("src_nat_cidr_range").(string),
 		ApiKeyId:        d.Get("api_key_id").(string),
+		Description:     d.Get("description").(string),
 	}
 	return at
 }
