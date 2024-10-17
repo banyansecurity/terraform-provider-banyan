@@ -24,7 +24,7 @@ type Client interface {
 	Delete(id string) (err error)
 	DetachPolicy(id string) (err error)
 	Disable(id string) (err error)
-	Enabled(id string) (err error)
+	Enable(id string) (err error)
 	GetPolicyForService(id string) (attachedPolicy policy.GetPolicy, err error)
 }
 

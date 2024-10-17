@@ -64,7 +64,7 @@ func (s *Service) Disable(id string) (err error) {
 	return
 }
 
-func (s *Service) Enabled(id string) (err error) {
+func (s *Service) Enable(id string) (err error) {
 	path := "api/v1/enable_registered_service"
 	err = s.updateService(id, path)
 	if err != nil {

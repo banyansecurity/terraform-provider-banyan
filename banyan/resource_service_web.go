@@ -290,7 +290,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "enable resource service",
+			Description: "enable / disable web service",
 		},
 	}
 	return
