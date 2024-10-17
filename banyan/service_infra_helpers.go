@@ -2,11 +2,12 @@ package banyan
 
 import (
 	"fmt"
-	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/banyansecurity/terraform-banyan-provider/client"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -94,6 +95,11 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	err = d.Set("disable_private_dns", svc.CreateServiceSpec.Spec.DisablePrivateDns)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("enable_private_dns", svc.CreateServiceSpec.Spec.EnabledPrivateDns)
 	if err != nil {
 		return diag.FromErr(err)
 	}

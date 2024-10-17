@@ -24,6 +24,7 @@ type Client interface {
 	Delete(id string) (err error)
 	DetachPolicy(id string) (err error)
 	Disable(id string) (err error)
+	Enabled(id string) (err error)
 	GetPolicyForService(id string) (attachedPolicy policy.GetPolicy, err error)
 }
 
@@ -94,6 +95,7 @@ type Attributes struct {
 	// deprecated: Addresses
 	Addresses         []string `json:"addresses,omitempty" toml:"addresses"`
 	DisablePrivateDns bool     `json:"disable_private_dns"`
+	EnabledPrivateDns bool     `json:"enable_private_dns"`
 }
 type FrontendAddress struct {
 	CIDR string `json:"cidr" toml:"cidr"`
