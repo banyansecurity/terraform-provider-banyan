@@ -291,6 +291,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Default:     true,
 			Description: "mode in which policy should be. If this is true policy is in enforcing mode else policy is in Permissive mode",
+		},
 		"tls_sni": {
 			Type:     schema.TypeList,
 			Optional: true,
@@ -303,7 +304,6 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "redirect the user to the following path after authentication",
 			Default:     "/",
-
 		},
 	}
 	return
