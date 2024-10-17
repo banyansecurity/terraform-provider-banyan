@@ -99,11 +99,6 @@ func resourceServiceInfraCommonRead(svc service.GetServiceSpec, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("enable_private_dns", svc.CreateServiceSpec.Spec.EnabledPrivateDns)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	err = d.Set("suppress_device_trust_verification", svc.CreateServiceSpec.Spec.SuppressDeviceTrustVerification)
 	if err != nil {
 		return diag.FromErr(err)
