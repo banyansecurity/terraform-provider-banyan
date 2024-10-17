@@ -102,6 +102,7 @@ func TestAccService_required_web(t *testing.T) {
 						backend_domain = "%s-web.internal"
 						backend_port = 8443
 						policy = banyan_policy_web.example.id
+						policy_enforcing = false
 					}
 					`, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
