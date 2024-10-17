@@ -53,10 +53,114 @@ func TestAccService_k8s(t *testing.T) {
 					  client_kube_cluster_name = "k8s-cluster"
 					  client_kube_ca_key = "k8scAk3yH3re"
 					  client_banyanproxy_listen_port = "9119"
+					  policy_enforcing = false
 					}
 					`, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistingService("banyan_service_k8s.example", &bnnService),
+				),
+			},
+			{
+				ResourceName:      "banyan_service_k8s.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccK8Service_basic(t *testing.T) {
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			//test case with policy enforce
+			{
+				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.example.com"
+						api_key_id = banyan_api_key.example.id
+					}
+
+					resource "banyan_policy_infra" "example" {
+						name        = "%s"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+
+					resource "banyan_service_k8s" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						access_tier 	  = banyan_accesstier.example.name
+						domain            = "test-k8s.corp.com"
+						policy            = banyan_policy_infra.example.id
+						policy_enforcing  = false
+						backend_dns_override_for_domain = "test-k8s.service"
+						client_kube_cluster_name = "k8s-cluster"
+						client_kube_ca_key = "k8scAk3yH3re"
+						client_banyanproxy_listen_port = "9119"
+					}
+					`, rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_service_k8s.example", "name", rName),
+				),
+			},
+			{
+				ResourceName:      "banyan_service_k8s.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// test case without policy enforcing
+			{
+				Config: fmt.Sprintf(`
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "access_tier"
+					}
+
+					resource banyan_accesstier "example" {
+						name = "%s"
+						address = "*.example.com"
+						api_key_id = banyan_api_key.example.id
+					}
+
+					resource "banyan_policy_infra" "example" {
+						name        = "%s"
+						description = "some tunnel policy description"
+						access {
+							roles       = ["ANY"]
+							trust_level = "High"
+						}
+					}
+
+					resource "banyan_service_k8s" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						access_tier 	  = banyan_accesstier.example.name
+						domain            = "test-k8s.corp.com"
+						policy            = banyan_policy_infra.example.id
+						backend_dns_override_for_domain = "test-k8s.service"
+						client_kube_cluster_name = "k8s-cluster"
+						client_kube_ca_key = "k8scAk3yH3re"
+						client_banyanproxy_listen_port = "9119"
+					}
+					`, rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_service_k8s.example", "name", rName),
 				),
 			},
 			{
