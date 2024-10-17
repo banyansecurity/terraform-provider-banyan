@@ -95,6 +95,7 @@ type Attributes struct {
 	// deprecated: Addresses
 	Addresses         []string `json:"addresses,omitempty" toml:"addresses"`
 	DisablePrivateDns bool     `json:"disable_private_dns"`
+	EnabledPrivateDns bool     `json:"enable_private_dns"`
 }
 type FrontendAddress struct {
 	CIDR string `json:"cidr" toml:"cidr"`

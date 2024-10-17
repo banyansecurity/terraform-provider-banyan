@@ -115,6 +115,12 @@ func SshSchema() map[string]*schema.Schema {
 			Default:     false,
 			Description: "By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn off Private DNS Override i.e. disable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.",
 		},
+		"enable_private_dns": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn on Private DNS Override i.e. enable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.",
+		},
 		"policy": {
 			Type:        schema.TypeString,
 			Optional:    true,

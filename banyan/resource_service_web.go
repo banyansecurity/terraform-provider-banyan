@@ -139,6 +139,12 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Default:     false,
 			Description: "By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn off Private DNS Override i.e. disable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.",
 		},
+		"enable_private_dns": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "By default, Private DNS Override will be set to true i.e disable_private_dns is false. On the device, the domain name will resolve over the service tunnel to the correct Access Tier's public IP address. If you turn on Private DNS Override i.e. enable_private_dns is set to true, you need to explicitly set a private DNS entry for the service domain name.",
+		},
 		"custom_http_headers": {
 			Type:        schema.TypeMap,
 			Optional:    true,
@@ -452,6 +458,7 @@ func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes,
 		FrontendAddresses: expandWebFrontendAddresses(d),
 		HostTagSelector:   hostTagSelector,
 		DisablePrivateDns: d.Get("disable_private_dns").(bool),
+		EnabledPrivateDns: d.Get("enable_private_dns").(bool),
 	}
 	return
 }
