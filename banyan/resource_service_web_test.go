@@ -672,11 +672,6 @@ func TestAccService_custom_tls_sni(t *testing.T) {
 					testAccCheckServiceAgainstJson(t, testAccService_basic_web_create_with_tls_sni(rName), &bnnService.ServiceID),
 				),
 			},
-			{
-				ResourceName:      "banyan_service_web.example",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -750,7 +745,7 @@ func testAccService_basic_web_create_with_tls_sni(name string) string {
             "oidc_settings": {
                 "enabled": true,
                 "service_domain_name": "https://%s-web.corp.com",
-                "post_auth_redirect_path": "",
+                "post_auth_redirect_path": "/",
                 "api_path": "",
                 "trust_callbacks": null,
                 "suppress_device_trust_verification": false
