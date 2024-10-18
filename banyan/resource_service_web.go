@@ -289,7 +289,7 @@ func WebSchema() (s map[string]*schema.Schema) {
 		"enable": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Default:     true,
 			Description: "enable / disable web service",
 		},
 	}
@@ -410,7 +410,7 @@ func toggleWebService(d *schema.ResourceData, m interface{}) (err error) {
 	log.Printf("[INFO] toggle web service %s", d.Id())
 	c := m.(*client.Holder)
 	if d.Get("enable").(bool) {
-		err = c.Service.Enabled(d.Id())
+		err = c.Service.Enable(d.Id())
 	} else {
 		err = c.Service.Disable(d.Id())
 	}
