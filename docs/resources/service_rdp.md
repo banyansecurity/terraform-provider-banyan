@@ -51,6 +51,7 @@ resource "banyan_service_rdp" "example" {
 - `http_connect` (Boolean) Indicates whether to use HTTP Connect request to derive the backend target address. Set to true for an RDP gateway
 - `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `policy` (String) Policy ID to be attached to this service
+- `policy_enforcing` (Boolean) mode in which policy should be. If this is true policy is in enforcing mode else policy is in Permissive mode
 - `port` (Number) The external-facing port for this service
 - `rdp_settings` (Set of String) allow admin to add custom rdp settings which app will add in rdp file
 - `suppress_device_trust_verification` (Boolean) suppress_device_trust_verification disables Device Trust Verification for a service if set to true

@@ -152,6 +152,12 @@ func SshSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     false,
 		},
+		"policy_enforcing": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "mode in which policy should be. If this is true policy is in enforcing mode else policy is in Permissive mode",
+		},
 		"allow_patterns": {
 			Type:     schema.TypeSet,
 			MaxItems: 1,

@@ -68,6 +68,7 @@ resource "banyan_service_tunnel" "example" {
 - `access_tiers` (Set of String) Name of the access tiers the connector will use to establish a secure dial-out connection. Will be set automatically if omitted.
 - `cidrs` (Set of String) Specifies the IPv4 address ranges of your private network in CIDR notation, ex: 192.168.1.0/24. Note that you can only specify private IP address ranges as defined in RFC-1918.
 - `cluster` (String) Cluster / shield name in Banyan. If not provided then the cluster will be set automatically
+- `description` (String) description of connector
 - `domains` (Set of String) Specifies the domains that should resolve at a DNS server in your private network, ex: mycompany.local.
 - `method` (String) The method used for the deployment of the satellite.
 - `platform` (String) The platform from which the satellite is deployed.
