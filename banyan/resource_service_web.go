@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -305,6 +306,12 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Description: "redirect the user to the following path after authentication",
 			Default:     "/",
 		},
+		"enable": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "enable / disable web service",
+		},
 	}
 	return
 }
@@ -394,6 +401,16 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		}
 	}
 
+	isWebServiceEnable := false
+	if strings.EqualFold(svc.Enabled, "TRUE") {
+		isWebServiceEnable = true
+	}
+
+	err = d.Set("enable", isWebServiceEnable)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	TLSSNI := d.Get("tls_sni")
 	if TLSSNI != nil {
 		err = d.Set("tls_sni", expandTLSSNIs(d))
@@ -416,7 +433,26 @@ func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m int
 	if diagnostics.HasError() {
 		return diagnostics
 	}
+
+	// enable/disable web service
+	err := toggleWebService(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	diagnostics = resourceServiceWebRead(ctx, d, m)
+	return
+}
+
+func toggleWebService(d *schema.ResourceData, m interface{}) (err error) {
+	log.Printf("[INFO] toggle web service %s", d.Id())
+	c := m.(*client.Holder)
+	if d.Get("enable").(bool) {
+		err = c.Service.Enable(d.Id())
+		return
+	}
+
+	err = c.Service.Disable(d.Id())
 	return
 }
 
