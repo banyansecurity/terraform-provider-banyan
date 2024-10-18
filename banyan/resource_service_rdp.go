@@ -211,6 +211,12 @@ func RdpSchema() map[string]*schema.Schema {
 			},
 			Description: "allow admin to add custom rdp settings which app will add in rdp file",
 		},
+		"policy_enforcing": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "mode in which policy should be. If this is true policy is in enforcing mode else policy is in Permissive mode",
+		},
 	}
 }
 
