@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -381,7 +382,12 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 		}
 	}
 
-	err = d.Set("enable", svc.Enabled)
+	isWebServiceEnable := false
+	if strings.EqualFold(svc.Enabled, "TRUE") {
+		isWebServiceEnable = true
+	}
+
+	err = d.Set("enable", isWebServiceEnable)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -411,9 +417,10 @@ func toggleWebService(d *schema.ResourceData, m interface{}) (err error) {
 	c := m.(*client.Holder)
 	if d.Get("enable").(bool) {
 		err = c.Service.Enable(d.Id())
-	} else {
-		err = c.Service.Disable(d.Id())
+		return
 	}
+
+	err = c.Service.Disable(d.Id())
 	return
 }
 
