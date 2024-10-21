@@ -5,7 +5,7 @@ import "encoding/json"
 type AuthUserProfile int
 
 type RegisteredDomainRequest struct {
-	RegisteredDomain
+	RegisteredDomainInfo
 	Profile AuthUserProfile `json:"-"`
 }
 
@@ -29,7 +29,7 @@ type RegisteredDomainInfo struct {
 
 type ACMECnameDetails struct {
 	DomainName string `json:"domain_name,omitempty"`
-	Cname      string `json:"acme_cname,omitempty"`
+	ACME_cname string `json:"acme_cname,omitempty"`
 }
 
 type RDResponse struct {

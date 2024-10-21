@@ -19,7 +19,7 @@ type Client interface {
 	Create(RDReqBody RegisteredDomainRequest) (resp RegisteredDomainInfo, err error)
 	Update(id string, RDReqBody RegisteredDomainRequest) (resp RegisteredDomainInfo, err error)
 	Delete(id string) (err error)
-	CreateRDChallenge(RDChallengeReqBody RegisteredDomainChallengeRequest) (resp RegisteredDomainChallengeInfo, err error)
+	CreateRDChallenge(RDChallengeReqBody RegisteredDomainChallengeRequest) (RegisteredDomainChallengeID string, err error)
 }
 
 func NewClient(restClient *restclient.Client) Client {
@@ -88,7 +88,7 @@ func (a *RegisteredDomain) Delete(id string) (err error) {
 	return
 }
 
-func (a *RegisteredDomain) CreateRDChallenge(reqBody RegisteredDomainChallengeRequest) (createResp RegisteredDomainChallengeInfo, err error) {
+func (a *RegisteredDomain) CreateRDChallenge(reqBody RegisteredDomainChallengeRequest) (RegisteredDomainChallengeID string, err error) {
 	body, err := json.Marshal(reqBody)
 	if err != nil {
 		return
@@ -105,7 +105,7 @@ func (a *RegisteredDomain) CreateRDChallenge(reqBody RegisteredDomainChallengeRe
 		return
 	}
 
-	createResp = j.Data
+	RegisteredDomainChallengeID = j.Data.ID
 
 	return
 }
