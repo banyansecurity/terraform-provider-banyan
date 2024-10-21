@@ -3,12 +3,13 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
-	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
-	"github.com/pkg/errors"
 	"html"
 	"log"
 	"net/url"
+
+	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
+	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
+	"github.com/pkg/errors"
 )
 
 const apiVersion = "api/v1"
@@ -55,6 +56,25 @@ func (s *Service) Get(id string) (service GetServiceSpec, err error) {
 
 func (s *Service) Disable(id string) (err error) {
 	path := "api/v1/disable_registered_service"
+	err = s.updateService(id, path)
+	if err != nil {
+		return
+	}
+	log.Printf("disabled service: %q", id)
+	return
+}
+
+func (s *Service) Enable(id string) (err error) {
+	path := "api/v1/enable_registered_service"
+	err = s.updateService(id, path)
+	if err != nil {
+		return
+	}
+	log.Printf("enabled service: %q", id)
+	return
+}
+
+func (s *Service) updateService(id, path string) (err error) {
 	myUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -64,9 +84,8 @@ func (s *Service) Disable(id string) (err error) {
 	myUrl.RawQuery = query.Encode()
 	_, err = s.restClient.DoPost(myUrl.String(), nil)
 	if err != nil {
-		err = fmt.Errorf("error disabling service %s", err)
+		err = fmt.Errorf("error while enable/disable service %s", err)
 	}
-	log.Printf("disabled service: %q", id)
 	return
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
@@ -286,6 +287,31 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Optional:    true,
 			Description: "access tier group which is associated with service",
 		},
+		"policy_enforcing": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "mode in which policy should be. If this is true policy is in enforcing mode else policy is in Permissive mode",
+		},
+		"tls_sni": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"post_auth_redirect_path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "redirect the user to the following path after authentication",
+			Default:     "/",
+		},
+		"enable": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "enable / disable web service",
+		},
 	}
 	return
 }
@@ -316,7 +342,7 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("backend_tls_insecure", svc.CreateServiceSpec.Spec.BackendTarget.TLS)
+	err = d.Set("backend_tls_insecure", svc.CreateServiceSpec.Spec.BackendTarget.TLSInsecure)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -374,6 +400,30 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 			return diag.FromErr(err)
 		}
 	}
+
+	isWebServiceEnable := false
+	if strings.EqualFold(svc.Enabled, "TRUE") {
+		isWebServiceEnable = true
+	}
+
+	err = d.Set("enable", isWebServiceEnable)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	TLSSNI := d.Get("tls_sni")
+	if TLSSNI != nil {
+		err = d.Set("tls_sni", expandTLSSNIs(d))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	err = d.Set("post_auth_redirect_path", svc.CreateServiceSpec.Spec.HTTPSettings.OIDCSettings.PostAuthRedirectPath)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	return
 }
 
@@ -383,7 +433,26 @@ func resourceServiceWebUpdate(ctx context.Context, d *schema.ResourceData, m int
 	if diagnostics.HasError() {
 		return diagnostics
 	}
+
+	// enable/disable web service
+	err := toggleWebService(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	diagnostics = resourceServiceWebRead(ctx, d, m)
+	return
+}
+
+func toggleWebService(d *schema.ResourceData, m interface{}) (err error) {
+	log.Printf("[INFO] toggle web service %s", d.Id())
+	c := m.(*client.Holder)
+	if d.Get("enable").(bool) {
+		err = c.Service.Enable(d.Id())
+		return
+	}
+
+	err = c.Service.Disable(d.Id())
 	return
 }
 
@@ -447,8 +516,19 @@ func expandWebAttributes(d *schema.ResourceData) (attributes service.Attributes,
 	if err != nil {
 		return
 	}
+
+	TLSSNI := expandTLSSNIs(d)
+	if len(TLSSNI) != 0 {
+		err = d.Set("tls_sni", TLSSNI)
+		if err != nil {
+			return
+		}
+	} else {
+		TLSSNI = append(TLSSNI, d.Get("domain").(string))
+	}
+
 	attributes = service.Attributes{
-		TLSSNI:            []string{d.Get("domain").(string)},
+		TLSSNI:            TLSSNI,
 		FrontendAddresses: expandWebFrontendAddresses(d),
 		HostTagSelector:   hostTagSelector,
 		DisablePrivateDns: d.Get("disable_private_dns").(bool),
@@ -479,6 +559,15 @@ func expandWebBackend(d *schema.ResourceData) (backend service.Backend) {
 
 func expandBackendWhitelist(d *schema.ResourceData) []string {
 	itemsRaw := d.Get("whitelist").([]interface{})
+	items := make([]string, len(itemsRaw))
+	for i, raw := range itemsRaw {
+		items[i] = raw.(string)
+	}
+	return items
+}
+
+func expandTLSSNIs(d *schema.ResourceData) []string {
+	itemsRaw := d.Get("tls_sni").([]interface{})
 	items := make([]string, len(itemsRaw))
 	for i, raw := range itemsRaw {
 		items[i] = raw.(string)
@@ -602,7 +691,7 @@ func expandWebOIDCSettings(d *schema.ResourceData) (oidcSettings service.OIDCSet
 		Enabled:                         true,
 		ServiceDomainName:               fmt.Sprintf("https://%s", d.Get("domain").(string)),
 		APIPath:                         "",
-		PostAuthRedirectPath:            "",
+		PostAuthRedirectPath:            d.Get("post_auth_redirect_path").(string),
 		SuppressDeviceTrustVerification: d.Get("suppress_device_trust_verification").(bool),
 	}
 	return

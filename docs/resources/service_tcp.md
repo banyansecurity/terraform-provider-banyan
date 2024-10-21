@@ -52,6 +52,7 @@ resource "banyan_service_tcp" "example" {
 - `http_connect` (Boolean) Indicates to use HTTP Connect request to derive the backend target address.
 - `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `policy` (String) Policy ID to be attached to this service
+- `policy_enforcing` (Boolean) mode in which policy should be. If this is true policy is in enforcing mode else policy is in Permissive mode
 - `port` (Number) The external-facing port for this service
 - `suppress_device_trust_verification` (Boolean) suppress_device_trust_verification disables Device Trust Verification for a service if set to true
 

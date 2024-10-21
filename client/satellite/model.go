@@ -45,6 +45,7 @@ type SatelliteTunnelConfig struct {
 	Spec                string       `json:"spec"`
 	IpTables            string       `json:"ip_tables,omitempty"`
 	Domains             []string     `json:"domains"`
+	Description         string       `json:"description"`
 }
 
 type AccessTier struct {
@@ -93,6 +94,7 @@ type Info struct {
 type Metadata struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
+	Description string `json:"description"`
 }
 
 type Spec struct {

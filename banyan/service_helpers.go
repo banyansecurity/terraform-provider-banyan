@@ -3,12 +3,13 @@ package banyan
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
 	"github.com/banyansecurity/terraform-banyan-provider/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
@@ -68,8 +69,13 @@ func attachPolicyToService(d *schema.ResourceData, c *client.Holder) (err error)
 		AttachedToID:   d.Get("id").(string),
 		AttachedToType: "service",
 		IsEnabled:      true,
-		Enabled:        "TRUE",
 	}
+
+	policyEnforcing := d.Get("policy_enforcing")
+	if policyEnforcing != nil {
+		body.Enabled = boolToString(policyEnforcing.(bool))
+	}
+
 	pa, err := c.PolicyAttachment.Create(policyID, body)
 	if err != nil {
 		return
@@ -93,4 +99,11 @@ func resourceServiceUpdate(svc service.CreateService, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	return
+}
+
+func boolToString(boolValue bool) string {
+	if boolValue {
+		return "TRUE"
+	}
+	return "FALSE"
 }
