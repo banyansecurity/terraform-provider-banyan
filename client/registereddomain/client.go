@@ -2,6 +2,7 @@ package registereddomain
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 )
@@ -20,6 +21,7 @@ type Client interface {
 	Update(id string, RDReqBody RegisteredDomainRequest) (resp RegisteredDomainInfo, err error)
 	Delete(id string) (err error)
 	CreateRDChallenge(RDChallengeReqBody RegisteredDomainChallengeRequest) (RegisteredDomainChallengeID string, err error)
+	ValidateDomain(id string) (domainInfo RegisteredDomainInfo, err error)
 }
 
 func NewClient(restClient *restclient.Client) Client {
@@ -106,6 +108,18 @@ func (a *RegisteredDomain) CreateRDChallenge(reqBody RegisteredDomainChallengeRe
 	}
 
 	RegisteredDomainChallengeID = j.Data.ID
+
+	return
+}
+
+func (a *RegisteredDomain) ValidateDomain(id string) (domainInfo RegisteredDomainInfo, err error) {
+
+	path := fmt.Sprintf("%s/%s/%s/validate", apiVersion, registeredDomainComponent, id)
+
+	_, err = a.restClient.Create(apiVersion, registeredDomainComponent, nil, path)
+	if err != nil {
+		return
+	}
 
 	return
 }

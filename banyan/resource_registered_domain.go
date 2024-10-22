@@ -67,6 +67,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 	rdReqBody := rdFromState(d)
 
+	// if org is global edge create domain challenge first
 	if rdReqBody.ClusterName == constants.GlobalEdgeCluster {
 
 		challengeID, err := c.RegisteredDomain.CreateRDChallenge(registereddomain.RegisteredDomainChallengeRequest{
