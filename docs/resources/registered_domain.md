@@ -76,3 +76,9 @@ Two types of registered domain can be create
 - Type  : `CNAME`
 - Name  : use `cname_acme_setting_name` to get name of setting
 - Value : use `cname_acme_setting_value` to get value of setting
+
+
+After successful creation of DNS setting use the following resource to validate registered domain.\
+resource `banyan_validate_registered_domain` `validate` {\
+      domain_id = banyan_registered_domain.example.id\
+}
