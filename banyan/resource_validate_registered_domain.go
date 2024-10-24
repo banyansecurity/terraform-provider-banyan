@@ -10,7 +10,7 @@ import (
 
 func resourceValidateRegisteredDomain() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Registered domain resource allows for configuration of the registered domain API object",
+		Description:   "Registered domain validate resource allows to validate registered domain dns settings",
 		CreateContext: resourceValidateRegisteredDomainCreate,
 
 		// Skip Read, Update, and Delete by providing no-op functions

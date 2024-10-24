@@ -69,3 +69,15 @@ type RDChallengeResponse struct {
 	ErrorDescription string                        `json:"error_description"`
 	Data             RegisteredDomainChallengeInfo `json:"data"`
 }
+
+func mapChallengeInfo(respBody []byte) (challengeInfo RegisteredDomainChallengeInfo, err error) {
+	var j RDChallengeResponse
+	err = json.Unmarshal(respBody, &j)
+	if err != nil {
+		return
+	}
+
+	challengeInfo = j.Data
+
+	return
+}

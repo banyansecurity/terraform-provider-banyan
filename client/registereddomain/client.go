@@ -21,6 +21,7 @@ type Client interface {
 	Update(id string, RDReqBody RegisteredDomainRequest) (resp RegisteredDomainInfo, err error)
 	Delete(id string) (err error)
 	CreateRDChallenge(RDChallengeReqBody RegisteredDomainChallengeRequest) (RegisteredDomainChallengeID string, err error)
+	GetRDChallenge(id string) (getResp RegisteredDomainChallengeInfo, err error)
 	ValidateDomain(id string) (domainInfo RegisteredDomainInfo, err error)
 }
 
@@ -117,6 +118,20 @@ func (a *RegisteredDomain) ValidateDomain(id string) (domainInfo RegisteredDomai
 	path := fmt.Sprintf("%s/%s/%s/validate", apiVersion, registeredDomainComponent, id)
 
 	_, err = a.restClient.Create(apiVersion, registeredDomainComponent, nil, path)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (a *RegisteredDomain) GetRDChallenge(id string) (rdChallengeInfo RegisteredDomainChallengeInfo, err error) {
+	getResp, err := a.restClient.Read(apiVersion, RegisteredDomainChallengeComponent, id, "")
+	if err != nil {
+		return
+	}
+
+	rdChallengeInfo, err = mapChallengeInfo(getResp)
 	if err != nil {
 		return
 	}
