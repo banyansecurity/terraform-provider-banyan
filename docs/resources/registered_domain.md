@@ -47,6 +47,15 @@ ref : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resource
 - `cname_setting_value`
 - `txt_setting_name`
 - `txt_setting_value`
+
+They are stored in `dns_setting` field of type slice of object.\
+```
+dns_setting : []{
+  type  string
+  name  string
+  value string
+}
+```
 ***
 Two types of registered domain can be create
 1. Wildcard domain
@@ -57,28 +66,55 @@ Two types of registered domain can be create
 - To create DNS setting it required type of setting , name and its value
 - If your registered domain cname has ip address value then create type `A` dns setting.
 - If cname has domain value then need to create `CNAME` type DNS setting
-- To get name and value of setting use `cname_setting_name` and `cname_setting_value`
+- Get name and value for these type of records from `dns_setting`.
 
 ### 2. for wild card domain
 - Follow same steps of non wildcard domain. Just need to create one more setting.
 - Type  : `CNAME`
-- Name  : use `cname_acme_setting_name` to get name of setting
-- Value : use `cname_acme_setting_value` to get value of setting
+- Get name and value for these type of records from `dns_setting`.
 
 ## If org has Global edge network
 ### 1. For non wildcard domain
 - Follow same steps as private edge create `A` type or `CNAME` type setting based on value of registered domain cname.
 - Create on more setting of type `TXT`
-- To get name and value of setting use `txt_setting_name` and `txt_setting_value` respectively.
+- Get name and value for these type of records from `dns_setting`.
 
 ### 2: for wild card domain
 - Follow global edge non wildcard domain dns setting steps just create on more setting
 - Type  : `CNAME`
-- Name  : use `cname_acme_setting_name` to get name of setting
-- Value : use `cname_acme_setting_value` to get value of setting
+- Get name and value for these type of records from `dns_setting`.
 
+***
+```
+#example to create registered domain
 
-After successful creation of DNS setting use the following resource to validate registered domain.\
-resource `banyan_validate_registered_domain` `validate` {\
-      domain_id = banyan_registered_domain.example.id\
+resource "banyan_registered_domain" "name1" {
+  name        = "myglobaledge.bnntest.com"
+  cluster     = "global-edge"
+  cname       = "gke-usw1-at01.infra.bnntest.com"
+  description = "test me ne6"
 }
+
+
+#before validating registered domain, need to create dns setting to your dns registrar using it terraform script
+#example of route53 terraform
+#init route53 provider then create region is not present then create setting using following resource
+#Check which types of records needs to be created.
+
+
+resource "aws_route53_record" "example_cname" {
+  zone_id = aws_route53_zone.example.zone_id
+  name     = banyan_registered_domain.name1.details[0].name
+  type     = banyan_registered_domain.name1.details[0].type
+  ttl      = 300  # Time to Live in seconds
+  records  = [banyan_registered_domain.name1.details[0].address]
+}
+
+
+#After successful creation of DNS setting use the following resource to #validate registered domain.
+
+resource `banyan_validate_registered_domain` `validate` {
+      domain_id = banyan_registered_domain.example.id
+}
+
+```
