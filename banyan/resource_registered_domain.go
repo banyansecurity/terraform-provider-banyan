@@ -2,6 +2,7 @@ package banyan
 
 import (
 	"context"
+	"net"
 	"strings"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -57,47 +58,29 @@ func RegisteredDomainSchema() map[string]*schema.Schema {
 			Default:     "",
 			ForceNew:    true,
 		},
-		"cname_setting_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "CNAME type dns setting name",
-			ForceNew:    true,
-			Computed:    true,
-		},
-		"cname_setting_value": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "CNAME type dns setting value ",
-			ForceNew:    true,
-			Computed:    true,
-		},
-		"txt_setting_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "TXT type dns setting name",
-			ForceNew:    true,
-			Computed:    true,
-		},
-		"txt_setting_value": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "TXT type dns setting value",
-			ForceNew:    true,
-			Computed:    true,
-		},
-		"cname_acme_setting_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "CNAME type acme dns setting name",
-			ForceNew:    true,
-			Computed:    true,
-		},
-		"cname_acme_setting_value": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "CNAME type acme dns setting value",
-			ForceNew:    true,
-			Computed:    true,
+		"dns_setting": {
+			Type:        schema.TypeList,
+			Computed:    true, // read only user cannot specify custom values. 
+			Description: "List of dns settings required for registered domain",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"type": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "type of DNS setting ex: CNAME , A or TXT",
+					},
+					"name": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "name of DNS setting ",
+					},
+					"value": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "value of the dns setting",
+					},
+				},
+			},
 		},
 	}
 
@@ -128,7 +111,12 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	err = setDNSSettingsValues(d, c, rd)
+	dnsSettings, err := flattenDnsSettings(d, c, rd)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("dns_setting", dnsSettings)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -180,7 +168,12 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	err = setDNSSettingsValues(d, c, resp)
+	dnsSettings, err := flattenDnsSettings(d, c, resp)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("dns_setting", dnsSettings)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -203,30 +196,18 @@ func resourceRegisteredDomainDelete(ctx context.Context, d *schema.ResourceData,
 	return
 }
 
-func setDNSSettingsValues(d *schema.ResourceData, c *client.Holder, resp registereddomain.RegisteredDomainInfo) (err error) {
+func flattenDnsSettings(d *schema.ResourceData, c *client.Holder, resp registereddomain.RegisteredDomainInfo) (dnsSettings []interface{}, err error) {
 
 	// cname acme is only created for wildcard domains
 	if strings.HasPrefix(resp.Name, "*.") {
-		err = d.Set("cname_acme_setting_name", resp.DomainName)
-		if err != nil {
-			return
+
+		dnsSetting := map[string]interface{}{
+			"type":  "CNAME",
+			"name":  resp.DomainName,
+			"value": resp.ACME_cname,
 		}
 
-		err = d.Set("cname_acme_setting_value", resp.ACME_cname)
-		if err != nil {
-			return
-		}
-
-	}
-
-	err = d.Set("cname_setting_name", resp.Name)
-	if err != nil {
-		return
-	}
-
-	err = d.Set("cname_setting_value", resp.Cname)
-	if err != nil {
-		return
+		dnsSettings = append(dnsSettings, dnsSetting)
 	}
 
 	// challenge is only created for global edge network.
@@ -238,17 +219,37 @@ func setDNSSettingsValues(d *schema.ResourceData, c *client.Holder, resp registe
 			return
 		}
 
-		err = d.Set("txt_setting_name", challengeInfo.Label)
-		if err != nil {
-			return
+		dnsSetting := map[string]interface{}{
+			"type":  "TXT",
+			"name":  challengeInfo.Label,
+			"value": challengeInfo.Value,
 		}
 
-		err = d.Set("txt_setting_value", challengeInfo.Value)
-		if err != nil {
-			return
-		}
+		dnsSettings = append(dnsSettings, dnsSetting)
 
 	}
 
+	dnsSetting := map[string]interface{}{
+		"name":  resp.Name,
+		"value": resp.Cname,
+	}
+
+	// if cname has ip value then need to create A type of dns setting else CNAME type
+	if isIPv4Address(resp.Cname) {
+		dnsSetting["type"] = "A"
+	} else {
+		dnsSetting["type"] = "CNAME"
+	}
+
+	dnsSettings = append(dnsSettings, dnsSetting)
+
 	return
+}
+
+func isIPv4Address(ip string) bool {
+	// Parse the IP address
+	parsedIP := net.ParseIP(ip)
+
+	// Check if it's a valid IPv4 address and not empty
+	return parsedIP != nil && strings.Contains(ip, ".") && parsedIP.To4() != nil
 }
