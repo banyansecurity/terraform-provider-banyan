@@ -10,6 +10,7 @@ import (
 	"github.com/banyansecurity/terraform-banyan-provider/client/appconfig"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policy"
 	"github.com/banyansecurity/terraform-banyan-provider/client/policyattachment"
+	"github.com/banyansecurity/terraform-banyan-provider/client/registereddomain"
 	"github.com/banyansecurity/terraform-banyan-provider/client/restclient"
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/banyansecurity/terraform-banyan-provider/client/satellite"
@@ -34,6 +35,7 @@ type Holder struct {
 	AccessTierGroup  accesstiergroup.Client
 	SCIM             scim.Client
 	AppConfig        appconfig.Client
+	RegisteredDomain registereddomain.Client
 }
 
 // NewClientHolder returns a new client which is used to perform operations on all Banyan resources.
@@ -57,6 +59,7 @@ func NewClientHolder(hostUrl string, apiKey string) (client *Holder, err error) 
 		AccessTierGroup:  accesstiergroup.NewClient(restClient),
 		SCIM:             scim.NewClient(restClient),
 		AppConfig:        appconfig.NewClient(restClient),
+		RegisteredDomain: registereddomain.NewClient(restClient),
 	}
 	return &c, err
 }
