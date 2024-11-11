@@ -41,13 +41,6 @@ Registered domain resource allows for configuration of the registered domain API
 for example - if registrar is `route53` use their terraform script.\
 ref : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record
 
-- `cname_acme_setting_name`
-- `cname_acme_setting_value`
-- `cname_setting_name`
-- `cname_setting_value`
-- `txt_setting_name`
-- `txt_setting_value`
-
 They are stored in `dns_setting` field of type slice of object.\
 ```
 dns_setting : []{
