@@ -53,7 +53,7 @@ func TestAccRegisteredDomain(t *testing.T) {
 						name        = "%s"
 						cluster     = "global-edge"
 						cname       = "gke-usw1-at01.infra.bnntest.com"
-						description = "test me ne6"
+						description = "unit test of registered domain"
 					}
 					`, rName),
 				Check: resource.ComposeTestCheckFunc(
