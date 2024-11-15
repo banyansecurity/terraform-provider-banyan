@@ -36,3 +36,53 @@ resource "banyan_registered_domain" "example" {
 }
 `, name)
 }
+
+func TestAccRegisteredDomain(t *testing.T) {
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// Creates the registered domain with the given terraform configuration and asserts that the registered is created
+			{
+				Config: fmt.Sprintf(`
+
+					resource "banyan_registered_domain" "example" {
+						name        = "%s"
+						cluster     = "global-edge"
+						cname       = "gke-usw1-at01.infra.bnntest.com"
+						description = "unit test of registered domain"
+					}
+					`, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_registered_domain.example", "name", rName),
+				),
+			},
+			{
+				ResourceName:      "banyan_registered_domain.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: fmt.Sprintf(`
+
+					resource "banyan_registered_domain" "example" {
+						name        = "%s"
+						cluster     = "cluster1"
+						cname       = "gke-usw1-at01.infra.bnntest.com"
+					}
+					`, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_registered_domain.example", "name", rName),
+				),
+			},
+			{
+				ResourceName:      "banyan_registered_domain.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
