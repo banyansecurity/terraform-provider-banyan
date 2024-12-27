@@ -430,14 +430,14 @@ func expandBackendAllowPatterns(d *schema.ResourceData, connect bool) (allowPatt
 	if err != nil {
 		diag.Errorf("Unable to read cidrs from allow_patterns")
 	}
-	if len(cidrs) > 1 {
+	if len(cidrs) > 0 {
 		allowPattern.CIDRs = cidrs
 	}
 	hostnames, err := getStringListWithinSetForKey(patterns.(*schema.Set), "hostnames")
 	if err != nil {
 		diag.Errorf("Unable to read hostnames from allow_patterns")
 	}
-	if len(hostnames) > 1 {
+	if len(hostnames) > 0 {
 		allowPattern.Hostnames = hostnames
 	}
 	ports, err := getBackendAllowPorts(patterns.(*schema.Set))
