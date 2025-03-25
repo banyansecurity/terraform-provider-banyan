@@ -39,7 +39,7 @@ resource "banyan_registered_domain" "example" {
 
 func TestAccRegisteredDomain(t *testing.T) {
 
-	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-%s.com", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,

@@ -60,7 +60,7 @@ func RegisteredDomainSchema() map[string]*schema.Schema {
 		},
 		"dns_setting": {
 			Type:        schema.TypeList,
-			Computed:    true, // read only user cannot specify custom values. 
+			Computed:    true, // read only user cannot specify custom values.
 			Description: "List of dns settings required for registered domain",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
@@ -100,7 +100,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 			RegisteredDomainName: rdReqBody.Name,
 		})
 		if err != nil {
-			return
+			return diag.FromErr(err)
 		}
 
 		rdReqBody.RegisteredDomainChallengeID = &challengeID
