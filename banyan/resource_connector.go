@@ -2,6 +2,8 @@ package banyan
 
 import (
 	"context"
+	"encoding/json"
+	"html"
 	"time"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
@@ -83,6 +85,11 @@ func resourceConnector() *schema.Resource {
 				Optional:    true,
 				Description: "description of connector",
 			},
+			"extended_network_access": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enables support for public IP addresses and allows more than 100 connectors per organization",
+			},
 		},
 	}
 }
@@ -116,6 +123,7 @@ func connectorFromState(d *schema.ResourceData) (info satellite.Info) {
 				Platform: d.Get("platform").(string),
 				Method:   d.Get("method").(string),
 			},
+			ExtendedNetworkAccess: expandExtendedNetworkAccess(d),
 		},
 	}
 	return spec
@@ -165,6 +173,11 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	err = setExtendedNetworkAccess(d, sat.Spec)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return
 }
 
@@ -195,4 +208,24 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, m inte
 	}
 	d.SetId("")
 	return
+}
+
+func expandExtendedNetworkAccess(d *schema.ResourceData) bool {
+	extendedNetworkAccess, exists := d.GetOk("extended_network_access")
+	if exists {
+		return extendedNetworkAccess.(bool)
+	}
+	return false
+}
+
+func setExtendedNetworkAccess(d *schema.ResourceData, spec string) error {
+	var specs satellite.Info
+	sSpec := html.UnescapeString(spec)
+	err := json.Unmarshal([]byte(sSpec), &specs)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("extended_network_access", specs.ExtendedNetworkAccess)
+	return err
 }
