@@ -56,7 +56,7 @@ func TestAccConnector_tunnel(t *testing.T) {
 						description       = "realdescription"
 						scope             = "satellite"
 					}
-					
+
 					resource "banyan_connector" "example" {
 						name           = "%s"
 						api_key_id     = banyan_api_key.example.id
@@ -144,4 +144,67 @@ resource "banyan_connector" "example" {
   api_key_id 		= resource.banyan_api_key.example.id
 }
 `, name, name)
+}
+
+func TestAccConnected_with_extended_network(t *testing.T) {
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// Creates the connector with the given terraform configuration and asserts that the connector is created
+			{
+				Config: fmt.Sprintf(`
+
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "satellite"
+					}
+
+					resource "banyan_connector" "example" {
+						name       			    = "%s"
+ 						api_key_id 			    = banyan_api_key.example.id
+  						cidrs					= ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  						extended_network_access = true
+					}
+					`, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_connector.example", "name", rName),
+				),
+			},
+			{
+				ResourceName:      "banyan_connector.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: fmt.Sprintf(`
+
+					resource "banyan_api_key" "example" {
+						name              = "%s"
+						description       = "realdescription"
+						scope             = "satellite"
+					}
+
+					resource "banyan_connector" "example" {
+						name       			    = "%s"
+ 						api_key_id 			    = banyan_api_key.example.id
+  						cidrs					= ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  						extended_network_access = false
+					}
+					`, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("banyan_connector.example", "name", rName),
+				),
+			},
+			{
+				ResourceName:      "banyan_connector.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }

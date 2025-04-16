@@ -105,6 +105,8 @@ type Spec struct {
 	DisableSnat     bool             `json:"disable_snat"`
 	Domains         []string         `json:"domains,omitempty"`
 	Deployment      *Deployment      `json:"deployment,omitempty"`
+
+	ExtendedNetworkAccess bool `json:"extended_network_access"`
 }
 
 type Deployment struct {

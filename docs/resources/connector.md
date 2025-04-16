@@ -70,6 +70,7 @@ resource "banyan_service_tunnel" "example" {
 - `cluster` (String) Cluster / shield name in Banyan. If not provided then the cluster will be set automatically
 - `description` (String) description of connector
 - `domains` (Set of String) Specifies the domains that should resolve at a DNS server in your private network, ex: mycompany.local.
+- `extended_network_access` (Boolean) Enables support for public IP addresses and allows more than 100 connectors per organization
 - `method` (String) The method used for the deployment of the satellite.
 - `platform` (String) The platform from which the satellite is deployed.
 
