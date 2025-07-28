@@ -120,8 +120,9 @@ type HTTPSettings struct {
 	// the key of the map is the header name, and the value is the header value you want.
 	// The header value may be constructed using Go template syntax, such as {{.Email}}
 	// referencing values in Banyan's JWT TrustToken.
-	Headers  map[string]string `json:"headers" toml:"headers"`
-	TokenLoc *TokenLocation    `json:"token_loc,omitempty" toml:"token_loc"`
+	Headers     map[string]string `json:"headers" toml:"headers"`
+	TokenLoc    *TokenLocation    `json:"token_loc,omitempty" toml:"token_loc"`
+	EnableHTTP2 bool              `json:"enable_http2,omitempty" toml:"enable_http2"`
 }
 
 type CustomTrustCookie struct {
