@@ -312,6 +312,12 @@ func WebSchema() (s map[string]*schema.Schema) {
 			Default:     true,
 			Description: "enable / disable web service",
 		},
+		"enable_http2": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "enable / disable http2 for web service",
+		},
 	}
 	return
 }
@@ -407,6 +413,11 @@ func resourceServiceWebRead(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	err = d.Set("enable", isWebServiceEnable)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("enable_http2", svc.CreateServiceSpec.Spec.HTTPSettings.EnableHTTP2)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -639,6 +650,7 @@ func expandWebHTTPSettings(d *schema.ResourceData) (httpSettings service.HTTPSet
 		Headers:           expandCustomHttpHeaders(d),
 		HTTPHealthCheck:   expandWebHTTPHealthCheck(),
 		TokenLoc:          expandWebTokenLoc(d),
+		EnableHTTP2:       expandEnableHTTP2(d),
 	}
 	return
 }
@@ -786,4 +798,12 @@ func flattenCustomTrustCookie(customTrustCookie *service.CustomTrustCookie) (fla
 		flattened = append(flattened, tl)
 	}
 	return
+}
+
+func expandEnableHTTP2(d *schema.ResourceData) bool {
+	autorun, exists := d.GetOk("enable_http2")
+	if exists {
+		return autorun.(bool)
+	}
+	return false
 }
