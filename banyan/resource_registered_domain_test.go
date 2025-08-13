@@ -31,7 +31,6 @@ func testAccRD_basic_create(name string) string {
 resource "banyan_registered_domain" "example" {
 	name        = "%s"
 	cluster     = "global-edge"
-	cname       = "gke-usw1-at01.infra.bnntest.com"
 	description = "test me new"
 }
 `, name)
@@ -52,7 +51,6 @@ func TestAccRegisteredDomain(t *testing.T) {
 					resource "banyan_registered_domain" "example" {
 						name        = "%s"
 						cluster     = "global-edge"
-						cname       = "gke-usw1-at01.infra.bnntest.com"
 						description = "unit test of registered domain"
 					}
 					`, rName),
