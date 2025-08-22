@@ -507,6 +507,7 @@ func expandWebServiceSpec(d *schema.ResourceData) (spec service.Spec) {
 		CertSettings: expandWebCertSettings(d),
 		HTTPSettings: expandWebHTTPSettings(d),
 		ClientCIDRs:  []service.ClientCIDRs{},
+		CorsEnabled:  d.Get("cors_enabled").(bool),
 	}
 	return
 }

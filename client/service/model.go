@@ -86,6 +86,7 @@ type Spec struct {
 	HTTPSettings `json:"http_settings" toml:"http_settings"`
 	ClientCIDRs  []ClientCIDRs `json:"client_cidrs" toml:"client_cidrs"`
 	TagSlice     `json:"tags,omitempty" toml:"tags"`
+	CorsEnabled  bool `json:"cors_enabled" toml:"cors_enabled"`
 }
 
 type Attributes struct {
