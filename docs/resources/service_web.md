@@ -113,6 +113,7 @@ resource "banyan_service_web" "example-service" {
 - `dns_overrides` (Map of String) dns_overrides is an optional section that specifies name-to-address or name-to-name mappings. Name-to-address mapping could be used instead of DNS lookup. Format is "FQDN: ip_address". Name-to-name mapping could be used to override one FQDN with the other. Format is "FQDN1: FQDN2" Example: name-to-address -> "internal.myservice.com" : "10.23.0.1"
  name-to-name    ->    "exposed.service.com" : "internal.myservice.com"
 - `enable` (Boolean) enable / disable web service
+- `enable_http2` (Boolean) enable / disable http2 for web service
 - `exemptions` (Block Set) (see [below for nested schema](#nestedblock--exemptions))
 - `icon` (String) Name of the icon which will be displayed to the end user. The icon names can be found in the UI in the service config
 - `letsencrypt` (Boolean) Use a Public CA-issued server certificate instead of a Private CA-issued one

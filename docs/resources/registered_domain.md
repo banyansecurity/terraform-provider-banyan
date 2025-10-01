@@ -18,11 +18,11 @@ Registered domain resource allows for configuration of the registered domain API
 ### Required
 
 - `cluster` (String) cluster name used to identify if cluster type is private edge or global edge
-- `cname` (String) CNAME of the access-tier
 - `name` (String) Name of the registered domain
 
 ### Optional
 
+- `cname` (String) CNAME of the access-tier
 - `description` (String) description of registered domain
 
 ### Read-Only

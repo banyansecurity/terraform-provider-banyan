@@ -47,7 +47,8 @@ func RegisteredDomainSchema() map[string]*schema.Schema {
 		},
 		"cname": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
+			Computed:    true,
 			Description: "CNAME of the access-tier",
 			ForceNew:    true,
 		},
@@ -136,7 +137,6 @@ func rdFromState(d *schema.ResourceData) registereddomain.RegisteredDomainReques
 			Description: d.Get("description").(string),
 		},
 	}
-
 }
 
 func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostic diag.Diagnostics) {
