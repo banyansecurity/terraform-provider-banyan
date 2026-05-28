@@ -2,10 +2,12 @@ package banyan
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/pkg/errors"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
+	"github.com/banyansecurity/terraform-banyan-provider/client/role"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -101,6 +103,20 @@ func dataSourceRoleSchema() (s map[string]*schema.Schema) {
 			Computed:    true,
 			Description: "Enforces whether the role requires an MDM to be present on the device",
 		},
+		"serial_numbers": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "List of Serial Numbers belonging to devices for the role",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"api_version": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "defines version of API to use v1/v2",
+			Default:     "v1",
+		},
 	}
 	return
 }
@@ -115,59 +131,60 @@ func dataSourceRole() *schema.Resource {
 
 func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	resp, err := c.Role.GetName(d.Get("name").(string))
-	if err != nil {
-		handleNotFoundError(d, err)
-		return
+
+	apiVersion := d.Get("api_version").(string)
+
+	var id, name, description string
+	var spec role.CreateRole
+
+	switch apiVersion {
+	case "v1":
+		resp, err := c.Role.GetName(d.Get("name").(string))
+		if err != nil {
+			handleNotFoundError(d, err)
+			return
+		}
+
+		id = resp.ID
+		name = resp.Name
+		description = resp.Description
+		spec = resp.UnmarshalledSpec
+
+	case "v2":
+		resp, err := c.RoleV2.GetByName(d.Get("name").(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = json.Unmarshal([]byte(resp.Spec), &spec)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		id = resp.ID
+		name = resp.Name
+		description = resp.Description
 	}
-	if resp.ID == "" {
-		err = errors.New("Could not find role with name: " + d.Get("name").(string))
+
+	if id == "" {
+		err := errors.New("Could not find role with name: " + d.Get("name").(string))
 		return diag.FromErr(err)
 	}
-	d.SetId(resp.ID)
-	err = d.Set("name", resp.Name)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("description", resp.Description)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("container_fqdn", resp.UnmarshalledSpec.Spec.ContainerFQDN)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("image", resp.UnmarshalledSpec.Spec.Image)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("repo_tag", resp.UnmarshalledSpec.Spec.RepoTag)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("user_group", resp.UnmarshalledSpec.Spec.UserGroup)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("email", resp.UnmarshalledSpec.Spec.Email)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("device_ownership", resp.UnmarshalledSpec.Spec.DeviceOwnership)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("platform", resp.UnmarshalledSpec.Spec.Platform)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("known_device_only", resp.UnmarshalledSpec.Spec.KnownDeviceOnly)
+
+	d.SetId(id)
+	err := d.Set("name", name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("mdm_present", resp.UnmarshalledSpec.Spec.MDMPresent)
+	err = d.Set("description", description)
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	err = role.SetRoleStateFromSpec(d, spec)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	return
 }

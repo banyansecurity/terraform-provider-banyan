@@ -2,6 +2,9 @@ package banyan
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"log"
 
 	"github.com/banyansecurity/terraform-banyan-provider/client"
 	"github.com/banyansecurity/terraform-banyan-provider/client/role"
@@ -127,6 +130,12 @@ func RoleSchema() (s map[string]*schema.Schema) {
 				Type: schema.TypeString,
 			},
 		},
+		"api_version": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "defines version of API to use v1/v2",
+			Default:     role.DefaultAPIVersion,
+		},
 	}
 	return
 }
@@ -142,7 +151,7 @@ func RoleFromState(d *schema.ResourceData) (r role.CreateRole) {
 			},
 		},
 		Kind:       "BanyanRole",
-		APIVersion: "rbac.banyanops.com/v1",
+		APIVersion: fmt.Sprintf("rbac.banyanops.com/%s", d.Get("api_version").(string)),
 		Type:       "origin",
 		Spec: role.Spec{
 			ContainerFQDN:   convertSchemaSetToStringSlice(d.Get("container_fqdn").(*schema.Set)),
@@ -164,89 +173,139 @@ func RoleFromState(d *schema.ResourceData) (r role.CreateRole) {
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	resp, err := c.Role.Create(RoleFromState(d))
-	if err != nil {
-		return diag.FromErr(err)
+
+	apiVersion := d.Get("api_version").(string)
+	var id string
+
+	switch apiVersion {
+	case "v1":
+		resp, err := c.Role.Create(RoleFromState(d))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		id = resp.ID
+	case "v2":
+		resp, err := c.RoleV2.CreateRole(RoleFromState(d))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		id = resp.ID
 	}
-	d.SetId(resp.ID)
+
+	d.SetId(id)
+
 	return
 }
 
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	resp, err := c.Role.Update(RoleFromState(d))
-	if err != nil {
-		return diag.FromErr(err)
+
+	apiVersion := d.Get("api_version").(string)
+	var id string
+
+	switch apiVersion {
+	case "v1":
+		resp, err := c.Role.Update(RoleFromState(d))
+		if err != nil {
+			log.Printf("[ERROR] API error: %v", err)
+			return diag.FromErr(err)
+		}
+		id = resp.ID
+	case "v2":
+		resp, err := c.RoleV2.UpdateRole(RoleFromState(d))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		id = resp.ID
 	}
-	d.SetId(resp.ID)
+
+	d.SetId(id)
+
 	return
 }
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	resp, err := c.Role.Get(d.Id())
-	if err != nil {
-		handleNotFoundError(d, err)
-		return
+
+	apiVersion := d.Get("api_version").(string)
+
+	var id, name, description string
+	var spec role.CreateRole
+
+	//when we import existing resource it doesn't use default value
+	if apiVersion == "" {
+		apiVersion = role.DefaultAPIVersion
 	}
-	d.SetId(resp.ID)
-	err = d.Set("name", resp.Name)
+
+	switch apiVersion {
+	case "v1":
+		resp, err := c.Role.Get(d.Id())
+		if err != nil {
+			handleNotFoundError(d, err)
+			return
+		}
+
+		id = resp.ID
+		name = resp.Name
+		description = resp.Description
+		spec = resp.UnmarshalledSpec
+
+	case "v2":
+		resp, err := c.RoleV2.GetRole(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = json.Unmarshal([]byte(resp.Spec), &spec)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		id = resp.ID
+		name = resp.Name
+		description = resp.Description
+	default:
+		err := fmt.Errorf("Invalid Version of API %s", apiVersion)
+		return diag.FromErr(err)
+	}
+
+	d.SetId(id)
+
+	err := d.Set("name", name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("description", resp.Description)
+	err = d.Set("description", description)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("container_fqdn", resp.UnmarshalledSpec.Spec.ContainerFQDN)
+
+	err = role.SetRoleStateFromSpec(d, spec)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("image", resp.UnmarshalledSpec.Spec.Image)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("repo_tag", resp.UnmarshalledSpec.Spec.RepoTag)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("user_group", resp.UnmarshalledSpec.Spec.UserGroup)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("email", resp.UnmarshalledSpec.Spec.Email)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("device_ownership", resp.UnmarshalledSpec.Spec.DeviceOwnership)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("platform", resp.UnmarshalledSpec.Spec.Platform)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("known_device_only", resp.UnmarshalledSpec.Spec.KnownDeviceOnly)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("mdm_present", resp.UnmarshalledSpec.Spec.MDMPresent)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("serial_numbers", resp.UnmarshalledSpec.Spec.SerialNumbers)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+
 	return
 }
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) (diagnostics diag.Diagnostics) {
 	c := m.(*client.Holder)
-	err := c.Role.Delete(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
+
+	apiVersion := d.Get("api_version").(string)
+
+	switch apiVersion {
+	case "v1":
+		err := c.Role.Delete(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	case "v2":
+		err := c.RoleV2.DeleteRole(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
+
 	d.SetId("")
 	return
 }

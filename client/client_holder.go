@@ -36,6 +36,7 @@ type Holder struct {
 	SCIM             scim.Client
 	AppConfig        appconfig.Client
 	RegisteredDomain registereddomain.Client
+	RoleV2           role.ClientV2
 }
 
 // NewClientHolder returns a new client which is used to perform operations on all Banyan resources.
@@ -60,6 +61,7 @@ func NewClientHolder(hostUrl string, apiKey string) (client *Holder, err error) 
 		SCIM:             scim.NewClient(restClient),
 		AppConfig:        appconfig.NewClient(restClient),
 		RegisteredDomain: registereddomain.NewClient(restClient),
+		RoleV2:           role.NewClientV2(restClient),
 	}
 	return &c, err
 }

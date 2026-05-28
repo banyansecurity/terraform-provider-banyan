@@ -190,6 +190,7 @@ func (r *Role) GetAll() (specs []GetRole, err error) {
 	if err != nil {
 		return
 	}
+
 	return
 }
 

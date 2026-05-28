@@ -69,9 +69,10 @@ func TestAccRole_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "banyan_role.acceptance",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "banyan_role.acceptance",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"api_version"},
 			},
 		},
 	})
@@ -96,9 +97,10 @@ func TestAccRole_complex(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "banyan_role.acceptance",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "banyan_role.acceptance",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"api_version"},
 			},
 			// Updates the same role with a different configuration and asserts that the same role was updated correctly
 			{
@@ -110,9 +112,10 @@ func TestAccRole_complex(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "banyan_role.acceptance",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "banyan_role.acceptance",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"api_version"},
 			},
 		},
 	})
@@ -206,4 +209,84 @@ resource "banyan_role" "acceptance" {
   serial_numbers = ["First"]
 }
 `, name)
+}
+
+func testAccRole_complex_createV2(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_role" "acceptance" {
+ name = %q
+  description = "realdescription"
+  container_fqdn = ["asdf.asdf"]
+  known_device_only = true
+  platform = ["macOS", "Android"]
+  user_group = ["group1"]
+  email = ["john@marsha.com"]
+  device_ownership = ["Corporate Dedicated", "Employee Owned"]
+  mdm_present = true
+  serial_numbers = ["First"]
+  api_version = "v2"
+}
+`, name)
+}
+
+// Returns terraform configuration for an updated version of the role with additional groups. Takes in custom name.
+func testAccRole_complex_updateV2(name string) string {
+	return fmt.Sprintf(`
+resource "banyan_role" "acceptance" {
+ name = %q
+  description = "realdescription"
+  container_fqdn = ["asdf.asdf"]
+  known_device_only = true
+  platform = ["macOS", "Android"]
+  user_group = ["group1", "group2"]
+  email = ["john@marsha.com"]
+  device_ownership = ["Corporate Dedicated", "Employee Owned"]
+  mdm_present = true
+  serial_numbers = ["First"]
+  api_version = "v2"
+}
+`, name)
+}
+
+func TestAccRole_complexV2(t *testing.T) {
+	var bnnRole role.GetRole
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoleDestroy(t, &bnnRole.ID),
+		Steps: []resource.TestStep{
+			// Creates the role with the given terraform configuration and asserts that the role is created
+			{
+				Config: testAccRole_complex_createV2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingRole("banyan_role.acceptance", &bnnRole),
+					resource.TestCheckResourceAttr("banyan_role.acceptance", "name", rName),
+					resource.TestCheckResourceAttrPtr("banyan_role.acceptance", "id", &bnnRole.ID),
+				),
+			},
+			{
+				ResourceName:            "banyan_role.acceptance",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"api_version"},
+			},
+			// Updates the same role with a different configuration and asserts that the same role was updated correctly
+			{
+				Config: testAccRole_complex_updateV2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistingRole("banyan_role.acceptance", &bnnRole),
+					testAccCheckRoleGroupsUpdated(t, &bnnRole, []string{"group1", "group2"}),
+					resource.TestCheckResourceAttrPtr("banyan_role.acceptance", "id", &bnnRole.ID),
+				),
+			},
+			{
+				ResourceName:            "banyan_role.acceptance",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"api_version"},
+			},
+		},
+	})
 }
