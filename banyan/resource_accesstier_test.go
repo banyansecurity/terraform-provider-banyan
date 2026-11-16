@@ -30,6 +30,7 @@ func TestAccAccessTier_required(t *testing.T) {
 						name = "%s"
 						address = "*.example.com"
 						api_key_id = banyan_api_key.example.id
+						cluster = "cluster1"
 					}
 					`, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -53,6 +54,7 @@ func TestAccAccessTier_required(t *testing.T) {
 						name = "%s"
 						address = "*.example.com"
 						api_key_id = banyan_api_key.example.id
+						cluster = "cluster1"
 					}
 					`, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -88,6 +90,7 @@ func TestAccAccessTier_optional(t *testing.T) {
 						name = "%s"
 						address = "*.example.com"
 						api_key_id = banyan_api_key.example.id
+						cluster = "cluster1"
 						tunnel_connector_port = 39103
 						tunnel_cidrs = ["10.0.2.0/16"]
 						tunnel_private_domains = ["test.com"]
@@ -119,6 +122,7 @@ func TestAccAccessTier_optional(t *testing.T) {
 						name = "%s"
 						address = "*.exampletwo.com"
 						api_key_id = banyan_api_key.example.id
+						cluster = "cluster1"
 						tunnel_connector_port = 39104
 						tunnel_cidrs = ["10.0.3.0/16"]
 						tunnel_private_domains = ["example.com"]

@@ -63,11 +63,11 @@ resource "banyan_policy_tunnel" "anyone-high" {
 
 - `address` (String) Public address of the access tier
 - `api_key_id` (String) ID of the API key which is scoped to access tier
+- `cluster` (String) Cluster / shield name in Banyan
 - `name` (String) Name of the access tier
 
 ### Optional
 
-- `cluster` (String) Cluster / shield name in Banyan. If not provided then the cluster will be chosen automatically
 - `console_log_level` (String) Controls verbosity of logs to console. Must be one of "ERR", "WARN", "INFO", "DEBUG"
 - `debug_address_transparency` (Boolean) Provide client address transparency
 - `debug_client_timeout` (Number) Client identification timeout

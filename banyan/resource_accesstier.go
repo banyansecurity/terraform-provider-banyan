@@ -341,13 +341,8 @@ func resourceAccessTierCreate(ctx context.Context, d *schema.ResourceData, m int
 	return
 }
 
-// automatically set the cluster unless it is specified
+// validates that the specified cluster exists for the org
 func setAccessTierCluster(c *client.Holder, d *schema.ResourceData) (clusterName string, err error) {
-	_, ok := d.GetOk("cluster")
-	if !ok {
-		clusterName, err = getFirstCluster(c)
-		return
-	}
 	clusterName = d.Get("cluster").(string)
 	clusters, err := c.Shield.GetAll()
 	if err != nil {
