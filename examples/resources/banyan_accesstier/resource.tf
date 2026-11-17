@@ -8,4 +8,5 @@ resource "banyan_accesstier" "example" {
   name       = "example"
   address    = "*.example.mycompany.com"
   api_key_id = banyan_api_key.example.id
+  cluster    = "cluster1"
 }
